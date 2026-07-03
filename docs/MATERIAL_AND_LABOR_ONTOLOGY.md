@@ -2,7 +2,7 @@
 
 **Document:** `docs/MATERIAL_AND_LABOR_ONTOLOGY.md`
 **Status:** Specification for review — pilot-stage; values marked as model parameters are not validated results
-**Applies to:** Scan-to-Build ecosystem / Home as Twin (U.S. Patents 9,720,401 · 10,768,609)
+**Applies to:** Scan-to-Build review / Home as Twin (U.S. Patents 9,720,401 · 10,768,609)
 **Companion documents:** `docs/ARCHITECTURE.md` (system architecture, v2), `docs/WORKPACKET_EXAMPLES.md` (illustrative WorkPacket contracts)
 
 > **Review status:** This document is a review specification, not an implementation guarantee. Schemas and examples are illustrative reference contracts for pilot evaluation.
