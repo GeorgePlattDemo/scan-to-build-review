@@ -5,7 +5,7 @@
 **Version:** MFKO 1.2  
 **Maturity:** Pre-commissioning; engineering validation required  
 **Recommended location:** `docs/MACHINE_FUNCTION_KINEMATIC_ONTOLOGY.md`  
-**Applies to:** Scan-to-Build ecosystem · Homeowner Project Record · WorkPacket execution layer  
+**Applies to:** Scan-to-Build review · Homeowner Project Record · WorkPacket execution layer  
 **Primary uses:** WorkPacket validation, MachineEnvelope definitions, machine-behavior governance, demo generation, animation audits, generated-output conformance, and execution-report design.
 
 > **Controlling note.** This document is the canonical mechanical-behavior reference for the Scan-to-Build repository. It is subordinate to the issued patent specifications and does not replace engineering drawings, safety certification, machine commissioning, OSHA/ANSI/NFPA review, manufacturer instructions, or validated performance testing. Its purpose is to translate the patent-described physical execution layer into stable labels, datums, states, refusal paths, and compliance checks so that WorkPackets, simulations, HTML demos, and generated artifacts cannot invent machine behavior.
