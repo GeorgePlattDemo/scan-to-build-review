@@ -1,5 +1,7 @@
 # Scan-to-Build / Home as a Twin — Public Review Package
 
+<a href="https://georgeplattdemo.github.io/scan-to-build-review/working-app.html"><kbd>▶ OPEN WORKING APP</kbd></a>
+
 Public review artifact · simulation only · no live machine control · no production claim.
 
 U.S. Patent Nos. 9,720,401 and 10,768,609, held by 3D Solutions LLC, provide issued context for review. Publication of this repository grants no license. See [NOTICE.md](docs/NOTICE.md).
