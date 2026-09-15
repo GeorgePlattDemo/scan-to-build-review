@@ -1,0 +1,81 @@
+name: STB bounded visible-build tune
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/stb-visible-tune.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  tune:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply exact bounded edits
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('system-build-current.html')
+          text = path.read_text(encoding='utf-8')
+
+          replacements = [
+              (
+                  'landing build-check tag',
+                  '<p class="tag">STB SYSTEM BUILD · HUMAN PATH CHECK</p>\n',
+                  ''
+              ),
+              (
+                  'landing acceptance notice',
+                  '<p class="status"><b>Acceptance surface.</b> The supplied words, drawings, order, and project-door intent control this browser view. Technical Store, pricing, machine, safety, and authorization claims remain governed by the current system and are not created by this page.</p>\n',
+                  ''
+              ),
+              (
+                  'recovery navigation strip',
+                  '<nav class="recovery-nav" aria-label="Build pages"><button data-go="landing">Landing</button><button data-go="projects">Projects</button><button data-go="intake">Bring what you have</button><button data-go="alcove-capture">Scan</button><button data-go="alcove-config">Configure</button><button data-go="store">Store</button><button data-go="alcove-review">Review</button><button data-go="request">Request</button><button data-go="yard">Yard</button><button data-go="terms">Terms</button><button data-go="recap">Recap</button><button data-go="record">Record</button></nav>\n',
+                  ''
+              ),
+              (
+                  'bottom acceptance disclaimer',
+                  '<p class="status" style="margin-top:18px"><b>NO BLOOD ON WOOD.</b> This page is a human-path acceptance surface. It does not authorize physical execution.</p>\n',
+                  ''
+              ),
+              (
+                  'new-user bounded continuation',
+                  '<p class="dim">Nothing costs anything until you say so. Nothing gets cut today.</p><div class="btns"><button data-go="projects">START</button></div>',
+                  '<p class="dim">Nothing costs anything until you say so. Nothing gets cut today.</p><p class="dim">Hitting "Next" will bring you into the system of user 1\'s projects at varying stages.</p><div class="btns"><button data-go="projects">Next →</button></div>'
+              ),
+              (
+                  'professional bounded continuation',
+                  '<p><b>Everything.</b> <span class="dim">Parts, material, what was made and when.</span></p><div class="btns"><button data-go="intake">ATTACH A FILE</button><button data-go="intake">TYPE IT IN</button></div>',
+                  '<p><b>Everything.</b> <span class="dim">Parts, material, what was made and when.</span></p><p class="dim">Hitting "Next" will bring you into the system of user 1\'s projects at varying stages.</p><div class="btns"><button data-go="projects">Next →</button></div>'
+              ),
+          ]
+
+          for label, old, new in replacements:
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{label}: expected exactly 1 match, found {count}')
+              text = text.replace(old, new, 1)
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+          git diff --check
+          git diff -- system-build-current.html
+
+      - name: Commit visible build change
+        shell: bash
+        run: |
+          git config user.name "Scan-to-Build bounded edit"
+          git config user.email "actions@users.noreply.github.com"
+          git add system-build-current.html
+          git commit -m "Clean landing and add bounded entry Next controls"
+          git push
