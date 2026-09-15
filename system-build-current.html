@@ -56,10 +56,7 @@ p{margin:0 0 9px}.sub{color:var(--text2)}
 .timeline{display:grid;grid-template-columns:13px 1fr auto auto;gap:0 8px;font-size:11px;align-items:baseline}
 .timeline>div{padding:3.5px 0;border-bottom:1px dotted var(--border)}.dot{font-weight:700;color:var(--ok)}.dot.open{color:var(--text3)}.who,.when{color:var(--text3);font-size:9.5px;white-space:nowrap}.when{font-family:ui-monospace,Menlo,monospace}
 .pick{border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin:5px 0;cursor:pointer}.pick.on{background:var(--tint);border-color:var(--border2)}.pick b{font-size:11.5px}.pick p{margin:2px 0 0;font-size:10px;color:var(--text3)}
-.flow{font:10.5px/1.9 ui-monospace,Menlo,monospace;color:var(--text2);background:var(--rail);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin:9px 0}
-.section{padding:10px 0;border-top:1px solid var(--border)}.section:first-of-type{border-top:0}.sh{display:flex;gap:8px;align-items:baseline}.sn{font-size:9px;font-weight:700;color:var(--text3)}.st{font-weight:600}.ss{margin-left:auto;font-size:9px;font-weight:700;letter-spacing:.04em;color:var(--accent);background:var(--rail);border:1px solid var(--border);padding:2px 6px;border-radius:3px}
-.section p{color:var(--text2);font-size:11.5px;margin:4px 0 0}
-.fields{display:grid;grid-template-columns:128px 1fr;gap:0 14px}.field{display:contents}.fl,.fv{padding:8px 0;border-top:1px solid var(--border)}.fl{font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--accent)}.fv{font-size:11.5px;color:var(--text2)}
+.flow{font:11.5px/1.95 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--text2);background:var(--rail);border:1px solid var(--border);border-radius:8px;padding:11px 13px;margin:0 0 12px}
 .bottom{display:flex;gap:8px;align-items:center;margin-top:13px;padding-top:10px;border-top:1px solid var(--border)}
 .bottom button{font:inherit;font-size:11px;padding:6px 11px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text);cursor:pointer}
 .bottom button.primary{background:var(--tint);border-color:var(--border2);color:var(--accent);font-weight:600}
@@ -69,7 +66,32 @@ p{margin:0 0 9px}.sub{color:var(--text2)}
 .hero{background:var(--rail);border:1px solid var(--border);border-radius:9px;padding:12px 14px;margin:12px 0}
 .verbs b{display:block;margin-top:7px}.verbs span{color:var(--text2)}
 .cards{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin:10px 0}.card{border:1px solid var(--border);border-radius:8px;padding:8px 10px}.card b{display:block;font-size:11.5px}.card span{font-size:10.5px;color:var(--text2)}
-@media(max-width:760px){.page.on{display:block}.rail{border-left:0;border-top:1px solid var(--border)}.rowline{flex-wrap:wrap}.rt{width:auto;flex:1}.rv{width:auto}.cards{grid-template-columns:1fr}.fields{grid-template-columns:1fr}.field{display:block}.fl{padding-bottom:1px}.fv{padding-top:1px}.timeline{grid-template-columns:13px 1fr}.who,.when{display:none}}
+
+/* Full closing-pair styles */
+.lede{margin:0 0 4px;font-size:13.5px;color:var(--text2)}
+.lede + .lede{margin-bottom:16px}
+.s{padding:13px 0;border-top:1px solid var(--border)}
+.s .h{display:flex;gap:9px;align-items:baseline;margin-bottom:5px;flex-wrap:wrap}
+.s .num{font-size:10px;font-weight:700;letter-spacing:.07em;color:var(--text3)}
+.s .name{font-size:13.5px;font-weight:600;letter-spacing:.01em}
+.s .st{margin-left:auto;font-size:9.5px;font-weight:700;letter-spacing:.05em;padding:2px 7px;border-radius:3px;background:var(--rail);color:var(--text3);border:1px solid var(--border);white-space:nowrap}
+.s .st b{color:var(--accent);font-weight:700}
+.s p{margin:0 0 7px;color:var(--text2)}
+.s p:last-child{margin-bottom:0}.s p.k{color:var(--text)}
+.s p.q{color:var(--text3);font-size:12.5px;padding-left:11px;border-left:2px solid var(--border2)}
+.ops{background:var(--rail);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin:11px 0 3px}
+.ops .t{margin:0 0 7px;font-size:9.5px;font-weight:700;letter-spacing:.08em;color:var(--accent)}
+.ops .chain{font:11.5px/1.9 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--text2);margin:0 0 8px}
+.ops p{margin:0;font-size:12.5px;color:var(--text2)}
+.f{display:grid;grid-template-columns:132px 1fr;gap:0 16px;padding:10px 0;border-top:1px solid var(--border);align-items:baseline}
+.f .l{font-size:9.5px;font-weight:700;letter-spacing:.07em;color:var(--accent);padding-top:2px}.f .v{min-width:0}
+.f .slot{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--text3);display:block;margin-bottom:5px}
+.f p{margin:0 0 5px;color:var(--text2);font-size:12.5px}.f p:last-child{margin-bottom:0}.f p.k{color:var(--text)}
+.close{border-top:1px solid var(--border2);margin-top:16px;padding-top:14px}.close p{margin:0 0 9px;color:var(--text2)}.close p:last-child{margin-bottom:0}.close b{color:var(--text)}
+.three{font-size:13px;color:var(--text);line-height:2;margin:0}.three b{font-weight:600}
+.vocab{display:flex;flex-wrap:wrap;gap:4px;margin:9px 0 0}.vocab span{font-size:9.5px;font-weight:600;letter-spacing:.04em;padding:2px 7px;border-radius:3px;background:var(--rail);border:1px solid var(--border);color:var(--text3)}
+
+@media(max-width:760px){.page.on{display:block}.rail{border-left:0;border-top:1px solid var(--border)}.rowline{flex-wrap:wrap}.rt{width:auto;flex:1}.rv{width:auto}.cards{grid-template-columns:1fr}.timeline{grid-template-columns:13px 1fr}.who,.when{display:none}.f{grid-template-columns:1fr;gap:4px}.s .st{margin-left:0}}
 </style>
 </head>
 <body>
@@ -218,19 +240,23 @@ p{margin:0 0 9px}.sub{color:var(--text2)}
   <section class="page" id="next">
     <main class="main">
       <h1>What happens next</h1>
-      <p class="sub">Your confirmed version stays unchanged unless you approve a new one.</p>
-      <div class="section"><div class="sh"><span class="sn">01</span><span class="st">Yard review</span><span class="ss">REQUEST · received</span></div><p>Checks material, capability, services, timing and terms. Accept, adjust or decline. Adjustment returns with a reason.</p></div>
-      <div class="section"><div class="sh"><span class="sn">02</span><span class="st">Offer</span><span class="ss">TERMS · returned</span></div><p>Material · services · price · timing · validity. Nothing reserved yet.</p></div>
-      <div class="section"><div class="sh"><span class="sn">03</span><span class="st">Acceptance</span><span class="ss">YOU · decide</span></div><p>One identified version and one identified offer. Changed definition means new version.</p></div>
-      <div class="section"><div class="sh"><span class="sn">04</span><span class="st">Settlement</span><span class="ss">PAYMENT · separate</span></div><p>Acceptance is not payment.</p></div>
-      <div class="section"><div class="sh"><span class="sn">05</span><span class="st">Material</span><span class="ss">STORE · allocate</span></div><p>The Store resolves actual material against the accepted job.</p><div class="flow">receive → identify → maintain availability → allocate → stage → reconcile use / remnants / exceptions</div></div>
-      <div class="section"><div class="sh"><span class="sn">06</span><span class="st">Production release</span><span class="ss">JOB · released</span></div><p>Commercial completion does not start a machine.</p></div>
-      <div class="section"><div class="sh"><span class="sn">07</span><span class="st">Local cell</span><span class="ss">CELL · readiness</span></div><p>Machine · tooling · setup · material presence · local conditions. Cycle Start stays local.</p></div>
-      <div class="section"><div class="sh"><span class="sn">08</span><span class="st">Primary operations</span><span class="ss">PARTS · outcomes</span></div><p>Each required cycle records its outcome. Stopped or failed work remains stopped or failed.</p></div>
-      <div class="section"><div class="sh"><span class="sn">09</span><span class="st">Completion</span><span class="ss">SECONDARY · resolved</span></div><p>Resolve required secondary work. Then inspect → label → group → stage.</p></div>
-      <div class="section"><div class="sh"><span class="sn">10</span><span class="st">Handoff</span><span class="ss">READY · notice</span></div><p>Yard ≤2 business h after last required cycle. Pickup 4 business h after READY. Staged is not picked up.</p></div>
-      <div class="section"><div class="sh"><span class="sn">11</span><span class="st">Custody</span><span class="ss">HANDOFF · recorded</span></div><p>Pickup or delivery transfers custody. Until then the job is not closed.</p></div>
-      <div class="section"><div class="sh"><span class="sn">12</span><span class="st">Owner record</span><span class="ss">RECORD · reconciled</span></div><p>Missing events stay missing. Nothing is filled in by assumption.</p></div>
+      <p class="lede">Your confirmed version stays unchanged unless you approve a new one.</p>
+      <p class="lede">Nothing below is complicated. It is only kept apart. Each step names who owns it, what it establishes, and what it does not.</p>
+
+      <div class="s"><div class="h"><span class="num">01</span><span class="name">Yard review</span><span class="st">REQUEST · <b>received</b></span></div><p>The yard checks material, capability, services, timing and current terms against what you asked for.</p><p>It may accept, adjust or decline. Every adjustment comes back with a reason.</p><p class="q">A reason is not a courtesy. It is what lets you tell a shortage from a preference.</p></div>
+      <div class="s"><div class="h"><span class="num">02</span><span class="name">Offer</span><span class="st">TERMS · <b>returned</b></span></div><p>The offer identifies material, services, price, timing and validity. Nothing is reserved.</p><p>It is a statement of what the yard would do, for a stated period, against one identified version.</p><p class="q">When the period ends, the offer ends. A price quoted against stock that has since gone is not a price.</p></div>
+      <div class="s"><div class="h"><span class="num">03</span><span class="name">Acceptance</span><span class="st">YOU · <b>accept or decline</b></span></div><p>Acceptance binds one version to one offer. Both are identified.</p><p class="k">A changed definition requires a new version.</p><p class="q">There is no way to amend a version in place. A record you can edit afterwards is not a record.</p></div>
+      <div class="s"><div class="h"><span class="num">04</span><span class="name">Settlement</span><span class="st">PAYMENT · <b>recorded separately</b></span></div><p>Acceptance is not payment. Payment is its own event, with its own time and its own reference.</p><p>Its status is established before the next commercial step, whatever that step is.</p></div>
+      <div class="s"><div class="h"><span class="num">05</span><span class="name">Material</span><span class="st">STORE · <b>identifies and allocates</b></span></div><p>The Store resolves actual material against the accepted job — identity, quantity, lot or source.</p><p>Allocation records what is committed to this order, and takes it out of what is available to anyone else.</p><div class="ops"><p class="t">STORE OPERATIONS, HIGH LEVEL</p><p class="chain">receive material → identify stock → maintain availability →<br>allocate to accepted jobs → stage for production → reconcile use,<br>remnants and exceptions</p><p>The Store answers questions about material. It does not answer questions about your project, and it does not change the definition to make an answer easier.</p></div></div>
+      <div class="s"><div class="h"><span class="num">06</span><span class="name">Production release</span><span class="st">JOB · <b>released</b></span></div><p>Commercial completion does not start a machine.</p><p>Release permits the job to proceed toward the local cell. It confers nothing else.</p></div>
+      <div class="s"><div class="h"><span class="num">07</span><span class="name">Local cell</span><span class="st">CELL · <b>checks its own readiness</b></span></div><p>The cell resolves machine, tooling, setup, material presence and local conditions.</p><p class="k">Readiness is local knowledge. Nothing upstream can supply it, and nothing upstream can overrule it.</p><p class="q">Cycle Start belongs to the person standing at the machine. That is deliberate, and it is not negotiable.</p></div>
+      <div class="s"><div class="h"><span class="num">08</span><span class="name">Primary operations</span><span class="st">PARTS · <b>made to the released definition</b></span></div><p>Each required cycle records its own outcome.</p><p>Stopped, incomplete and failed work stays recorded as stopped, incomplete and failed.</p><p class="q">A part that was cut twice was cut twice. The second one is the good one; the first one still happened.</p></div>
+      <div class="s"><div class="h"><span class="num">09</span><span class="name">Completion</span><span class="st">SECONDARY WORK · <b>resolved</b></span></div><p>Required secondary work is completed here, assigned elsewhere, or left to you — whichever the accepted plan says. Then: inspect, label, group, stage.</p><p class="q">Inspection compares the made part against the confirmed requirement. It does not adjust the requirement to match the part.</p></div>
+      <div class="s"><div class="h"><span class="num">10</span><span class="name">Handoff</span><span class="st">READY · <b>notice issued</b></span></div><p>Standard pickup path: staged within 2 business hours of the last required cycle, then 4 business hours to collect.</p><p class="k">The clock starts at the notice, not at staging. You cannot be late for a window nobody told you had opened.</p><p class="k">Staged is not picked up.</p></div>
+      <div class="s"><div class="h"><span class="num">11</span><span class="name">Custody</span><span class="st">HANDOFF · <b>recorded</b></span></div><p>Pickup or delivery transfers custody. Until that event, custody remains with the yard.</p><p class="q">A job is not closed by being finished. It is closed by being handed over.</p></div>
+      <div class="s"><div class="h"><span class="num">12</span><span class="name">Owner record</span><span class="st">RECORD · <b>reconciled</b></span></div><p>One record retains the whole chain:</p><p class="chain" style="font:11.5px/1.9 ui-monospace,Menlo,monospace;color:var(--text2)">definition → yard response → accepted terms → settlement →<br>material → release → machine outcomes → completion →<br>inspection → staging → custody</p><p class="k">Missing events stay missing. Nothing is filled in by assumption, and nothing is promoted by wording.</p></div>
+
+      <div class="close"><p>The chain reads long because it is written down. Every one of these steps happens in an ordinary job too — material gets found, someone decides, a machine runs, someone signs for it. They just happen inside a single word, and the word is usually <b>ordered</b>.</p><p>Separating them costs twelve lines of text. Collapsing them costs you the ability to say which one went wrong.</p></div>
       <div class="bottom"><button data-back="terms">Back</button><span class="fine">Definition remains unchanged.</span><button class="next" data-next="recap">Next →</button></div>
     </main>
     <aside class="rail"><p class="hd">08 · NEXT</p><div class="row"><b>Close the circuit</b><span>Store → release → cell → completion → custody.</span></div><div class="row"><b>Keep events separate</b><span>Every promotion needs its own basis.</span></div></aside>
@@ -239,21 +265,31 @@ p{margin:0 0 9px}.sub{color:var(--text2)}
   <section class="page" id="recap">
     <main class="main">
       <h1>What happened</h1>
-      <p class="sub">One project. One version history. One record.</p>
-      <div class="fields">
-        <div class="field"><div class="fl">SOURCE</div><div class="fv">[files · measurements · notes · drawings] — original sources retained where available.</div></div>
-        <div class="field"><div class="fl">OBSERVATIONS</div><div class="fv">[measurements · stated requirements · unresolved conditions] — observations stayed separate from assumptions.</div></div>
-        <div class="field"><div class="fl">CONFIGURATION</div><div class="fv">45½″ opening · five shelves · 14″ depth · Pine · back none.</div></div>
-        <div class="field"><div class="fl">DEFINITION</div><div class="fv">Identified version confirmed before commercial processing.</div></div>
-        <div class="field"><div class="fl">YARD REQUEST</div><div class="fv">Ten service / handling / handoff answers bound to the confirmed version.</div></div>
-        <div class="field"><div class="fl">YARD RESPONSE</div><div class="fv">Reference response returned. Geometry unchanged.</div></div>
-        <div class="field"><div class="fl">OFFER / ACCEPTANCE</div><div class="fv">Placeholder. Not established by this public surface.</div></div>
-        <div class="field"><div class="fl">SETTLEMENT / MATERIAL</div><div class="fv">Placeholder. No live payment or allocation is claimed.</div></div>
-        <div class="field"><div class="fl">PRODUCTION / CELL</div><div class="fv">Placeholder. No physical production, local readiness, or Cycle Start is claimed.</div></div>
-        <div class="field"><div class="fl">COMPLETION / HANDOFF</div><div class="fv">Placeholder. No staged or transferred custody is claimed.</div></div>
-      </div>
-      <div class="flow">source → observation → configuration → definition → request → response → offer → acceptance → settlement → allocation → release → production → completion → inspection → staging → custody</div>
-      <p class="boundary">No redraw. No silent substitution. No missing step promoted by wording.</p>
+      <p class="lede">One project. One version history. One record.</p>
+      <p class="lede">Written forward as it happened, not assembled backwards from what survived.</p>
+
+      <div class="f"><div class="l">SOURCE</div><div class="v"><span class="slot">YOU PROVIDED — [files · measurements · notes · drawings]</span><p>Original sources retained where available. The file stays the file.</p></div></div>
+      <div class="f"><div class="l">OBSERVATIONS</div><div class="v"><span class="slot">WE RECORDED — [measurements · stated requirements · unresolved conditions]</span><p>What was observed stayed separate from what was assumed. Where the two could not be separated, the condition stayed unresolved.</p></div></div>
+      <div class="f"><div class="l">CONFIGURATION</div><div class="v"><span class="slot">YOU CHOSE — [project choices]</span><p>These became part of the identified version. The ones you were not asked about were not choices.</p></div></div>
+      <div class="f"><div class="l">DEFINITION</div><div class="v"><span class="slot">VERSION — [version id]</span><p class="k">The definition was confirmed before any commercial processing began.</p></div></div>
+      <div class="f"><div class="l">YARD REQUEST</div><div class="v"><span class="slot">SUBMITTED — [date · request id]</span><p>The request carried the confirmed version plus your service and handoff choices.</p><p>A request was not an order.</p></div></div>
+      <div class="f"><div class="l">YARD RESPONSE</div><div class="v"><span class="slot">RETURNED — [accepted · adjusted · declined]</span><p>Changes were stated explicitly, with reasons.</p><p class="k">Confirmed geometry was not silently rewritten.</p></div></div>
+      <div class="f"><div class="l">OFFER</div><div class="v"><span class="slot">TERMS — [offer id · validity · amount]</span><p>One offer, one identified version, one stated period.</p></div></div>
+      <div class="f"><div class="l">ACCEPTANCE</div><div class="v"><span class="slot">DECISION — [accepted · declined · expired]</span><p>Recorded separately from payment. Expired is an outcome, not a gap.</p></div></div>
+      <div class="f"><div class="l">SETTLEMENT</div><div class="v"><span class="slot">PAYMENT — [status · reference]</span><p>Recorded separately from allocation and from release.</p></div></div>
+      <div class="f"><div class="l">MATERIAL</div><div class="v"><span class="slot">ALLOCATED — [material identity · quantity · lot / source]</span><p>What the Store committed to this job, and where it came from.</p></div></div>
+      <div class="f"><div class="l">RELEASE</div><div class="v"><span class="slot">RELEASE — [status · time]</span><p>Release allowed the job to proceed. It did not establish machine readiness.</p></div></div>
+      <div class="f"><div class="l">LOCAL CELL</div><div class="v"><span class="slot">READINESS — [cell · machine · status]</span><p>The cell established its own readiness. Cycle Start remained local.</p></div></div>
+      <div class="f"><div class="l">MACHINE OUTCOME</div><div class="v"><span class="slot">PRIMARY WORK — [complete · stopped · exception]</span><p>Each required operation kept its recorded outcome, including the ones that did not finish.</p></div></div>
+      <div class="f"><div class="l">SECONDARY WORK</div><div class="v"><span class="slot">COMPLETION — [none · completed · customer · third party]</span><p>Residual work resolved according to the accepted completion plan. Where it went to you, that is recorded as an assignment, not an omission.</p></div></div>
+      <div class="f"><div class="l">QUALITY</div><div class="v"><span class="slot">INSPECTION — [status] &nbsp;·&nbsp; LABELS — [status] &nbsp;·&nbsp; PART COUNT — [status]</span><p>Three separate checks. A pass on one is not a pass on the others.</p></div></div>
+      <div class="f"><div class="l">STAGING</div><div class="v"><span class="slot">STAGED — [time] &nbsp;·&nbsp; READY NOTICE — [time]</span><p class="k">Staged did not mean custody transferred.</p></div></div>
+      <div class="f"><div class="l">HANDOFF</div><div class="v"><span class="slot">CUSTODY — [pickup · delivery · recipient · time]</span><p class="k">Custody transferred here.</p></div></div>
+      <div class="f"><div class="l">CLOSED</div><div class="v"><span class="slot">PROJECT STATUS — closed</span><p>Closed means handed over and reconciled. It does not mean nothing is left to do — assembly, finish and fixing were always yours.</p></div></div>
+
+      <div class="close"><p>The final record preserves the chain:</p><p class="flow">source → observation → configuration → definition → request →<br>response → offer → acceptance → settlement → allocation →<br>release → production → completion → inspection → staging → custody</p><p class="three"><b>No redraw.</b><br><b>No silent substitution.</b><br><b>No missing step promoted by wording.</b></p><p style="margin-top:12px">Read backwards, it is an audit. Read forwards, it is only what happened.</p><p>The record is not valuable because it is thorough. It is valuable because it is checkable, and because it is yours to take with you — to the next project, to a different yard, or to somebody who wants to know why a recorded dimension is what it is.</p></div>
+      <div class="vocab"><span>ACCEPTED</span><span>REFERENCE</span><span>DOCUMENTED</span><span>RESEARCH</span><span>PLANNED</span><span>NOT ADMITTED</span><span>NOT MEASURED</span><span>NOT VALIDATED</span><span>NOT CLAIMED</span><span>NOT AUTHORIZED</span></div>
+      <p style="margin:8px 0 0;font-size:11px;color:var(--text3);line-height:1.5">Status language is fixed. Planned capability is not written in the present tense. Modeled machine time is not measured production time. A favorable Store answer is not physical execution. User review is not fabrication authorization.</p>
       <div class="bottom"><button data-back="next">Back</button><span class="fine">End-of-project reference page.</span><button class="next" data-next="record">Next →</button></div>
     </main>
     <aside class="rail"><p class="hd">09 · RECAP</p><div class="row"><b>Write forward</b><span>Record what happened, not what the ending implies.</span></div><div class="row"><b>Keep nulls honest</b><span>Missing events remain missing.</span></div></aside>
