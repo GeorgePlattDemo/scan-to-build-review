@@ -1,0 +1,2054 @@
+{
+  "source_commit": "5eb125199d8f48c3d29dcedb7ecb18bdc1c3a4a0",
+  "files": {
+    "system-build.html": {
+      "blob": "c9379ba271cb13f0df343149f39f6e983751f0a6",
+      "pages": {
+        "landing": {
+          "sha256": "81cb715d69d19a7a3dbe6ff70719d61cb0c310ebc26d5aa61e160ffa1e998453",
+          "text": [
+            "SCAN TO BUILD",
+            "Your idea. Your measurements. Your parts.",
+            "YOU SCAN",
+            "Capture the space with laser, AR, or tape. The measurements are yours.",
+            "YOU DEFINE",
+            "One part, several parts, or a need we don't offer yet.",
+            "YOU SELECT",
+            "Set the material, size, doors, and other available options.",
+            "YOU CONFIRM",
+            "Approve exactly what you want built\u2014and nothing else.",
+            "YOUR DEFINITION REACHES THE CUT",
+            "Your confirmed dimensions guide the work without being redrawn, retyped, or reinterpreted along the way.",
+            "WE CUT \u00b7 MILL \u00b7 DRILL \u00b7 LABEL",
+            "Within stated limits. Staged for pickup. We tell you when they're ready.",
+            "YOU BUILD.",
+            "HOW ARE YOU STARTING?",
+            "NEW USER",
+            "RETURNING USER",
+            "PROFESSIONAL",
+            "BUILD GUIDE",
+            "Goal",
+            "Say what this is",
+            "One screen, no scrolling to understand it.",
+            "Show who does what",
+            "Four steps are yours, one is ours.",
+            "Make the seam visible",
+            "The definition reaches the cut unchanged.",
+            "Offer three ways in",
+            "Same road after. Different opening."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "data-go": "new-user"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "data-go": "returning"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "data-go": "professional"
+              }
+            }
+          ],
+          "svg_count": 0
+        },
+        "new-user": {
+          "sha256": "3d03e6afef149dac6ec95a00bd9c2d4b5da0e694e97dc38f8ecf0fbbf6761706",
+          "text": [
+            "We don't sell products.",
+            "We capture what you want and turn it into parts. You tell us. That's what you get.",
+            "No catalogue.",
+            "Nothing here was made before you asked for it. There's no shelf sitting in a warehouse waiting to almost fit your wall.",
+            "No reinterpreting.",
+            "What you confirm is what gets cut. Not something close. Not something easier. Not something we thought you meant.",
+            "No returns",
+            ", because nothing is stock. Your parts are your parts. That's why the confirm step is real, and why we show you everything before you take it.",
+            "We don't check your numbers.",
+            "If the opening is 45\u00bd and you enter 45, you get 45. The measurements are yours, and so is what comes back.",
+            "Nothing costs anything until you say so. Nothing gets cut today.",
+            "START",
+            "BUILD GUIDE",
+            "Goal",
+            "Name the category",
+            "Not a store. Not a catalogue.",
+            "Set expectation once",
+            "Made to your numbers, not picked off a shelf.",
+            "Make confirm mean something",
+            "Nothing to return, so the step matters.",
+            "Hand over responsibility",
+            "Your numbers, your parts. No scolding."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "data-go": "projects"
+              }
+            }
+          ],
+          "svg_count": 0
+        },
+        "returning": {
+          "sha256": "48865876aca0d8aa38fdadd04e4ea72a4b6f676c53986e1f23ad388ee4a03506",
+          "text": [
+            "Nothing moved while you were gone.",
+            "Your measurements, your choices, your confirmed version \u2014 exactly as you left them.",
+            "What changed is outside your project.",
+            "What the store had on the rack, what the machine could do that day. Those were true when you asked. We'll ask again.",
+            "Pick up, or do it again",
+            "Resume.",
+            "Open it where you stopped.",
+            "Make another.",
+            "Same project, new numbers. The second one takes minutes.",
+            "Replace a part.",
+            "One shelf, one panel. You don't reorder the whole thing.",
+            "OPEN A PROJECT",
+            "START SOMETHING NEW",
+            "BUILD GUIDE",
+            "Goal",
+            "Don't start over",
+            "Everything saved is still saved.",
+            "Trust what's saved",
+            "Nothing edited in the background.",
+            "Second one is easy",
+            "Same project, new numbers.",
+            "Parts stay orderable",
+            "Replace one, not all."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "data-go": "saved"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "data-go": "projects"
+              }
+            }
+          ],
+          "svg_count": 0
+        },
+        "saved": {
+          "sha256": "eec38095d24ee1d7c96fbfa96fa8f0ccc6eda798e47edf868bd13aad8c303763",
+          "text": [
+            "Open a project",
+            "This public acceptance surface does not persist your local project record.",
+            "Your actual application keeps local project state. This page proves the visible route and navigation without pretending a saved project exists here.",
+            "START SOMETHING NEW",
+            "BUILD GUIDE",
+            "Do not fake saved state",
+            "Visible route",
+            "The button works and tells the truth.",
+            "Local record stays local",
+            "This review page does not invent it."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "data-go": "projects"
+              }
+            }
+          ],
+          "svg_count": 0
+        },
+        "professional": {
+          "sha256": "164865bd5a11cd3fd69dee6c503bd341db11b6044cab4c90668a4e934d62a8e3",
+          "text": [
+            "Send us what you want. Nothing else.",
+            "We don't need your job file, your client list, or your pricing.",
+            "The least that works:",
+            "a material, a dimension, an operation. That's a part we can make.",
+            "Send more if it helps you.",
+            "A drawing, a photo, a PDF \u2014 we keep it with the job. Held as reference, not read.",
+            "Your customer's copy \u2014 your call",
+            "Every job can carry a record your customer keeps. You decide what's in it.",
+            "Nothing.",
+            "The job stays yours.",
+            "Just the parts.",
+            "Names and sizes. Five years out, one shelf breaks \u2014 they order that one piece instead of calling you about a whole unit.",
+            "Everything.",
+            "Parts, material, what was made and when.",
+            "ATTACH A FILE",
+            "TYPE IT IN",
+            "BUILD GUIDE",
+            "Goal",
+            "Reduce friction",
+            "Send the least that works.",
+            "Save time",
+            "No re-drawing, no re-quoting.",
+            "Plan end early",
+            "Decide the handoff before the job starts.",
+            "Offer organization tool",
+            "Part records his customer keeps."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "data-go": "intake"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "data-go": "intake"
+              }
+            }
+          ],
+          "svg_count": 0
+        },
+        "projects": {
+          "sha256": "0ef0e79e0f08623691e90dc59133726fdd1db58a4e63c821528159b2edf1b973",
+          "text": [
+            "Start your own",
+            "Board, sketch, or file",
+            "Critical fit",
+            "Shelf insert",
+            "Space utilization",
+            "Window seat",
+            "Outdoor build",
+            "To fit your space",
+            "What are you making?",
+            "A bounded project is one somebody already worked out.",
+            "How the parts go together, what thickness holds up, where the fasteners land \u2014 that's settled. It doesn't get asked again.",
+            "What's left is the part only you can answer:",
+            "how big is your space, and what should it look like.",
+            "Answer about ten questions and you get a list of parts, cut to your numbers.",
+            "You're not designing furniture. If a question needs a woodworker to answer it, we shouldn't be asking you.",
+            "That's why the list is worth a look first.",
+            "Not because your idea has to fit it \u2014 because when it does, you skip everything except the choices that are actually yours.",
+            "Some answers open more questions",
+            "Doors on the bottom of the shelving, say. There's more than one way to do doors.",
+            "Cut from flat stock, hinge cutouts machined, hardware pack to match",
+            "Picked from a catalogue, our parts cut to suit them",
+            "Just the machining \u2014 you already have the hinges you want",
+            "No doors. You looked, you changed your mind.",
+            "Say no and none of it appears.",
+            "If nothing here is your thing",
+            "Start your own stays first. A need we don't offer is still worth keeping.",
+            "BUILD GUIDE",
+            "Goal",
+            "Name the problem",
+            "Critical fit, not \u201cshelving.\u201d",
+            "Make it want touching",
+            "Color and character earn the click.",
+            "Keep the door open",
+            "Start your own is first and never moves.",
+            "Capture the miss",
+            "A need we don't offer is worth keeping."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "tile first",
+                "data-go": "start-own",
+                "title": "Start your own project"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "tile",
+                "data-go": "alcove-capture",
+                "title": "Critical fit"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "tile",
+                "data-go": "window-intake",
+                "title": "Space utilization"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "tile",
+                "data-go": "picnic-chooser",
+                "title": "Outdoor build"
+              }
+            }
+          ],
+          "svg_count": 4
+        },
+        "start-own": {
+          "sha256": "85d13b3c3f92d8b9a899b9415f62c248d7352ff9e7e15831e66bc07c801196b5",
+          "text": [
+            "Start your own project",
+            "Nothing on the list fits? Fine. Here's what we can do for you.",
+            "1\u00d76 pine",
+            "1\u00d76 poplar",
+            "1\u00d76 cherry",
+            "1\u00d78 oak",
+            "2\u00d74 stud",
+            "\u00be plywood",
+            "Grab a board and tell us what you want done to it.",
+            "Cut it to length. Put a hole in it. That's a whole project and it's a perfectly good reason to be here. Everything below is the same idea with more in it.",
+            "More ways we can help, roughly easiest first.",
+            "2",
+            "Add pieces as you go.",
+            "One board, then the next. You don't have to know the whole thing up front.",
+            "3",
+            "Just tell us in plain words.",
+            "Say what you're after and we'll write down what we heard. You check it.",
+            "4",
+            "Type the numbers.",
+            "Lengths, widths, where the holes go. We draw it back so you can see it.",
+            "5",
+            "Send a scan or a photo.",
+            "Phone, laser, a picture of the wall. Even a napkin sketch.",
+            "6",
+            "Draw it here.",
+            "Boxes at right angles, which is most of what wood is. Enough for a bench or a frame.",
+            "7",
+            "Bring what you already have.",
+            "A cut list, a PDF, a CAD export. Keep working in the tool you know \u2014 we'll take what it gives us.",
+            "Nobody climbs the whole list. Come in where you are, and move up only if it helps.",
+            "BRING WHAT YOU HAVE \u2192",
+            "BUILD GUIDE",
+            "Goal",
+            "Floor is one board",
+            "A cut is a project. Start there.",
+            "Sort by effort",
+            "Not by who they are. No beginner box.",
+            "Offer, don't instruct",
+            "What we can do, not what they must.",
+            "No wrong entry",
+            "Every rung is a complete path."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "data-go": "intake"
+              }
+            }
+          ],
+          "svg_count": 0
+        },
+        "intake": {
+          "sha256": "caf471067c97fbf9cc5a71d04434dfa9256c0285b4079341dc7feb0c1c326876",
+          "text": [
+            "Bring what you have.",
+            "You don't have to put it in our format first. Give us whatever you've already got and we'll work out what's missing.",
+            "Tell us what you want",
+            "A sentence is enough to start.",
+            "Enter measurements",
+            "Type what you took. Fractions or decimals.",
+            "Add photos",
+            "A picture of the space or the thing.",
+            "Scan it",
+            "Phone, LiDAR, AR \u2014 whatever you used.",
+            "Sketch it",
+            "On paper, on a napkin, on your screen.",
+            "Use a previous project",
+            "Reorder, replace one part, or start from it.",
+            "Attach a file",
+            "Drawing, PDF, cut list, takeoff, spreadsheet, CAD.",
+            "I'm not sure",
+            "Start with a question. We'll work it out.",
+            "Bring more than one.",
+            "A photo, your tape measurements, and a PDF of the bracket is one project \u2014 not three.",
+            "What we promise, and what we don't",
+            "We keep your source.",
+            "The file stays the file. Nothing overwrites it.",
+            "We read what we reliably can",
+            "\u2014 and show you what we read, and where it came from.",
+            "We tell you what we couldn't establish",
+            "instead of filling it in.",
+            "We ask only for what's still missing.",
+            "USE A SIMPLE SPACE EXAMPLE \u2192",
+            "BUILD GUIDE",
+            "Goal",
+            "Receive broadly",
+            "Without pretending to understand broadly.",
+            "No format to learn",
+            "Their words, their files, their units.",
+            "One project, many sources",
+            "Photo + tape + PDF is one intake.",
+            "Professional behind one door",
+            "Not a separate system. An entry context."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "data-go": "alcove-capture"
+              }
+            }
+          ],
+          "svg_count": 0
+        },
+        "alcove-capture": {
+          "sha256": "037a8ecb2b858755857cd4d9cbca74cad6eafd51008fabd8f7afba8cfb11359b",
+          "text": [
+            "Define your project to your space \u2014 and your taste",
+            "A scan gets the shape. You get the numbers.",
+            "45\u00bd in",
+            "45 in",
+            "mantel",
+            "65 in",
+            "shelf top",
+            "recessed wall bows in \u00bd in",
+            "floor slopes 1.2\u00b0",
+            "drawn to scale \u00b7 94\u00bd in ceiling",
+            "Start with a scan if you have one.",
+            "Your phone can capture the room \u2014 the walls, the opening, roughly where things sit. That gives us context: what kind of space this is, what's around it, which way the light comes in.",
+            "A scan is not a measurement.",
+            "It's close, and close is fine for context. It isn't fine for a part that has to slide into a 45\u00bd-inch opening with a quarter inch to spare.",
+            "So you take the ones that matter.",
+            "Width at the top, the middle, and the bottom \u2014 they're rarely the same. Height on both sides. Depth front to back. A tape does this. So does a laser, if you have one. A level tells you what's out of plumb, which matters more than most people expect.",
+            "Some numbers are about taste, not fit.",
+            "Where the top lands is your call. Sixty-five inches, say. Line a shelf up with the mantel and it looks deliberate. Ignore the mantel and it looks like it landed there. Either is fine \u2014 it's your room.",
+            "You decide which numbers are controlling.",
+            "Mark a dimension as controlling and that's what the parts get cut to. Everything else is context we keep and don't cut to. Nobody but you has stood in that room.",
+            "What we keep from each",
+            "Scan",
+            "\u2014 the shape, and the fact that it came from a scan.",
+            "Your measurements",
+            "\u2014 the numbers, how you took them, and how many times.",
+            "What's off",
+            "\u2014 slope, bow, twist. Recorded, not corrected.",
+            "UPLOAD A SCAN",
+            "TYPE THE NUMBERS",
+            "BUILD GUIDE",
+            "Goal",
+            "Headline first",
+            "Name the job before showing the room.",
+            "Separate the roles",
+            "Scan is context. Measurement is controlling.",
+            "Fit and taste both count",
+            "Shelf height is a preference, not a constraint.",
+            "Draw to scale",
+            "1.74 px per inch. A wrong drawing is a wrong promise.",
+            "Record, don't correct",
+            "Slope and bow are drawn, not straightened."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "data-go": "alcove-config"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "data-go": "alcove-config"
+              }
+            }
+          ],
+          "svg_count": 1
+        },
+        "alcove-config": {
+          "sha256": "98b2b0c0b18aa24a8a8a47413f567a155ec760b79b0ac33d0b398348816b7631",
+          "text": [
+            "Make it yours",
+            "Shelves",
+            "5",
+            "Depth",
+            "14 in",
+            "Heights",
+            "fractions",
+            "Material",
+            "Pine",
+            "Poplar",
+            "Cherry",
+            "Oak",
+            "CURRENT CONFIGURATION",
+            "MATERIAL REQUIRED",
+            "CALCULATED PRICE",
+            "$0",
+            "HOW WAS THIS FIGURED?",
+            "Store Zero reference model",
+            "Shelf SKU",
+            "Unit price",
+            "Reference on hand",
+            "Nominal interior span",
+            "44 in",
+            "Ordered cut length",
+            "not set on this page",
+            "Pieces across",
+            "96 in boards",
+            "72 in boards",
+            "4",
+            "Material",
+            "Hardware pack",
+            "Cell D-001 reference economics",
+            "Cycle model",
+            "S2-0.1",
+            "Basis",
+            "CALCULATED",
+            "Measured",
+            "false",
+            "Job time",
+            "Cell recovery",
+            "Pricing engine",
+            "Engine",
+            "STB-STORE-ZERO-PRICE-1",
+            "Version",
+            "0.2.2",
+            "Catalog clock",
+            "2026-09-10",
+            "Mark-on",
+            "5%",
+            "User 1's measured opening remains 45\u00bd in. The 44 in nominal interior span is the opening less the two \u00be in class side members. No fit allowance or ordered-size reduction is silently applied here. Pieces across = ceil(depth \u00f7 5.5). Boards per shelf = ceil(across \u00f7 2).",
+            "REFERENCE ECONOMICS:",
+            "the displayed amount uses the recovered Store Zero 0.2.2 budgetary model so shelf count, depth, and species visibly change the estimate. The later ordering decision can change the cut definition and must be reconciled before any commercial or production claim.",
+            "REVIEW AND CONFIRM",
+            "BUILD GUIDE",
+            "Goal",
+            "Feel like a tool",
+            "Price up front. Explanation behind a disclosure.",
+            "Real Store values only",
+            "Catalog SKUs, catalog prices, engine totals.",
+            "Say UNRESOLVED",
+            "Never invent what the engine can't answer.",
+            "Estimate is not a quote",
+            "Budgetary. Basis shown, not buried."
+          ],
+          "controls": [
+            {
+              "tag": "input",
+              "attributes": {
+                "id": "c-n",
+                "type": "range",
+                "min": "2",
+                "max": "7",
+                "value": "5",
+                "style": "width:100%;margin-bottom:10px;accent-color:var(--accent)"
+              }
+            },
+            {
+              "tag": "input",
+              "attributes": {
+                "id": "c-d",
+                "type": "range",
+                "min": "8",
+                "max": "16",
+                "step": "1",
+                "value": "14",
+                "style": "width:100%;margin-bottom:10px;accent-color:var(--accent)"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "id": "fmt",
+                "style": "font-size:10px;padding:2px 7px"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "swatch on",
+                "data-material": "pine"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "swatch",
+                "data-material": "poplar"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "swatch",
+                "data-material": "cherry"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "swatch",
+                "data-material": "oak"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "data-go": "alcove-review"
+              }
+            }
+          ],
+          "svg_count": 1
+        },
+        "alcove-review": {
+          "sha256": "16cd39137ca2adca1c312adb4327e2335870bc08102f2367aea1d7c0d5481c8d",
+          "text": [
+            "Review this version",
+            "This is exactly what gets frozen. Read it before you confirm it.",
+            "Alcove insert \u00b7 User 1 \u00b7 version 1",
+            "Opening width",
+            "45\u00bd in \u2014 controlling",
+            "Side thickness",
+            "\u00be in each \u2014 bounded class",
+            "Nominal interior span",
+            "44 in \u2014 derived before ordering decision",
+            "Ordered-size adjustment",
+            "not decided on this page",
+            "Shelves",
+            "5",
+            "Depth",
+            "14 in",
+            "Shelf heights",
+            "Material",
+            "Calculated price",
+            "Basis",
+            "Reference budgetary estimate \u00b7 Store Zero 0.2.2",
+            "Still unresolved",
+            "Floor slopes 1.2\u00b0. Recessed wall bows in \u00bd in. Both recorded, neither corrected.",
+            "The ordered-size adjustment has not been recorded yet. Structural adequacy is not evaluated here.",
+            "What confirm means",
+            "Confirm freezes this exact definition as one identified version.",
+            "Change anything afterward and that makes a new version. This one stays in your history.",
+            "It does",
+            "not",
+            "by itself mean ordered, paid, material reserved, production released, machine authorized, or cut.",
+            "CONFIRM THIS VERSION",
+            "KEEP EDITING",
+            "BUILD GUIDE",
+            "Goal",
+            "Show the exact version",
+            "Not a summary. The thing being frozen.",
+            "Mark what controls",
+            "Controlling, derived, unresolved.",
+            "Confirm \u2260 contract",
+            "Six things it is not, listed plainly.",
+            "Leave a way back",
+            "Keep editing is always offered."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "id": "confirm-alcove"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "data-go": "alcove-config"
+              }
+            }
+          ],
+          "svg_count": 0
+        },
+        "window-intake": {
+          "sha256": "4d9e3fb32a5efd170cb26e75968474f4e9ea445ff9ab63395b7ba37d5571cabc",
+          "text": [
+            "Start your own project",
+            "Nothing on the ribbon was this. Say it in your own words and we'll read it back.",
+            "WHAT DO YOU WANT MADE?",
+            "A window seat under the hex window with a bench you can sit on, and bookshelves either side. The wall is 103 inches.",
+            "Words carry consequences.",
+            "\u201cBench\u201d means a person sits on it. That raises a condition. It does not automatically refuse the job.",
+            "Read it back before building on it.",
+            "THAT'S RIGHT \u2014 CARRY ON",
+            "BUILD GUIDE",
+            "Goal",
+            "Words carry consequences",
+            "Bench means a person sits on it. That is not a shelf.",
+            "Trigger, don't block",
+            "The word raises a condition. It does not refuse the job.",
+            "Say it at the door",
+            "Found at intake, not discovered at confirm.",
+            "Read it back",
+            "They see what we heard before anything is built on it."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "data-go": "window-space"
+              }
+            }
+          ],
+          "svg_count": 0
+        },
+        "window-space": {
+          "sha256": "1f3dfd194f65722d22b459f4c337a38cc36787bee21a2a4ea76efe78af019794",
+          "text": [
+            "Space defined",
+            "The second bounded project deliberately pushes the present envelope.",
+            "Overall wall width",
+            "103.000 in",
+            "Bench depth",
+            "14.000 in",
+            "Tower / seat relationship",
+            "bounded configuration",
+            "The system may carry dimensions forward while still refusing to invent structural meaning.",
+            "NEXT \u2014 THE SPAN",
+            "BUILD GUIDE",
+            "Push the envelope without hiding it",
+            "Geometry can be known",
+            "That does not mean every structural question is answered.",
+            "Keep families distinct",
+            "Dimensional and sheet work may share one job without becoming one machine."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "data-go": "window-span"
+              }
+            }
+          ],
+          "svg_count": 0
+        },
+        "window-span": {
+          "sha256": "9f62037dfdf7b928e0d80b87a1d7bfa7908d6c61cd265d75ad1a8e3ac537019f",
+          "text": [
+            "The span, and how it resolves",
+            "A seat is not merely a long shelf.",
+            "STRUCTURAL_SPAN_NOT_EVALUATED",
+            "The seat-bay span needs qualified resolution. The application may carry the question; it may not invent the answer.",
+            "Resolution is not release.",
+            "A qualified answer can resolve a declared condition without authorizing physical production.",
+            "ONE THING NEEDS A PERSON \u2192",
+            "BUILD GUIDE",
+            "Goal",
+            "Stop on the real question",
+            "Do not make the homeowner do structural design.",
+            "Resolve, don't smuggle",
+            "A person with the right role can answer a bounded question."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "data-go": "window-resolve"
+              }
+            }
+          ],
+          "svg_count": 0
+        },
+        "window-resolve": {
+          "sha256": "7ec15783d0d14fead6d1914dea3c1bffabdf5c220c97348decd10dfba5a3ed34",
+          "text": [
+            "One thing needs a person",
+            "The job can continue only if the declared seat condition is answered on a stated basis.",
+            "QUALIFIED RESOLUTION",
+            "Question:",
+            "Is the declared seat deck adequate for this bounded span and divider arrangement?",
+            "The system records who answered, what they answered, the basis, date, and scope. It does not convert the answer into machine authority.",
+            "RECORD A BOUNDED ANSWER \u2192",
+            "BUILD GUIDE",
+            "Human in the loop, not human as a loophole",
+            "Named question",
+            "Only the unresolved condition is handed off.",
+            "Named basis",
+            "The answer travels with its scope."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "data-go": "window-parts"
+              }
+            }
+          ],
+          "svg_count": 0
+        },
+        "window-parts": {
+          "sha256": "f172380e59463c56d06ab03a37f2604abba67eebc83302fd12d1782bf9d7c86f",
+          "text": [
+            "Two machine families, one job",
+            "The project demonstrates a mixed dimensional + sheet part set without pretending the two machines are the same thing.",
+            "DIMENSIONAL STREAM",
+            "Tower sides, shelves, seat deck, divider, rails, cleats and blocking remain dimensional-member work.",
+            "SHEET STREAM",
+            "Back panels remain sheet work. A requested curvilinear window aperture is a separate Mode-2 capability question, not silently admitted here.",
+            "NEXT \u2014 REVIEW",
+            "BUILD GUIDE",
+            "Show the envelope",
+            "One owner record",
+            "Multiple processing families can still belong to one project.",
+            "Don't flatten capability",
+            "Each stream keeps its own envelope and refusal reasons."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "data-go": "window-review"
+              }
+            }
+          ],
+          "svg_count": 0
+        },
+        "window-review": {
+          "sha256": "21be4e9510d2148ba4abe5a57700a66b56b83efbc4000f73d20a301a78a91dd8",
+          "text": [
+            "Review this version",
+            "This project exists to show both what the system can carry and where it must stop at this stage.",
+            "Geometry:",
+            "bounded and carried forward.",
+            "Mixed families:",
+            "represented without collapsing authority.",
+            "Physical release:",
+            "not established by this demonstration.",
+            "At this stage",
+            "is part of the product truth. The door stays visible while the envelope grows underneath it.",
+            "BUILD GUIDE",
+            "Make the boundary useful",
+            "Do not hide the edge",
+            "The project is valuable because it reaches it.",
+            "Grow underneath the door",
+            "Later capability can expand without redesigning Page 1."
+          ],
+          "controls": [],
+          "svg_count": 0
+        },
+        "picnic-chooser": {
+          "sha256": "f5ee7fb0da84bb99639b6001c60f17fbec8e53e634bfcb960027f2a0a668f58e",
+          "text": [
+            "Picnic tables",
+            "Off the shelf, three choices. You have a tape measure.",
+            "Attached bench.",
+            "Classic one-object table. Seats attached to A-frames.",
+            "Separate benches.",
+            "Table plus two independent benches.",
+            "Frames only \u2014 attached.",
+            "Hard angled/frame geometry local. You supply the long straight boards.",
+            "Frames only \u2014 separate.",
+            "Same scope idea, separate-bench form.",
+            "Why anyone picks frames only",
+            "Frames don't care how long the table is. The difficult bounded geometry can be made locally while long simple members stay holder supplied.",
+            "Structure is never a choice.",
+            "Support count and structural conditions are derived only from admitted rules.",
+            "BUILD GUIDE",
+            "Goal",
+            "Four doors, two classes",
+            "Form and fulfillment scope are different questions.",
+            "Form is a class. Scope is a flag.",
+            "Do not build four unrelated products.",
+            "Frames-only has a reason",
+            "Capability-aware decomposition.",
+            "Structure is never a choice",
+            "The user does not pick support count."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "choice",
+                "data-pform": "Attached bench",
+                "data-pscope": "Complete part set"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "choice",
+                "data-pform": "Separate benches",
+                "data-pscope": "Complete part set"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "choice",
+                "data-pform": "Attached bench",
+                "data-pscope": "Frames only"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "choice",
+                "data-pform": "Separate benches",
+                "data-pscope": "Frames only"
+              }
+            }
+          ],
+          "svg_count": 0
+        },
+        "picnic-config": {
+          "sha256": "6aab0661f50bd03fe28b26cc198c92fc501c00a387f91031d9a5c67bb44c6dd9",
+          "text": [
+            "Attached bench \u00b7 Complete part set",
+            "Set the dimensions and preferences that actually belong to you.",
+            "Length",
+            "8 ft",
+            "6 ft",
+            "8 ft",
+            "12 ft",
+            "Material preference",
+            "unresolved",
+            "Treated",
+            "Cedar",
+            "Scope",
+            "Complete part set",
+            "CURRENT CONFIGURATION",
+            "Attached bench \u00b7 8 ft",
+            "WE MAKE",
+            "bounded candidate parts",
+            "YOU SUPPLY",
+            "assembly / finish",
+            "CALCULATED PRICE",
+            "UNRESOLVED",
+            "REVIEW AND CONFIRM",
+            "BUILD GUIDE",
+            "Goal",
+            "Show cause and effect",
+            "Length and scope visibly change the candidate.",
+            "Keep Store truth separate",
+            "No placeholder SKU or price becomes present authority.",
+            "Keep holder-supplied parts visible",
+            "Frames-only does not make long boards disappear."
+          ],
+          "controls": [
+            {
+              "tag": "input",
+              "attributes": {
+                "id": "plen",
+                "type": "range",
+                "min": "72",
+                "max": "144",
+                "step": "6",
+                "value": "96"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "data-len": "72"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "data-len": "96"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "data-len": "144"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "swatch pmat",
+                "data-pmat": "Treated"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "swatch pmat",
+                "data-pmat": "Cedar"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "data-go": "picnic-review"
+              }
+            }
+          ],
+          "svg_count": 1
+        },
+        "picnic-review": {
+          "sha256": "55cf1aa95d37ffc026d442a4c88c11cb94029a8fbd7f2cfce6ff4de9700db682",
+          "text": [
+            "Review this version",
+            "The selected form and scope are holder choices. Structural support and machine authority are not.",
+            "Form",
+            "Attached bench",
+            "Scope",
+            "Complete part set",
+            "Length",
+            "8 ft",
+            "Material preference",
+            "UNRESOLVED",
+            "Separate-benches geometry remains unresolved until a bounded geometry source is admitted.",
+            "Attached-bench geometry is not borrowed to make the screen look complete.",
+            "Confirmation here does not create an order or fabrication authority.",
+            "CONFIRM THIS VERSION",
+            "KEEP EDITING",
+            "BUILD GUIDE",
+            "Goal",
+            "Freeze holder choices",
+            "Form, scope, length, preference.",
+            "Do not invent the rest",
+            "Unresolved capability remains unresolved."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "id": "confirm-picnic"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "data-go": "picnic-config"
+              }
+            }
+          ],
+          "svg_count": 0
+        }
+      }
+    },
+    "system-build-current.html": {
+      "blob": "5265f5aad292d512d94670d4159521bc065c83dc",
+      "pages": {
+        "landing": {
+          "sha256": "ce64d740d77bdc9aee2bf7075a5506c387da761a92e1b2d4694a9ccaf98cf2c5",
+          "text": [
+            "SCAN TO BUILD",
+            "Your idea. Your measurements. Your parts.",
+            "YOU SCAN",
+            "Capture the space with laser, AR, or tape. The measurements are yours.",
+            "YOU DEFINE",
+            "One part, several parts, or a need we don't offer yet.",
+            "YOU SELECT",
+            "Set the material, size, doors, and other available options.",
+            "YOU CONFIRM",
+            "Approve exactly what you want built\u2014and nothing else.",
+            "YOUR DEFINITION REACHES THE CUT",
+            "Your confirmed dimensions guide the work without being redrawn, retyped, or reinterpreted along the way.",
+            "WE CUT \u00b7 MILL \u00b7 DRILL \u00b7 LABEL",
+            "Within stated limits. Staged for pickup. We tell you when they're ready.",
+            "YOU BUILD.",
+            "HOW ARE YOU STARTING?",
+            "NEW USER",
+            "RETURNING USER",
+            "PROFESSIONAL",
+            "BUILD GUIDE",
+            "Goal",
+            "Say what this is",
+            "One screen, no scrolling to understand it.",
+            "Show who does what",
+            "Four steps are yours, one is ours.",
+            "Make the seam visible",
+            "The definition reaches the cut unchanged.",
+            "Offer three ways in",
+            "Same road after. Different opening."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "data-next": "new-user"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "data-next": "returning"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "data-next": "professional"
+              }
+            }
+          ],
+          "svg_count": 0
+        },
+        "new-user": {
+          "sha256": "46b0b59d6811dbeca704ef5769a75dcadb3edba567cca6a6489bab0fd79324fa",
+          "text": [
+            "\u2190 Home",
+            "We don't sell products.",
+            "We capture what you want and turn it into parts. You tell us. That's what you get.",
+            "No catalogue.",
+            "Nothing here was made before you asked for it. There's no shelf sitting in a warehouse waiting to almost fit your wall.",
+            "No reinterpreting.",
+            "What you confirm is what gets cut. Not something close. Not something easier. Not something we thought you meant.",
+            "No returns",
+            ", because nothing is stock. Your parts are your parts. That's why the confirm step is real, and why we show you everything before you take it.",
+            "We don't check your numbers.",
+            "If the opening is 45\u00bd and you enter 45, you get 45. The measurements are yours, and so is what comes back.",
+            "Nothing costs anything until you say so. Nothing gets cut today.",
+            "START",
+            "BUILD GUIDE",
+            "Goal",
+            "Name the category",
+            "Not a store. Not a catalogue.",
+            "Set expectation once",
+            "Made to your numbers, not picked off a shelf.",
+            "Make confirm mean something",
+            "Nothing to return, so the step matters.",
+            "Hand over responsibility",
+            "Your numbers, your parts. No scolding."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "back",
+                "data-back": "landing"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "data-next": "projects"
+              }
+            }
+          ],
+          "svg_count": 0
+        },
+        "returning": {
+          "sha256": "3ea4e1e26cdbd3eacb40ca7e279935db739aefcd0bfafce0bde3fd16a86eee02",
+          "text": [
+            "\u2190 Home",
+            "Nothing moved while you were gone.",
+            "Your measurements, your choices, your confirmed version \u2014 exactly as you left them.",
+            "What changed is outside your project.",
+            "What the store had on the rack, what the machine could do that day. Those were true when you asked. We'll ask again.",
+            "Pick up, or do it again",
+            "Resume.",
+            "Open it where you stopped.",
+            "Make another.",
+            "Same project, new numbers. The second one takes minutes.",
+            "Replace a part.",
+            "One shelf, one panel. You don't reorder the whole thing.",
+            "OPEN A PROJECT",
+            "START SOMETHING NEW",
+            "This public walkthrough does not manufacture a saved project. The current application retains project records; use Start Something New here to continue the reference path.",
+            "BUILD GUIDE",
+            "Goal",
+            "Don't start over",
+            "Everything saved is still saved.",
+            "Trust what's saved",
+            "Nothing edited in the background.",
+            "Second one is easy",
+            "Same project, new numbers.",
+            "Parts stay orderable",
+            "Replace one, not all."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "back",
+                "data-back": "landing"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "id": "openSaved"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "data-next": "projects"
+              }
+            }
+          ],
+          "svg_count": 0
+        },
+        "professional": {
+          "sha256": "4edc207c0d44d9e363c13c3f85be3354c9196c05fd9713b14f803ad037b8958d",
+          "text": [
+            "\u2190 Home",
+            "Send us what you want. Nothing else.",
+            "We don't need your job file, your client list, or your pricing.",
+            "The least that works:",
+            "a material, a dimension, an operation. That's a part we can make.",
+            "Send more if it helps you.",
+            "A drawing, a photo, a PDF \u2014 we keep it with the job. Held as reference, not read.",
+            "Your customer's copy \u2014 your call",
+            "Every job can carry a record your customer keeps. You decide what's in it.",
+            "Nothing.",
+            "The job stays yours.",
+            "Just the parts.",
+            "Names and sizes. Five years out, one shelf breaks \u2014 they order that one piece instead of calling you about a whole unit.",
+            "Everything.",
+            "Parts, material, what was made and when.",
+            "Different answer per job. It's your customer.",
+            "ATTACH A FILE",
+            "TYPE IT IN",
+            "BUILD GUIDE",
+            "Goal",
+            "Reduce friction",
+            "Send the least that works.",
+            "Save time",
+            "No re-drawing, no re-quoting.",
+            "Plan end early",
+            "Decide the handoff before the job starts.",
+            "Offer organization tool",
+            "Part records his customer keeps."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "back",
+                "data-back": "landing"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "data-next": "projects"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "data-next": "projects"
+              }
+            }
+          ],
+          "svg_count": 0
+        },
+        "projects": {
+          "sha256": "d01d8a35170b27d34208fc89761b77bbb83deb37652f56de267679fd58d9671f",
+          "text": [
+            "Start your own",
+            "Board, sketch, or file",
+            "Critical fit",
+            "Shelf insert",
+            "Space utilization",
+            "Window seat",
+            "Outdoor build",
+            "To fit your space",
+            "\u2190 Back",
+            "What are you making?",
+            "A bounded project is one somebody already worked out.",
+            "How the parts go together, what thickness holds up, where the fasteners land \u2014 that's settled. It doesn't get asked again.",
+            "What's left is the part only you can answer:",
+            "how big is your space, and what should it look like.",
+            "Answer about ten questions and you get a list of parts, cut to your numbers.",
+            "You're not designing furniture. If a question needs a woodworker to answer it, we shouldn't be asking you.",
+            "That's why the list is worth a look first.",
+            "Not because your idea has to fit it \u2014 because when it does, you skip everything except the choices that are actually yours.",
+            "Some answers open more questions",
+            "Doors on the bottom of the shelving, say. There's more than one way to do doors.",
+            "Cut from flat stock, hinge cutouts machined, hardware pack to match",
+            "Picked from a catalogue, our parts cut to suit them",
+            "Just the machining \u2014 you already have the hinges you want",
+            "No doors. You looked, you changed your mind.",
+            "Say no and none of it appears.",
+            "If nothing here is your thing",
+            "Tell us anyway. We'd rather keep the record of what you wanted than push it into the closest thing on the list. Some of what's on this ribbon got here that way.",
+            "Click a project image. The picture is the door. Alcove carries the full worked run on this page.",
+            "BUILD GUIDE",
+            "Goal",
+            "Name the problem",
+            "Critical fit, not \u201cshelving.\u201d",
+            "Make it want touching",
+            "Color and character earn the click.",
+            "Keep the door open",
+            "Start your own is first and never moves.",
+            "Capture the miss",
+            "A need we don't offer is worth keeping.",
+            "Readme",
+            "Reference build. Input welcome."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "tile first",
+                "data-project": "own",
+                "title": "Start your own project"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "tile",
+                "data-project": "alcove",
+                "title": "Critical fit"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "tile",
+                "data-project": "window",
+                "title": "Space utilization"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "tile",
+                "data-project": "picnic",
+                "title": "Outdoor build"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "back",
+                "data-back": "landing"
+              }
+            },
+            {
+              "tag": "a",
+              "attributes": {
+                "class": "ghpill",
+                "href": "https://github.com/GeorgePlattDemo/scan-to-build-system#readme"
+              }
+            }
+          ],
+          "svg_count": 4
+        },
+        "define": {
+          "sha256": "8a0337cb48fc287af9d5835ea8294b090e669ccd67a280d5dcb10295db83876d",
+          "text": [
+            "Make it yours",
+            "The opening stays measured. Shelf count, depth, heights and material preference are yours.",
+            "Shelves",
+            "5 shelves",
+            "Depth",
+            "14 in",
+            "Heights",
+            "fractions",
+            "Material preference",
+            "Pine",
+            "Poplar",
+            "Cherry",
+            "Oak",
+            "CURRENT CONFIGURATION",
+            "Pine \u00b7 5 shelves \u00b7 14 in deep",
+            "DEFINITION",
+            "44 in nominal interior span",
+            "REFERENCE MATERIAL BASIS",
+            "10 \u00d7 1\u00d76\u00d796 + 4 \u00d7 1\u00d76\u00d772 \u00b7 Pine",
+            "ORDERED SIZE",
+            "Not set on this page",
+            "STORE ZERO REFERENCE PRICE",
+            "BUDGETARY_ESTIMATE \u00b7 pricing engine 0.2.2 \u00b7 catalog clock 2026-09-10",
+            "$374.42",
+            "Reference estimate, not a commercial quote.",
+            "Store Zero supplies the pricing basis. Ordered-size adjustment remains unresolved; no fit allowance or ordered-size reduction is silently applied here.",
+            "HOW WAS THIS FIGURED?",
+            "Measured opening",
+            "45\u00bd in",
+            "Left side/support",
+            "\u00be in",
+            "Right side/support",
+            "\u00be in",
+            "Nominal interior span",
+            "45\u00bd \u2212 \u00be \u2212 \u00be = 44 in",
+            "Attached reference Store",
+            "Store Zero",
+            "Catalog clock",
+            "2026-09-10",
+            "Pricing engine",
+            "STB-STORE-ZERO-PRICE-1 \u00b7 0.2.2",
+            "Estimate status",
+            "BUDGETARY_ESTIMATE",
+            "Selected SKU",
+            "STB-ZERO-PINE-1X6-96-001",
+            "96 in unit price",
+            "$20.99",
+            "Pieces across",
+            "3",
+            "96 in boards",
+            "10",
+            "72 in boards",
+            "4",
+            "Reference material total",
+            "$272.86",
+            "Hardware pack",
+            "$18.00",
+            "Cycle model",
+            "STB-D001-CYCLE-MODEL-S2-0.1",
+            "Modeled / measured",
+            "CALCULATED \u00b7 false",
+            "Modeled job time",
+            "29.1 min",
+            "Cell recovery",
+            "$83.56",
+            "Back",
+            "None",
+            "Store Zero is the attached reference pricing node for this public walkthrough. Its catalog and modeled economics are reference fixtures, not live inventory, a reservation, a commercial offer, or physical production authority.",
+            "Back",
+            "Next \u2192",
+            "03 \u00b7 DEFINE",
+            "Feel like a tool",
+            "The drawing, choices and Store Zero estimate change together.",
+            "Price comes from the Store",
+            "The application presents the identified Store/Reference Node result; it does not invent one.",
+            "Keep the math visible",
+            "45\u00bd \u2212 \u00be \u2212 \u00be = 44 in nominal.",
+            "Keep authority separate",
+            "Reference price is not an offer, allocation, release, readiness, or Cycle Start."
+          ],
+          "controls": [
+            {
+              "tag": "input",
+              "attributes": {
+                "class": "alcove-slider",
+                "id": "c-n",
+                "type": "range",
+                "min": "2",
+                "max": "7",
+                "step": "1",
+                "value": "5",
+                "aria-label": "Shelf count"
+              }
+            },
+            {
+              "tag": "input",
+              "attributes": {
+                "class": "alcove-slider",
+                "id": "c-d",
+                "type": "range",
+                "min": "8",
+                "max": "16",
+                "step": "1",
+                "value": "14",
+                "aria-label": "Shelf depth"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "alcove-format",
+                "id": "fmt",
+                "type": "button"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "on",
+                "type": "button",
+                "data-material": "pine"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "type": "button",
+                "data-material": "poplar"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "type": "button",
+                "data-material": "cherry"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "type": "button",
+                "data-material": "oak"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "data-back": "projects"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "next",
+                "data-next": "store"
+              }
+            }
+          ],
+          "svg_count": 1
+        },
+        "store": {
+          "sha256": "75061a62178c39b2976eecbf67a13c29ab0c090dd852bd743a1c2759a95e254f",
+          "text": [
+            "What happens next",
+            "Your confirmed version stays unchanged unless you approve a new one.",
+            "Nothing below is complicated. It is only kept apart. Each step names who owns it, what it establishes, and what it does not.",
+            "NODE",
+            "store-zero",
+            "MATERIAL",
+            "Pine reference",
+            "PRICE",
+            "$374.42",
+            "STATUS",
+            "BUDGETARY_ESTIMATE",
+            "Reference journey shown before confirmation.",
+            "The labels below name the event or state reached at each step; viewing this page does not claim those events have happened. Store Zero is the attached reference Store for the configuration above.",
+            "01",
+            "Yard review",
+            "REQUEST \u00b7",
+            "received",
+            "The yard checks material, capability, services, timing and current terms against what you asked for.",
+            "It may accept, adjust or decline. Every adjustment comes back with a reason.",
+            "A reason is not a courtesy. It is what lets you tell a shortage from a preference.",
+            "02",
+            "Offer",
+            "TERMS \u00b7",
+            "returned",
+            "The offer identifies material, services, price, timing and validity. Nothing is reserved.",
+            "It is a statement of what the yard would do, for a stated period, against one identified version.",
+            "When the period ends, the offer ends. A price quoted against stock that has since gone is not a price.",
+            "03",
+            "Acceptance",
+            "YOU \u00b7",
+            "accept or decline",
+            "Acceptance binds one version to one offer. Both are identified.",
+            "A changed definition requires a new version.",
+            "There is no way to amend a version in place. A record you can edit afterwards is not a record.",
+            "04",
+            "Settlement",
+            "PAYMENT \u00b7",
+            "recorded separately",
+            "Acceptance is not payment. Payment is its own event, with its own time and its own reference.",
+            "Its status is established before the next commercial step, whatever that step is.",
+            "05",
+            "Material",
+            "STORE \u00b7",
+            "identifies and allocates",
+            "The Store resolves actual material against the accepted job \u2014 identity, quantity, lot or source.",
+            "Allocation records what is committed to this order, and takes it out of what is available to anyone else.",
+            "STORE OPERATIONS, HIGH LEVEL",
+            "receive material \u2192 identify stock \u2192 maintain availability \u2192",
+            "allocate to accepted jobs \u2192 stage for production \u2192 reconcile use,",
+            "remnants and exceptions",
+            "The Store answers questions about material. It does not answer questions about your project, and it does not change the definition to make an answer easier.",
+            "06",
+            "Production release",
+            "JOB \u00b7",
+            "released",
+            "Commercial completion does not start a machine.",
+            "Release permits the job to proceed toward the local cell. It confers nothing else.",
+            "07",
+            "Local cell",
+            "CELL \u00b7",
+            "checks its own readiness",
+            "The cell resolves machine, tooling, setup, material presence and local conditions.",
+            "Readiness is local knowledge. Nothing upstream can supply it, and nothing upstream can overrule it.",
+            "Cycle Start belongs to the person standing at the machine. That is deliberate, and it is not negotiable.",
+            "08",
+            "Primary operations",
+            "PARTS \u00b7",
+            "made to the released definition",
+            "Each required cycle records its own outcome.",
+            "Stopped, incomplete and failed work stays recorded as stopped, incomplete and failed.",
+            "A part that was cut twice was cut twice. The second one is the good one; the first one still happened.",
+            "09",
+            "Completion",
+            "SECONDARY WORK \u00b7",
+            "resolved",
+            "Required secondary work is completed here, assigned elsewhere, or left to you \u2014 whichever the accepted plan says. Then: inspect, label, group, stage.",
+            "Inspection compares the made part against the confirmed requirement. It does not adjust the requirement to match the part.",
+            "10",
+            "Handoff",
+            "READY \u00b7",
+            "notice issued",
+            "Standard pickup path: staged within 2 business hours of the last required cycle, then 4 business hours to collect.",
+            "The clock starts at the notice, not at staging. You cannot be late for a window nobody told you had opened.",
+            "Staged is not picked up.",
+            "11",
+            "Custody",
+            "HANDOFF \u00b7",
+            "recorded",
+            "Pickup or delivery transfers custody. Until that event the parts are ours to look after and yours to own.",
+            "A job is not closed by being finished. It is closed by being handed over.",
+            "12",
+            "Owner record",
+            "RECORD \u00b7",
+            "reconciled",
+            "One record retains the whole chain:",
+            "definition \u2192 yard response \u2192 accepted terms \u2192 settlement \u2192",
+            "material \u2192 release \u2192 machine outcomes \u2192 completion \u2192",
+            "inspection \u2192 staging \u2192 custody",
+            "Missing events stay missing. Nothing is filled in by assumption, and nothing is promoted by wording.",
+            "The chain reads long because it is written down. Every one of these steps happens in an ordinary job too \u2014 material gets found, someone decides, a machine runs, someone signs for it. They just happen inside a single word, and the word is usually",
+            "ordered",
+            ".",
+            "Separating them costs twelve lines of text. Collapsing them costs you the ability to say which one went wrong.",
+            "Back",
+            "Reference journey \u00b7 no event is promoted by viewing this page.",
+            "Next \u2192",
+            "04 \u00b7 STORE",
+            "See the whole circuit",
+            "Store, terms, material, release, cell, handoff and record stay visible.",
+            "Store owns its price",
+            "Another participating Store may return a different supported price.",
+            "Keep authority local",
+            "Price and support do not start a machine."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "data-back": "define"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "next",
+                "data-next": "review"
+              }
+            }
+          ],
+          "svg_count": 0
+        },
+        "review": {
+          "sha256": "0961aa9e39ae140888faa2b287e581f7eefeb710f4e9b77f64123ae58ec630be",
+          "text": [
+            "Review your definition",
+            "One identified version. Nothing commercial happens merely because you confirm it.",
+            "OPENING",
+            "45\u00bd in",
+            "SPAN",
+            "44 in nominal",
+            "SHELVES",
+            "5",
+            "REFERENCE PRICE",
+            "$374.42",
+            "BACK",
+            "none",
+            "Meaning of Confirm.",
+            "You affirm the intended definition and acknowledge the displayed Store basis and unresolved conditions. The Store Zero number is a budgetary reference estimate, not a commercial offer.",
+            "CONFIRMATION \u2260 ORDER",
+            "\u00b7 order \u2260 payment \u00b7 payment \u2260 allocation \u00b7 allocation \u2260 production release.",
+            "Back",
+            "CONFIRM THIS DEFINITION",
+            "Next \u2192",
+            "05 \u00b7 REVIEW",
+            "Freeze the version",
+            "The commercial chain refers to this identified definition.",
+            "Carry the price basis",
+            "The reference estimate stays attached to the configuration it priced.",
+            "Do not broaden Confirm",
+            "Review remains separate from commerce and motion."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "data-back": "store"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "primary",
+                "data-next": "request"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "next",
+                "data-next": "request"
+              }
+            }
+          ],
+          "svg_count": 0
+        },
+        "request": {
+          "sha256": "501e68dcee24a25841d106f205babc61f9bc7b04830aeb4c031da135f5df4655",
+          "text": [
+            "STB \u2014 ALCOVE INSERT \u00b7 SUBMISSION & RESPONSE 0.1",
+            "Before we build it \u2014 ten questions",
+            "Definition frozen \u00b7 45\u00bd\u2033 opening \u00b7 5 shelves \u00b7 14\u2033 deep \u00b7 pine \u00b7 44\u2033 nominal span \u00b7 back none",
+            "VERSION",
+            "confirmed",
+            "PROJECT",
+            "alcove insert",
+            "NODE",
+            "store-zero",
+            "THIS SHEET",
+            "REQUEST \u00b7 not an order",
+            "Answer all ten, including the noes.",
+            "Defaults add nothing. Yard may adjust, add or revoke before acceptance \u2014 with a reason.",
+            "Fabrication",
+            "unresolved",
+            "\u00b7 extras",
+            "$0 default",
+            "YARD \u22642 business h \u00b7 PICKUP 4 business h after READY",
+            "YARD PRICES",
+            "10 of 10 answered",
+            "\u2260",
+            "request is not order \u00b7",
+            "\u2260",
+            "order is not payment \u00b7",
+            "\u2260",
+            "payment is not allocation \u00b7",
+            "\u2260",
+            "allocation is not release \u00b7",
+            "\u2260 staged is not picked up",
+            "Back",
+            "SEND TO THE YARD",
+            "Next \u2192",
+            "06 \u00b7 REQUEST",
+            "Project stays frozen",
+            "These choices change service, handling, timing, or price\u2014not geometry.",
+            "Visible noes",
+            "Unavailable work stays visible and disabled."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "data-back": "review"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "primary",
+                "data-next": "yard"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "next",
+                "data-next": "yard"
+              }
+            }
+          ],
+          "svg_count": 0
+        },
+        "yard": {
+          "sha256": "3e80b93d962d2f93c751e87fa51bfd99281eedafaee1f125ab9a47323b55c304",
+          "text": [
+            "STB \u2014 ALCOVE INSERT \u00b7 YARD RESPONSE",
+            "The yard came back",
+            "Reference response \u00b7 confirmed geometry unchanged",
+            "RESPONSE",
+            "REF-SZ-001",
+            "AGAINST",
+            "confirmed version",
+            "FROM",
+            "steward \u00b7 store-zero",
+            "STATUS",
+            "ADJUSTMENT REQUIRED",
+            "Definition unchanged.",
+            "The yard may price services, decline unavailable work, or return a material/timing question. It may not silently rewrite confirmed geometry.",
+            "Default edge / labels / loose-cart pickup",
+            "accepted as asked",
+            "Paid extras",
+            "yard-priced before acceptance",
+            "Stain + clear",
+            "not offered",
+            "One thing only you can decide",
+            "Wait for the requested material",
+            "No substitute. Yard returns a later plan.",
+            "Review a substitute",
+            "Material identity changes only if you explicitly accept it.",
+            "Timing",
+            "\u25cf",
+            "Yard response",
+            "yard",
+            "now",
+            "\u25cb",
+            "Offer / terms",
+            "commercial",
+            "after answer",
+            "\u25cb",
+            "Payment / allocation / release",
+            "separate",
+            "later",
+            "\u25cb",
+            "Stage \u22642 business h after last required cycle",
+            "yard",
+            "target",
+            "\u25cb",
+            "Pickup 4 business h after READY",
+            "holder",
+            "then hold policy",
+            "Back",
+            "CONTINUE TO TERMS",
+            "Next \u2192",
+            "07 \u00b7 YARD",
+            "Return facts",
+            "Accepted, priced, unavailable, or unresolved.",
+            "No silent substitution",
+            "Material identity changes only by explicit decision."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "data-back": "request"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "primary",
+                "data-next": "terms"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "next",
+                "data-next": "terms"
+              }
+            }
+          ],
+          "svg_count": 0
+        },
+        "terms": {
+          "sha256": "0b57977277052337b7fb49afbe6a29001eb45d9f2d9727b3e4fb24c2538562d8",
+          "text": [
+            "STB \u2014 REFERENCE COMMERCIAL HANDOFF",
+            "Terms \u2192 settlement \u2192 queue",
+            "Known sequence \u00b7 not live commerce",
+            "VERSION",
+            "confirmed",
+            "TERMS",
+            "reference only",
+            "PRICE",
+            "not established",
+            "AUTHORITY",
+            "no physical execution",
+            "\u25cf",
+            "Definition review recorded",
+            "holder",
+            "complete",
+            "\u25cf",
+            "Submission / yard response",
+            "yard",
+            "reference",
+            "\u25cb",
+            "Offer accepted",
+            "holder",
+            "future",
+            "\u25cb",
+            "Settlement evidence",
+            "commercial",
+            "future",
+            "\u25cb",
+            "Material allocated",
+            "store",
+            "future",
+            "\u25cb",
+            "Production released",
+            "release",
+            "future",
+            "\u25cb",
+            "Queued / local readiness / Cycle Start",
+            "cell",
+            "future",
+            "\u25cb",
+            "Inspect \u00b7 label \u00b7 stage",
+            "quality",
+            "\u22642 h target",
+            "\u25cb",
+            "READY notice \u2192 4 h pickup window",
+            "fulfillment",
+            "future",
+            "\u25cb",
+            "Custody transfer \u2192 close",
+            "handoff",
+            "future",
+            "Current Alcove truth:",
+            "44\u2033 nominal interior span; no ordered-size reduction applied. Ordered-size adjustment, structure, installation, commercial terms and allocation remain unresolved.",
+            "Back",
+            "Shell fixed. Class content may change.",
+            "Next \u2192",
+            "08 \u00b7 TERMS",
+            "One sequence",
+            "Acceptance, settlement, allocation, release, readiness, Cycle Start.",
+            "Different authorities",
+            "One word cannot collapse them."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "data-back": "yard"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "next",
+                "data-next": "recap"
+              }
+            }
+          ],
+          "svg_count": 0
+        },
+        "recap": {
+          "sha256": "53ee3256bd6a8cf95e46fedee1acdc56daa6593db6aafbe70360c5601f5d6544",
+          "text": [
+            "What happened",
+            "One project. One version history. One record.",
+            "Written forward as it happened, not assembled backwards from what survived.",
+            "SOURCE",
+            "YOU PROVIDED \u2014 [files \u00b7 measurements \u00b7 notes \u00b7 drawings]",
+            "Original sources retained where available. The file stays the file.",
+            "OBSERVATIONS",
+            "WE RECORDED \u2014 [measurements \u00b7 stated requirements \u00b7 unresolved conditions]",
+            "What was observed stayed separate from what was assumed. Where the two could not be separated, the condition stayed unresolved.",
+            "CONFIGURATION",
+            "YOU CHOSE \u2014 [project choices]",
+            "These became part of the identified version. The ones you were not asked about were not choices.",
+            "DEFINITION",
+            "VERSION \u2014 [version id]",
+            "The definition was confirmed before any commercial processing began.",
+            "YARD REQUEST",
+            "SUBMITTED \u2014 [date \u00b7 request id]",
+            "The request carried the confirmed version plus your service and handoff choices.",
+            "A request was not an order.",
+            "YARD RESPONSE",
+            "RETURNED \u2014 [accepted \u00b7 adjusted \u00b7 declined]",
+            "Changes were stated explicitly, with reasons.",
+            "Confirmed geometry was not silently rewritten.",
+            "OFFER",
+            "TERMS \u2014 [offer id \u00b7 validity \u00b7 amount]",
+            "One offer, one identified version, one stated period.",
+            "ACCEPTANCE",
+            "DECISION \u2014 [accepted \u00b7 declined \u00b7 expired]",
+            "Recorded separately from payment. Expired is an outcome, not a gap.",
+            "SETTLEMENT",
+            "PAYMENT \u2014 [status \u00b7 reference]",
+            "Recorded separately from allocation and from release.",
+            "MATERIAL",
+            "ALLOCATED \u2014 [material identity \u00b7 quantity \u00b7 lot / source]",
+            "What the Store committed to this job, and where it came from.",
+            "RELEASE",
+            "RELEASE \u2014 [status \u00b7 time]",
+            "Release allowed the job to proceed. It did not establish machine readiness.",
+            "LOCAL CELL",
+            "READINESS \u2014 [cell \u00b7 machine \u00b7 status]",
+            "The cell established its own readiness. Cycle Start remained local.",
+            "MACHINE OUTCOME",
+            "PRIMARY WORK \u2014 [complete \u00b7 stopped \u00b7 exception]",
+            "Each required operation kept its recorded outcome, including the ones that did not finish.",
+            "SECONDARY WORK",
+            "COMPLETION \u2014 [none \u00b7 completed \u00b7 customer \u00b7 third party]",
+            "Residual work resolved according to the accepted completion plan. Where it went to you, that is recorded as an assignment, not an omission.",
+            "QUALITY",
+            "INSPECTION \u2014 [status] \u00a0\u00b7\u00a0 LABELS \u2014 [status] \u00a0\u00b7\u00a0 PART COUNT \u2014 [status]",
+            "Three separate checks. A pass on one is not a pass on the others.",
+            "STAGING",
+            "STAGED \u2014 [time] \u00a0\u00b7\u00a0 READY NOTICE \u2014 [time]",
+            "Staged did not mean custody transferred.",
+            "HANDOFF",
+            "CUSTODY \u2014 [pickup \u00b7 delivery \u00b7 recipient \u00b7 time]",
+            "Custody transferred here.",
+            "CLOSED",
+            "PROJECT STATUS \u2014 closed",
+            "Closed means handed over and reconciled. It does not mean nothing is left to do \u2014 assembly, finish and fixing were always yours.",
+            "The final record preserves the chain:",
+            "source \u2192 observation \u2192 configuration \u2192 definition \u2192 request \u2192",
+            "response \u2192 offer \u2192 acceptance \u2192 settlement \u2192 allocation \u2192",
+            "release \u2192 production \u2192 completion \u2192 inspection \u2192 staging \u2192 custody",
+            "No redraw.",
+            "No silent substitution.",
+            "No missing step promoted by wording.",
+            "Read backwards, it is an audit. Read forwards, it is only what happened.",
+            "The record is not valuable because it is thorough. It is valuable because it is checkable, and because it is yours to take with you \u2014 to the next project, to a different yard, or to somebody who wants to know why a recorded dimension is what it is.",
+            "ACCEPTED",
+            "REFERENCE",
+            "DOCUMENTED",
+            "RESEARCH",
+            "PLANNED",
+            "NOT ADMITTED",
+            "NOT MEASURED",
+            "NOT VALIDATED",
+            "NOT CLAIMED",
+            "NOT AUTHORIZED",
+            "Status language is fixed. Planned capability is not written in the present tense. Modeled machine time is not measured production time. A favorable Store answer is not physical execution. User review is not fabrication authorization.",
+            "Back",
+            "End-of-project reference page.",
+            "Next \u2192",
+            "09 \u00b7 RECAP",
+            "Write forward",
+            "Record what happened, not what the ending implies.",
+            "Keep nulls honest",
+            "Missing events remain missing."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "data-back": "terms"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "next",
+                "data-next": "record"
+              }
+            }
+          ],
+          "svg_count": 0
+        },
+        "record": {
+          "sha256": "42925920c0820dace4edab4d47537c47d7b9057cd068e5b1712f880a9040ff25",
+          "text": [
+            "Keep your project record",
+            "Owner-facing closeout reference.",
+            "PROJECT",
+            "alcove insert",
+            "VERSION",
+            "confirmed",
+            "STATUS",
+            "reference only",
+            "CUSTODY",
+            "not transferred",
+            "Definition",
+            "retained",
+            "Yard request / response",
+            "reference path shown",
+            "Commercial completion",
+            "not established",
+            "Physical outcome",
+            "not recorded",
+            "Custody transfer",
+            "not recorded",
+            "The owner record preserves what exists and names what does not. It does not promote a demonstration into a completed physical order.",
+            "Back",
+            "Start \u2192",
+            "10 \u00b7 RECORD",
+            "One chain",
+            "Definition through custody.",
+            "No invented ending",
+            "Reference remains reference."
+          ],
+          "controls": [
+            {
+              "tag": "button",
+              "attributes": {
+                "data-back": "recap"
+              }
+            },
+            {
+              "tag": "button",
+              "attributes": {
+                "class": "next",
+                "data-next": "landing"
+              }
+            }
+          ],
+          "svg_count": 0
+        }
+      }
+    }
+  }
+}
