@@ -89,6 +89,6 @@ jobs:
           git config user.email 'actions@users.noreply.github.com'
           git add system-build-current.html
           git diff --cached --name-only
-          test "$(git diff --cached --name-only | sort | tr '\n' ' ')" = "system-build-current.html "
+          test "$(git diff --cached --name-only | sort | tr '\n' ' ')" = ".github/workflows/stb-critical-fit-configurator-cleanup.yml system-build-current.html "
           git commit -m 'Clarify critical-fit capture and configurator'
           git push origin HEAD:edit/critical-fit-configurator-0.1
