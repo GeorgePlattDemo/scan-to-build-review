@@ -31,3 +31,25 @@ all unresolved, reference and machine-authority boundaries. Do not abbreviate pa
 
 The inventory records every source page's text, controls, SVG count and exact section hash.
 Future changes must explain any removal or route change against this baseline.
+
+## Recovery mapping
+
+- All 20 original page IDs remain. Eighteen original sections remain byte-identical.
+- `alcove-config` retains its content and controls; its forward route now visits `store`
+  before `alcove-review`.
+- `alcove-review` retains all original detailed content. The newer review's Store basis
+  is included there; it is not substituted for the detailed version, measurements or
+  unresolved conditions. Its existing confirmation continues to the request page.
+- `store`, `request`, `yard`, `terms`, `recap`, and `record` retain the later complete text.
+- Later transaction styles are scoped to those surfaces so they cannot restyle intake,
+  capture, configuration, window-seat or picnic-table pages.
+- The single router handles Back and forward navigation. Old `#define`, `#review` and
+  `#next` links resolve to their retained counterparts.
+- The existing reference configurator updates the Store and request summary. No live
+  Store connection, upload engine, commercial transaction or production execution is added.
+
+A temporary `preview/full-human-path-recovery.html` is used only for rendered verification.
+It is not a new source baseline or README destination and will be removed at promotion.
+
+Run `python tests/recovery/check-preservation.py` from this repository before accepting
+further edits. This checks actual content, not line-count statistics.
