@@ -9,7 +9,6 @@ permissions:
 
 jobs:
   apply:
-    if: github.event.head_commit.message == 'chore: stage project tile asset reference repair'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
