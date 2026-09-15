@@ -1,0 +1,81 @@
+name: STB project-start repair
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Apply bounded project-start repair
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('system-build-current.html')
+          s = p.read_text()
+
+          def once(old, new, label):
+              global s
+              n = s.count(old)
+              if n != 1:
+                  raise SystemExit(f'{label}: expected 1 match, found {n}')
+              s = s.replace(old, new, 1)
+
+          once(
+              '<div class="wrap">\n\n<section class="page on" id="landing">',
+              '<div class="wrap">\n\n<nav class="recovery-nav" aria-label="Build pages" hidden><button data-go="landing">Landing</button><button data-go="projects">Projects</button><button data-go="intake">Bring what you have</button><button data-go="alcove-capture">Scan</button><button data-go="alcove-config">Configure</button><button data-go="store">Store</button><button data-go="alcove-review">Review</button><button data-go="request">Request</button><button data-go="yard">Yard</button><button data-go="terms">Terms</button><button data-go="recap">Recap</button><button data-go="record">Record</button></nav>\n<section class="page on" id="landing">',
+              'restore post-landing nav'
+          )
+
+          once(
+              '.recovery-nav{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0 12px}',
+              '.recovery-nav{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0 12px}.recovery-nav[hidden]{display:none}',
+              'hide nav on landing'
+          )
+
+          once(
+              "const first=p.querySelector('.main,.split,div[style*=\"border-right\"]');",
+              "const first=p.querySelector('.main,.body,.ribbonbody,div[style*=\"border-right\"]');",
+              'keep chrome out of project split'
+          )
+
+          once(
+              'history.replaceState(null,"","#"+id);document.querySelectorAll(".recovery-nav button")',
+              'history.replaceState(null,"","#"+id);const nav=document.querySelector(".recovery-nav");if(nav)nav.hidden=(id==="landing");document.querySelectorAll(".recovery-nav button")',
+              'toggle post-landing nav'
+          )
+
+          p.write_text(s)
+
+          checks = {
+              'bounded-project explanation preserved': 'A bounded project is one somebody already worked out.' in s,
+              'project ribbon precedes body': '<section class="page" id="projects"><div class="split"><div class="ribbon">' in s,
+              'new-user/professional Next copy preserved twice': s.count('Hitting "Next" will bring you into the system of user 1\'s projects at varying stages.') == 2,
+              'post-landing nav restored': s.count('<nav class="recovery-nav" aria-label="Build pages" hidden>') == 1,
+              'landing still starts clean': '<div class="wrap">\n\n<nav class="recovery-nav" aria-label="Build pages" hidden>' in s,
+              'split no longer receives backbar': "p.querySelector('.main,.split,div[style*=\"border-right\"]')" not in s,
+          }
+          bad = [k for k,v in checks.items() if not v]
+          if bad:
+              raise SystemExit('Verification failed: ' + '; '.join(bad))
+          for k in checks:
+              print('PASS:', k)
+          PY
+      - name: Commit visible repair
+        run: |
+          if git diff --quiet -- system-build-current.html; then
+            echo "No visible repair produced"
+            exit 1
+          fi
+          git config user.name 'Scan-to-Build bounded edit'
+          git config user.email 'actions@users.noreply.github.com'
+          git add system-build-current.html
+          git commit -m 'Repair project start layout and restore post-landing nav'
+          git push origin HEAD:main
