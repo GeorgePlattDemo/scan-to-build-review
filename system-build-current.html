@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Scan-to-Build — Current Alcove Run</title>
+<style>
+:root{
+  --bg:#faf9f7;--surface:#fff;--rail:#f4f2ef;--tint:#f6efe4;
+  --border:#e3ded7;--border2:#d9c3a2;--text:#1c1917;--text2:#57534e;
+  --text3:#8a8580;--accent:#7a4f22;--ok:#5d7f3f;--warn:#8a6d1f;--warnbg:#fdf6e3;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#16150f;--surface:#1e1c16;--rail:#191711;--tint:#262015;
+  --border:#332f26;--border2:#4d4130;--text:#f2efe8;--text2:#b4aea3;
+  --text3:#847d72;--accent:#e0ad74;--ok:#8fb36a;--warn:#d4b483;--warnbg:#2b2413;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:13.5px/1.55 ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:980px;margin:0 auto;padding:18px 16px 48px}
+.topline{display:flex;gap:10px;align-items:baseline;justify-content:space-between;margin-bottom:8px}
+.tag{margin:0;font-size:10.5px;font-weight:700;letter-spacing:.09em;color:var(--text3)}
+.status{margin:0 0 10px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--tint);color:var(--text2);font-size:11px}
+.status b{color:var(--text)}
+.run{display:flex;gap:2px;overflow-x:auto;white-space:nowrap;margin:0 0 12px;padding:5px 7px;border:1px solid var(--border);border-radius:8px;background:var(--surface);scrollbar-width:thin}
+.run button{border:0;background:transparent;color:var(--text3);font:inherit;font-size:10px;padding:5px 7px;border-radius:5px;cursor:pointer}
+.run button:hover{background:var(--rail);color:var(--text2)}
+.run button.on{background:var(--tint);color:var(--accent);font-weight:700}
+.run .num{font-size:8px;margin-right:3px}
+.page{display:none;background:var(--surface);border:1px solid var(--border);border-radius:11px;overflow:hidden}
+.page.on{display:grid;grid-template-columns:minmax(0,1fr) 170px}
+.main{padding:22px 24px 18px;min-width:0}
+.rail{background:var(--rail);border-left:1px solid var(--border);padding:22px 14px 16px;display:flex;flex-direction:column;min-width:0}
+.rail .hd{margin:0 0 18px;font-size:9.5px;font-weight:700;letter-spacing:.09em;color:var(--text3)}
+.rail b{display:block;font-size:11.5px;margin-bottom:2px}
+.rail span{display:block;color:var(--text2);font-size:10.5px;line-height:1.4}
+.rail .row{margin-bottom:18px}
+h1{margin:0 0 4px;font-size:21px;line-height:1.2}
+h2{margin:15px 0 7px;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--accent)}
+p{margin:0 0 9px}.sub{color:var(--text2)}
+.hdr{display:flex;flex-wrap:wrap;border:1px solid var(--border2);border-radius:7px;overflow:hidden;margin:10px 0}
+.hdr>div{flex:1;min-width:120px;padding:5px 9px;border-right:1px solid var(--border);background:var(--rail)}
+.hdr>div:last-child{border-right:0}.hdr b{display:block;font-size:8.5px;letter-spacing:.07em;color:var(--text3)}.hdr span{font-size:11px;font-family:ui-monospace,Menlo,monospace}
+.band{border:1px solid var(--border);background:var(--rail);border-radius:7px;padding:8px 10px;margin:9px 0;font-size:11px;color:var(--text2)}
+.band.warn{background:var(--warnbg);border-color:var(--border2);color:var(--warn)}
+.kv{display:flex;justify-content:space-between;gap:14px;padding:5px 0;border-bottom:1px dotted var(--border);font-size:11.5px}
+.kv span:first-child{color:var(--text2)}.kv:last-child{border-bottom:0}
+.rows{margin-top:3px}.rowline{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px dotted var(--border)}
+.rowline:last-child{border-bottom:0}.rn{width:18px;flex:none;font-size:9px;font-weight:700;color:var(--text3)}
+.rt{width:145px;flex:none;font-size:11.5px;font-weight:600}.rt i{display:block;font-style:normal;font-weight:400;color:var(--text3);font-size:9.5px;line-height:1.3}
+.opts{flex:1;display:flex;gap:4px;flex-wrap:wrap}.pill{font:inherit;font-size:10.5px;padding:3px 8px;border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer}.pill.on{background:var(--tint);border-color:var(--border2);color:var(--accent);font-weight:600}.pill:disabled{opacity:.42;text-decoration:line-through;cursor:not-allowed}
+.rv{width:74px;flex:none;text-align:right;color:var(--text3);font:10px ui-monospace,Menlo,monospace}
+.total{display:flex;justify-content:space-between;gap:12px;align-items:end;border:1px solid var(--border2);background:var(--tint);border-radius:8px;padding:9px 11px;margin:10px 0}
+.total .left{font-size:10.5px;color:var(--accent)}.total .big{font-size:18px;font-weight:600;color:var(--accent);text-align:right}.total .big i{display:block;font-style:normal;font-size:9.5px;font-weight:400;color:var(--text2)}
+.boundary{font-size:10.5px;color:var(--text3);line-height:1.55}
+.timeline{display:grid;grid-template-columns:13px 1fr auto auto;gap:0 8px;font-size:11px;align-items:baseline}
+.timeline>div{padding:3.5px 0;border-bottom:1px dotted var(--border)}.dot{font-weight:700;color:var(--ok)}.dot.open{color:var(--text3)}.who,.when{color:var(--text3);font-size:9.5px;white-space:nowrap}.when{font-family:ui-monospace,Menlo,monospace}
+.pick{border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin:5px 0;cursor:pointer}.pick.on{background:var(--tint);border-color:var(--border2)}.pick b{font-size:11.5px}.pick p{margin:2px 0 0;font-size:10px;color:var(--text3)}
+.flow{font:10.5px/1.9 ui-monospace,Menlo,monospace;color:var(--text2);background:var(--rail);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin:9px 0}
+.section{padding:10px 0;border-top:1px solid var(--border)}.section:first-of-type{border-top:0}.sh{display:flex;gap:8px;align-items:baseline}.sn{font-size:9px;font-weight:700;color:var(--text3)}.st{font-weight:600}.ss{margin-left:auto;font-size:9px;font-weight:700;letter-spacing:.04em;color:var(--accent);background:var(--rail);border:1px solid var(--border);padding:2px 6px;border-radius:3px}
+.section p{color:var(--text2);font-size:11.5px;margin:4px 0 0}
+.fields{display:grid;grid-template-columns:128px 1fr;gap:0 14px}.field{display:contents}.fl,.fv{padding:8px 0;border-top:1px solid var(--border)}.fl{font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--accent)}.fv{font-size:11.5px;color:var(--text2)}
+.bottom{display:flex;gap:8px;align-items:center;margin-top:13px;padding-top:10px;border-top:1px solid var(--border)}
+.bottom button{font:inherit;font-size:11px;padding:6px 11px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text);cursor:pointer}
+.bottom button.primary{background:var(--tint);border-color:var(--border2);color:var(--accent);font-weight:600}
+.bottom button.next{margin-left:auto;border:0;background:transparent;color:var(--text3);padding:4px 2px}
+.bottom button.next:hover{color:var(--accent)}
+.fine{font-size:9.5px;color:var(--text3)}
+.hero{background:var(--rail);border:1px solid var(--border);border-radius:9px;padding:12px 14px;margin:12px 0}
+.verbs b{display:block;margin-top:7px}.verbs span{color:var(--text2)}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin:10px 0}.card{border:1px solid var(--border);border-radius:8px;padding:8px 10px}.card b{display:block;font-size:11.5px}.card span{font-size:10.5px;color:var(--text2)}
+@media(max-width:760px){.page.on{display:block}.rail{border-left:0;border-top:1px solid var(--border)}.rowline{flex-wrap:wrap}.rt{width:auto;flex:1}.rv{width:auto}.cards{grid-template-columns:1fr}.fields{grid-template-columns:1fr}.field{display:block}.fl{padding-bottom:1px}.fv{padding-top:1px}.timeline{grid-template-columns:13px 1fr}.who,.when{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topline">
+    <p class="tag">STB SYSTEM BUILD · CURRENT ALCOVE RUN</p>
+    <a href="system-build.html" style="font-size:10px;color:var(--text3);text-decoration:none">earlier acceptance surface</a>
+  </div>
+  <p class="status"><b>Human-path reference.</b> Mirrors the current Alcove walkthrough branch. It does not create live inventory, payment, production authority, machine readiness, or physical execution.</p>
+  <nav class="run" aria-label="Alcove walkthrough">
+    <button class="on" data-page="landing"><span class="num">01</span>Landing</button>
+    <button data-page="define"><span class="num">02</span>Define</button>
+    <button data-page="store"><span class="num">03</span>Store</button>
+    <button data-page="review"><span class="num">04</span>Review</button>
+    <button data-page="request"><span class="num">05</span>Request</button>
+    <button data-page="yard"><span class="num">06</span>Yard</button>
+    <button data-page="terms"><span class="num">07</span>Terms</button>
+    <button data-page="next"><span class="num">08</span>Next</button>
+    <button data-page="recap"><span class="num">09</span>Recap</button>
+    <button data-page="record"><span class="num">10</span>Record</button>
+  </nav>
+
+  <section class="page on" id="landing">
+    <main class="main">
+      <h1>SCAN TO BUILD</h1>
+      <p class="sub">Your idea. Your measurements. Your parts.</p>
+      <div class="verbs">
+        <b>YOU SCAN</b><span>Capture the space with laser, AR, or tape. The measurements are yours.</span>
+        <b>YOU DEFINE</b><span>One part, several parts, or a need we do not offer yet.</span>
+        <b>YOU SELECT</b><span>Set the available material and project choices.</span>
+        <b>YOU CONFIRM YOUR DEFINITION</b><span>Approve exactly what you want built—and nothing else.</span>
+        <b>YOUR DEFINITION REACHES THE CUT</b><span>Confirmed dimensions travel without being redrawn, retyped, or reinterpreted.</span>
+        <b>WE CUT · MILL · DRILL · LABEL</b><span>Within stated limits. Staged for pickup. We tell you when your parts are ready.</span>
+      </div>
+      <p style="font-weight:600;font-size:15px;margin-top:12px">YOU BUILD.</p>
+      <div class="bottom"><span class="fine">Alcove is the full worked run.</span><button class="next" data-next="define">Next →</button></div>
+    </main>
+    <aside class="rail"><p class="hd">BUILD GUIDE</p><div class="row"><b>Start with the person</b><span>Same operating chain after entry.</span></div><div class="row"><b>Keep the seam visible</b><span>Definition travels to the cut.</span></div><div class="row"><b>Use one worked run</b><span>Alcove carries the full circuit.</span></div></aside>
+  </section>
+
+  <section class="page" id="define">
+    <main class="main">
+      <h1>Define the Alcove insert</h1>
+      <p class="sub">Current controlled configurator baseline.</p>
+      <div class="hdr"><div><b>OPENING</b><span>45½ in</span></div><div><b>SHELVES</b><span>5</span></div><div><b>DEPTH</b><span>14 in</span></div><div><b>MATERIAL</b><span>Pine</span></div></div>
+      <div class="cards"><div class="card"><b>Side/support thickness</b><span>¾ in each side</span></div><div class="card"><b>Nominal interior span</b><span>44 in</span></div><div class="card"><b>Shelf heights</b><span>12 · 24 · 36 · 45 · 65 in</span></div><div class="card"><b>Back</b><span>None</span></div></div>
+      <div class="band warn"><b>Ordered-size adjustment unresolved.</b> No ordered-size reduction is applied on this page.</div>
+      <p class="boundary">Definition records what the person supplied and selected. It does not infer structure, installation, Store resolution, or production authority.</p>
+      <div class="bottom"><button data-back="landing">Back</button><button class="next" data-next="store">Next →</button></div>
+    </main>
+    <aside class="rail"><p class="hd">02 · DEFINE</p><div class="row"><b>Known</b><span>Opening, depth, shelf count, heights, material preference, back.</span></div><div class="row"><b>Derived</b><span>44 in nominal interior span.</span></div><div class="row"><b>Not invented</b><span>No hidden fit allowance.</span></div></aside>
+  </section>
+
+  <section class="page" id="store">
+    <main class="main">
+      <h1>Ask the Store</h1>
+      <p class="sub">The Store answers its own questions. It does not rewrite the project.</p>
+      <div class="hdr"><div><b>NODE</b><span>store-zero</span></div><div><b>MATERIAL</b><span>reference only</span></div><div><b>PRICE</b><span>unresolved</span></div><div><b>STATUS</b><span>reference</span></div></div>
+      <div class="kv"><span>Material / offering</span><span>Store-owned</span></div>
+      <div class="kv"><span>Availability</span><span>fixture / reference only</span></div>
+      <div class="kv"><span>Full Alcove commercial amount</span><span>not established</span></div>
+      <div class="kv"><span>Physical production authority</span><span>not established</span></div>
+      <div class="band">A favorable Store answer is not an order, reservation, payment, production release, machine readiness, or Cycle Start.</div>
+      <div class="bottom"><button data-back="define">Back</button><button class="next" data-next="review">Next →</button></div>
+    </main>
+    <aside class="rail"><p class="hd">03 · STORE</p><div class="row"><b>Ask bounded questions</b><span>Material, supportability, basis.</span></div><div class="row"><b>Keep authority local</b><span>Store answers Store facts.</span></div></aside>
+  </section>
+
+  <section class="page" id="review">
+    <main class="main">
+      <h1>Review your definition</h1>
+      <p class="sub">One identified version. Nothing commercial happens merely because you confirm it.</p>
+      <div class="hdr"><div><b>OPENING</b><span>45½ in</span></div><div><b>SPAN</b><span>44 in nominal</span></div><div><b>SHELVES</b><span>5</span></div><div><b>BACK</b><span>none</span></div></div>
+      <div class="band"><b>Meaning of Confirm.</b> You affirm the intended definition and acknowledge the displayed Store basis and unresolved conditions.</div>
+      <p class="boundary"><b>CONFIRMATION ≠ ORDER</b> · order ≠ payment · payment ≠ allocation · allocation ≠ production release.</p>
+      <div class="bottom"><button data-back="store">Back</button><button class="primary" data-next="request">CONFIRM THIS DEFINITION</button><button class="next" data-next="request">Next →</button></div>
+    </main>
+    <aside class="rail"><p class="hd">04 · REVIEW</p><div class="row"><b>Freeze the version</b><span>The commercial chain refers to this identified definition.</span></div><div class="row"><b>Do not broaden Confirm</b><span>Review remains separate from commerce and motion.</span></div></aside>
+  </section>
+
+  <section class="page" id="request">
+    <main class="main">
+      <p class="tag">STB — ALCOVE INSERT · SUBMISSION & RESPONSE 0.1</p>
+      <h1>Before we build it — ten questions</h1>
+      <p class="sub">Definition frozen · 45½″ opening · 5 shelves · 14″ deep · pine · 44″ nominal span · back none</p>
+      <div class="hdr"><div><b>VERSION</b><span>confirmed</span></div><div><b>PROJECT</b><span>alcove insert</span></div><div><b>NODE</b><span>store-zero</span></div><div><b>THIS SHEET</b><span>REQUEST · not an order</span></div></div>
+      <div class="band"><b>Answer all ten, including the noes.</b> Defaults add nothing. Yard may adjust, add or revoke before acceptance — with a reason.</div>
+      <div class="rows" id="decisionRows"></div>
+      <div class="total"><div class="left">Fabrication <b>unresolved</b> · extras <b>$0 default</b><br><b>YARD ≤2 business h · PICKUP 4 business h after READY</b></div><div class="big">YARD PRICES<i id="answered">10 of 10 answered</i></div></div>
+      <p class="boundary"><b>≠</b> request is not order · <b>≠</b> order is not payment · <b>≠</b> payment is not allocation · <b>≠</b> allocation is not release · <b>≠ staged is not picked up</b></p>
+      <div class="bottom"><button data-back="review">Back</button><button class="primary" data-next="yard">SEND TO THE YARD</button><button class="next" data-next="yard">Next →</button></div>
+    </main>
+    <aside class="rail"><p class="hd">05 · REQUEST</p><div class="row"><b>Project stays frozen</b><span>These choices change service, handling, timing, or price—not geometry.</span></div><div class="row"><b>Visible noes</b><span>Unavailable work stays visible and disabled.</span></div></aside>
+  </section>
+
+  <section class="page" id="yard">
+    <main class="main">
+      <p class="tag">STB — ALCOVE INSERT · YARD RESPONSE</p>
+      <h1>The yard came back</h1>
+      <p class="sub">Reference response · confirmed geometry unchanged</p>
+      <div class="hdr"><div><b>RESPONSE</b><span>REF-SZ-001</span></div><div><b>AGAINST</b><span>confirmed version</span></div><div><b>FROM</b><span>steward · store-zero</span></div><div><b>STATUS</b><span>ADJUSTMENT REQUIRED</span></div></div>
+      <div class="band"><b>Definition unchanged.</b> The yard may price services, decline unavailable work, or return a material/timing question. It may not silently rewrite confirmed geometry.</div>
+      <div class="kv"><span>Default edge / labels / loose-cart pickup</span><span>accepted as asked</span></div>
+      <div class="kv"><span>Paid extras</span><span>yard-priced before acceptance</span></div>
+      <div class="kv"><span>Stain + clear</span><span>not offered</span></div>
+      <h2>One thing only you can decide</h2>
+      <div class="pick on" data-stock="wait"><b>Wait for the requested material</b><p>No substitute. Yard returns a later plan.</p></div>
+      <div class="pick" data-stock="review"><b>Review a substitute</b><p>Material identity changes only if you explicitly accept it.</p></div>
+      <h2>Timing</h2>
+      <div class="timeline">
+        <div class="dot">●</div><div>Yard response</div><div class="who">yard</div><div class="when">now</div>
+        <div class="dot open">○</div><div>Offer / terms</div><div class="who">commercial</div><div class="when">after answer</div>
+        <div class="dot open">○</div><div>Payment / allocation / release</div><div class="who">separate</div><div class="when">later</div>
+        <div class="dot open">○</div><div>Stage ≤2 business h after last required cycle</div><div class="who">yard</div><div class="when">target</div>
+        <div class="dot open">○</div><div>Pickup 4 business h after READY</div><div class="who">holder</div><div class="when">then hold policy</div>
+      </div>
+      <div class="bottom"><button data-back="request">Back</button><button class="primary" data-next="terms">CONTINUE TO TERMS</button><button class="next" data-next="terms">Next →</button></div>
+    </main>
+    <aside class="rail"><p class="hd">06 · YARD</p><div class="row"><b>Return facts</b><span>Accepted, priced, unavailable, or unresolved.</span></div><div class="row"><b>No silent substitution</b><span>Material identity changes only by explicit decision.</span></div></aside>
+  </section>
+
+  <section class="page" id="terms">
+    <main class="main">
+      <p class="tag">STB — REFERENCE COMMERCIAL HANDOFF</p>
+      <h1>Terms → settlement → queue</h1>
+      <p class="sub">Known sequence · not live commerce</p>
+      <div class="hdr"><div><b>VERSION</b><span>confirmed</span></div><div><b>TERMS</b><span>reference only</span></div><div><b>PRICE</b><span>not established</span></div><div><b>AUTHORITY</b><span>no physical execution</span></div></div>
+      <div class="timeline">
+        <div class="dot">●</div><div>Definition review recorded</div><div class="who">holder</div><div class="when">complete</div>
+        <div class="dot">●</div><div>Submission / yard response</div><div class="who">yard</div><div class="when">reference</div>
+        <div class="dot open">○</div><div>Offer accepted</div><div class="who">holder</div><div class="when">future</div>
+        <div class="dot open">○</div><div>Settlement evidence</div><div class="who">commercial</div><div class="when">future</div>
+        <div class="dot open">○</div><div>Material allocated</div><div class="who">store</div><div class="when">future</div>
+        <div class="dot open">○</div><div>Production released</div><div class="who">release</div><div class="when">future</div>
+        <div class="dot open">○</div><div>Queued / local readiness / Cycle Start</div><div class="who">cell</div><div class="when">future</div>
+        <div class="dot open">○</div><div>Inspect · label · stage</div><div class="who">quality</div><div class="when">≤2 h target</div>
+        <div class="dot open">○</div><div>READY notice → 4 h pickup window</div><div class="who">fulfillment</div><div class="when">future</div>
+        <div class="dot open">○</div><div>Custody transfer → close</div><div class="who">handoff</div><div class="when">future</div>
+      </div>
+      <div class="band warn"><b>Current Alcove truth:</b> 44″ nominal interior span; no ordered-size reduction applied. Ordered-size adjustment, structure, installation and Store resolution remain unresolved.</div>
+      <div class="bottom"><button data-back="yard">Back</button><span class="fine">Shell fixed. Class content may change.</span><button class="next" data-next="next">Next →</button></div>
+    </main>
+    <aside class="rail"><p class="hd">07 · TERMS</p><div class="row"><b>One sequence</b><span>Acceptance, settlement, allocation, release, readiness, Cycle Start.</span></div><div class="row"><b>Different authorities</b><span>One word cannot collapse them.</span></div></aside>
+  </section>
+
+  <section class="page" id="next">
+    <main class="main">
+      <h1>What happens next</h1>
+      <p class="sub">Your confirmed version stays unchanged unless you approve a new one.</p>
+      <div class="section"><div class="sh"><span class="sn">01</span><span class="st">Yard review</span><span class="ss">REQUEST · received</span></div><p>Checks material, capability, services, timing and terms. Accept, adjust or decline. Adjustment returns with a reason.</p></div>
+      <div class="section"><div class="sh"><span class="sn">02</span><span class="st">Offer</span><span class="ss">TERMS · returned</span></div><p>Material · services · price · timing · validity. Nothing reserved yet.</p></div>
+      <div class="section"><div class="sh"><span class="sn">03</span><span class="st">Acceptance</span><span class="ss">YOU · decide</span></div><p>One identified version and one identified offer. Changed definition means new version.</p></div>
+      <div class="section"><div class="sh"><span class="sn">04</span><span class="st">Settlement</span><span class="ss">PAYMENT · separate</span></div><p>Acceptance is not payment.</p></div>
+      <div class="section"><div class="sh"><span class="sn">05</span><span class="st">Material</span><span class="ss">STORE · allocate</span></div><p>The Store resolves actual material against the accepted job.</p><div class="flow">receive → identify → maintain availability → allocate → stage → reconcile use / remnants / exceptions</div></div>
+      <div class="section"><div class="sh"><span class="sn">06</span><span class="st">Production release</span><span class="ss">JOB · released</span></div><p>Commercial completion does not start a machine.</p></div>
+      <div class="section"><div class="sh"><span class="sn">07</span><span class="st">Local cell</span><span class="ss">CELL · readiness</span></div><p>Machine · tooling · setup · material presence · local conditions. Cycle Start stays local.</p></div>
+      <div class="section"><div class="sh"><span class="sn">08</span><span class="st">Primary operations</span><span class="ss">PARTS · outcomes</span></div><p>Each required cycle records its outcome. Stopped or failed work remains stopped or failed.</p></div>
+      <div class="section"><div class="sh"><span class="sn">09</span><span class="st">Completion</span><span class="ss">SECONDARY · resolved</span></div><p>Resolve required secondary work. Then inspect → label → group → stage.</p></div>
+      <div class="section"><div class="sh"><span class="sn">10</span><span class="st">Handoff</span><span class="ss">READY · notice</span></div><p>Yard ≤2 business h after last required cycle. Pickup 4 business h after READY. Staged is not picked up.</p></div>
+      <div class="section"><div class="sh"><span class="sn">11</span><span class="st">Custody</span><span class="ss">HANDOFF · recorded</span></div><p>Pickup or delivery transfers custody. Until then the job is not closed.</p></div>
+      <div class="section"><div class="sh"><span class="sn">12</span><span class="st">Owner record</span><span class="ss">RECORD · reconciled</span></div><p>Missing events stay missing. Nothing is filled in by assumption.</p></div>
+      <div class="bottom"><button data-back="terms">Back</button><span class="fine">Definition remains unchanged.</span><button class="next" data-next="recap">Next →</button></div>
+    </main>
+    <aside class="rail"><p class="hd">08 · NEXT</p><div class="row"><b>Close the circuit</b><span>Store → release → cell → completion → custody.</span></div><div class="row"><b>Keep events separate</b><span>Every promotion needs its own basis.</span></div></aside>
+  </section>
+
+  <section class="page" id="recap">
+    <main class="main">
+      <h1>What happened</h1>
+      <p class="sub">One project. One version history. One record.</p>
+      <div class="fields">
+        <div class="field"><div class="fl">SOURCE</div><div class="fv">[files · measurements · notes · drawings] — original sources retained where available.</div></div>
+        <div class="field"><div class="fl">OBSERVATIONS</div><div class="fv">[measurements · stated requirements · unresolved conditions] — observations stayed separate from assumptions.</div></div>
+        <div class="field"><div class="fl">CONFIGURATION</div><div class="fv">45½″ opening · five shelves · 14″ depth · Pine · back none.</div></div>
+        <div class="field"><div class="fl">DEFINITION</div><div class="fv">Identified version confirmed before commercial processing.</div></div>
+        <div class="field"><div class="fl">YARD REQUEST</div><div class="fv">Ten service / handling / handoff answers bound to the confirmed version.</div></div>
+        <div class="field"><div class="fl">YARD RESPONSE</div><div class="fv">Reference response returned. Geometry unchanged.</div></div>
+        <div class="field"><div class="fl">OFFER / ACCEPTANCE</div><div class="fv">Placeholder. Not established by this public surface.</div></div>
+        <div class="field"><div class="fl">SETTLEMENT / MATERIAL</div><div class="fv">Placeholder. No live payment or allocation is claimed.</div></div>
+        <div class="field"><div class="fl">PRODUCTION / CELL</div><div class="fv">Placeholder. No physical production, local readiness, or Cycle Start is claimed.</div></div>
+        <div class="field"><div class="fl">COMPLETION / HANDOFF</div><div class="fv">Placeholder. No staged or transferred custody is claimed.</div></div>
+      </div>
+      <div class="flow">source → observation → configuration → definition → request → response → offer → acceptance → settlement → allocation → release → production → completion → inspection → staging → custody</div>
+      <p class="boundary">No redraw. No silent substitution. No missing step promoted by wording.</p>
+      <div class="bottom"><button data-back="next">Back</button><span class="fine">End-of-project reference page.</span><button class="next" data-next="record">Next →</button></div>
+    </main>
+    <aside class="rail"><p class="hd">09 · RECAP</p><div class="row"><b>Write forward</b><span>Record what happened, not what the ending implies.</span></div><div class="row"><b>Keep nulls honest</b><span>Missing events remain missing.</span></div></aside>
+  </section>
+
+  <section class="page" id="record">
+    <main class="main">
+      <h1>Keep your project record</h1>
+      <p class="sub">Owner-facing closeout reference.</p>
+      <div class="hdr"><div><b>PROJECT</b><span>alcove insert</span></div><div><b>VERSION</b><span>confirmed</span></div><div><b>STATUS</b><span>reference only</span></div><div><b>CUSTODY</b><span>not transferred</span></div></div>
+      <div class="kv"><span>Definition</span><span>retained</span></div>
+      <div class="kv"><span>Yard request / response</span><span>reference path shown</span></div>
+      <div class="kv"><span>Commercial completion</span><span>not established</span></div>
+      <div class="kv"><span>Physical outcome</span><span>not recorded</span></div>
+      <div class="kv"><span>Custody transfer</span><span>not recorded</span></div>
+      <div class="band">The owner record preserves what exists and names what does not. It does not promote a demonstration into a completed physical order.</div>
+      <div class="bottom"><button data-back="recap">Back</button><button class="next" data-next="landing">Start →</button></div>
+    </main>
+    <aside class="rail"><p class="hd">10 · RECORD</p><div class="row"><b>One chain</b><span>Definition through custody.</span></div><div class="row"><b>No invented ending</b><span>Reference remains reference.</span></div></aside>
+  </section>
+</div>
+
+<script>
+const decisions=[
+ ['Edge condition','how the cut edges arrive',['As cut','Deburred','Sanded 150'],'included'],
+ ['Shelf-pin boring','beyond what the class declares',['Class default','Adjustable columns','No bores'],'included'],
+ ['Hardware pack','pins and fasteners',['No added pack','Yard-sourced pack','I supply my own'],'included'],
+ ['Labels','what travels with the parts',['Labels only','+ Assembly sheet','+ QR to record'],'included'],
+ ['Finishing','only if the yard declares it',['None — raw','Stain + clear'],'included'],
+ ['Offcuts','usable remnants and scrap',['I take them','Disposal','Leave for remnant rack'],'included'],
+ ['Packaging','how it leaves the cart',['Loose on cart','Banded','Boxed'],'included'],
+ ['Handoff','custody transfers here',['Pickup','Pickup later','Curbside','Through the door'],'included'],
+ ['Who collects','named on the record',['Me','Named agent','My contractor'],'included'],
+ ['If something is out of stock','this shapes the yard response',['Ask me first','Wait for stock','No substitutes'],'included']
+];
+const rows=document.getElementById('decisionRows');
+decisions.forEach((d,i)=>{
+ const r=document.createElement('div');r.className='rowline';
+ const opts=d[2].map((x,j)=>`<button class="pill ${j===0?'on':''}" ${d[0]==='Finishing'&&j===1?'disabled':''}>${x}</button>`).join('');
+ r.innerHTML=`<span class="rn">${String(i+1).padStart(2,'0')}</span><span class="rt">${d[0]}<i>${d[1]}</i></span><span class="opts">${opts}</span><span class="rv">${d[3]}</span>`;
+ rows.append(r);
+});
+document.addEventListener('click',e=>{
+ const pill=e.target.closest('.pill');if(pill&&!pill.disabled){[...pill.parentElement.children].forEach(x=>x.classList.remove('on'));pill.classList.add('on');}
+ const pick=e.target.closest('.pick');if(pick){document.querySelectorAll('.pick').forEach(x=>x.classList.remove('on'));pick.classList.add('on');}
+ const target=e.target.closest('[data-page],[data-next],[data-back]');
+ if(!target)return;
+ const id=target.dataset.page||target.dataset.next||target.dataset.back;
+ show(id);
+});
+function show(id){
+ const page=document.getElementById(id);if(!page)return;
+ document.querySelectorAll('.page').forEach(x=>x.classList.remove('on'));
+ document.querySelectorAll('.run button').forEach(x=>x.classList.toggle('on',x.dataset.page===id));
+ page.classList.add('on');window.scrollTo({top:0,behavior:'smooth'});
+ history.replaceState(null,'','#'+id);
+}
+const initial=location.hash.slice(1);if(document.getElementById(initial))show(initial);
+</script>
+</body>
+</html>
