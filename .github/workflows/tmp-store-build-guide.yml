@@ -1,0 +1,67 @@
+name: Temporary Store build guide expansion
+
+on:
+  push:
+    branches:
+      - edit/store-build-guide-0.1
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: edit/store-build-guide-0.1
+      - name: Replace only the Store build guide rail
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('system-build-current.html')
+          before = p.read_text()
+          old = '''<aside class="rail"><p class="hd">04 · STORE</p><div class="row"><b>See the whole circuit</b><span>Store, terms, material, release, cell, handoff and record stay visible.</span></div><div class="row"><b>Store owns its price</b><span>Another participating Store may return a different supported price.</span></div><div class="row"><b>Keep authority local</b><span>Price and support do not start a machine.</span></div></aside>'''
+          new = '''<aside class="rail"><p class="hd">04 · STORE · BUILD GUIDE</p><p class="goal">The leap: the definition is the input.</p><div class="row"><b>01 · Freeze the job</b><span>User choices become one identified version. Stop changing the thing behind the scenes.</span></div><div class="row"><b>02 · Send that exact version</b><span>No redraw. No retyping. No second interpretation before the Store sees it.</span></div><div class="row"><b>03 · Ask ordinary questions</b><span>Do you have the material? Can you do the work? What does it cost? When?</span></div><div class="row"><b>04 · Answer from declared facts</b><span>Catalog, stated stock, cell limits, services and economics already have named sources.</span></div><div class="row"><b>05 · Stamp the answer</b><span>Catalog clock + engine version + commit say exactly what the answer was based on.</span></div><div class="row"><b>06 · Keep declared honest</b><span>Declared means stated and checkable. It does not mean live, measured or commissioned.</span></div><div class="row"><b>07 · Do not redesign at the counter</b><span>Store may support, adjust, defer or refuse. It may not rewrite the project.</span></div><div class="row"><b>08 · Separate work from policy</b><span>A cut, hole or finish is work. Pickup, substitution and payment are transaction choices.</span></div><div class="row"><b>09 · Price the same facts</b><span>Material + actual quantities + required operations + Store rules form the price basis.</span></div><div class="row"><b>10 · Return reasons</b><span>Short stock, unsupported work or changed timing comes back with the reason.</span></div><div class="row"><b>11 · One version, one offer</b><span>Change the definition? Make a new version. Never edit the old one into something else.</span></div><div class="row"><b>12 · Keep the verbs separate</b><span>Accept ≠ pay ≠ allocate ≠ release ≠ ready ≠ Cycle Start.</span></div><div class="row"><b>13 · Leave the machine local</b><span>The cell proves readiness. The person at the machine owns Cycle Start.</span></div><div class="row"><b>14 · Record the real outcome</b><span>Complete, stopped, recut, secondary work, inspection and staging all stay in the chain.</span></div><div class="row"><b>15 · Handoff closes the job</b><span>Staged is not picked up. Custody transfer is the close.</span></div><div class="row"><b>16 · Make it repeatable</b><span>Same request + same pins = same answer. If something changed, the record says what.</span></div><div class="row"><b>Why this is buildable</b><span>Nothing exotic: preserve the source, freeze the definition, ask bounded questions, answer from declared facts, and never let a later step rewrite an earlier one.</span></div></aside>'''
+          assert before.count(old) == 1, f'expected exactly one old Store rail, found {before.count(old)}'
+          assert new not in before, 'new Store rail already present'
+          after = before.replace(old, new, 1)
+          assert after != before
+          assert after.count(old) == 0
+          assert after.count(new) == 1
+          # Exact-change guard: the file after replacement must equal the source with only this substitution.
+          p.write_text(after)
+          assert p.read_text() == after
+          PY
+      - name: Static validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s = Path('system-build-current.html').read_text()
+          assert s.count('04 · STORE · BUILD GUIDE') == 1
+          assert s.count('The leap: the definition is the input.') == 1
+          assert s.count('Why this is buildable') == 2, 'expected Configure and Store build-guide closers'
+          assert 'See the whole circuit</b><span>Store, terms, material, release, cell, handoff and record stay visible.' not in s
+          assert s.count('Store Zero is a declared reference lumberyard.') == 1
+          assert s.count('<section class="page transaction" id="store">') == 1
+          scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', s, flags=re.S)
+          Path('/tmp/system-build-scripts.js').write_text('\n;\n'.join(scripts))
+          print(f'scripts={len(scripts)}')
+          PY
+          node --check /tmp/system-build-scripts.js
+      - name: Commit guide and remove helper
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add system-build-current.html
+          git rm .github/workflows/tmp-store-build-guide.yml
+          git commit -m "Expand Store build guide into plain-language spine"
+          git push origin HEAD:edit/store-build-guide-0.1
