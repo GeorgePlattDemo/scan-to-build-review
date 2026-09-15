@@ -48,7 +48,7 @@ jobs:
           assert original_store_suffix == new_store_suffix, 'existing Store content after the orientation was altered'
           assert after.count('Store Zero is a declared reference lumberyard.') == 1
           assert after.count('SEND TO STORE ZERO') == 1
-          assert 'REVIEW AND CONFIRM</button></div>' not in after
+          assert old_button not in after
           p.write_text(after, encoding='utf-8')
           PY
 
