@@ -1,0 +1,83 @@
+name: STB project tile asset pass
+
+on:
+  push:
+    branches: ['edit/project-tile-assets-0.1']
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: edit/project-tile-assets-0.1
+      - name: Apply bounded project tile asset pass
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('system-build-current.html')
+          s = p.read_text()
+
+          def once(old, new, label):
+              global s
+              n = s.count(old)
+              if n != 1:
+                  raise SystemExit(f'{label}: expected 1 match, found {n}')
+              s = s.replace(old, new, 1)
+
+          once(
+              '.tile svg{width:100%;display:block;border-radius:9px;border:1px solid var(--border);background:var(--surface)}.tile.first svg{border-color:var(--border-accent)}',
+              '.tile svg,.tile img.tile-art{width:100%;display:block;border-radius:9px;border:1px solid var(--border);background:var(--surface)}.tile img.tile-art{aspect-ratio:100/72;object-fit:cover}.tile.first svg,.tile.first img.tile-art{border-color:var(--border-accent)}',
+              'tile image style'
+          )
+
+          once(
+              '<button class="tile first" data-go="start-own" title="Start your own project"><svg viewBox="0 0 100 72"><rect width="100" height="72" fill="#f8f5ef"/><g transform="rotate(-25 50 34)"><rect x="12" y="27" width="20" height="13" rx="3" fill="#3b2412"/><path d="M32 27.5 L88 30 L88 37.5 L32 40 Z" fill="#dfe4e9" stroke="#8b959e"/></g><g transform="rotate(25 50 34)"><rect x="12" y="28" width="76" height="12" rx="2.5" fill="#efa919" stroke="#9c6c0a"/><circle cx="50" cy="34" r="2.2" fill="#8ed15a"/></g><rect x="4" y="56" width="92" height="12" rx="2" fill="#6d4726"/></svg><span class="t1">Start your own</span><span class="t2">Board, sketch, or file</span></button>',
+              '<button class="tile first" data-go="start-own" title="Start your own project"><img class="tile-art" src="assets/project-tiles/start-your-own.png" alt="Crossed hand saw and spirit level above a wooden board"><span class="t1">Start your own</span><span class="t2">Board, sketch, or file</span></button>',
+              'start-your-own image swap'
+          )
+
+          alcove = '<button class="tile" data-go="alcove-capture" title="Critical fit"><svg viewBox="0 0 100 72"><rect width="100" height="72" fill="#f3ece1"/><g transform="skewY(-7) translate(0 9)"><rect x="16" y="6" width="68" height="54" fill="#c89b62"/><rect x="20" y="10" width="60" height="46" fill="#e8d4b4"/><g fill="#c89b62"><rect x="20" y="22" width="60" height="3.5"/><rect x="20" y="36" width="60" height="3.5"/><rect x="20" y="50" width="60" height="3.5"/></g><rect x="16" y="6" width="68" height="54" fill="none" stroke="#9a7343" stroke-width="1.4"/></g></svg><span class="t1">Critical fit</span><span class="t2">Shelf insert</span></button>'
+          plywood = '<button class="tile" data-go="window-parts" title="Plywood curvilinear shapes · dimensional definition"><img class="tile-art" src="assets/project-tiles/plywood-curvilinear-shapes.png" alt="Plywood sheet with a centered curvilinear arched cutout"><span class="t1">Plywood curvilinear shapes</span><span class="t2">Dimensional definition · sheet stream</span></button>'
+          once(alcove, alcove + '\n' + plywood, 'insert plywood tile after critical fit')
+
+          checks = {
+              'first image asset referenced once': s.count('assets/project-tiles/start-your-own.png') == 1,
+              'plywood image asset referenced once': s.count('assets/project-tiles/plywood-curvilinear-shapes.png') == 1,
+              'two image tiles only': s.count('class="tile-art"') == 2,
+              'start route preserved': 'data-go="start-own"' in s,
+              'plywood route lands on existing machine-family page': 'data-go="window-parts" title="Plywood curvilinear shapes · dimensional definition"' in s and 'id="window-parts"' in s,
+              'plywood label present': s.count('<span class="t1">Plywood curvilinear shapes</span>') == 1,
+              'machine-family qualifier present': s.count('Dimensional definition · sheet stream') == 1,
+              'window seat preserved': '<span class="t1">Space utilization</span><span class="t2">Window seat</span>' in s,
+              'picnic preserved': 'data-go="picnic-chooser" title="Outdoor build"' in s,
+              'project explanation preserved': 'A bounded project is one somebody already worked out.' in s,
+              'no embedded base64 images added': 'data:image/' not in s,
+          }
+          order = [
+              s.index('<span class="t1">Start your own</span>'),
+              s.index('<span class="t1">Critical fit</span>'),
+              s.index('<span class="t1">Plywood curvilinear shapes</span>'),
+              s.index('<span class="t1">Space utilization</span>'),
+              s.index('<span class="t1">Outdoor build</span>'),
+          ]
+          checks['requested tile order preserved'] = order == sorted(order)
+          bad = [k for k,v in checks.items() if not v]
+          if bad:
+              raise SystemExit('Verification failed: ' + '; '.join(bad))
+          p.write_text(s)
+          for k in checks:
+              print('PASS:', k)
+          PY
+      - name: Commit project tile pass and remove temporary workflow
+        run: |
+          git diff --check -- system-build-current.html
+          git rm .github/workflows/stb-project-tile-assets.yml
+          git config user.name 'Scan-to-Build bounded edit'
+          git config user.email 'actions@users.noreply.github.com'
+          git add system-build-current.html
+          git commit -m 'Use lightweight assets for project tile images'
+          git push origin HEAD:edit/project-tile-assets-0.1
