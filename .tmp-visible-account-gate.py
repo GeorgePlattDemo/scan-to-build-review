@@ -36,6 +36,8 @@ for section_id in ('new-user', 'returning', 'professional'):
     )
     if count != 1:
         raise SystemExit(f'{section_id}: expected one door-next block, found {count}')
+    if 'Hitting "Next"' in section2 or '>Next →</button>' in section2:
+        raise SystemExit(f'{section_id}: stale Next workaround remains')
     text = text[:start] + section2 + text[end:]
 
 project_marker = '<section class="page" id="projects">'
@@ -103,8 +105,6 @@ if text.count('</body>') != 1:
     raise SystemExit(f'expected one body close, found {text.count("</body>")}')
 text = text.replace('</body>', script + '</body>', 1)
 
-if 'Hitting "Next"' in text or '>Next →</button>' in text:
-    raise SystemExit('stale Next workaround remains')
 for name in accounts:
     expected = f'data-demo-account="{name}"'
     if text.count(expected) != 3:
