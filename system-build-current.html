@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Scan-to-Build — System Build</title>
-<meta name="stb-canonical-build" content="front-door-0.2">
+<meta name="stb-canonical-build" content="front-door-0.3">
 <style>
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 #stb-current{display:block;width:100%;height:100%;border:0;background:#faf9f7}
@@ -23,28 +23,33 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
     const style = doc.createElement('style');
     style.textContent = `
-      .canonical-appbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);font-size:11px}
-      .canonical-appbar[hidden]{display:none}
-      .canonical-appbar button{font-size:11px;padding:5px 10px;background:var(--surface)}
-      .canonical-appbar .spacer{flex:1}
-      .canonical-appbar label{display:flex;align-items:center;gap:6px;color:var(--text2);font-weight:600;letter-spacing:.03em}
-      .canonical-appbar select{font:inherit;font-size:11px;padding:4px 7px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text)}
-      .canonical-project-list{display:grid;gap:8px;margin:14px 0}
-      .canonical-project-row{display:block;width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);text-align:left}
-      .canonical-project-row b,.canonical-project-row span{display:block}
-      .canonical-project-row span{margin-top:2px;color:var(--text2);font-size:12px}
+      .recovery-nav{align-items:center}
+      .recovery-nav .canonical-nav-spacer{flex:1}
+      .recovery-nav .canonical-user-label{display:flex;align-items:center;gap:6px;margin-left:auto;color:var(--text2);font-size:10px;font-weight:600;letter-spacing:.03em}
+      .recovery-nav .canonical-user-label select{font:inherit;font-size:10px;padding:4px 7px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text)}
       #projects>.demo-active-account,#projects>#demo-empty-projects{display:none!important}
     `;
     doc.head.append(style);
 
     const recovery = doc.querySelector('.recovery-nav');
-    if (recovery) recovery.hidden = true;
+    if (recovery) {
+      const homeButton = recovery.querySelector('[data-go="projects"]');
+      if (homeButton) homeButton.textContent = 'Home';
+      const myProjectsButton = doc.createElement('button');
+      myProjectsButton.type = 'button';
+      myProjectsButton.textContent = 'My Projects';
+      myProjectsButton.setAttribute('data-canonical-go', 'my-projects');
+      if (homeButton) homeButton.insertAdjacentElement('afterend', myProjectsButton);
 
-    const appbar = doc.createElement('nav');
-    appbar.className = 'canonical-appbar';
-    appbar.setAttribute('aria-label', 'Application navigation');
-    appbar.innerHTML = '<button type="button" data-canonical-go="projects">HOME</button><button type="button" data-canonical-go="my-projects">MY PROJECTS</button><span class="spacer"></span><label>DEMO USER <select id="canonical-demo-user"><option>Sarah</option><option>Tom</option><option>Dick</option><option>Harry</option></select></label>';
-    wrap.prepend(appbar);
+      const spacer = doc.createElement('span');
+      spacer.className = 'canonical-nav-spacer';
+      recovery.append(spacer);
+
+      const userLabel = doc.createElement('label');
+      userLabel.className = 'canonical-user-label';
+      userLabel.innerHTML = 'DEMO USER <select id="canonical-demo-user"><option>Sarah</option><option>Tom</option><option>Dick</option><option>Harry</option></select>';
+      recovery.append(userLabel);
+    }
 
     function makePage(id, mainHtml, railHtml) {
       const section = doc.createElement('section');
@@ -56,8 +61,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     }
 
     makePage('my-projects',
-      '<h1>MY PROJECTS</h1><p class="sub" id="canonical-my-projects-intro"></p><div id="canonical-my-projects-body"></div><div class="btns"><button type="button" data-canonical-go="start-own">+ START ANOTHER PROJECT</button><button type="button" data-canonical-go="projects">HOME</button></div>',
-      '<p class="goal">Your chute</p><div class="row"><b>Account-scoped</b><span>This is the active user’s own working list, separate from the shared Home library.</span></div><div class="row"><b>Home stays common</b><span>Changing users never hides the bounded-project library.</span></div>'
+      '<h1>MY PROJECTS</h1><p class="sub" id="canonical-my-projects-intro"></p><div id="canonical-my-projects-body"></div><div class="btns"><button type="button" data-canonical-go="projects">+ START ANOTHER PROJECT</button><button type="button" data-canonical-go="projects">HOME</button></div>',
+      '<p class="goal">Your chute</p><div class="row"><b>Account-scoped</b><span>This is the active user’s own working list, separate from the shared Home library.</span></div><div class="row"><b>Start new at Home</b><span>A new project begins by seeing the bounded-project library first.</span></div>'
     );
 
     makePage('archive',
@@ -65,7 +70,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       '<p class="goal">Your records</p><div class="row"><b>Account-scoped</b><span>Changing the demo user changes whose private records are shown.</span></div><div class="row"><b>No invented history</b><span>An empty demo account stays empty until a record actually exists.</span></div>'
     );
 
-    const userKey = 'stb-canonical-demo-user-v1';
     const allowed = ['Sarah','Tom','Dick','Harry'];
     let activeUser = 'Sarah';
     const userSelect = doc.getElementById('canonical-demo-user');
@@ -74,11 +78,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       const intro = doc.getElementById('canonical-my-projects-intro');
       const body = doc.getElementById('canonical-my-projects-body');
       if (!intro || !body) return;
-      intro.textContent = activeUser.toUpperCase() + ' · working projects';
+      intro.textContent = activeUser.toUpperCase() + ' · previous / working projects';
       if (activeUser === 'Sarah') {
-        body.innerHTML = '<div class="canonical-project-list"><button class="canonical-project-row" type="button" data-canonical-go="alcove-capture"><b>Alcove insert</b><span>User 1 working path · capture / measurements → configuration → Store / review / record.</span></button></div>';
+        body.innerHTML = '<p class="dim">Sarah’s current project list is the full project set shown on Home.</p>';
       } else {
-        body.innerHTML = '<p><b>' + activeUser.toUpperCase() + '</b> has no saved private projects in this demonstration yet.</p><p class="dim">The shared bounded-project library is still available from HOME.</p>';
+        body.innerHTML = '<p><b>' + activeUser.toUpperCase() + '</b> has no previous or saved private projects in this demonstration yet.</p><p class="dim">Use HOME to see the shared bounded-project library before starting something new.</p>';
       }
     }
 
@@ -106,21 +110,20 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     function renderAccount(name) {
       if (!allowed.includes(name)) name = 'Sarah';
       activeUser = name;
-      localStorage.setItem(userKey, name);
       if (userSelect) userSelect.value = name;
       keepHomeShared();
       renderMyProjects();
       renderArchive();
     }
 
-    // Sarah is the deterministic default for the demo user; Home itself is shared.
+    // Sarah is User 1 / the deterministic demonstration default. Home itself is shared.
     renderAccount('Sarah');
 
     if (userSelect) {
       userSelect.addEventListener('change', () => renderAccount(userSelect.value));
     }
 
-    // The original full project-ribbon screen is Home. Give it a direct return to the active user's chute.
+    // The original full project-ribbon screen is Home. The top-left Start your own tile remains the only direct blank-project entry.
     const homeBody = doc.querySelector('#projects .body');
     if (homeBody && !homeBody.querySelector('[data-canonical-home-return]')) {
       const returnRow = doc.createElement('div');
@@ -142,15 +145,18 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       });
     }
 
-    // Keep every original button label. Only make the existing choices work.
+    // Keep every original button label. Every start-new choice sees Home / bounded projects first.
     wireDoor('new-user', ['projects','projects','projects']);
-    wireDoor('returning', ['my-projects','start-own','archive']);
+    wireDoor('returning', ['my-projects','projects','archive']);
     wireDoor('professional', ['intake','intake','intake']);
 
     let currentId = doc.querySelector('.page.on')?.id || 'landing';
     const navStack = [];
 
-    function canonicalShow(id, push = true) {
+    function canonicalShow(requestedId, push = true) {
+      let id = requestedId;
+      // Sarah’s current Home project set is also her entire My Projects list for now.
+      if (id === 'my-projects' && activeUser === 'Sarah') id = 'projects';
       const next = doc.getElementById(id);
       if (!next) return;
       if (push && currentId && currentId !== id) navStack.push(currentId);
@@ -158,13 +164,17 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       next.classList.add('on');
       currentId = id;
       if (id === 'projects') keepHomeShared();
-      appbar.hidden = id === 'landing';
-      if (recovery) recovery.hidden = true;
+      if (recovery) recovery.hidden = id === 'landing';
       try { win.scrollTo({top:0,behavior:'instant'}); } catch { win.scrollTo(0,0); }
       if (id.startsWith('alcove') && typeof win.syncAlcove === 'function') win.syncAlcove();
       if (id.startsWith('picnic') && typeof win.syncPicnic === 'function') win.syncPicnic();
       if (typeof win.syncTransaction === 'function') win.syncTransaction();
       try { win.history.replaceState(null, '', '#' + id); } catch {}
+      doc.querySelectorAll('.recovery-nav button').forEach(button => {
+        const target = button.getAttribute('data-go') || button.getAttribute('data-canonical-go');
+        if (target === id || (target === 'my-projects' && requestedId === 'my-projects')) button.setAttribute('aria-current','step');
+        else button.removeAttribute('aria-current');
+      });
     }
 
     function canonicalBack() {
@@ -184,7 +194,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     }, true);
 
     keepHomeShared();
-    appbar.hidden = currentId === 'landing';
+    if (recovery) recovery.hidden = currentId === 'landing';
   });
 })();
 </script>
