@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Scan-to-Build — System Build</title>
-<meta name="stb-canonical-build" content="front-door-0.1">
+<meta name="stb-canonical-build" content="front-door-0.2">
 <style>
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 #stb-current{display:block;width:100%;height:100%;border:0;background:#faf9f7}
@@ -29,13 +29,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       .canonical-appbar .spacer{flex:1}
       .canonical-appbar label{display:flex;align-items:center;gap:6px;color:var(--text2);font-weight:600;letter-spacing:.03em}
       .canonical-appbar select{font:inherit;font-size:11px;padding:4px 7px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text)}
-      .canonical-library-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:14px 0}
-      .canonical-library-card{display:block;width:100%;padding:12px 13px;border:1px solid var(--border);border-radius:9px;background:var(--surface);text-align:left}
-      .canonical-library-card b,.canonical-library-card span{display:block}
-      .canonical-library-card span{margin-top:2px;color:var(--text2);font-size:12px}
-      .canonical-library-card.start{grid-column:1/-1;border-color:var(--border-accent);background:var(--tint)}
-      .canonical-library-note{font-size:12px;color:var(--text2)}
-      @media(max-width:760px){.canonical-library-grid{grid-template-columns:1fr}}
+      .canonical-project-list{display:grid;gap:8px;margin:14px 0}
+      .canonical-project-row{display:block;width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);text-align:left}
+      .canonical-project-row b,.canonical-project-row span{display:block}
+      .canonical-project-row span{margin-top:2px;color:var(--text2);font-size:12px}
+      #projects>.demo-active-account,#projects>#demo-empty-projects{display:none!important}
     `;
     doc.head.append(style);
 
@@ -45,7 +43,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     const appbar = doc.createElement('nav');
     appbar.className = 'canonical-appbar';
     appbar.setAttribute('aria-label', 'Application navigation');
-    appbar.innerHTML = '<button type="button" data-canonical-go="home">HOME</button><button type="button" data-canonical-go="projects">MY PROJECTS</button><span class="spacer"></span><label>DEMO USER <select id="canonical-demo-user"><option>Sarah</option><option>Tom</option><option>Dick</option><option>Harry</option></select></label>';
+    appbar.innerHTML = '<button type="button" data-canonical-go="projects">HOME</button><button type="button" data-canonical-go="my-projects">MY PROJECTS</button><span class="spacer"></span><label>DEMO USER <select id="canonical-demo-user"><option>Sarah</option><option>Tom</option><option>Dick</option><option>Harry</option></select></label>';
     wrap.prepend(appbar);
 
     function makePage(id, mainHtml, railHtml) {
@@ -57,30 +55,32 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       return section;
     }
 
-    makePage('home',
-      '<h1>PROJECT LIBRARY</h1>' +
-      '<p class="sub">Frozen bounded projects stay here as reusable starting points. Open one to see the latest published path — capture or plan, configuration, Store / reference outcome, and record where that project has them.</p>' +
-      '<div class="canonical-library-grid">' +
-        '<button class="canonical-library-card start" type="button" data-canonical-go="start-own"><b>+ START YOUR OWN PROJECT</b><span>Begin with a board, an idea, measurements, a scan, a drawing, or a file.</span></button>' +
-        '<button class="canonical-library-card" type="button" data-canonical-go="alcove-capture"><b>Critical fit · Alcove shelf insert</b><span>Scan / measurements → configuration → Store Zero → review → record.</span></button>' +
-        '<button class="canonical-library-card" type="button" data-canonical-go="window-parts"><b>Plywood curvilinear shapes</b><span>Frozen sheet-workstream definition.</span></button>' +
-        '<button class="canonical-library-card" type="button" data-canonical-go="window-intake"><b>Space utilization · Window seat</b><span>Bounded project with dimensional + sheet workstreams and a declared human gate.</span></button>' +
-        '<button class="canonical-library-card" type="button" data-canonical-go="picnic-chooser"><b>Outdoor build · Picnic table</b><span>Bounded form and fulfillment-scope choices.</span></button>' +
-      '</div>' +
-      '<p class="canonical-library-note">A library project preserves the reusable project definition. It does not transfer another user\'s private account, order, payment, address, or owner record.</p>' +
-      '<div class="btns"><button type="button" data-canonical-go="projects">RETURN TO MY PROJECTS</button></div>',
-      '<p class="goal">Shared starting points</p><div class="row"><b>Start your own stays first</b><span>The library never traps a person inside an existing project class.</span></div><div class="row"><b>Frozen means inspectable</b><span>Prior bounded work remains visible instead of being silently redesigned.</span></div><div class="row"><b>Identity stays separate</b><span>Public project facts do not become somebody else\'s private record.</span></div>'
+    makePage('my-projects',
+      '<h1>MY PROJECTS</h1><p class="sub" id="canonical-my-projects-intro"></p><div id="canonical-my-projects-body"></div><div class="btns"><button type="button" data-canonical-go="start-own">+ START ANOTHER PROJECT</button><button type="button" data-canonical-go="projects">HOME</button></div>',
+      '<p class="goal">Your chute</p><div class="row"><b>Account-scoped</b><span>This is the active user’s own working list, separate from the shared Home library.</span></div><div class="row"><b>Home stays common</b><span>Changing users never hides the bounded-project library.</span></div>'
     );
 
     makePage('archive',
-      '<h1>COMPLETED PROJECTS / RECORDS</h1><p class="sub" id="canonical-archive-intro"></p><div id="canonical-archive-body"></div><div class="btns"><button type="button" data-canonical-go="projects">RETURN TO MY PROJECTS</button><button type="button" data-canonical-go="home">HOME</button></div>',
-      '<p class="goal">Your chute</p><div class="row"><b>Account-scoped</b><span>Changing the demo user changes whose private records are shown.</span></div><div class="row"><b>No invented history</b><span>An empty demo account stays empty until a record actually exists.</span></div>'
+      '<h1>COMPLETED PROJECTS / RECORDS</h1><p class="sub" id="canonical-archive-intro"></p><div id="canonical-archive-body"></div><div class="btns"><button type="button" data-canonical-go="my-projects">RETURN TO MY PROJECTS</button><button type="button" data-canonical-go="projects">HOME</button></div>',
+      '<p class="goal">Your records</p><div class="row"><b>Account-scoped</b><span>Changing the demo user changes whose private records are shown.</span></div><div class="row"><b>No invented history</b><span>An empty demo account stays empty until a record actually exists.</span></div>'
     );
 
     const userKey = 'stb-canonical-demo-user-v1';
     const allowed = ['Sarah','Tom','Dick','Harry'];
     let activeUser = 'Sarah';
     const userSelect = doc.getElementById('canonical-demo-user');
+
+    function renderMyProjects() {
+      const intro = doc.getElementById('canonical-my-projects-intro');
+      const body = doc.getElementById('canonical-my-projects-body');
+      if (!intro || !body) return;
+      intro.textContent = activeUser.toUpperCase() + ' · working projects';
+      if (activeUser === 'Sarah') {
+        body.innerHTML = '<div class="canonical-project-list"><button class="canonical-project-row" type="button" data-canonical-go="alcove-capture"><b>Alcove insert</b><span>User 1 working path · capture / measurements → configuration → Store / review / record.</span></button></div>';
+      } else {
+        body.innerHTML = '<p><b>' + activeUser.toUpperCase() + '</b> has no saved private projects in this demonstration yet.</p><p class="dim">The shared bounded-project library is still available from HOME.</p>';
+      }
+    }
 
     function renderArchive() {
       const intro = doc.getElementById('canonical-archive-intro');
@@ -90,8 +90,17 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       if (activeUser === 'Sarah') {
         body.innerHTML = '<div class="reviewbox"><p style="font-weight:600;margin-bottom:6px">Alcove insert · frozen reference record</p><p class="dim">Open the retained record path for the current bounded-project demonstration.</p><button type="button" data-canonical-go="record">OPEN RECORD</button></div>';
       } else {
-        body.innerHTML = '<p><b>' + activeUser.toUpperCase() + '</b> has no completed records in this demonstration.</p><p class="dim">That is deliberate. Switching users does not expose Sarah\'s private demo record.</p>';
+        body.innerHTML = '<p><b>' + activeUser.toUpperCase() + '</b> has no completed records in this demonstration.</p><p class="dim">Switching users does not expose Sarah’s private demo record.</p>';
       }
+    }
+
+    function keepHomeShared() {
+      const projects = doc.getElementById('projects');
+      if (!projects) return;
+      const split = projects.querySelector(':scope > .split');
+      if (split) split.hidden = false;
+      const empty = doc.getElementById('demo-empty-projects');
+      if (empty) empty.hidden = true;
     }
 
     function renderAccount(name) {
@@ -99,29 +108,29 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       activeUser = name;
       localStorage.setItem(userKey, name);
       if (userSelect) userSelect.value = name;
-      const active = doc.getElementById('demo-active-account-name');
-      if (active) active.textContent = name.toUpperCase();
-      const emptyName = doc.getElementById('demo-empty-account-name');
-      if (emptyName) emptyName.textContent = name.toUpperCase();
-      const projects = doc.getElementById('projects');
-      if (projects) {
-        const split = projects.querySelector(':scope > .split');
-        const empty = doc.getElementById('demo-empty-projects');
-        const showSarah = name === 'Sarah';
-        if (split) split.hidden = !showSarah;
-        if (empty) empty.hidden = showSarah;
-      }
+      keepHomeShared();
+      renderMyProjects();
       renderArchive();
     }
 
-    // Sarah is the deterministic default each time the canonical build is opened.
+    // Sarah is the deterministic default for the demo user; Home itself is shared.
     renderAccount('Sarah');
 
     if (userSelect) {
       userSelect.addEventListener('change', () => renderAccount(userSelect.value));
     }
 
-    // Remove the four large named-account button groups from the three entry-context pages.
+    // The original full project-ribbon screen is Home. Give it a direct return to the active user's chute.
+    const homeBody = doc.querySelector('#projects .body');
+    if (homeBody && !homeBody.querySelector('[data-canonical-home-return]')) {
+      const returnRow = doc.createElement('div');
+      returnRow.className = 'btns';
+      returnRow.setAttribute('data-canonical-home-return', 'true');
+      returnRow.innerHTML = '<button type="button" data-canonical-go="my-projects">RETURN TO MY PROJECTS</button>';
+      homeBody.prepend(returnRow);
+    }
+
+    // Remove only the temporary four-name account-button workaround from the three orientation pages.
     doc.querySelectorAll('#new-user .demo-account-gate,#returning .demo-account-gate,#professional .demo-account-gate').forEach(node => node.remove());
 
     function wireDoor(pageId, destinations) {
@@ -129,13 +138,13 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       buttons.forEach((button, index) => {
         button.disabled = false;
         button.removeAttribute('disabled');
-        button.setAttribute('data-canonical-go', destinations[index] || 'home');
+        button.setAttribute('data-canonical-go', destinations[index] || 'projects');
       });
     }
 
-    // Keep the button words exactly as written; only make the existing controls work.
-    wireDoor('new-user', ['projects','projects','home']);
-    wireDoor('returning', ['projects','start-own','archive']);
+    // Keep every original button label. Only make the existing choices work.
+    wireDoor('new-user', ['projects','projects','projects']);
+    wireDoor('returning', ['my-projects','start-own','archive']);
     wireDoor('professional', ['intake','intake','intake']);
 
     let currentId = doc.querySelector('.page.on')?.id || 'landing';
@@ -148,6 +157,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       doc.querySelectorAll('.page').forEach(page => page.classList.remove('on'));
       next.classList.add('on');
       currentId = id;
+      if (id === 'projects') keepHomeShared();
       appbar.hidden = id === 'landing';
       if (recovery) recovery.hidden = true;
       try { win.scrollTo({top:0,behavior:'instant'}); } catch { win.scrollTo(0,0); }
@@ -161,7 +171,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       canonicalShow(navStack.pop() || 'landing', false);
     }
 
-    // Replace only navigation; all existing project/configurator behavior remains in the frozen base.
+    // Replace only navigation; all original project/configurator behavior stays in the frozen base.
     win.show = canonicalShow;
     win.back = canonicalBack;
 
@@ -173,6 +183,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       canonicalShow(target.getAttribute('data-canonical-go'));
     }, true);
 
+    keepHomeShared();
     appbar.hidden = currentId === 'landing';
   });
 })();
