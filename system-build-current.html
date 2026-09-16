@@ -119,10 +119,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     // Sarah is User 1 / the deterministic demonstration default. Home itself is shared.
     renderAccount('Sarah');
 
-    if (userSelect) {
-      userSelect.addEventListener('change', () => renderAccount(userSelect.value));
-    }
-
     // The original full project-ribbon screen is Home. The top-left Start your own tile remains the only direct blank-project entry.
     const homeBody = doc.querySelector('#projects .body');
     if (homeBody && !homeBody.querySelector('[data-canonical-home-return]')) {
@@ -151,9 +147,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     wireDoor('professional', ['intake','intake','intake']);
 
     let currentId = doc.querySelector('.page.on')?.id || 'landing';
+    let requestedView = currentId;
     const navStack = [];
 
     function canonicalShow(requestedId, push = true) {
+      requestedView = requestedId;
       let id = requestedId;
       // Sarah’s current Home project set is also her entire My Projects list for now.
       if (id === 'my-projects' && activeUser === 'Sarah') id = 'projects';
@@ -170,10 +168,19 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       if (id.startsWith('picnic') && typeof win.syncPicnic === 'function') win.syncPicnic();
       if (typeof win.syncTransaction === 'function') win.syncTransaction();
       try { win.history.replaceState(null, '', '#' + id); } catch {}
+      const currentTarget = requestedId === 'my-projects' ? 'my-projects' : id;
       doc.querySelectorAll('.recovery-nav button').forEach(button => {
         const target = button.getAttribute('data-go') || button.getAttribute('data-canonical-go');
-        if (target === id || (target === 'my-projects' && requestedId === 'my-projects')) button.setAttribute('aria-current','step');
+        if (target === currentTarget) button.setAttribute('aria-current','step');
         else button.removeAttribute('aria-current');
+      });
+    }
+
+    if (userSelect) {
+      userSelect.addEventListener('change', () => {
+        renderAccount(userSelect.value);
+        if (requestedView === 'my-projects') canonicalShow('my-projects', false);
+        else if (currentId === 'projects') canonicalShow('projects', false);
       });
     }
 
