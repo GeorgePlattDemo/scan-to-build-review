@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Scan-to-Build — System Build</title>
-<meta name="stb-canonical-build" content="front-door-0.3">
+<meta name="stb-canonical-build" content="front-door-0.4">
 <style>
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 #stb-current{display:block;width:100%;height:100%;border:0;background:#faf9f7}
@@ -28,6 +28,15 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       .recovery-nav .canonical-user-label{display:flex;align-items:center;gap:6px;margin-left:auto;color:var(--text2);font-size:10px;font-weight:600;letter-spacing:.03em}
       .recovery-nav .canonical-user-label select{font:inherit;font-size:10px;padding:4px 7px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text)}
       #projects>.demo-active-account,#projects>#demo-empty-projects{display:none!important}
+      .canonical-use-project{display:block;margin:3px 0 0;font-size:8.5px;line-height:1.2;font-weight:700;letter-spacing:.05em;color:var(--accent)}
+      .canonical-contextbar{margin:0 0 14px;padding:10px 12px;border:1px solid var(--border-accent);border-radius:8px;background:var(--tint);font-size:11.5px;color:var(--text2)}
+      .canonical-contextbar b{display:block;color:var(--text);font-size:11px;letter-spacing:.04em;margin-bottom:2px}
+      .canonical-contextbar .btns{margin-top:9px}
+      .canonical-contextbar button{font-size:10.5px;padding:5px 9px}
+      .canonical-saved-list{display:grid;gap:8px;margin:14px 0}
+      .canonical-saved-row{display:block;width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);text-align:left}
+      .canonical-saved-row b,.canonical-saved-row span{display:block}
+      .canonical-saved-row span{margin-top:2px;color:var(--text2);font-size:11px}
     `;
     doc.head.append(style);
 
@@ -62,7 +71,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
     makePage('my-projects',
       '<h1>MY PROJECTS</h1><p class="sub" id="canonical-my-projects-intro"></p><div id="canonical-my-projects-body"></div><div class="btns"><button type="button" data-canonical-go="projects">+ START ANOTHER PROJECT</button><button type="button" data-canonical-go="projects">HOME</button></div>',
-      '<p class="goal">Your chute</p><div class="row"><b>Account-scoped</b><span>This is the active user’s own working list, separate from the shared Home library.</span></div><div class="row"><b>Start new at Home</b><span>A new project begins by seeing the bounded-project library first.</span></div>'
+      '<p class="goal">Your chute</p><div class="row"><b>Account-scoped</b><span>This is the active user’s own working list, separate from the shared Home library.</span></div><div class="row"><b>Affirmative save</b><span>Looking at a library project does not put it here. Save is a separate act.</span></div>'
     );
 
     makePage('archive',
@@ -71,8 +80,120 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     );
 
     const allowed = ['Sarah','Tom','Dick','Harry'];
+    const projectCatalog = {
+      'alcove-capture': { key:'alcove', title:'Critical fit · Shelf insert', rootId:'alcove-capture' },
+      'window-parts': { key:'plywood', title:'Plywood curvilinear shapes', rootId:'window-parts' },
+      'window-intake': { key:'window-seat', title:'Space utilization · Window seat', rootId:'window-intake' },
+      'picnic-chooser': { key:'picnic', title:'Outdoor build · Picnic table', rootId:'picnic-chooser' }
+    };
+    const savedKey = 'stb-canonical-saved-projects-v1';
+    let savedByUser = {};
+    try { savedByUser = JSON.parse(localStorage.getItem(savedKey) || '{}') || {}; } catch { savedByUser = {}; }
     let activeUser = 'Sarah';
+    let preview = null;
+    let ownedOpen = null;
+    let restoringState = false;
     const userSelect = doc.getElementById('canonical-demo-user');
+
+    doc.querySelectorAll('#projects .tile[data-go]').forEach(tile => {
+      if (tile.getAttribute('data-go') === 'start-own' || tile.querySelector('.canonical-use-project')) return;
+      const small = doc.createElement('span');
+      small.className = 'canonical-use-project';
+      small.textContent = 'USE THIS PROJECT';
+      tile.append(small);
+    });
+
+    function captureState() {
+      const controls = {};
+      doc.querySelectorAll('.page input[id],.page select[id],.page textarea[id]').forEach(el => {
+        controls[el.id] = { value: el.value, checked: !!el.checked };
+      });
+      const heights = [...doc.querySelectorAll('[data-height-index]')].map(el => ({ index: el.getAttribute('data-height-index'), value: el.value }));
+      const material = doc.querySelector('[data-material].on')?.getAttribute('data-material') || null;
+      const picnicMaterial = doc.querySelector('[data-pmat].on')?.getAttribute('data-pmat') || null;
+      const picnicTitle = doc.getElementById('picnic-title')?.textContent || null;
+      const format = doc.getElementById('fmt')?.textContent || null;
+      const pills = [...doc.querySelectorAll('#decisionRows .rowline')].map(row => row.querySelector('.pill.on')?.textContent || null);
+      const stock = doc.querySelector('.pick.on')?.getAttribute('data-stock') || null;
+      return { controls, heights, material, picnicMaterial, picnicTitle, format, pills, stock };
+    }
+
+    function unlockPreviewControls() {
+      doc.querySelectorAll('[data-canonical-preview-lock]').forEach(el => {
+        if ('disabled' in el) el.disabled = el.getAttribute('data-canonical-was-disabled') === 'true';
+        el.style.pointerEvents = el.getAttribute('data-canonical-was-pointer') || '';
+        el.removeAttribute('aria-disabled');
+        el.removeAttribute('data-canonical-preview-lock');
+        el.removeAttribute('data-canonical-was-disabled');
+        el.removeAttribute('data-canonical-was-pointer');
+      });
+    }
+
+    function restoreState(state) {
+      if (!state) return;
+      unlockPreviewControls();
+      restoringState = true;
+      try {
+        Object.entries(state.controls || {}).forEach(([id, saved]) => {
+          const el = doc.getElementById(id);
+          if (!el) return;
+          if (el.type === 'checkbox' || el.type === 'radio') el.checked = !!saved.checked;
+          else el.value = saved.value;
+        });
+
+        const fmt = doc.getElementById('fmt');
+        if (fmt && state.format && fmt.textContent !== state.format) fmt.click();
+        if (typeof win.renderHeights === 'function') win.renderHeights();
+        (state.heights || []).forEach(saved => {
+          const el = doc.querySelector('[data-height-index="' + saved.index + '"]');
+          if (!el) return;
+          el.value = saved.value;
+          el.dispatchEvent(new Event('change', { bubbles:true }));
+        });
+
+        if (state.material) {
+          const button = doc.querySelector('[data-material="' + state.material + '"]');
+          if (button && !button.classList.contains('on')) button.click();
+        }
+
+        if (state.picnicTitle) {
+          const parts = state.picnicTitle.split(' · ');
+          if (parts.length >= 2) {
+            const form = parts[0];
+            const scope = parts.slice(1).join(' · ');
+            const button = [...doc.querySelectorAll('[data-pform][data-pscope]')].find(el => el.getAttribute('data-pform') === form && el.getAttribute('data-pscope') === scope);
+            if (button && doc.getElementById('picnic-title')?.textContent !== state.picnicTitle) button.click();
+          }
+        }
+
+        if (state.picnicMaterial) {
+          const button = doc.querySelector('[data-pmat="' + state.picnicMaterial + '"]');
+          if (button && !button.classList.contains('on')) button.click();
+        }
+
+        [...doc.querySelectorAll('#decisionRows .rowline')].forEach((row, index) => {
+          const wanted = state.pills?.[index];
+          if (!wanted) return;
+          row.querySelectorAll('.pill').forEach(button => button.classList.toggle('on', button.textContent === wanted));
+        });
+        if (state.stock) doc.querySelectorAll('.pick').forEach(el => el.classList.toggle('on', el.getAttribute('data-stock') === state.stock));
+
+        doc.querySelectorAll('.page input[id],.page select[id],.page textarea[id]').forEach(el => {
+          if (Object.prototype.hasOwnProperty.call(state.controls || {}, el.id)) el.dispatchEvent(new Event('input', { bubbles:true }));
+        });
+        if (typeof win.syncAlcove === 'function') win.syncAlcove();
+        if (typeof win.syncPicnic === 'function') win.syncPicnic();
+        if (typeof win.syncTransaction === 'function') win.syncTransaction();
+      } finally {
+        restoringState = false;
+      }
+    }
+
+    const publishedBaseline = captureState();
+
+    function persistSaved() {
+      localStorage.setItem(savedKey, JSON.stringify(savedByUser));
+    }
 
     function renderMyProjects() {
       const intro = doc.getElementById('canonical-my-projects-intro');
@@ -81,9 +202,14 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       intro.textContent = activeUser.toUpperCase() + ' · previous / working projects';
       if (activeUser === 'Sarah') {
         body.innerHTML = '<p class="dim">Sarah’s current project list is the full project set shown on Home.</p>';
-      } else {
-        body.innerHTML = '<p><b>' + activeUser.toUpperCase() + '</b> has no previous or saved private projects in this demonstration yet.</p><p class="dim">Use HOME to see the shared bounded-project library before starting something new.</p>';
+        return;
       }
+      const items = savedByUser[activeUser] || [];
+      if (!items.length) {
+        body.innerHTML = '<p><b>' + activeUser.toUpperCase() + '</b> has no previous or saved private projects in this demonstration yet.</p><p class="dim">Opening a library project does not create one. Use HOME, inspect a bounded project, and save it affirmatively if you want it here.</p>';
+        return;
+      }
+      body.innerHTML = '<div class="canonical-saved-list">' + items.map(item => '<button class="canonical-saved-row" type="button" data-owned-project-id="' + item.id + '"><b>' + item.title + '</b><span>' + (item.changed ? 'Saved with your changes' : 'Saved from the bounded project as shown') + ' · based on library project</span></button>').join('') + '</div>';
     }
 
     function renderArchive() {
@@ -116,10 +242,105 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       renderArchive();
     }
 
-    // Sarah is User 1 / the deterministic demonstration default. Home itself is shared.
+    function removeContextBars() {
+      doc.querySelectorAll('.canonical-contextbar').forEach(node => node.remove());
+      unlockPreviewControls();
+    }
+
+    function lockPageForPreview(page) {
+      if (!preview || preview.editing) return;
+      const selector = 'input,select,textarea,[data-material],[data-pform],[data-pmat],[data-len],#fmt,.pill,.pick,#confirm-alcove,#confirm-picnic';
+      page.querySelectorAll(selector).forEach(el => {
+        if (el.closest('.canonical-contextbar')) return;
+        el.setAttribute('data-canonical-preview-lock', 'true');
+        if ('disabled' in el) {
+          el.setAttribute('data-canonical-was-disabled', el.disabled ? 'true' : 'false');
+          el.disabled = true;
+        } else {
+          el.setAttribute('data-canonical-was-pointer', el.style.pointerEvents || '');
+          el.style.pointerEvents = 'none';
+          el.setAttribute('aria-disabled', 'true');
+        }
+      });
+    }
+
+    function contextHost(page) {
+      return page.querySelector(':scope > .main') || page.querySelector(':scope > .split > .body') || page.querySelector(':scope > .split > .ribbonbody') || page.querySelector('.main') || page.querySelector('.body');
+    }
+
+    function renderContextBar(page) {
+      removeContextBars();
+      if (preview) {
+        const host = contextHost(page);
+        if (!host) return;
+        const bar = doc.createElement('div');
+        bar.className = 'canonical-contextbar';
+        if (preview.editing) {
+          bar.innerHTML = '<b>WORKING COPY · ' + activeUser.toUpperCase() + '</b><span>You may change the available controls. The published library project is still unchanged. Nothing is added to MY PROJECTS until you save.</span><div class="btns"><button type="button" data-canonical-preview-action="save-changes">SAVE MY CHANGES</button></div>';
+        } else {
+          bar.innerHTML = '<b>LIBRARY PROJECT · READ ONLY</b><span>Look through this project without taking ownership of it. Back or Home leaves without saving.</span><div class="btns"><button type="button" data-canonical-preview-action="save">SAVE THIS PROJECT</button><button type="button" data-canonical-preview-action="edit">MAKE CHANGES</button></div>';
+        }
+        host.prepend(bar);
+        lockPageForPreview(page);
+      } else if (ownedOpen) {
+        const host = contextHost(page);
+        if (!host) return;
+        const bar = doc.createElement('div');
+        bar.className = 'canonical-contextbar';
+        bar.innerHTML = '<b>MY PROJECT · ' + activeUser.toUpperCase() + '</b><span>This is your saved copy, based on the bounded library project. The library source remains unchanged.</span>';
+        host.prepend(bar);
+      }
+    }
+
+    function discardPreview(restore = true) {
+      const old = preview;
+      preview = null;
+      removeContextBars();
+      if (restore && old) restoreState(publishedBaseline);
+    }
+
+    function startLibraryPreview(rootId) {
+      const project = projectCatalog[rootId];
+      if (!project) return;
+      ownedOpen = null;
+      restoreState(publishedBaseline);
+      preview = { project, editing:false, visited:new Set([rootId]) };
+      canonicalShow(rootId);
+    }
+
+    function savePreview(changed) {
+      if (!preview) return;
+      const project = preview.project;
+      const state = changed ? captureState() : publishedBaseline;
+      const item = {
+        id: project.key + '-' + Date.now(),
+        key: project.key,
+        title: project.title,
+        rootId: project.rootId,
+        changed: !!changed,
+        state
+      };
+      if (!savedByUser[activeUser]) savedByUser[activeUser] = [];
+      savedByUser[activeUser].push(item);
+      persistSaved();
+      preview = null;
+      restoreState(publishedBaseline);
+      renderMyProjects();
+      canonicalShow('my-projects', false);
+    }
+
+    function openOwnedProject(id) {
+      const item = (savedByUser[activeUser] || []).find(project => project.id === id);
+      if (!item) return;
+      discardPreview(false);
+      restoreState(publishedBaseline);
+      restoreState(item.state);
+      ownedOpen = item;
+      canonicalShow(item.rootId);
+    }
+
     renderAccount('Sarah');
 
-    // The original full project-ribbon screen is Home. The top-left Start your own tile remains the only direct blank-project entry.
     const homeBody = doc.querySelector('#projects .body');
     if (homeBody && !homeBody.querySelector('[data-canonical-home-return]')) {
       const returnRow = doc.createElement('div');
@@ -129,7 +350,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       homeBody.prepend(returnRow);
     }
 
-    // Remove only the temporary four-name account-button workaround from the three orientation pages.
     doc.querySelectorAll('#new-user .demo-account-gate,#returning .demo-account-gate,#professional .demo-account-gate').forEach(node => node.remove());
 
     function wireDoor(pageId, destinations) {
@@ -141,7 +361,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       });
     }
 
-    // Keep every original button label. Every start-new choice sees Home / bounded projects first.
     wireDoor('new-user', ['projects','projects','projects']);
     wireDoor('returning', ['my-projects','projects','archive']);
     wireDoor('professional', ['intake','intake','intake']);
@@ -151,9 +370,15 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     const navStack = [];
 
     function canonicalShow(requestedId, push = true) {
+      if (restoringState) push = false;
+      if (!restoringState && preview && ['projects','my-projects','landing','archive'].includes(requestedId)) discardPreview(true);
+      if (!restoringState && ownedOpen && ['projects','my-projects','landing','archive'].includes(requestedId)) {
+        ownedOpen = null;
+        restoreState(publishedBaseline);
+      }
+
       requestedView = requestedId;
       let id = requestedId;
-      // Sarah’s current Home project set is also her entire My Projects list for now.
       if (id === 'my-projects' && activeUser === 'Sarah') id = 'projects';
       const next = doc.getElementById(id);
       if (!next) return;
@@ -161,12 +386,14 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       doc.querySelectorAll('.page').forEach(page => page.classList.remove('on'));
       next.classList.add('on');
       currentId = id;
+      if (preview && id !== 'projects' && id !== 'my-projects') preview.visited.add(id);
       if (id === 'projects') keepHomeShared();
       if (recovery) recovery.hidden = id === 'landing';
       try { win.scrollTo({top:0,behavior:'instant'}); } catch { win.scrollTo(0,0); }
       if (id.startsWith('alcove') && typeof win.syncAlcove === 'function') win.syncAlcove();
       if (id.startsWith('picnic') && typeof win.syncPicnic === 'function') win.syncPicnic();
       if (typeof win.syncTransaction === 'function') win.syncTransaction();
+      renderContextBar(next);
       try { win.history.replaceState(null, '', '#' + id); } catch {}
       const currentTarget = requestedId === 'my-projects' ? 'my-projects' : id;
       doc.querySelectorAll('.recovery-nav button').forEach(button => {
@@ -178,6 +405,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
     if (userSelect) {
       userSelect.addEventListener('change', () => {
+        if (preview) discardPreview(true);
+        if (ownedOpen) {
+          ownedOpen = null;
+          restoreState(publishedBaseline);
+        }
         renderAccount(userSelect.value);
         if (requestedView === 'my-projects') canonicalShow('my-projects', false);
         else if (currentId === 'projects') canonicalShow('projects', false);
@@ -185,14 +417,59 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     }
 
     function canonicalBack() {
+      if (preview) {
+        discardPreview(true);
+        canonicalShow('projects', false);
+        return;
+      }
       canonicalShow(navStack.pop() || 'landing', false);
     }
 
-    // Replace only navigation; all original project/configurator behavior stays in the frozen base.
     win.show = canonicalShow;
     win.back = canonicalBack;
 
     doc.addEventListener('click', event => {
+      const action = event.target.closest('[data-canonical-preview-action]');
+      if (action) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        const kind = action.getAttribute('data-canonical-preview-action');
+        if (kind === 'save') savePreview(false);
+        if (kind === 'edit' && preview) {
+          preview.editing = true;
+          renderContextBar(doc.getElementById(currentId));
+        }
+        if (kind === 'save-changes') savePreview(true);
+        return;
+      }
+
+      const owned = event.target.closest('[data-owned-project-id]');
+      if (owned) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        openOwnedProject(owned.getAttribute('data-owned-project-id'));
+        return;
+      }
+
+      if (preview) {
+        const backTarget = event.target.closest('[data-back],button.back,button[data-go]');
+        if (backTarget && (backTarget.hasAttribute('data-back') || /^back\b/i.test(backTarget.textContent.trim()))) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          discardPreview(true);
+          canonicalShow('projects', false);
+          return;
+        }
+      }
+
+      const tile = event.target.closest('#projects .tile[data-go]');
+      if (tile && tile.getAttribute('data-go') !== 'start-own') {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        startLibraryPreview(tile.getAttribute('data-go'));
+        return;
+      }
+
       const target = event.target.closest('[data-canonical-go]');
       if (!target) return;
       event.preventDefault();
