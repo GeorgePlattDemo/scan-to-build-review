@@ -1,0 +1,44 @@
+name: Temporary visible account gate correction
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: ${{ github.actor != 'github-actions[bot]' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Apply visible account gate correction
+        run: python .tmp-visible-account-gate.py
+
+      - name: Verify visible acceptance surface
+        run: |
+          set -euo pipefail
+          grep -q 'SARAH · MY PROJECTS' system-build-current.html
+          grep -q 'TOM · MY PROJECTS' system-build-current.html
+          grep -q 'DICK · MY PROJECTS' system-build-current.html
+          grep -q 'HARRY · MY PROJECTS' system-build-current.html
+          grep -q 'ACTIVE DEMO ACCOUNT' system-build-current.html
+          ! grep -q 'Hitting "Next"' system-build-current.html
+          ! grep -q '>Next →</button>' system-build-current.html
+          git diff --check
+          test -z "$(git diff --name-only | grep -Ev '^(system-build-current\.html|\.tmp-visible-account-gate\.py|\.github/workflows/tmp-visible-account-gate\.yml)$' || true)"
+
+      - name: Commit visible account gate and remove temporary machinery
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add system-build-current.html
+          git rm -f .tmp-visible-account-gate.py .github/workflows/tmp-visible-account-gate.yml
+          git commit -m "Make demo account selection visible"
+          git push origin HEAD:main
