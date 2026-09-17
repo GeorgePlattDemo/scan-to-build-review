@@ -531,14 +531,24 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
     doc.querySelectorAll('#new-user .demo-account-gate,#returning .demo-account-gate,#professional .demo-account-gate').forEach(node => node.remove());
 
-    const newUserStart = doc.querySelector('#new-user .btns button[data-go="projects"]');
-    if (newUserStart) {
-      newUserStart.textContent = 'NEXT → HOME';
-      newUserStart.setAttribute('data-canonical-go', 'projects');
+    function replaceEntryHomeButton(button, label) {
+      if (!button) return;
+      const clean = button.cloneNode(true);
+      clean.type = 'button';
+      clean.textContent = label;
+      clean.removeAttribute('data-go');
+      clean.removeAttribute('onclick');
+      clean.setAttribute('data-canonical-go', 'projects');
+      button.replaceWith(clean);
     }
 
+    replaceEntryHomeButton(
+      doc.querySelector('#new-user .btns button[data-go="projects"]'),
+      'NEXT → HOME'
+    );
+
     const returningStart = [...doc.querySelectorAll('#returning .btns button')].find(button => /START SOMETHING NEW/i.test(button.textContent));
-    if (returningStart) returningStart.setAttribute('data-canonical-go', 'projects');
+    replaceEntryHomeButton(returningStart, 'START SOMETHING NEW');
 
     const professionalRow = doc.querySelector('#professional .door-preview');
     if (professionalRow && !professionalRow.querySelector('[data-professional-shared-home]')) {
