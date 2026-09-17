@@ -11,7 +11,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 </style>
 </head>
 <body>
-<iframe id="stb-current" title="Scan-to-Build System" src="system-build-front-door-0.5.html?v=user1-next-2"></iframe>
+<iframe id="stb-current" title="Scan-to-Build System" src="system-build-front-door-0.5.html?v=user1-next-3"></iframe>
 <script>
 (() => {
   const shell = document.getElementById('stb-current');
@@ -30,7 +30,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     doc.querySelectorAll('.demo-active-account,#demo-empty-projects,.demo-empty-projects,.demo-account-gate,.canonical-user-label,#canonical-demo-user,[data-canonical-home-return],[data-demo-account]').forEach((node) => node.remove());
     ['new-user', 'returning', 'professional'].forEach((id) => {
       const page = doc.getElementById(id);
-      if (!page || page.querySelector('[data-door-next]')) return;
+      if (!page) return;
+      if (page.querySelector('[data-door-next]')) return;
       const row = page.querySelector('.main .btns');
       const btn = doc.createElement('button');
       btn.type = 'button';
@@ -59,7 +60,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     let n = 0;
     const t = setInterval(() => {
       n += 1;
-      try { if (clean() || n > 240) clearInterval(t); } catch (e) { if (n > 240) clearInterval(t); }
+      try { clean(); } catch (e) {}
+      if (n > 400) clearInterval(t);
     }, 40);
   };
   shell.addEventListener('load', tick);
