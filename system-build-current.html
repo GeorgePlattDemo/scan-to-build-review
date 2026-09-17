@@ -11,46 +11,56 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 </style>
 </head>
 <body>
-<iframe id="stb-current" title="Scan-to-Build System" src="system-build-front-door-0.5.html?v=restore-next"></iframe>
+<iframe id="stb-current" title="Scan-to-Build System" src="system-build-front-door-0.5.html?v=user1-next-2"></iframe>
 <script>
 (() => {
   const shell = document.getElementById('stb-current');
-  const addDoorNext = () => {
+  const innerDoc = () => {
     const inner = shell.contentDocument && shell.contentDocument.getElementById('stb-current');
-    const win = inner && inner.contentWindow;
+    return inner && inner.contentWindow;
+  };
+  const clean = () => {
+    const win = innerDoc();
     const doc = win && win.document;
     if (!doc || typeof win.show !== 'function') return false;
-    if (doc.documentElement.dataset.doorNext === 'true') return true;
+    try {
+      sessionStorage.removeItem('stb-account-session-v1');
+      localStorage.removeItem('stb-canonical-saved-projects-v1');
+    } catch (e) {}
+    doc.querySelectorAll('.demo-active-account,#demo-empty-projects,.demo-empty-projects,.demo-account-gate,.canonical-user-label,#canonical-demo-user,[data-canonical-home-return],[data-demo-account]').forEach((node) => node.remove());
     ['new-user', 'returning', 'professional'].forEach((id) => {
-      const main = doc.querySelector('#' + id + ' .main');
-      if (!main || main.querySelector('[data-door-next]')) return;
-      const row = doc.createElement('div');
-      row.className = 'btns';
-      row.innerHTML = '<button type="button" data-door-next="projects">NEXT</button>';
-      main.append(row);
+      const page = doc.getElementById(id);
+      if (!page || page.querySelector('[data-door-next]')) return;
+      const row = page.querySelector('.main .btns');
+      const btn = doc.createElement('button');
+      btn.type = 'button';
+      btn.setAttribute('data-door-next', 'projects');
+      btn.textContent = 'NEXT';
+      if (row) row.append(btn);
+      else {
+        const wrap = doc.createElement('div');
+        wrap.className = 'btns';
+        wrap.append(btn);
+        page.querySelector('.main').append(wrap);
+      }
     });
-    doc.addEventListener('click', (e) => {
-      const btn = e.target.closest('[data-door-next]');
-      if (!btn) return;
-      e.preventDefault();
-      win.show(btn.getAttribute('data-door-next'));
-    });
-    const select = doc.getElementById('canonical-demo-user');
-    if (select) {
-      [...select.options].forEach((opt) => {
-        if (opt.textContent === 'Sarah') opt.textContent = 'User 1';
-        if (/^(Tom|Dick|Harry)$/.test(opt.textContent)) opt.remove();
+    if (!doc.documentElement.dataset.doorNextClick) {
+      doc.documentElement.dataset.doorNextClick = 'true';
+      doc.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-door-next]');
+        if (!btn) return;
+        e.preventDefault();
+        win.show('projects');
       });
     }
-    doc.documentElement.dataset.doorNext = 'true';
     return true;
   };
   const tick = () => {
     let n = 0;
     const t = setInterval(() => {
       n += 1;
-      try { if (addDoorNext() || n > 200) clearInterval(t); } catch (e) { if (n > 200) clearInterval(t); }
-    }, 50);
+      try { if (clean() || n > 240) clearInterval(t); } catch (e) { if (n > 240) clearInterval(t); }
+    }, 40);
   };
   shell.addEventListener('load', tick);
   if (shell.contentDocument && shell.contentDocument.readyState === 'complete') tick();
