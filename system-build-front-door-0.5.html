@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Scan-to-Build — System Build</title>
-<meta name="stb-canonical-build" content="front-door-0.5">
+<meta name="stb-canonical-build" content="front-door-0.6">
 <style>
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 #stb-current{display:block;width:100%;height:100%;border:0;background:#faf9f7}
@@ -531,19 +531,20 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
     doc.querySelectorAll('#new-user .demo-account-gate,#returning .demo-account-gate,#professional .demo-account-gate').forEach(node => node.remove());
 
-    function wireDoor(pageId, destinations) {
-      const buttons = [...doc.querySelectorAll('#' + pageId + ' .door-preview button')];
-      buttons.forEach((button, index) => {
-        button.disabled = false;
-        button.removeAttribute('disabled');
-        button.setAttribute('data-canonical-go', destinations[index] || 'projects');
-      });
+    function addEntryNext(pageId) {
+      const page = doc.getElementById(pageId);
+      const main = page?.querySelector(':scope > .main');
+      if (!main || main.querySelector('[data-entry-next]')) return;
+      const row = doc.createElement('div');
+      row.className = 'btns';
+      row.setAttribute('data-entry-next', 'true');
+      row.innerHTML = '<button type="button" data-canonical-go="projects">NEXT → HOME</button>';
+      main.append(row);
     }
 
-    wireDoor('new-user', ['projects','projects','projects']);
-    wireDoor('returning', ['my-projects','projects','archive']);
-    wireDoor('professional', ['intake','intake','intake']);
+    ['new-user','returning','professional'].forEach(addEntryNext);
 
+    const entryPages = ['landing','new-user','returning','professional'];
     let currentId = doc.querySelector('.page.on')?.id || 'landing';
     let requestedView = currentId;
     const navStack = [];
@@ -567,7 +568,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       currentId = id;
       if (preview && id !== 'projects' && id !== 'my-projects') preview.visited.add(id);
       if (id === 'projects') keepHomeShared();
-      if (recovery) recovery.hidden = id === 'landing';
+      if (recovery) recovery.hidden = entryPages.includes(id);
       try { win.scrollTo({top:0,behavior:'instant'}); } catch { win.scrollTo(0,0); }
       if (id.startsWith('alcove') && typeof win.syncAlcove === 'function') win.syncAlcove();
       if (id.startsWith('picnic') && typeof win.syncPicnic === 'function') win.syncPicnic();
@@ -658,7 +659,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     }, true);
 
     keepHomeShared();
-    if (recovery) recovery.hidden = currentId === 'landing';
+    if (recovery) recovery.hidden = entryPages.includes(currentId);
   });
 })();
 </script>
