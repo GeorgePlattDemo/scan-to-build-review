@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Scan-to-Build — System Build</title>
-<meta name="stb-canonical-build" content="front-door-0.6">
+<meta name="stb-canonical-build" content="front-door-0.7">
 <style>
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 #stb-current{display:block;width:100%;height:100%;border:0;background:#faf9f7}
@@ -105,40 +105,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
     makePage('playhouse-s001',
       '<h1>PLAYHOUSE ARCHED WINDOW</h1><p class="sub">Sarah wants a large arched window opening in a small outdoor playhouse wall panel. This uses the existing bounded S-001 sheet project — not a new machine claim.</p>' +
-      '<div class="s001-play-grid">' +
-        '<section class="s001-card"><h3>EXAMPLE SOURCE · SARAH</h3>' +
-          '<svg class="s001-source-art" viewBox="0 0 420 300" role="img" aria-label="Simple outdoor playhouse with a large arched window marked on the front wall">' +
-            '<rect x="0" y="0" width="420" height="300" fill="#eee7da"/>' +
-            '<path d="M75 125 L210 42 L345 125" fill="none" stroke="#766652" stroke-width="8" stroke-linejoin="round"/>' +
-            '<rect x="92" y="122" width="236" height="145" rx="2" fill="#d7b785" stroke="#766652" stroke-width="5"/>' +
-            '<rect x="118" y="177" width="58" height="90" fill="#8d6a46" opacity=".72"/>' +
-            '<path d="M206 236 L206 179 Q206 137 250 137 Q294 137 294 179 L294 236 Z" fill="#f5f1e9" stroke="#5d5041" stroke-width="5" stroke-dasharray="7 5"/>' +
-            '<line x1="206" y1="248" x2="294" y2="248" stroke="#5d5041" stroke-width="2"/>' +
-            '<text x="250" y="265" text-anchor="middle" font-size="13" fill="#4c443b">36 in opening</text>' +
-            '<text x="302" y="190" font-size="12" fill="#4c443b">24 in straight</text>' +
-            '<text x="252" y="128" text-anchor="middle" font-size="12" fill="#4c443b">12 in rise</text>' +
-          '</svg>' +
-          '<p class="s001-source-note">Example capture only. The playhouse gives the geometry a reason to exist; it does not establish structure, child safety, installation, weatherproofing, or code suitability.</p>' +
-          '<div class="s001-fixed"><div><b>PARENT SHEET</b><span>48 × 96 in · 1/2 in plywood</span></div><div><b>WORK FIELD</b><span>centered 48 × 36 in</span></div><div><b>PROJECT CLASS</b><span>S001_CENTERED_ARCHED_SHEET_V0</span></div><div><b>OPERATION</b><span>ROUTE_PROFILE · retained tabs</span></div></div>' +
-        '</section>' +
-        '<section class="s001-card"><h3>PLAY WITH THE BOUNDED SHAPE</h3><p class="dim">These controls only change the three inputs already admitted by the canonical project. They stay inside the current software/reference field.</p>' +
-          '<svg class="s001-sheet-art" viewBox="0 0 960 480" role="img" aria-label="Full 48 by 96 sheet, centered 48 by 36 work field, and adjustable arched opening">' +
-            '<rect x="8" y="8" width="944" height="464" rx="5" fill="#eee7da" stroke="#5d5041" stroke-width="4"/>' +
-            '<rect x="240" y="60" width="480" height="360" fill="#f8f5ef" stroke="#8a7459" stroke-width="4" stroke-dasharray="12 8"/>' +
-            '<path id="s001-opening-path" d="" fill="#fff" stroke="#3f3a34" stroke-width="5"/>' +
-            '<text x="480" y="31" text-anchor="middle" font-size="19" fill="#4c443b">96 in parent</text>' +
-            '<text x="480" y="87" text-anchor="middle" font-size="17" fill="#6b5d4c">centered 48 × 36 work field</text>' +
-            '<text id="s001-opening-label" x="480" y="405" text-anchor="middle" font-size="16" fill="#4c443b"></text>' +
-          '</svg>' +
-          '<div class="s001-control"><label for="s001-opening-width">Opening width</label><output id="s001-opening-width-out">36 in</output><input id="s001-opening-width" data-s001-control type="range" min="1" max="48" step="0.5" value="36"></div>' +
-          '<div class="s001-control"><label for="s001-straight-height">Straight side height</label><output id="s001-straight-height-out">24 in</output><input id="s001-straight-height" data-s001-control type="range" min="1" max="35" step="0.5" value="24"></div>' +
-          '<div class="s001-control"><label for="s001-arch-rise">Arch rise</label><output id="s001-arch-rise-out">12 in</output><input id="s001-arch-rise" data-s001-control type="range" min="1" max="12" step="0.5" value="12"></div>' +
-          '<div class="btns"><button type="button" data-s001-control id="s001-reset">RESET TO SARAH\'S 36 / 24 / 12</button></div>' +
-          '<div class="s001-status" id="s001-field-status">INSIDE CURRENT 48 × 36 SOFTWARE / REFERENCE FIELD</div>' +
-          '<p class="dim" id="s001-geometry-summary"></p>' +
-        '</section>' +
-      '</div>' +
-      '<div class="s001-boundary">The drawing is a view of the definition. It is not a toolpath, controller program, Cycle Start, fabrication release, or claim that a physical S-001 machine has been commissioned.</div>' +
+      '<div class="s001-v2-placeholder"></div>' +
       '<div class="btns"><button type="button" data-canonical-go="projects">BACK TO HOME</button><button type="button" data-canonical-go="playhouse-store">ASK STORE ZERO →</button></div>',
       '<p class="goal">One bounded sheet example</p><div class="row"><b>Sarah’s starting values</b><span>36 in wide · 24 in straight side · 12 in arch rise.</span></div><div class="row"><b>Current field</b><span>48 × 36 in, centered on the 48 × 96 sheet.</span></div><div class="row"><b>First sheet research candidate</b><span>Routed profile with retained tabs. Drilling is not admitted in this round.</span></div>'
     );
@@ -227,39 +194,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       const straightInput = doc.getElementById('s001-straight-height');
       const riseInput = doc.getElementById('s001-arch-rise');
       if (!widthInput || !straightInput || !riseInput) return;
-
-      let width = Math.max(1, Math.min(48, Number(widthInput.value) || 36));
-      let straight = Math.max(1, Math.min(35, Number(straightInput.value) || 24));
-      let rise = Math.max(1, Number(riseInput.value) || 12);
-      const maxRise = Math.max(1, 36 - straight);
-      riseInput.max = String(maxRise);
-      if (rise > maxRise) rise = maxRise;
-      widthInput.value = String(width);
-      straightInput.value = String(straight);
-      riseInput.value = String(rise);
-
-      const g = readS001();
+      const width = Number(widthInput.value) || 36;
+      const straight = Number(straightInput.value) || 24;
+      const rise = Number(riseInput.value) || 12;
+      const g = {width, straight, rise, total:straight+rise, radius:rise>0?(width*width)/(8*rise)+rise/2:null};
       const set = (id, text) => { const el = doc.getElementById(id); if (el) el.textContent = text; };
-      set('s001-opening-width-out', fmtIn(g.width) + ' in');
-      set('s001-straight-height-out', fmtIn(g.straight) + ' in');
-      set('s001-arch-rise-out', fmtIn(g.rise) + ' in');
-
-      const px = 10;
-      const centerX = 480;
-      const fieldTop = 60;
-      const fieldHeight = 360;
-      const openingW = g.width * px;
-      const openingH = g.total * px;
-      const bottom = fieldTop + (fieldHeight + openingH) / 2;
-      const top = bottom - openingH;
-      const springY = bottom - g.straight * px;
-      const left = centerX - openingW / 2;
-      const right = centerX + openingW / 2;
-      const path = `M ${left} ${bottom} L ${left} ${springY} Q ${centerX} ${top} ${right} ${springY} L ${right} ${bottom} Z`;
-      const pathEl = doc.getElementById('s001-opening-path');
-      if (pathEl) pathEl.setAttribute('d', path);
-      set('s001-opening-label', `${fmtIn(g.width)} wide · ${fmtIn(g.straight)} straight + ${fmtIn(g.rise)} rise = ${fmtIn(g.total)} high`);
-      set('s001-geometry-summary', `Opening ${fmtIn(g.width)} × ${fmtIn(g.total)} in overall · straight side ${fmtIn(g.straight)} in · arch rise ${fmtIn(g.rise)} in · derived circular-segment radius ${fmtIn(g.radius)} in.`);
       set('s001-store-opening', `${fmtIn(g.width)} in wide × ${fmtIn(g.total)} in overall`);
       set('s001-store-radius', `circular segment · ${fmtIn(g.radius)} in radius`);
       set('s001-review-width', `${fmtIn(g.width)} in`);
@@ -269,17 +208,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       set('s001-result-geometry', `${fmtIn(g.width)} wide · ${fmtIn(g.straight)} straight · ${fmtIn(g.rise)} rise · ${fmtIn(g.total)} total height`);
       set('s001-record-geometry', `${fmtIn(g.width)} wide · ${fmtIn(g.straight)} straight · ${fmtIn(g.rise)} rise`);
     }
-
-    [doc.getElementById('s001-opening-width'), doc.getElementById('s001-straight-height'), doc.getElementById('s001-arch-rise')].forEach(input => {
-      input?.addEventListener('input', syncS001Playhouse);
-    });
-    doc.getElementById('s001-reset')?.addEventListener('click', () => {
-      doc.getElementById('s001-opening-width').value = '36';
-      doc.getElementById('s001-straight-height').value = '24';
-      doc.getElementById('s001-arch-rise').value = '12';
-      syncS001Playhouse();
-    });
-    syncS001Playhouse();
 
     function captureState() {
       const controls = {};
@@ -318,9 +246,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
           if (el.type === 'checkbox' || el.type === 'radio') el.checked = !!saved.checked;
           else el.value = saved.value;
         });
-
-        const fmt = doc.getElementById('fmt');
-        if (fmt && state.format && fmt.textContent !== state.format) fmt.click();
         if (typeof win.renderHeights === 'function') win.renderHeights();
         (state.heights || []).forEach(saved => {
           const el = doc.querySelector('[data-height-index="' + saved.index + '"]');
@@ -328,37 +253,14 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
           el.value = saved.value;
           el.dispatchEvent(new Event('change', { bubbles:true }));
         });
-
         if (state.material) {
           const button = doc.querySelector('[data-material="' + state.material + '"]');
           if (button && !button.classList.contains('on')) button.click();
         }
-
-        if (state.picnicTitle) {
-          const parts = state.picnicTitle.split(' · ');
-          if (parts.length >= 2) {
-            const form = parts[0];
-            const scope = parts.slice(1).join(' · ');
-            const button = [...doc.querySelectorAll('[data-pform][data-pscope]')].find(el => el.getAttribute('data-pform') === form && el.getAttribute('data-pscope') === scope);
-            if (button && doc.getElementById('picnic-title')?.textContent !== state.picnicTitle) button.click();
-          }
-        }
-
         if (state.picnicMaterial) {
           const button = doc.querySelector('[data-pmat="' + state.picnicMaterial + '"]');
           if (button && !button.classList.contains('on')) button.click();
         }
-
-        [...doc.querySelectorAll('#decisionRows .rowline')].forEach((row, index) => {
-          const wanted = state.pills?.[index];
-          if (!wanted) return;
-          row.querySelectorAll('.pill').forEach(button => button.classList.toggle('on', button.textContent === wanted));
-        });
-        if (state.stock) doc.querySelectorAll('.pick').forEach(el => el.classList.toggle('on', el.getAttribute('data-stock') === state.stock));
-
-        doc.querySelectorAll('.page input[id],.page select[id],.page textarea[id]').forEach(el => {
-          if (Object.prototype.hasOwnProperty.call(state.controls || {}, el.id)) el.dispatchEvent(new Event('input', { bubbles:true }));
-        });
         if (typeof win.syncAlcove === 'function') win.syncAlcove();
         if (typeof win.syncPicnic === 'function') win.syncPicnic();
         if (typeof win.syncTransaction === 'function') win.syncTransaction();
@@ -531,18 +433,24 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
     doc.querySelectorAll('#new-user .demo-account-gate,#returning .demo-account-gate,#professional .demo-account-gate').forEach(node => node.remove());
 
-    function addEntryNext(pageId) {
-      const page = doc.getElementById(pageId);
-      const main = page?.querySelector(':scope > .main');
-      if (!main || main.querySelector('[data-entry-next]')) return;
-      const row = doc.createElement('div');
-      row.className = 'btns';
-      row.setAttribute('data-entry-next', 'true');
-      row.innerHTML = '<button type="button" data-canonical-go="projects">NEXT → HOME</button>';
-      main.append(row);
+    const newUserStart = doc.querySelector('#new-user .btns button[data-go="projects"]');
+    if (newUserStart) {
+      newUserStart.textContent = 'NEXT → HOME';
+      newUserStart.setAttribute('data-canonical-go', 'projects');
     }
 
-    ['new-user','returning','professional'].forEach(addEntryNext);
+    const returningStart = [...doc.querySelectorAll('#returning .btns button')].find(button => /START SOMETHING NEW/i.test(button.textContent));
+    if (returningStart) returningStart.setAttribute('data-canonical-go', 'projects');
+
+    const professionalRow = doc.querySelector('#professional .door-preview');
+    if (professionalRow && !professionalRow.querySelector('[data-professional-shared-home]')) {
+      const sharedHome = doc.createElement('button');
+      sharedHome.type = 'button';
+      sharedHome.textContent = 'SHARED HOME';
+      sharedHome.setAttribute('data-professional-shared-home', 'true');
+      sharedHome.setAttribute('data-canonical-go', 'projects');
+      professionalRow.append(sharedHome);
+    }
 
     const entryPages = ['landing','new-user','returning','professional'];
     let currentId = doc.querySelector('.page.on')?.id || 'landing';
@@ -556,7 +464,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         ownedOpen = null;
         restoreState(publishedBaseline);
       }
-
       requestedView = requestedId;
       let id = requestedId;
       if (id === 'my-projects' && activeUser === 'Sarah') id = 'projects';
@@ -623,7 +530,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         if (kind === 'save-changes') savePreview(true);
         return;
       }
-
       const owned = event.target.closest('[data-owned-project-id]');
       if (owned) {
         event.preventDefault();
@@ -631,7 +537,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         openOwnedProject(owned.getAttribute('data-owned-project-id'));
         return;
       }
-
       if (preview) {
         const backTarget = event.target.closest('[data-back],button.back,button[data-go]');
         if (backTarget && (backTarget.hasAttribute('data-back') || /^back\b/i.test(backTarget.textContent.trim()))) {
@@ -642,7 +547,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
           return;
         }
       }
-
       const tile = event.target.closest('#projects .tile[data-go]');
       if (tile && tile.getAttribute('data-go') !== 'start-own') {
         event.preventDefault();
@@ -650,7 +554,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         startLibraryPreview(tile.getAttribute('data-go'));
         return;
       }
-
       const target = event.target.closest('[data-canonical-go]');
       if (!target) return;
       event.preventDefault();
