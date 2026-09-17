@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Scan-to-Build — System Build</title>
-<meta name="stb-canonical-build" content="front-door-0.7">
+<meta name="stb-canonical-build" content="front-door-0.8">
 <style>
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 #stb-current{display:block;width:100%;height:100%;border:0;background:#faf9f7}
@@ -105,6 +105,40 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
           <div class="row"><b>Capture the miss</b><span>A need we don't offer is still worth keeping.</span></div>
         `);
       }
+    }
+
+    const canonicalStore = doc.getElementById('store');
+    if (canonicalStore) {
+      const intro = canonicalStore.querySelector(':scope > .main > .band:first-child p');
+      if (intro) intro.innerHTML = `<b style="color:var(--text)">Store Zero is a declared reference lumberyard.</b> It is not a real dealer and it is not a mock-up. It is a complete, pinned answering surface, built so that a request has something specific to be answered by. It carries a catalog of SKUs with unit prices and a catalog clock. It carries declared on-hand quantities, which are stated figures and not physical counts. It carries a declared machine envelope for dimensional cell D-001 and sheet cell S-001, a declared list of the secondary operations it will and will not perform, declared economics covering mark-on, cell recovery and the cycle model, and a named owner and cell steward whose resolution authority is declared per condition class. Store Zero has one canonical reference document, STORE-ZERO.md, which ties its Store definition, machine references, economics, authority, unresolved conditions, research questions and implementation sources together. It is also the controlled research surface for asking what the yard can do now and whether any missing capability is worth adding. Every answer it returns carries its basis and its pins: which catalog clock, which engine version, which commit. That is what makes receipt of an order auditable rather than merely plausible. Send the same request twice against the same pins and the same number comes back. Send it after something moved and a different number comes back, and the record will say what moved, when, and who declared it. Store Zero holds no commercial authority, no live inventory, no payment, and no production release.`;
+
+      const rail = canonicalStore.querySelector(':scope > .rail');
+      if (rail) rail.innerHTML = `
+        <p class="hd">04 · STORE · BUILD GUIDE</p>
+        <p class="goal">The leap: the definition is the input.</p>
+        <div class="row"><b>00 · One Store truth</b><span>STORE-ZERO.md is the semantic master. Code, JSON, schemas and tests remain implementation assets — not competing Store definitions.</span></div>
+        <div class="row"><b>01 · Freeze the job</b><span>User choices become one identified version. Stop changing the thing behind the scenes.</span></div>
+        <div class="row"><b>02 · Send that exact version</b><span>No redraw. No retyping. No second interpretation before the Store sees it.</span></div>
+        <div class="row"><b>03 · Ask ordinary questions</b><span>Do you have the material? Can you do the work? What does it cost? When?</span></div>
+        <div class="row"><b>04 · Answer from declared facts</b><span>Catalog, stated stock, cell limits, services and economics already have named sources.</span></div>
+        <div class="row"><b>05 · Stamp the answer</b><span>Catalog clock + engine version + capability identity + commit.</span></div>
+        <div class="row"><b>06 · Keep declared honest</b><span>Declared means stated and checkable. Not live, measured, commissioned or physically counted unless evidence says so.</span></div>
+        <div class="row"><b>07 · Do not redesign at the counter</b><span>Store may support, adjust, defer or refuse. It may not rewrite the project.</span></div>
+        <div class="row"><b>08 · Separate work from policy</b><span>Cut, mill, drill and finish are work. Pickup, substitution and payment are transaction decisions.</span></div>
+        <div class="row"><b>09 · Price the same facts</b><span>Material + quantities + required operations + Store rules form the price basis.</span></div>
+        <div class="row"><b>10 · Return reasons</b><span>Short stock, unsupported work or changed timing comes back with the reason.</span></div>
+        <div class="row"><b>11 · Negative answers count</b><span>UNRESOLVED · REFUSED · UNAVAILABLE are useful results when they identify why the path stopped.</span></div>
+        <div class="row"><b>12 · Let the gap become evidence</b><span>Name the missing function, frequency, consequence and handling burden before proposing new capability.</span></div>
+        <div class="row"><b>13 · Add the smallest thing earned</b><span>Existing process · secondary operation · supplier · outsource · defer · refuse can all be better answers than another machine.</span></div>
+        <div class="row"><b>14 · One version, one offer</b><span>Change the definition? Make a new version. Never edit the old one into something else.</span></div>
+        <div class="row"><b>15 · Keep the verbs separate</b><span>Accept ≠ pay ≠ allocate ≠ release ≠ ready ≠ Cycle Start.</span></div>
+        <div class="row"><b>16 · Leave the machine local</b><span>The cell proves readiness. The person at the machine owns Cycle Start.</span></div>
+        <div class="row"><b>17 · Record the real outcome</b><span>Complete, stopped, recut, secondary work, inspection and staging all stay in the chain.</span></div>
+        <div class="row"><b>18 · Handoff closes the job</b><span>Staged is not picked up. Custody transfer is the close.</span></div>
+        <div class="row"><b>19 · Make it repeatable</b><span>Same request + same pins = same answer. If something changed, the record says what.</span></div>
+        <div class="row"><b>20 · Use Store Zero as the test surface</b><span>Realistic demand meets declared Store assets. Support, refusal and burden tell the research program what — if anything — is worth adding.</span></div>
+        <div class="row"><b>Why this is buildable</b><span>Nothing exotic: preserve the source, freeze the definition, ask bounded questions, answer from declared facts, and never let a later step rewrite an earlier one.</span></div>
+      `;
     }
 
     const intent = doc.getElementById('playhouse-s001');
