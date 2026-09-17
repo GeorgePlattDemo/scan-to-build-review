@@ -11,61 +11,408 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 </style>
 </head>
 <body>
-<iframe id="stb-current" title="Scan-to-Build System" src="system-build-front-door-0.5.html?v=user1-next-3"></iframe>
+<iframe id="stb-current" title="Scan-to-Build System" src="system-build-front-door-0.5.html?v=d1993b34"></iframe>
 <script>
 (() => {
   const shell = document.getElementById('stb-current');
-  const innerDoc = () => {
-    const inner = shell.contentDocument && shell.contentDocument.getElementById('stb-current');
-    return inner && inner.contentWindow;
-  };
-  const clean = () => {
-    const win = innerDoc();
-    const doc = win && win.document;
-    if (!doc || typeof win.show !== 'function') return false;
-    try {
-      sessionStorage.removeItem('stb-account-session-v1');
-      localStorage.removeItem('stb-canonical-saved-projects-v1');
-    } catch (e) {}
-    doc.querySelectorAll('.demo-active-account,#demo-empty-projects,.demo-empty-projects,.demo-account-gate,.canonical-user-label,#canonical-demo-user,[data-canonical-home-return],[data-demo-account]').forEach((node) => node.remove());
-    ['new-user', 'returning', 'professional'].forEach((id) => {
-      const page = doc.getElementById(id);
-      if (!page) return;
-      if (page.querySelector('[data-door-next]')) return;
-      const row = page.querySelector('.main .btns');
-      const btn = doc.createElement('button');
-      btn.type = 'button';
-      btn.setAttribute('data-door-next', 'projects');
-      btn.textContent = 'NEXT';
-      if (row) row.append(btn);
-      else {
-        const wrap = doc.createElement('div');
-        wrap.className = 'btns';
-        wrap.append(btn);
-        page.querySelector('.main').append(wrap);
+  const apply = () => {
+    const shellWin = shell.contentWindow;
+    const shellDoc = shellWin?.document;
+    const inner = shellDoc?.getElementById('stb-current');
+    if (!inner) return false;
+    const win = inner.contentWindow;
+    const doc = win?.document;
+    if (!doc || typeof win.show !== 'function' || !doc.getElementById('playhouse-record')) return false;
+    if (doc.documentElement.dataset.s001OutcomeSplit === 'true') return true;
+    doc.documentElement.dataset.s001OutcomeSplit = 'true';
+
+    const style = doc.createElement('style');
+    style.textContent = `
+      .s001-v2-intent-grid{display:grid;grid-template-columns:minmax(0,.9fr) minmax(300px,1.1fr);gap:16px;align-items:start;margin:14px 0}
+      .s001-v2-story{font-size:13px;line-height:1.55;margin:10px 0 0}
+      .s001-v2-callout{margin:12px 0;padding:12px 14px;border-left:4px solid var(--accent);background:var(--tint);font-size:13px;line-height:1.5}
+      .s001-v2-callout b{display:block;margin-bottom:3px}
+      .s001-v2-machine-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);gap:16px;align-items:start;margin:14px 0}
+      .s001-v2-sheet{width:100%;height:auto;display:block;background:#f4efe7;border-radius:9px;border:1px solid var(--border)}
+      .s001-v2-legend{display:flex;flex-wrap:wrap;gap:10px 16px;margin:9px 0 0;font-size:10.5px;color:var(--text2)}
+      .s001-v2-legend span{display:flex;align-items:center;gap:6px}
+      .s001-v2-key{width:24px;height:0;border-top:3px solid #3f3a34;display:inline-block}
+      .s001-v2-key.tabs{border-top-style:dotted;border-top-width:5px;border-color:#7a5b2f}
+      .s001-v2-key.saw{border-top-style:dashed;border-color:#315f85}
+      .s001-v2-key.out{height:9px;border:0;background:rgba(176,55,52,.18);outline:1px solid rgba(176,55,52,.55)}
+      .s001-v2-seq{display:grid;gap:7px;margin:12px 0}
+      .s001-v2-seq .row{display:grid;grid-template-columns:28px 1fr;gap:9px;padding:9px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface)}
+      .s001-v2-seq .n{font-size:10px;font-weight:800;color:var(--accent)}
+      .s001-v2-seq b,.s001-v2-seq span{display:block}
+      .s001-v2-seq b{font-size:11px}.s001-v2-seq span{margin-top:2px;font-size:10.5px;color:var(--text2);line-height:1.35}
+      .s001-v2-store-split{display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:9px;margin:12px 0}
+      .s001-v2-store-card{border:1px solid var(--border);border-radius:9px;background:var(--surface);padding:11px}
+      .s001-v2-store-card h3{margin:0 0 7px;font-size:12px}.s001-v2-store-card p{margin:5px 0;font-size:11px;line-height:1.45}
+      .s001-v2-pass{border-left:4px solid #557b58}.s001-v2-separate{border-left:4px solid #9b7540}
+      .s001-v2-order{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:7px;margin:12px 0}
+      .s001-v2-order>div{border:1px solid var(--border);border-radius:8px;padding:9px;background:var(--surface)}
+      .s001-v2-order b,.s001-v2-order span{display:block}.s001-v2-order b{font-size:9px;letter-spacing:.05em;color:var(--text2)}.s001-v2-order span{margin-top:3px;font-size:11.5px}
+      @media(max-width:820px){.s001-v2-intent-grid,.s001-v2-machine-grid{grid-template-columns:1fr}}
+    `;
+    doc.head.append(style);
+
+    const home = doc.getElementById('projects');
+    if (home) {
+      home.querySelector('[data-canonical-home-return]')?.remove();
+
+      const ribbon = home.querySelector(':scope > .split > .ribbon');
+      if (ribbon) {
+        ['start-own','alcove-capture','window-intake','window-parts','picnic-chooser'].forEach(id => {
+          const tile = ribbon.querySelector(`.tile[data-go="${id}"]`);
+          if (tile) ribbon.append(tile);
+        });
       }
-    });
-    if (!doc.documentElement.dataset.doorNextClick) {
-      doc.documentElement.dataset.doorNextClick = 'true';
-      doc.addEventListener('click', (e) => {
-        const btn = e.target.closest('[data-door-next]');
-        if (!btn) return;
-        e.preventDefault();
-        win.show('projects');
-      });
+
+      const body = home.querySelector(':scope > .split > .body');
+      if (body) {
+        [...body.children].forEach(node => {
+          if (!node.classList.contains('backbar')) node.remove();
+        });
+        body.insertAdjacentHTML('beforeend', `
+          <h1 style="font-size:21px">What are you making?</h1>
+          <p><b>A bounded project starts with work that has already been mapped.</b> <span class="dim">The parts, their relationships, and the questions that must be answered are defined before you get here. Anything that still needs engineering, Store resolution, or physical verification stays visible.</span></p>
+          <p class="dim">What's left is the part only you can answer: <b style="color:var(--text)">your space, your measurements, and the choices that make this one yours.</b></p>
+          <p class="dim">You should not be asked to solve the project for us. <b style="color:var(--text)">A question appears only when your answer changes the definition.</b></p>
+          <p><b>That's why the list is worth a look first.</b> <span class="dim">When a bounded project fits what you want to make, you skip the questions that do not belong to you.</span></p>
+          <h3>Some answers open more questions</h3>
+          <p class="dim">Choose doors, for example, and the project may also need to know the door type, hardware path, clearances, and required machining.</p>
+          <p class="dim">Choose no doors and those questions disappear. <b style="color:var(--text)">No choice, no unnecessary question.</b></p>
+          <h3>If nothing here is your thing</h3>
+          <p class="dim"><b style="color:var(--text)">Start your own stays first.</b> Bring the need, measurements, sketch, drawing, photo, board, or file you already have. We keep the source, show what can be defined, and leave what is still missing visible.</p>
+          <p class="dim">When the required responsibilities are accounted for, the project can ask the Store a clear question.</p>
+        `);
+      }
+
+      const rail = home.querySelector(':scope > .rail');
+      if (rail) {
+        const foot = rail.querySelector(':scope > .foot');
+        [...rail.children].forEach(node => {
+          if (node !== foot) node.remove();
+        });
+        rail.insertAdjacentHTML('afterbegin', `
+          <p class="hd">BUILD GUIDE</p>
+          <p class="goal">Common project contract</p>
+          <div class="row"><b>Name the problem</b><span>Critical fit, not “shelving.”</span></div>
+          <div class="row"><b>Make it worth opening</b><span>Color and character earn the click.</span></div>
+          <div class="row"><b>Ask only what matters</b><span>If the answer changes the project, ask it. Otherwise don't.</span></div>
+          <div class="row"><b>Keep responsibility honest</b><span>User chooses. Project derives. Store resolves. Unknown stays visible.</span></div>
+          <div class="row"><b>Keep the door open</b><span>Start your own is first and never moves.</span></div>
+          <div class="row"><b>Capture the miss</b><span>A need we don't offer is still worth keeping.</span></div>
+        `);
+      }
     }
+
+    const canonicalStore = doc.getElementById('store');
+    if (canonicalStore) {
+      const intro = canonicalStore.querySelector(':scope > .main > .band:first-child p');
+      if (intro) intro.innerHTML = `<b style="color:var(--text)">Store Zero is a declared reference lumberyard.</b> It is not a real dealer and it is not a mock-up. It is a complete, pinned answering surface, built so that a request has something specific to be answered by. It carries a catalog of SKUs with unit prices and a catalog clock. It carries declared on-hand quantities, which are stated figures and not physical counts. It carries a declared machine envelope for dimensional cell D-001 and sheet cell S-001, a declared list of the secondary operations it will and will not perform, declared economics covering mark-on, cell recovery and the cycle model, and a named owner and cell steward whose resolution authority is declared per condition class. Store Zero has one canonical reference document, STORE-ZERO.md, which ties its Store definition, machine references, economics, authority, unresolved conditions, research questions and implementation sources together. It is also the controlled research surface for asking what the yard can do now and whether any missing capability is worth adding. Every answer it returns carries its basis and its pins: which catalog clock, which engine version, which commit. That is what makes receipt of an order auditable rather than merely plausible. Send the same request twice against the same pins and the same number comes back. Send it after something moved and a different number comes back, and the record will say what moved, when, and who declared it. Store Zero holds no commercial authority, no live inventory, no payment, and no production release.`;
+
+      const rail = canonicalStore.querySelector(':scope > .rail');
+      if (rail) rail.innerHTML = `
+        <p class="hd">04 · STORE · BUILD GUIDE</p>
+        <p class="goal">The leap: the definition is the input.</p>
+        <div class="row"><b>00 · One Store truth</b><span>STORE-ZERO.md is the semantic master. Code, JSON, schemas and tests remain implementation assets — not competing Store definitions.</span></div>
+        <div class="row"><b>01 · Freeze the job</b><span>User choices become one identified version. Stop changing the thing behind the scenes.</span></div>
+        <div class="row"><b>02 · Send that exact version</b><span>No redraw. No retyping. No second interpretation before the Store sees it.</span></div>
+        <div class="row"><b>03 · Ask ordinary questions</b><span>Do you have the material? Can you do the work? What does it cost? When?</span></div>
+        <div class="row"><b>04 · Answer from declared facts</b><span>Catalog, stated stock, cell limits, services and economics already have named sources.</span></div>
+        <div class="row"><b>05 · Stamp the answer</b><span>Catalog clock + engine version + capability identity + commit.</span></div>
+        <div class="row"><b>06 · Keep declared honest</b><span>Declared means stated and checkable. Not live, measured, commissioned or physically counted unless evidence says so.</span></div>
+        <div class="row"><b>07 · Do not redesign at the counter</b><span>Store may support, adjust, defer or refuse. It may not rewrite the project.</span></div>
+        <div class="row"><b>08 · Separate work from policy</b><span>Cut, mill, drill and finish are work. Pickup, substitution and payment are transaction decisions.</span></div>
+        <div class="row"><b>09 · Price the same facts</b><span>Material + quantities + required operations + Store rules form the price basis.</span></div>
+        <div class="row"><b>10 · Return reasons</b><span>Short stock, unsupported work or changed timing comes back with the reason.</span></div>
+        <div class="row"><b>11 · Negative answers count</b><span>UNRESOLVED · REFUSED · UNAVAILABLE are useful results when they identify why the path stopped.</span></div>
+        <div class="row"><b>12 · Let the gap become evidence</b><span>Name the missing function, frequency, consequence and handling burden before proposing new capability.</span></div>
+        <div class="row"><b>13 · Add the smallest thing earned</b><span>Existing process · secondary operation · supplier · outsource · defer · refuse can all be better answers than another machine.</span></div>
+        <div class="row"><b>14 · One version, one offer</b><span>Change the definition? Make a new version. Never edit the old one into something else.</span></div>
+        <div class="row"><b>15 · Keep the verbs separate</b><span>Accept ≠ pay ≠ allocate ≠ release ≠ ready ≠ Cycle Start.</span></div>
+        <div class="row"><b>16 · Leave the machine local</b><span>The cell proves readiness. The person at the machine owns Cycle Start.</span></div>
+        <div class="row"><b>17 · Record the real outcome</b><span>Complete, stopped, recut, secondary work, inspection and staging all stay in the chain.</span></div>
+        <div class="row"><b>18 · Handoff closes the job</b><span>Staged is not picked up. Custody transfer is the close.</span></div>
+        <div class="row"><b>19 · Make it repeatable</b><span>Same request + same pins = same answer. If something changed, the record says what.</span></div>
+        <div class="row"><b>20 · Use Store Zero as the test surface</b><span>Realistic demand meets declared Store assets. Support, refusal and burden tell the research program what — if anything — is worth adding.</span></div>
+        <div class="row"><b>Why this is buildable</b><span>Nothing exotic: preserve the source, freeze the definition, ask bounded questions, answer from declared facts, and never let a later step rewrite an earlier one.</span></div>
+      `;
+    }
+
+    const intent = doc.getElementById('playhouse-s001');
+    const intentMain = intent?.querySelector('.main');
+    const intentRail = intent?.querySelector('.rail');
+    if (intentMain) intentMain.innerHTML = `
+      <h1>SCAN / INTENT · PLAYHOUSE WINDOW</h1>
+      <p class="sub">Sarah does not need a whole sheet of plywood. She needs the useful parts the sheet can become.</p>
+      <div class="s001-v2-intent-grid">
+        <section class="s001-card">
+          <h3>SARAH'S PROJECT</h3>
+          <svg class="s001-source-art" viewBox="0 0 420 300" role="img" aria-label="Small outdoor playhouse with a large arched window marked on the wall">
+            <rect width="420" height="300" fill="#eee7da"/>
+            <path d="M75 125 L210 42 L345 125" fill="none" stroke="#766652" stroke-width="8" stroke-linejoin="round"/>
+            <rect x="92" y="122" width="236" height="145" rx="2" fill="#d7b785" stroke="#766652" stroke-width="5"/>
+            <rect x="118" y="177" width="58" height="90" fill="#8d6a46" opacity=".72"/>
+            <path d="M206 236 L206 179 Q206 137 250 137 Q294 137 294 179 L294 236 Z" fill="#f5f1e9" stroke="#5d5041" stroke-width="5" stroke-dasharray="7 5"/>
+            <line x1="250" y1="137" x2="250" y2="236" stroke="#7a5b2f" stroke-width="3" stroke-dasharray="6 5"/>
+            <text x="250" y="265" text-anchor="middle" font-size="13" fill="#4c443b">36 in opening</text>
+            <text x="302" y="190" font-size="12" fill="#4c443b">24 in straight</text>
+            <text x="252" y="128" text-anchor="middle" font-size="12" fill="#4c443b">12 in rise</text>
+          </svg>
+          <p class="s001-v2-story">She wants a large arched opening in the playhouse wall. She wants the center kept intact enough to take home and may turn it into shutters. She wants the remaining pieces returned too. Hinges and final owner finishing are outside this yard order.</p>
+        </section>
+        <section class="s001-card">
+          <h3>WHAT SARAH DEFINES</h3>
+          <div class="s001-data">
+            <div class="row"><b>WOOD</b><span>48 × 96 in · 1/2 in plywood</span></div>
+            <div class="row"><b>OPENING</b><span>36 in wide · 24 in straight · 12 in rise</span></div>
+            <div class="row"><b>KEEP CENTER</b><span>Yes · retained by tabs</span></div>
+            <div class="row"><b>RETURN REMNANTS</b><span>Yes · do not treat as disposal</span></div>
+            <div class="row"><b>OWNER FINISH</b><span>Sarah trims retained tabs later</span></div>
+            <div class="row"><b>HARDWARE</b><span>Not included in this order</span></div>
+          </div>
+          <div class="s001-v2-callout"><b>The sheet is the input. The outcome is the parts.</b>The scan / intent page keeps the human reason for the job. The next page carries only the material, geometry and operations the system needs.</div>
+        </section>
+      </div>
+      <div class="s001-boundary">Intent does not create machine motion. Sarah defines the material and features; the machine-facing definition is derived next and remains bounded by the admitted Store envelope.</div>
+      <div class="btns"><button type="button" data-canonical-go="projects">BACK TO HOME</button><button type="button" data-canonical-go="playhouse-machine">SEE MACHINE DEFINITION →</button></div>
+    `;
+    if (intentRail) intentRail.innerHTML = `<p class="hd">BUILD GUIDE</p><p class="goal">Outcome before gadget</p><div class="row"><b>Why this page exists</b><span>Human intent has value here. Sarah describes the result she wants, not machine coordinates.</span></div><div class="row"><b>What carries forward</b><span>Material, dimensions, retained-part intent and requested operations.</span></div>`;
+
+    let machine = doc.getElementById('playhouse-machine');
+    if (!machine) {
+      machine = doc.createElement('section');
+      machine.className = 'page';
+      machine.id = 'playhouse-machine';
+      machine.innerHTML = `<div class="main">
+        <h1>MACHINE DEFINITION · SHEET</h1>
+        <p class="sub">The story stops here. This page carries only what the bounded sheet operation needs to know.</p>
+        <div class="s001-v2-machine-grid">
+          <section class="s001-card">
+            <svg class="s001-v2-sheet" viewBox="0 0 960 480" role="img" aria-label="Four by eight plywood sheet showing current routed work field, routed arched profile with tabs, internal route, and separate secondary saw cut requests">
+              <rect x="8" y="8" width="944" height="464" rx="5" fill="#eee7da" stroke="#5d5041" stroke-width="4"/>
+              <rect x="8" y="8" width="232" height="464" fill="#b03734" opacity=".12"/>
+              <rect x="720" y="8" width="232" height="464" fill="#b03734" opacity=".12"/>
+              <rect x="240" y="8" width="480" height="52" fill="#b03734" opacity=".12"/>
+              <rect x="240" y="420" width="480" height="52" fill="#b03734" opacity=".12"/>
+              <rect x="240" y="60" width="480" height="360" fill="#faf8f2" stroke="#9c3e3a" stroke-width="3" stroke-dasharray="11 8"/>
+              <line x1="180" y1="16" x2="180" y2="464" stroke="#315f85" stroke-width="4" stroke-dasharray="13 10"/>
+              <line x1="780" y1="16" x2="780" y2="464" stroke="#315f85" stroke-width="4" stroke-dasharray="13 10"/>
+              <path id="s001-opening-path" d="" fill="none" stroke="#3f3a34" stroke-width="5"/>
+              <path id="s001-center-route" d="" fill="none" stroke="#7a5b2f" stroke-width="4"/>
+              <g id="s001-tab-markers"></g>
+              <text x="480" y="31" text-anchor="middle" font-size="18" fill="#4c443b">96 in parent sheet</text>
+              <text x="480" y="84" text-anchor="middle" font-size="16" fill="#7f332f">CURRENT ROUTED FIELD · 48 × 36 in</text>
+              <text x="180" y="455" text-anchor="middle" font-size="13" fill="#315f85">18 in</text>
+              <text x="780" y="455" text-anchor="middle" font-size="13" fill="#315f85">18 in</text>
+              <text id="s001-opening-label" x="480" y="408" text-anchor="middle" font-size="15" fill="#4c443b"></text>
+            </svg>
+            <div class="s001-v2-legend">
+              <span><i class="s001-v2-key"></i> routed path</span>
+              <span><i class="s001-v2-key tabs"></i> retained tab material</span>
+              <span><i class="s001-v2-key saw"></i> secondary straight-cut request</span>
+              <span><i class="s001-v2-key out"></i> outside current routed field</span>
+            </div>
+            <p class="dim">The blue straight-cut lines are shown because Sarah requested them. They are intentionally kept separate from the currently pinned routed S-001 Store envelope.</p>
+          </section>
+          <section class="s001-card">
+            <h3>BOUNDED GEOMETRY</h3>
+            <div class="s001-control"><label for="s001-opening-width">Opening width</label><output id="s001-opening-width-out">36 in</output><input id="s001-opening-width" data-s001-control type="range" min="1" max="48" step="0.5" value="36"></div>
+            <div class="s001-control"><label for="s001-straight-height">Straight side height</label><output id="s001-straight-height-out">24 in</output><input id="s001-straight-height" data-s001-control type="range" min="1" max="35" step="0.5" value="24"></div>
+            <div class="s001-control"><label for="s001-arch-rise">Arch rise</label><output id="s001-arch-rise-out">12 in</output><input id="s001-arch-rise" data-s001-control type="range" min="1" max="12" step="0.5" value="12"></div>
+            <div class="btns"><button type="button" data-s001-control id="s001-reset">RESET TO SARAH'S 36 / 24 / 12</button></div>
+            <div class="s001-status">ROUTED PROFILE IS INSIDE CURRENT 48 × 36 REFERENCE FIELD</div>
+            <p class="dim" id="s001-geometry-summary"></p>
+            <div class="s001-v2-seq">
+              <div class="row"><span class="n">01</span><div><b>ROUTE INTERNAL CENTER FEATURE</b><span>Straight internal route. Retained material remains connected by tabs according to the project rule.</span></div></div>
+              <div class="row"><span class="n">02</span><div><b>ROUTE OUTER ARCHED PROFILE</b><span>Curvilinear opening profile with retained tabs.</span></div></div>
+              <div class="row"><span class="n">03</span><div><b>SECONDARY STRAIGHT CUT REQUEST</b><span>Two straight cuts, 18 in from the sheet ends. Shown as a separate requested operation because it is not admitted by the pinned routed envelope.</span></div></div>
+            </div>
+          </section>
+        </div>
+        <div class="s001-boundary">This is an operation definition, not controller code. The internal route and straight-cut requests are retained as project facts; Store decides which portions are inside its current reference capability.</div>
+        <div class="btns"><button type="button" data-canonical-go="playhouse-s001">BACK TO INTENT</button><button type="button" data-canonical-go="playhouse-store">ASK STORE ZERO →</button></div>
+      </div><aside class="rail"><p class="hd">BUILD GUIDE</p><p class="goal">Only machine-facing facts</p><div class="row"><b>Material</b><span>48 × 96 in · 1/2 in plywood.</span></div><div class="row"><b>Current routed field</b><span>48 × 36 in centered.</span></div><div class="row"><b>Paths</b><span>Internal route · outer arched route · separate straight-cut request.</span></div></aside>`;
+      intent.insertAdjacentElement('afterend', machine);
+    }
+
+    const store = doc.getElementById('playhouse-store');
+    const storeMain = store?.querySelector('.main');
+    const storeRail = store?.querySelector('.rail');
+    if (storeMain) storeMain.innerHTML = `
+      <h1>STORE ZERO · JOB CHECK</h1>
+      <p class="sub">Store separates what the pinned S-001 routed envelope can support from requested work that still belongs to a separate operation path.</p>
+      <div class="s001-v2-store-split">
+        <section class="s001-v2-store-card s001-v2-pass"><h3>ROUTED ARCHED OPENING</h3><p><b>SUPPORTABLE · REFERENCE</b></p><p>Request: <code>SHEET_MODE2_ARCHED_APERTURE_V0</code><br>Envelope: <code>S001-MODE2-ARCHED-APERTURE-V0</code></p><p id="s001-store-opening"></p><p id="s001-store-radius"></p><p>4 requested tabs · Store reference plan 5 · physical retention NOT MEASURED.</p></section>
+        <section class="s001-v2-store-card s001-v2-separate"><h3>ADDITIONAL PROJECT FEATURES</h3><p><b>RETAINED · SEPARATE FROM PINNED ROUTED ENVELOPE</b></p><p>Internal center route feature and two straight saw-cut requests at 18 in from each sheet end remain in the project definition.</p><p>They are not silently promoted into <code>SHEET_MODE2_ARCHED_APERTURE_V0</code>.</p></section>
+      </div>
+      <div class="s001-v2-order">
+        <div><b>MATERIAL</b><span>STB-ZERO-PLY-050-48X96-001</span></div>
+        <div><b>ROUTED DISPOSITION</b><span>SUPPORTABLE · REFERENCE</span></div>
+        <div><b>REFERENCE AMOUNT</b><span>$26.55 material-only</span></div>
+        <div><b>PROCESS / SECONDARY COST</b><span>UNRESOLVED</span></div>
+        <div><b>COMMISSIONED</b><span>false</span></div>
+        <div><b>PHYSICAL AUTHORITY</b><span>false</span></div>
+      </div>
+      <div class="s001-boundary">The Store answer is deliberately mixed: the arched routed opening is inside the current reference envelope; the extra center route and straight-cut requests remain visible but are not invented into that envelope. No binding quote or fabrication authority is created.</div>
+      <div class="btns"><button type="button" data-canonical-go="playhouse-machine">BACK TO MACHINE DEFINITION</button><button type="button" data-canonical-go="playhouse-review">REVIEW JOB FACTS →</button></div>
+    `;
+    if (storeRail) storeRail.innerHTML = `<p class="hd">BUILD GUIDE</p><p class="goal">The Store is a membrane</p><div class="row"><b>Supported</b><span>The bounded arched route inside the pinned reference envelope.</span></div><div class="row"><b>Retained, not invented</b><span>Additional requested features stay in the job even when this Store envelope does not yet admit them.</span></div>`;
+
+    const review = doc.getElementById('playhouse-review');
+    const reviewMain = review?.querySelector('.main');
+    if (reviewMain) reviewMain.innerHTML = `
+      <h1>REVIEW · SARAH'S JOB</h1>
+      <p class="sub">The narrative has become a bounded definition and a Store answer. Review shows the facts without turning unresolved work into capability.</p>
+      <div class="s001-v2-order">
+        <div><b>PROJECT</b><span>Playhouse arched window</span></div>
+        <div><b>WOOD</b><span>48 × 96 in · 1/2 in plywood</span></div>
+        <div><b>OPENING</b><span id="s001-review-opening"></span></div>
+        <div><b>PRIMARY ROUTE</b><span>SUPPORTABLE · REFERENCE</span></div>
+        <div><b>CENTER FEATURE</b><span>Requested · retained separately</span></div>
+        <div><b>STRAIGHT CUTS</b><span>2 requested · 18 in from sheet ends · separate path</span></div>
+        <div><b>RETURN MATERIAL</b><span>Center and remnants retained for Sarah</span></div>
+        <div><b>HARDWARE</b><span>Not included</span></div>
+      </div>
+      <div class="s001-boundary">Confirming this review retains the job definition. It is not payment, reservation, production release, machine readiness, or physical execution authorization.</div>
+      <div class="btns"><button type="button" data-canonical-go="playhouse-store">BACK TO STORE</button><button type="button" data-canonical-go="playhouse-result">CONFIRM JOB FACTS →</button></div>
+    `;
+
+    const result = doc.getElementById('playhouse-result');
+    const resultMain = result?.querySelector('.main');
+    if (resultMain) resultMain.innerHTML = `
+      <h1>RESULT · JOB DEFINITION RETAINED</h1>
+      <p class="sub">The journey reached a truthful Store result: one bounded operation is supported in reference software; the additional requested operations remain explicit and unresolved at this Store envelope.</p>
+      <div class="s001-v2-order">
+        <div><b>CLASS</b><span>S001_CENTERED_ARCHED_SHEET_V0</span></div>
+        <div><b>GEOMETRY</b><span id="s001-result-geometry"></span></div>
+        <div><b>ROUTED STORE STATUS</b><span>SUPPORTABLE · REFERENCE</span></div>
+        <div><b>ADDITIONAL OPS</b><span>Retained · not admitted to pinned routed envelope</span></div>
+        <div><b>PHYSICAL STATUS</b><span>NOT CLAIMED / NOT AUTHORIZED</span></div>
+        <div><b>OWNER MATERIAL</b><span>Center + remnants designated for return</span></div>
+      </div>
+      <div class="btns"><button type="button" data-canonical-go="playhouse-review">BACK TO REVIEW</button><button type="button" data-canonical-go="playhouse-record">OPEN ORDER / JOURNEY RECORD →</button></div>
+    `;
+
+    const record = doc.getElementById('playhouse-record');
+    const recordMain = record?.querySelector('.main');
+    const recordRail = record?.querySelector('.rail');
+    if (recordMain) recordMain.innerHTML = `
+      <h1>SARAH · ORDER / JOURNEY RECORD</h1>
+      <p class="sub">Only the facts needed to explain what this journey established are retained here.</p>
+      <div class="s001-v2-order">
+        <div><b>PROJECT</b><span>Playhouse arched window</span></div>
+        <div><b>OWNER</b><span>Sarah · demonstration project</span></div>
+        <div><b>MATERIAL</b><span>STB-ZERO-PLY-050-48X96-001 · 48 × 96 in · 1/2 in plywood</span></div>
+        <div><b>GEOMETRY</b><span id="s001-record-geometry"></span></div>
+        <div><b>PRIMARY STORE REQUEST</b><span>SHEET_MODE2_ARCHED_APERTURE_V0</span></div>
+        <div><b>PRIMARY STORE RESULT</b><span>SUPPORTABLE · REFERENCE</span></div>
+        <div><b>RETENTION</b><span>4 requested tabs · 5 planned by reference policy · NOT MEASURED physically</span></div>
+        <div><b>ADDITIONAL REQUESTS</b><span>Internal center route + two straight cuts · retained outside pinned routed envelope</span></div>
+        <div><b>RETURN TO OWNER</b><span>Center piece and remaining sheet pieces</span></div>
+        <div><b>HARDWARE</b><span>Not included</span></div>
+        <div><b>MATERIAL-ONLY REFERENCE</b><span>$26.55</span></div>
+        <div><b>PROCESS / SECONDARY PRICE</b><span>UNRESOLVED</span></div>
+        <div><b>PHYSICAL EXECUTION</b><span>false · no cut, inspection, staging or pickup recorded</span></div>
+        <div><b>STORE PIN</b><span>4402abeb6b0299a5b6db2eec85ed04c3b0236bcc</span></div>
+      </div>
+      <div class="s001-v2-callout"><b>Outcome, not gadget.</b>The human page explains why the job exists. The machine page carries only material, geometry and operations. The order / record page keeps only what the journey actually established.</div>
+      <div class="btns"><button type="button" data-canonical-go="playhouse-s001">RETURN TO INTENT</button><button type="button" data-canonical-go="projects">HOME</button></div>
+    `;
+    if (recordRail) recordRail.innerHTML = `<p class="hd">BUILD GUIDE</p><p class="goal">Facts at the end</p><div class="row"><b>What happened</b><span>A bounded project definition reached a truthful Store evaluation.</span></div><div class="row"><b>What did not happen</b><span>No physical production event is invented into the record.</span></div>`;
+
+    const oldStoreBack = doc.querySelector('#playhouse-store [data-canonical-go="playhouse-s001"]');
+    if (oldStoreBack) oldStoreBack.setAttribute('data-canonical-go', 'playhouse-machine');
+
+    const fmt = (value) => Number(value).toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
+    const read = () => {
+      const width = Number(doc.getElementById('s001-opening-width')?.value || 36);
+      const straight = Number(doc.getElementById('s001-straight-height')?.value || 24);
+      const rise = Number(doc.getElementById('s001-arch-rise')?.value || 12);
+      const total = straight + rise;
+      const radius = width * width / (8 * rise) + rise / 2;
+      return { width, straight, rise, total, radius };
+    };
+    const text = (id, value) => { const el = doc.getElementById(id); if (el) el.textContent = value; };
+    const sync = () => {
+      const widthInput = doc.getElementById('s001-opening-width');
+      const straightInput = doc.getElementById('s001-straight-height');
+      const riseInput = doc.getElementById('s001-arch-rise');
+      if (!widthInput || !straightInput || !riseInput) return;
+      let straight = Math.max(1, Math.min(35, Number(straightInput.value) || 24));
+      let rise = Math.max(1, Number(riseInput.value) || 12);
+      let width = Math.max(1, Math.min(48, Number(widthInput.value) || 36));
+      const maxRise = Math.max(1, 36 - straight);
+      riseInput.max = String(maxRise);
+      if (rise > maxRise) rise = maxRise;
+      widthInput.value = String(width); straightInput.value = String(straight); riseInput.value = String(rise);
+      const g = read();
+      text('s001-opening-width-out', fmt(g.width) + ' in');
+      text('s001-straight-height-out', fmt(g.straight) + ' in');
+      text('s001-arch-rise-out', fmt(g.rise) + ' in');
+      const px = 10, centerX = 480, fieldTop = 60, fieldHeight = 360;
+      const openingW = g.width * px, openingH = g.total * px;
+      const bottom = fieldTop + (fieldHeight + openingH) / 2;
+      const top = bottom - openingH;
+      const springY = bottom - g.straight * px;
+      const left = centerX - openingW / 2, right = centerX + openingW / 2;
+      const outer = `M ${left} ${bottom} L ${left} ${springY} Q ${centerX} ${top} ${right} ${springY} L ${right} ${bottom} Z`;
+      doc.getElementById('s001-opening-path')?.setAttribute('d', outer);
+      const centerRoute = `M ${centerX} ${bottom} L ${centerX} ${top + 7}`;
+      doc.getElementById('s001-center-route')?.setAttribute('d', centerRoute);
+      const tabs = doc.getElementById('s001-tab-markers');
+      if (tabs) {
+        const points = [
+          [left, bottom - g.straight * px * .45],
+          [right, bottom - g.straight * px * .45],
+          [centerX - openingW * .22, top + g.rise * px * .42],
+          [centerX + openingW * .22, top + g.rise * px * .42],
+          [centerX, bottom - openingH * .28]
+        ];
+        tabs.innerHTML = points.map(([x,y]) => `<circle cx="${x}" cy="${y}" r="7" fill="#f4efe7" stroke="#7a5b2f" stroke-width="4"/>`).join('');
+      }
+      text('s001-opening-label', `${fmt(g.width)} wide · ${fmt(g.straight)} straight + ${fmt(g.rise)} rise = ${fmt(g.total)} high`);
+      text('s001-geometry-summary', `Opening ${fmt(g.width)} × ${fmt(g.total)} in overall · straight side ${fmt(g.straight)} in · arch rise ${fmt(g.rise)} in · derived radius ${fmt(g.radius)} in.`);
+      text('s001-store-opening', `${fmt(g.width)} in wide × ${fmt(g.total)} in overall`);
+      text('s001-store-radius', `Circular segment · ${fmt(g.radius)} in derived radius`);
+      text('s001-review-opening', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise · ${fmt(g.total)} total height`);
+      text('s001-result-geometry', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise · ${fmt(g.total)} total height`);
+      text('s001-record-geometry', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise`);
+    };
+
+    ['s001-opening-width','s001-straight-height','s001-arch-rise'].forEach(id => doc.getElementById(id)?.addEventListener('input', sync));
+    doc.getElementById('s001-reset')?.addEventListener('click', () => {
+      doc.getElementById('s001-opening-width').value = '36';
+      doc.getElementById('s001-straight-height').value = '24';
+      doc.getElementById('s001-arch-rise').value = '12';
+      sync();
+    });
+    sync();
+
+    const originalShow = win.show;
+    win.show = function(id) {
+      const result = originalShow.apply(this, arguments);
+      if (String(id).startsWith('playhouse')) setTimeout(sync, 0);
+      return result;
+    };
     return true;
   };
-  const tick = () => {
-    let n = 0;
-    const t = setInterval(() => {
-      n += 1;
-      try { clean(); } catch (e) {}
-      if (n > 400) clearInterval(t);
-    }, 40);
+
+  const scheduleApply = () => {
+    let attempts = 0;
+    const timer = setInterval(() => {
+      attempts += 1;
+      try {
+        if (apply() || attempts > 200) clearInterval(timer);
+      } catch (error) {
+        if (attempts > 200) clearInterval(timer);
+      }
+    }, 50);
   };
-  shell.addEventListener('load', tick);
-  if (shell.contentDocument && shell.contentDocument.readyState === 'complete') tick();
+  shell.addEventListener('load', scheduleApply);
+  if (shell.contentDocument?.readyState === 'complete') scheduleApply();
 })();
 </script>
 </body>
