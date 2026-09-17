@@ -68,20 +68,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     if (recovery) {
       const homeButton = recovery.querySelector('[data-go="projects"]');
       if (homeButton) homeButton.textContent = 'Home';
-      const myProjectsButton = doc.createElement('button');
-      myProjectsButton.type = 'button';
-      myProjectsButton.textContent = 'My Projects';
-      myProjectsButton.setAttribute('data-canonical-go', 'my-projects');
-      if (homeButton) homeButton.insertAdjacentElement('afterend', myProjectsButton);
-
-      const spacer = doc.createElement('span');
-      spacer.className = 'canonical-nav-spacer';
-      recovery.append(spacer);
-
-      const userLabel = doc.createElement('label');
-      userLabel.className = 'canonical-user-label';
-      userLabel.innerHTML = 'DEMO USER <select id="canonical-demo-user"><option>Sarah</option><option>Tom</option><option>Dick</option><option>Harry</option></select>';
-      recovery.append(userLabel);
     }
 
     function makePage(id, mainHtml, railHtml) {
@@ -518,17 +504,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       canonicalShow(item.rootId);
     }
 
-    renderAccount('Sarah');
-
-    const homeBody = doc.querySelector('#projects .body');
-    if (homeBody && !homeBody.querySelector('[data-canonical-home-return]')) {
-      const returnRow = doc.createElement('div');
-      returnRow.className = 'btns';
-      returnRow.setAttribute('data-canonical-home-return', 'true');
-      returnRow.innerHTML = '<button type="button" data-canonical-go="my-projects">RETURN TO MY PROJECTS</button>';
-      homeBody.prepend(returnRow);
-    }
-
+    // Front-door contract: landing -> new-user -> projects.
+    // Front-door contract: landing -> returning -> projects via START SOMETHING NEW.
+    // Front-door contract: landing -> professional -> projects via SHARED HOME.
     doc.querySelectorAll('#new-user .demo-account-gate,#returning .demo-account-gate,#professional .demo-account-gate').forEach(node => node.remove());
 
     function replaceEntryHomeButton(button, label) {
@@ -536,16 +514,21 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       const clean = button.cloneNode(true);
       clean.type = 'button';
       clean.textContent = label;
+      clean.removeAttribute('disabled');
       clean.removeAttribute('data-go');
       clean.removeAttribute('onclick');
       clean.setAttribute('data-canonical-go', 'projects');
       button.replaceWith(clean);
     }
 
-    replaceEntryHomeButton(
-      doc.querySelector('#new-user .btns button[data-go="projects"]'),
-      'NEXT → HOME'
-    );
+    const newUserMain = doc.querySelector('#new-user .main');
+    if (newUserMain && !newUserMain.querySelector('[data-new-user-home]')) {
+      const next = doc.createElement('div');
+      next.className = 'door-next';
+      next.setAttribute('data-new-user-home', 'true');
+      next.innerHTML = '<div class="btns"><button type="button" data-canonical-go="projects">NEXT → HOME</button></div>';
+      newUserMain.append(next);
+    }
 
     const returningStart = [...doc.querySelectorAll('#returning .btns button')].find(button => /START SOMETHING NEW/i.test(button.textContent));
     replaceEntryHomeButton(returningStart, 'START SOMETHING NEW');
