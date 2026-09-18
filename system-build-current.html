@@ -553,14 +553,32 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         '</span></div><div><b>AUTHORITY</b><span>reference / no physical execution</span></div></div>';
 
       if (stage === 'store') {
+        const nextStep = blocking.length
+          ? 'Return to the project, create a new revision, and rerun dependent checks'
+          : !ans
+            ? 'Evaluate the confirmed Window Seat revision with Store Zero'
+            : ans.stale
+              ? 'Return to the project and evaluate the current revision'
+              : 'Review the Store answer against this exact Window Seat revision';
         const stateRows = ans ? [
           ['Material mapping', ans.states?.mapping || '—'],
           ['Availability', ans.states?.availability || '—'],
           ['Edge milling', ans.states?.edgeMill || '—'],
           ['Price evidence', ans.states?.price || '—'],
           ['Job disposition', ans.jobDisposition || ans.status || '—'],
-          ['Known reference basis', moneySeat(ans.q)]
-        ] : [['Store answer', 'NOT YET EVALUATED']];
+          ['Known reference basis', moneySeat(ans.q)],
+          ['Recovery basis', moneySeat(ans.recovery) + ' fabrication / fulfillment recovery'],
+          ['Cell consumption basis', moneySeat(ans.cellConsumption)],
+          ['Catalog / engine', (ans.pin?.clock || '—') + ' · ' + (ans.pin?.engine || '—')],
+          ['Commercial authority', 'NOT ESTABLISHED'],
+          ['Production authority', 'NOT ESTABLISHED'],
+          ['Next legitimate step', nextStep]
+        ] : [
+          ['Store answer', 'NOT YET EVALUATED'],
+          ['Commercial authority', 'NOT ESTABLISHED'],
+          ['Production authority', 'NOT ESTABLISHED'],
+          ['Next legitimate step', nextStep]
+        ];
         const demandRows = [
           ['Submitted revision', revision.number],
           ['Finished occurrences', occurrences.length],
