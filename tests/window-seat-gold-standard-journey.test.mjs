@@ -135,18 +135,22 @@ assert.equal(shell.includes('const seatNavTargets'),false,'Seat reference contra
 assert.match(shell,/button\.dataset\.journeyStage = stage/);
 assert.match(shell,/const stage = LEGACY_TARGET_TO_STAGE\[target\] \|\| null/);
 
-// Project switching is explicit. View/stage operations may not select Window Seat.
+// Project switching is explicit and selected before the older preview handler can stop propagation.
 const explicitSeatSelections=(shell.match(/selectJourneyProject\('window-seat'\)/g)||[]).length;
 assert.equal(explicitSeatSelections,1,'Window Seat identity can be selected from more than one path');
 const openSeat=between(shell,'function openSeatView(mode, stage) {','function showSeatContinuous()');
 assert.match(openSeat,/activeJourneyProject !== 'window-seat'/);
 assert.equal(openSeat.includes("activeJourneyProject = 'window-seat'"),false);
-const messages=between(shell,"window.addEventListener('message', function(event) {","doc.addEventListener('click', function(event) {");
+const messages=between(shell,"window.addEventListener('message', function(event) {","const PROJECT_TILE_TO_JOURNEY");
 assert.match(messages,/activeJourneyProject !== 'window-seat'/,'iframe messages can implicitly revive Window Seat');
-assert.match(shell,/if \(target === 'alcove-capture'\) selectJourneyProject\('alcove'\)/,'Alcove project selection is not explicit');
+assert.match(shell,/const PROJECT_TILE_TO_JOURNEY = Object\.freeze/);
+assert.match(shell,/'alcove-capture': 'alcove'/);
+assert.match(shell,/'window-parts': 'playhouse'/);
+assert.match(shell,/'picnic-chooser': 'picnic'/);
+assert.match(shell,/win\.addEventListener\('click', function\(event\) \{[\s\S]*PROJECT_TILE_TO_JOURNEY\[target\]/,'project identity is not selected at the window-capture boundary');
+assert.equal(shell.includes("doc.addEventListener('click', function(event) {\n      const tile = event.target.closest('#projects .tile[data-go]');"),false,'late document-capture project selector can still lose to preview stopImmediatePropagation');
 const shellShow=between(shell,'win.show = function(id) {','const result = originalShow.apply');
 assert.equal(shellShow.includes('selectJourneyProject(null)'),false,'top-nav/library navigation changes project identity');
-assert.match(shell,/else selectJourneyProject\(null\);/,'non-Seat/non-Alcove project tiles do not explicitly clear project-specific journey context');
 
 assert.match(seat,/ref=snapshot\.storeAnswer\|\|snapshot\.storeReference\|\|null/,'Review does not prefer the held Store answer');
 assert.match(seat,/jSection\('Store basis \/ pins'/,'Owner Record does not preserve Store pins');
