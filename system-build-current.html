@@ -12,6 +12,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 </head>
 <body>
 <iframe id="stb-current" title="Scan-to-Build System" src="system-build-front-door-0.5.html?v=7e4ea998"></iframe>
+<script src="store-zero-canonical-doctrine.js?v=906af215"></script>
 <script>
 (() => {
   const shell = document.getElementById('stb-current');
@@ -86,27 +87,13 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       .seat-guided-stage .ops .chain{font:11.5px/1.9 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--text2);margin:0 0 8px}
       .seat-guided-stage .close{border-top:1px solid var(--border-accent);margin-top:16px;padding-top:14px}
       .seat-guided-stage .close p{margin:0 0 9px;color:var(--text2)}
-      html[data-active-journey-project="window-seat"] .recovery-nav button[data-go="landing"]{order:1}
-      html[data-active-journey-project="window-seat"] .recovery-nav button[data-go="projects"]{order:2}
-      html[data-active-journey-project="window-seat"] .recovery-nav button[data-go="intake"]{order:3}
-      html[data-active-journey-project="window-seat"] .recovery-nav button[data-go="alcove-capture"]{order:4}
-      html[data-active-journey-project="window-seat"] .recovery-nav button[data-go="alcove-config"]{order:5}
-      html[data-active-journey-project="window-seat"] .recovery-nav button[data-go="alcove-review"]{order:6}
-      html[data-active-journey-project="window-seat"] .recovery-nav button[data-go="store"]{order:7}
-      html[data-active-journey-project="window-seat"] .recovery-nav button[data-go="request"]{order:8}
-      html[data-active-journey-project="window-seat"] .recovery-nav button[data-go="yard"]{order:9}
-      html[data-active-journey-project="window-seat"] .recovery-nav button[data-go="terms"]{order:10}
-      html[data-active-journey-project="window-seat"] .recovery-nav button[data-go="recap"]{order:11}
-      html[data-active-journey-project="window-seat"] .recovery-nav button[data-go="record"]{order:12}
-      html[data-active-journey-project="window-seat"] .recovery-nav .canonical-nav-spacer{order:90}
-      html[data-active-journey-project="window-seat"] .recovery-nav .canonical-user-label{order:100}
       @media(max-width:820px){.s001-v2-intent-grid,.s001-v2-machine-grid{grid-template-columns:1fr}.seat-guided-stage .ws-journey-grid{grid-template-columns:1fr}}
     `;
     doc.head.append(style);
 
     let activeJourneyProject = null;
     let seatJourneySnapshot = null;
-    let seatJourneyDoctrine = null;
+    let pendingSeatView = {mode:'continuous',stage:null};
 
     const home = doc.getElementById('projects');
     if (home) {
@@ -135,7 +122,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 <iframe
                   class="window-seat-shell-frame"
                   title="Space utilization · Window seat"
-                  src="stb-window-seat-space-utilization-0.7.3.html?v=91ccc121"
+                  src="stb-window-seat-space-utilization-0.7.3.html?v=20a4abdb"
                 ></iframe>
               </div>
             `;
@@ -145,12 +132,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
           windowSeatTile.addEventListener('click', event => {
             event.preventDefault();
             event.stopImmediatePropagation();
-            activeJourneyProject = 'window-seat';
-            doc.documentElement.dataset.activeJourneyProject = 'window-seat';
-            win.show('window-seat-live');
-            setTimeout(() => {
-              try { seatFrame()?.contentWindow?.scrollTo({top:0,behavior:'instant'}); } catch {}
-            }, 0);
+            showSeatContinuous();
           }, true);
         }
       }
@@ -195,49 +177,43 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     }
 
     const canonicalStore = doc.getElementById('store');
+    const canonicalDoctrine = window.STBStoreZeroCanonicalDoctrine || null;
     if (canonicalStore) {
-      const intro = canonicalStore.querySelector(':scope > .main > .band:first-child p');
-      if (intro) intro.innerHTML = `<b style="color:var(--text)">Store Zero is a declared reference lumberyard.</b> It is not a real dealer and it is not a mock-up. It is a complete, pinned answering surface, built so that a request has something specific to be answered by. It carries a catalog of SKUs with unit prices and a catalog clock. It carries declared on-hand quantities, which are stated figures and not physical counts. It carries a declared machine envelope for dimensional cell D-001 and sheet cell S-001, a declared list of the secondary operations it will and will not perform, declared economics covering mark-on, cell recovery and the cycle model, and a named owner and cell steward whose resolution authority is declared per condition class. Store Zero has one canonical reference document, STORE-ZERO.md, which ties its Store definition, machine references, economics, authority, unresolved conditions, research questions and implementation sources together. It is also the controlled research surface for asking what the yard can do now and whether any missing capability is worth adding. Every answer it returns carries its basis and its pins: which catalog clock, which engine version, which commit. That is what makes receipt of an order auditable rather than merely plausible. Send the same request twice against the same pins and the same number comes back. Send it after something moved and a different number comes back, and the record will say what moved, when, and who declared it. Store Zero holds no commercial authority, no live inventory, no payment, and no production release.`;
-
+      const main = canonicalStore.querySelector(':scope > .main');
       const rail = canonicalStore.querySelector(':scope > .rail');
-      if (rail) rail.innerHTML = `
-        <p class="hd">04 · STORE · BUILD GUIDE</p>
-        <p class="goal">The leap: the definition is the input.</p>
-        <div class="row"><b>00 · One Store truth</b><span>STORE-ZERO.md is the semantic master. Code, JSON, schemas and tests remain implementation assets — not competing Store definitions.</span></div>
-        <div class="row"><b>01 · Freeze the job</b><span>User choices become one identified version. Stop changing the thing behind the scenes.</span></div>
-        <div class="row"><b>02 · Send that exact version</b><span>No redraw. No retyping. No second interpretation before the Store sees it.</span></div>
-        <div class="row"><b>03 · Ask ordinary questions</b><span>Do you have the material? Can you do the work? What does it cost? When?</span></div>
-        <div class="row"><b>04 · Answer from declared facts</b><span>Catalog, stated stock, cell limits, services and economics already have named sources.</span></div>
-        <div class="row"><b>05 · Stamp the answer</b><span>Catalog clock + engine version + capability identity + commit.</span></div>
-        <div class="row"><b>06 · Keep declared honest</b><span>Declared means stated and checkable. Not live, measured, commissioned or physically counted unless evidence says so.</span></div>
-        <div class="row"><b>07 · Do not redesign at the counter</b><span>Store may support, adjust, defer or refuse. It may not rewrite the project.</span></div>
-        <div class="row"><b>08 · Separate work from policy</b><span>Cut, mill, drill and finish are work. Pickup, substitution and payment are transaction decisions.</span></div>
-        <div class="row"><b>09 · Price the same facts</b><span>Material + quantities + required operations + Store rules form the price basis.</span></div>
-        <div class="row"><b>10 · Return reasons</b><span>Short stock, unsupported work or changed timing comes back with the reason.</span></div>
-        <div class="row"><b>11 · Negative answers count</b><span>UNRESOLVED · REFUSED · UNAVAILABLE are useful results when they identify why the path stopped.</span></div>
-        <div class="row"><b>12 · Let the gap become evidence</b><span>Name the missing function, frequency, consequence and handling burden before proposing new capability.</span></div>
-        <div class="row"><b>13 · Add the smallest thing earned</b><span>Existing process · secondary operation · supplier · outsource · defer · refuse can all be better answers than another machine.</span></div>
-        <div class="row"><b>14 · One version, one offer</b><span>Change the definition? Make a new version. Never edit the old one into something else.</span></div>
-        <div class="row"><b>15 · Keep the verbs separate</b><span>Accept ≠ pay ≠ allocate ≠ release ≠ ready ≠ Cycle Start.</span></div>
-        <div class="row"><b>16 · Leave the machine local</b><span>The cell proves readiness. The person at the machine owns Cycle Start.</span></div>
-        <div class="row"><b>17 · Record the real outcome</b><span>Complete, stopped, recut, secondary work, inspection and staging all stay in the chain.</span></div>
-        <div class="row"><b>18 · Handoff closes the job</b><span>Staged is not picked up. Custody transfer is the close.</span></div>
-        <div class="row"><b>19 · Make it repeatable</b><span>Same request + same pins = same answer. If something changed, the record says what.</span></div>
-        <div class="row"><b>20 · Use Store Zero as the test surface</b><span>Realistic demand meets declared Store assets. Support, refusal and burden tell the research program what — if anything — is worth adding.</span></div>
-        <div class="row"><b>Why this is buildable</b><span>Nothing exotic: preserve the source, freeze the definition, ask bounded questions, answer from declared facts, and never let a later step rewrite an earlier one.</span></div>
-      `;
-    }
+      if (!canonicalDoctrine || canonicalDoctrine.expectedProcessStepCount !== 12) {
+        if (main) main.innerHTML = '<h1>CANONICAL STORE CONTENT UNAVAILABLE</h1><div class="band warn"><b>Fail closed.</b> The shared Store Zero doctrine is unavailable or does not declare exactly twelve canonical process steps.</div>';
+        if (rail) rail.innerHTML = '<p class="hd">04 · STORE · BUILD GUIDE</p><p class="goal">Fail closed</p>';
+      } else if (main) {
+        const intro = main.querySelector(':scope > .band:first-child p');
+        if (intro) intro.innerHTML = canonicalDoctrine.definitionHtml;
 
-    if (canonicalStore) {
-      const storeIntro = canonicalStore.querySelector(':scope > .main > .band:first-child p');
-      const storeGuide = canonicalStore.querySelector(':scope > .rail');
-      const storeProcess = [...canonicalStore.querySelectorAll(':scope > .main > .s, :scope > .main > .close')]
-        .map(node => node.outerHTML).join('');
-      seatJourneyDoctrine = {
-        storeIntro: storeIntro?.innerHTML || '',
-        storeGuide: (storeGuide?.innerHTML || '').replace('04 · STORE · BUILD GUIDE','03 · STORE · BUILD GUIDE'),
-        storeProcess
-      };
+        const tempIntro = doc.createElement('div');
+        tempIntro.innerHTML = canonicalDoctrine.processIntroHtml;
+        const sharedTitle = tempIntro.querySelector('h1');
+        const sharedLedes = tempIntro.querySelectorAll('.lede');
+        const sharedBand = tempIntro.querySelector('.band');
+        const title = main.querySelector(':scope > h1');
+        const ledes = main.querySelectorAll(':scope > .lede');
+        const bands = main.querySelectorAll(':scope > .band');
+        if (title && sharedTitle) title.innerHTML = sharedTitle.innerHTML;
+        ledes.forEach((node,index) => { if (sharedLedes[index]) node.innerHTML = sharedLedes[index].innerHTML; });
+        if (bands[1] && sharedBand) bands[1].innerHTML = sharedBand.innerHTML;
+
+        const tempSteps = doc.createElement('div');
+        tempSteps.innerHTML = canonicalDoctrine.processStepsHtml;
+        const sharedSteps = [...tempSteps.querySelectorAll(':scope > .s')];
+        const sharedClose = tempSteps.querySelector(':scope > .close');
+        if (sharedSteps.length !== 12 || !sharedClose) {
+          main.innerHTML = '<h1>CANONICAL STORE CONTENT UNAVAILABLE</h1><div class="band warn"><b>Fail closed.</b> Expected exactly twelve canonical Store process steps.</div>';
+        } else {
+          main.querySelectorAll(':scope > .s, :scope > .close').forEach(node => node.remove());
+          const bottom = main.querySelector(':scope > .bottom');
+          sharedSteps.forEach(node => bottom?.before(node.cloneNode(true)));
+          bottom?.before(sharedClose.cloneNode(true));
+        }
+        if (rail) rail.innerHTML = canonicalDoctrine.buildGuideHtml;
+      }
     }
 
     const intent = doc.getElementById('playhouse-s001');
@@ -492,21 +468,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
     const originalShow = win.show;
 
-    seatFrame()?.addEventListener('load', () => {
-      setTimeout(syncSeatDoctrine, 0);
-    });
-    syncSeatDoctrine();
-
-    const seatStageIds = Object.freeze({
-      store: 'seat-store',
-      request: 'seat-request',
-      yard: 'seat-yard',
-      terms: 'seat-terms',
-      recap: 'seat-recap',
-      record: 'seat-record'
-    });
     const seatNavTargets = Object.freeze({
-      capture: 'alcove-capture',
+      scan: 'alcove-capture',
       configure: 'alcove-config',
       store: 'store',
       review: 'alcove-review',
@@ -521,17 +484,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       return doc.querySelector('#window-seat-live .window-seat-shell-frame');
     }
 
-    function syncSeatDoctrine() {
-      const bridge = seatFrame()?.contentWindow?.STBWindowSeatJourney;
-      if (!bridge || !seatJourneyDoctrine) return false;
-      try {
-        bridge.setDoctrine(seatJourneyDoctrine);
-        return true;
-      } catch {
-        return false;
-      }
-    }
-
     function cloneSeat(value) {
       return value == null ? value : JSON.parse(JSON.stringify(value));
     }
@@ -540,45 +492,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       if (supplied) seatJourneySnapshot = cloneSeat(supplied);
       const bridge = seatFrame()?.contentWindow?.STBWindowSeatJourney;
       if (bridge) {
-        try {
-          seatJourneySnapshot = cloneSeat(evaluate ? bridge.evaluateCurrent() : bridge.snapshot());
-        } catch {}
+        try { seatJourneySnapshot = cloneSeat(evaluate ? bridge.evaluateCurrent() : bridge.snapshot()); } catch {}
       }
       return seatJourneySnapshot;
-    }
-
-    function ensureSeatStagePage(stage) {
-      const id = seatStageIds[stage];
-      let page = doc.getElementById(id);
-      if (page) return page;
-      page = doc.createElement('section');
-      page.className = 'page transaction seat-guided-stage';
-      page.id = id;
-      page.innerHTML = '<main class="main"></main><aside class="rail"></aside>';
-      doc.querySelector('.wrap')?.append(page);
-      return page;
-    }
-
-    function renderSeatStage(stage, supplied) {
-      if (supplied) refreshSeatSnapshot(false, supplied);
-      else refreshSeatSnapshot(false);
-      syncSeatDoctrine();
-      const page = ensureSeatStagePage(stage);
-      const main = page.querySelector(':scope > .main');
-      const rail = page.querySelector(':scope > .rail');
-      const bridge = seatFrame()?.contentWindow?.STBWindowSeatJourney;
-      let canonical = null;
-      try { canonical = bridge?.stage(stage) || null; } catch {}
-      if (!canonical || !main || !rail) {
-        if (main) main.innerHTML = '<h1>WINDOW SEAT · PROJECT CONTEXT UNAVAILABLE</h1><div class="band warn"><b>Fail closed.</b> Return to the Window Seat project view. This stage will not fall back to Alcove state.</div>';
-        if (rail) rail.innerHTML = '<p class="hd">WINDOW SEAT · GUIDED JOURNEY</p><p class="goal">Project context unavailable</p><div class="row"><b>No fallback</b><span>Seat stages never borrow Alcove project state.</span></div>';
-        return page;
-      }
-      main.innerHTML = canonical.mainHtml;
-      rail.innerHTML = canonical.railHtml;
-      page.dataset.seatRevision = String(refreshSeatSnapshot(false)?.revision?.number ?? '');
-      page.dataset.canonicalStage = stage;
-      return page;
     }
 
     function syncSeatNav(stage) {
@@ -590,58 +506,52 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       });
     }
 
-    function showSeatProject(anchor) {
+    function applyPendingSeatView() {
+      const bridge = seatFrame()?.contentWindow?.STBWindowSeatJourney;
+      if (!bridge) return false;
+      try {
+        if (pendingSeatView.mode === 'guided') bridge.showGuided(pendingSeatView.stage || 'scan');
+        else bridge.showContinuous();
+        refreshSeatSnapshot(false);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    function openSeatView(mode, stage) {
       activeJourneyProject = 'window-seat';
       doc.documentElement.dataset.activeJourneyProject = 'window-seat';
+      pendingSeatView = {mode: mode, stage: stage || null};
       originalShow.call(win, 'window-seat-live');
-      if (anchor) {
-        setTimeout(function(){
-          try { seatFrame()?.contentDocument?.querySelector(anchor)?.scrollIntoView({behavior:'smooth',block:'start'}); } catch {}
-        }, 0);
-      }
-      syncSeatNav(anchor === '#pg-capture' ? 'capture' : anchor === '#ws-review-this-version' ? 'review' : 'configure');
+      if (!applyPendingSeatView()) setTimeout(applyPendingSeatView, 0);
+      if (mode === 'guided') syncSeatNav(stage || 'scan');
+      else syncSeatNav(null);
     }
 
-    function showSeatStage(stage, supplied) {
-      if (stage === 'review') {
-        showSeatProject('#ws-review-this-version');
-        return;
-      }
-      if (!seatStageIds[stage]) {
-        showSeatProject('#pg-configure');
-        return;
-      }
-      activeJourneyProject = 'window-seat';
-      doc.documentElement.dataset.activeJourneyProject = 'window-seat';
-      renderSeatStage(stage, supplied);
-      originalShow.call(win, seatStageIds[stage]);
-      syncSeatNav(stage);
+    function showSeatContinuous() {
+      openSeatView('continuous', null);
     }
 
-    doc.addEventListener('click', function(event) {
-      const scrollBack = event.target.closest('[data-ws-scroll]');
-      if (scrollBack) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        showSeatProject(scrollBack.getAttribute('data-ws-scroll') || '#pg-configure');
-        return;
-      }
-      const stageButton = event.target.closest('[data-ws-guided-stage]');
-      if (!stageButton) return;
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      showSeatStage(stageButton.getAttribute('data-ws-guided-stage'));
-    }, true);
+    function showSeatGuided(stage, supplied) {
+      if (supplied) refreshSeatSnapshot(false, supplied);
+      openSeatView('guided', stage);
+    }
+
+    seatFrame()?.addEventListener('load', () => {
+      setTimeout(applyPendingSeatView, 0);
+    });
+    applyPendingSeatView();
 
     window.addEventListener('message', function(event) {
       if (event.origin !== window.location.origin) return;
       if (event.source !== seatFrame()?.contentWindow) return;
       if (event.data?.type === 'stb-window-seat-guided-handoff') {
-        showSeatStage('store', event.data.snapshot || null);
+        showSeatGuided(event.data.stage || 'store', event.data.snapshot || null);
         return;
       }
       if (event.data?.type === 'stb-window-seat-guided-stage') {
-        showSeatStage(event.data.stage, event.data.snapshot || null);
+        showSeatGuided(event.data.stage, event.data.snapshot || null);
       }
     });
 
@@ -658,18 +568,19 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     win.show = function(id) {
       const target = String(id);
       if (activeJourneyProject === 'window-seat') {
-        if (target === 'alcove-capture') { showSeatProject('#pg-capture'); return; }
-        if (target === 'alcove-config') { showSeatProject('#pg-configure'); return; }
-        if (target === 'alcove-review') { showSeatProject('#ws-review-this-version'); return; }
-        if (target === 'store') { showSeatStage('store'); return; }
-        if (target === 'request') { showSeatStage('request'); return; }
-        if (target === 'yard') { showSeatStage('yard'); return; }
-        if (target === 'terms') { showSeatStage('terms'); return; }
-        if (target === 'recap') { showSeatStage('recap'); return; }
-        if (target === 'record') { showSeatStage('record'); return; }
+        if (target === 'alcove-capture') { showSeatGuided('scan'); return; }
+        if (target === 'alcove-config') { showSeatGuided('configure'); return; }
+        if (target === 'store') { showSeatGuided('store'); return; }
+        if (target === 'alcove-review') { showSeatGuided('review'); return; }
+        if (target === 'request') { showSeatGuided('request'); return; }
+        if (target === 'yard') { showSeatGuided('yard'); return; }
+        if (target === 'terms') { showSeatGuided('terms'); return; }
+        if (target === 'recap') { showSeatGuided('recap'); return; }
+        if (target === 'record') { showSeatGuided('record'); return; }
         if (target === 'projects' || target === 'landing' || target === 'my-projects' || target === 'archive') {
           activeJourneyProject = null;
           seatJourneySnapshot = null;
+          pendingSeatView = {mode:'continuous',stage:null};
           delete doc.documentElement.dataset.activeJourneyProject;
         }
       }
