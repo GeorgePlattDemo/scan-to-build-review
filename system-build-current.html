@@ -480,27 +480,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
     function moneySeat(value) {
       const n = Number(value);
-      return Number.isFinite(n) ? '
-  };
-
-  const scheduleApply = () => {
-    let attempts = 0;
-    const timer = setInterval(() => {
-      attempts += 1;
-      try {
-        if (apply() || attempts > 200) clearInterval(timer);
-      } catch (error) {
-        if (attempts > 200) clearInterval(timer);
-      }
-    }, 50);
-  };
-  shell.addEventListener('load', scheduleApply);
-  if (shell.contentDocument?.readyState === 'complete') scheduleApply();
-})();
-</script>
-</body>
-</html>
- + n.toFixed(2) : '—';
+      return Number.isFinite(n) ? '$' + n.toFixed(2) : '—';
     }
 
     function seatCard(label, value) {
