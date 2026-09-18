@@ -161,6 +161,34 @@
   pre{white-space:pre-wrap;word-break:break-word;font-size:10.5px;line-height:1.45;margin:0;
     max-height:340px;overflow:auto;color:var(--text-2)}
   #occ-wrap summary{font-size:11.5px;font-weight:600}
+  .ws-journey-boundary{margin:22px 0 4px;padding:16px 0;border-top:1px solid var(--border-accent);border-bottom:1px solid var(--border-accent)}
+  .ws-journey-boundary .lb{margin-bottom:6px}
+  .ws-journey-boundary p{margin:0 0 8px;max-width:780px}
+  .ws-journey-boundary .btns{margin-top:10px}
+  .ws-journey-boundary .go{font-weight:700}
+  .ws-journey-stage{display:grid;grid-template-columns:minmax(0,1fr) 280px;border-top:1px solid var(--border);background:var(--surface)}
+  .ws-journey-stage>main{padding:24px;min-width:0;border-right:1px solid var(--border)}
+  .ws-journey-stage>.rail{padding:24px 18px;min-width:0}
+  .ws-journey-stage .stage-tag{margin:0 0 5px;font-size:9px;font-weight:700;letter-spacing:.09em;color:var(--accent)}
+  .ws-journey-stage h1{margin:0 0 7px;font-size:24px}
+  .ws-journey-stage .lede{margin:0 0 10px;font-size:13.5px;color:var(--text-2);line-height:1.55}
+  .ws-journey-stage .stage-bottom{display:flex;align-items:center;gap:8px;margin-top:18px;padding-top:12px;border-top:1px solid var(--border)}
+  .ws-journey-stage .stage-bottom button{font:inherit;font-size:11px;padding:6px 11px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text);cursor:pointer}
+  .ws-journey-stage .stage-bottom .next{margin-left:auto;border:0;background:transparent;color:var(--accent);font-weight:650}
+  .ws-journey-stage .stage-fine{font-size:9.5px;color:var(--text-3)}
+  .ws-journey-section{padding:13px 0;border-top:1px solid var(--border)}
+  .ws-journey-section:first-of-type{border-top:0}
+  .ws-journey-section h2{font-size:15px;margin:0 0 6px}
+  .ws-journey-section p{margin:0 0 7px;line-height:1.5}
+  .ws-journey-section p:last-child{margin-bottom:0}
+  .ws-journey-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:10px 0}
+  .ws-journey-grid .kv{display:block;border:1px solid var(--border);border-radius:8px;background:var(--bg);padding:8px 10px}
+  .ws-journey-grid .kv span{display:block}
+  .ws-journey-grid .kv span:first-child{font-size:9px;font-weight:700;letter-spacing:.05em;color:var(--text-3)}
+  .ws-journey-grid .kv span:last-child{margin-top:3px;font-size:11.5px;color:var(--text)}
+  .ws-journey-callout{margin:11px 0;padding:10px 12px;border-left:3px solid var(--border-accent);background:var(--bg);font-size:12px;line-height:1.5}
+  .ws-journey-callout.warn{border-left-color:var(--warn)}
+  .ws-journey-flow{font:11px/1.8 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--text-2)}
   @media (max-width:1100px){ .cfg{grid-template-columns:240px minmax(0,1fr)} .cfg>div:last-child{grid-column:1/-1} }
   @media (max-width:800px){
     .page{grid-template-columns:1fr}
@@ -170,6 +198,9 @@
     #mfields{grid-template-columns:1fr}
     .cfg>div:last-child{grid-column:auto}
     .two{grid-template-columns:1fr}
+    .ws-journey-stage{grid-template-columns:1fr}
+    .ws-journey-stage>main{border-right:0;border-bottom:1px solid var(--border)}
+    .ws-journey-grid{grid-template-columns:1fr}
     .rail .row,.rail .goal{margin-bottom:16px}
   }
 </style>
@@ -404,9 +435,9 @@
 
       <div class="btns">
         <button class="go" id="ws-send" disabled>EVALUATE WITH STORE ZERO</button>
-        <button class="go" id="ws-guided" disabled>SEND TO STORE ZERO → GUIDED JOURNEY</button>
         <button id="btn-inspect">INSPECT THE STORE REQUEST</button>
       </div>
+      <p class="dim" style="font-size:11.5px;margin:5px 0 0"><b>EVALUATE WITH STORE ZERO</b> calculates or refreshes the Store answer for this revision. It does not navigate the journey.</p>
 
       <div class="box" id="ans-box" style="display:none;margin-top:14px">
         <h4 id="ans-head">STORE ZERO ANSWER</h4>
@@ -415,6 +446,15 @@
       <div class="box" id="req-box" style="display:none;margin-top:12px">
         <h4>STORE REQUEST OBJECT — EXACTLY WHAT TRAVELS</h4>
         <div class="bd"><pre id="req-json"></pre></div>
+      </div>
+
+      <div class="ws-journey-boundary" id="ws-journey-boundary">
+        <p class="lb">CONTINUE THROUGH THE PROJECT</p>
+        <p><b>This project can be viewed two ways.</b></p>
+        <p class="dim">Use <b>Next</b> to follow the standard Scan-to-Build gates one step at a time, or simply <b>keep scrolling</b> to see the same journey continuously.</p>
+        <p class="dim">Both views carry this same Window Seat project, revision, definition and Store request. Nothing is recalculated or replaced when you change views.</p>
+        <p class="dim"><b>Project definition complete for this revision.</b> Next: ask the Store what it can actually satisfy.</p>
+        <div class="btns"><button class="go" id="ws-guided" disabled>NEXT → STORE ZERO</button></div>
       </div>
     </div>
   </div>
@@ -475,6 +515,8 @@
     <div class="foot"><p>Store Zero pin f88ec61c42… · D001-BOARD-EDGE-MILL-REF-0.3 · STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0.1 · guide/UI + adapter 0.7.3.</p></div>
   </div>
 </section>
+
+<div id="ws-continuous-journey" aria-label="Window Seat downstream journey"></div>
 
 <p class="note">Fixture demonstration, offline and deterministic: the Store answer comes from a local pinned fixture adapter carrying the subset of the canonical Store Zero reference this project needs, not from a network call and not from a real merchant. Fixture prices are not live prices. Modelled cycle time is not measured machine time. Bounded longitudinal edge milling is preserved research capability at the Stage-2 pin, not a commissioned machine. A reference estimate is not a commercial quote and does not authorise production. No order, no payment, no reservation, no allocation, no production release, no machine readiness, no Cycle Start.</p>
 
