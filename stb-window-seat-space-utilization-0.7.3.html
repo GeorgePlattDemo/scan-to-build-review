@@ -404,6 +404,7 @@
 
       <div class="btns">
         <button class="go" id="ws-send" disabled>EVALUATE WITH STORE ZERO</button>
+        <button class="go" id="ws-guided" disabled>SEND TO STORE ZERO → GUIDED JOURNEY</button>
         <button id="btn-inspect">INSPECT THE STORE REQUEST</button>
       </div>
 
@@ -1785,6 +1786,7 @@ function cycle(){
   /* gate */
   var blocking=open.filter(function(o){return o.block}).length;
   $('ws-send').disabled=!(blocking===0&&rev.confirmed);
+  $('ws-guided').disabled=!(blocking===0&&rev.confirmed);
   $('ws-gate').textContent=blocking
     ? blocking+' condition'+(blocking===1?'':'s')+' must be settled before this version can go to the Store. The rest travel with the request.'
     : (rev.confirmed?'Revision '+rev.n+' is ready to evaluate with Store Zero.':'Tick the box to carry these facts and choices forward.');
@@ -1855,6 +1857,48 @@ $('ws-send').onclick=function(){
   answer=StoreZeroAdapter.evaluate(req,famSp());
   answer.atRevision=rev.n; answer.stale=false; cycle();
   into($('ans-box'));
+};
+
+function cloneJourneyValue(value){ return JSON.parse(JSON.stringify(value)); }
+function currentJourneySnapshot(ensureAnswer){
+  var def=buildDefinition(), req=buildRequest(def), open=conditions(def);
+  if(ensureAnswer && (!answer || answer.stale || answer.atRevision!==rev.n)){
+    answer=StoreZeroAdapter.evaluate(req,famSp());
+    answer.atRevision=rev.n; answer.stale=false;
+    cycle();
+    def=buildDefinition(); req=buildRequest(def); open=conditions(def);
+  }
+  return cloneJourneyValue({
+    protocol:'stb.project-owned-journey/0.1',
+    project:{id:'window-seat',label:'Space utilization · Window seat',artifact:'0.7.3',projectClass:def.cls},
+    revision:{number:rev.n,confirmed:rev.confirmed},
+    definition:def,
+    storeRequest:req,
+    storeAnswer:answer,
+    openConditions:open,
+    occurrenceHistory:occHistory,
+    authority:{
+      commercial:false,
+      productionRelease:false,
+      machineReadiness:false,
+      cycleStart:false,
+      physicalFabrication:false
+    }
+  });
+}
+window.STBWindowSeatJourney=Object.freeze({
+  projectId:'window-seat',
+  artifactVersion:'0.7.3',
+  snapshot:function(){ return currentJourneySnapshot(false); },
+  evaluateCurrent:function(){ return currentJourneySnapshot(true); }
+});
+$('ws-guided').onclick=function(){
+  var snapshot=currentJourneySnapshot(true);
+  window.top.postMessage({
+    type:'stb-window-seat-guided-handoff',
+    stage:'store',
+    snapshot:snapshot
+  },'*');
 };
 $('btn-inspect').onclick=function(){
   var box=$('req-box'), show=box.style.display==='none';
