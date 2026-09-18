@@ -2053,8 +2053,10 @@ function jCallout(body,warn){
 }
 function jStageBottom(previous,next){
   var back=previous==='configure'
-    ? '<button type="button" data-ws-scroll="#ws-journey-boundary">Back to Configure</button>'
-    : '<button type="button" data-ws-guided-stage="'+previous+'">Back</button>';
+    ? '<button type="button" data-ws-scroll="#ws-configure-work">Back to Configure</button>'
+    : previous==='review'
+      ? '<button type="button" data-ws-scroll="#ws-review-this-version">Back to Review</button>'
+      : '<button type="button" data-ws-guided-stage="'+previous+'">Back</button>';
   var forward=next
     ? '<button class="next" type="button" data-ws-guided-stage="'+next+'">Next → '+next.charAt(0).toUpperCase()+next.slice(1)+'</button>'
     : '';
@@ -2301,67 +2303,6 @@ function openConditionHtml(open){
   if(!open||!open.length)return jCallout('<b>No blocking project condition is reported by this revision.</b> Store, commercial and physical authority boundaries still remain separate.',false);
   return jGrid(open.map(function(o){return [o.t||'Condition',(o.block?'STOP / BLOCKING':'CARRIED')+' · '+(o.w||'recorded condition')]}))
 }
-function buildReviewJourney(snapshot){
-  var req=snapshot.storeRequest||{}, ans=snapshot.storeAnswer||null, rev=snapshot.revision||{}, def=snapshot.definition||{};
-  var open=snapshot.openConditions||[], blocking=open.filter(function(o){return o&&o.block});
-  var occ=req.partOccurrences||[], mats=req.materialRequirements||[], ops=req.requestedOperations||[], exclusions=req.exclusions||[];
-  var runCount=occ.reduce(function(n,o){return n+(o.boardRuns||[]).length},0);
-  var storeStatus=!ans?'NOT YET EVALUATED':(ans.stale?'HISTORICAL — revision '+ans.atRevision:(ans.jobDisposition||ans.status||'CURRENT'));
-  var changeStatus=ans&&ans.stale
-    ? 'Definition moved to revision '+rev.number+' after Store answered revision '+ans.atRevision+'. The earlier answer remains historical.'
-    : ans?'Store answer and displayed definition are held against revision '+rev.number+'.':'No Store answer has been frozen for this revision.';
-  var facts=(req.controllingFacts||[]).map(function(f){return [f.describes,fmt(f.value)+' '+(f.unit||'')+' · '+(f.source||'')+' · '+(f.status||'')]});
-  var moduleRows=(req.modules||[]).map(function(m){return [m.id,moduleSummary(m)]});
-  return {
-    stage:'review',
-    headline:'Review this Window Seat revision',
-    mainHtml:'<p class="stage-tag">4 · REVIEW</p><h1>Review this Window Seat revision</h1>'+
-      '<p class="lede">This is the same project definition that reached Store Zero. Review does not summarize it into a new object; it shows the definition, Store answer, open conditions and revision relationship together.</p>'+
-      jSection('What you defined',
-        jGrid([
-          ['Project','Space utilization · Window seat'],
-          ['Revision',String(rev.number)+(rev.confirmed?' · confirmed':' · candidate')],
-          ['Project class',req.projectClass||'—'],
-          ['Overall',def.W!=null?(fmt(def.W)+' W × '+fmt(def.H)+' H × '+fmt(def.depth)+' D in'):'—'],
-          ['Three top-level modules',(req.modules||[]).map(function(m){return m.id}).join(' · ')||'—'],
-          ['Material',req.materialClass?(req.materialClass.family+' · '+req.materialClass.form+' · '+fmt(req.materialClass.thickness)+' in finished'):'—'],
-          ['Finished occurrences',occ.length],
-          ['Board runs',runCount],
-          ['Material demand lines',mats.length],
-          ['Operations requested',ops.length],
-          ['Excluded work',exclusions.length],
-          ['Open conditions',open.length+' · '+blocking.length+' blocking']
-        ])+
-        (facts.length?'<p class="lb">CONTROLLING FACTS</p>'+jGrid(facts):'')+
-        (moduleRows.length?'<p class="lb">MODULES</p>'+jGrid(moduleRows):'')
-      )+
-      jSection('What Store answered',
-        jGrid([
-          ['Store answer',storeStatus],
-          ['Material mapping',ans&&ans.states&&ans.states.mapping||'not evaluated'],
-          ['Availability',ans&&ans.states&&ans.states.availability||'not evaluated'],
-          ['Edge milling',ans&&ans.states&&ans.states.edgeMill||'not evaluated'],
-          ['Price evidence',ans&&ans.states&&ans.states.price||'not evaluated'],
-          ['Known reference selling basis',ans?jMoney(ans.q):'not established'],
-          ['Catalog clock',ans&&ans.pin&&ans.pin.clock||'—'],
-          ['Canonical Store commit',ans&&ans.pin&&ans.pin.commit||'—']
-        ])+
-        jCallout('<b>Revision relationship.</b> '+jEsc(changeStatus),!!(ans&&ans.stale))
-      )+
-      jSection('What remains unresolved',openConditionHtml(open)+
-        (exclusions.length?'<p class="dim"><b>Excluded work remains outside this definition:</b> '+exclusions.map(jEsc).join(' · ')+'</p>':'')
-      )+
-      (blocking.length?jCallout('<b>STOP.</b> '+blocking.map(function(o){return jEsc(o.t)}).join('; ')+'. Resolve the bounded question by creating a new revision and rerunning dependent checks. Do not manufacture a pass.',true):'')+
-      jCallout('<b>What review means.</b> Review affirms the identified definition and the displayed Store basis. It is not an order, payment, material allocation, production release, machine readiness statement or fabrication authorization.',false)+
-      jStageBottom('store','request'),
-    railHtml:'<p class="hd">04 · REVIEW · BUILD GUIDE</p><p class="goal">The exact version, not a status card.</p>'+
-      '<div class="row"><b>Show what controls</b><span>Controlling facts, derived consequences, material, operations and exclusions remain visible.</span></div>'+
-      '<div class="row"><b>Show the Store basis</b><span>Mapping, availability, capability, price evidence and pins stay attached to the revision answered.</span></div>'+
-      '<div class="row"><b>Historical means historical</b><span>A changed definition never inherits an earlier Store answer.</span></div>'+
-      '<div class="row"><b>STOP is useful</b><span>A blocking condition remains a durable result. Do not make the page green to keep the journey moving.</span></div>'+
-      '<div class="row"><b>Review ≠ contract</b><span>Order, payment, allocation, release, readiness and Cycle Start remain separate.</span></div>'
-  }
-}
 function buildRequestJourney(snapshot){
   var req=snapshot.storeRequest||{}, ans=snapshot.storeAnswer||null, rev=snapshot.revision||{};
   var ops=req.requestedOperations||[], generated=ops.filter(function(o){return o.basis==='GENERATED FROM DEFINITION'});
@@ -2375,7 +2316,7 @@ function buildRequestJourney(snapshot){
   return {
     stage:'request',
     headline:'Request · bind the exact Window Seat revision',
-    mainHtml:'<p class="stage-tag">5 · REQUEST</p><h1>Request · bind the exact Window Seat revision</h1>'+
+    mainHtml:'<p class="stage-tag">4 · REQUEST</p><h1>Request · bind the exact Window Seat revision</h1>'+
       '<p class="lede">A request asks the Store to act on one identified definition. It carries the revision and requested work forward without converting the project into an order.</p>'+
       jSection('What is being requested',
         jGrid([
@@ -2398,8 +2339,8 @@ function buildRequestJourney(snapshot){
         '<p><b>Store may not silently rewrite the Window Seat definition.</b> Geometry, material family, occurrence identity and requested work remain project-owned.</p>'
       )+
       jCallout('<b>REQUEST ≠ ORDER.</b> A request is not an accepted offer, payment, material reservation, allocation, production release, machine readiness or Cycle Start.',false)+
-      jStageBottom('review','yard'),
-    railHtml:'<p class="hd">05 · REQUEST · BUILD GUIDE</p><p class="goal">Ask against one frozen version.</p>'+
+      jStageBottom('store','yard'),
+    railHtml:'<p class="hd">04 · REQUEST · BUILD GUIDE</p><p class="goal">Ask against one frozen version.</p>'+
       '<div class="row"><b>Bind the revision</b><span>The Store request names the exact Window Seat revision it is about.</span></div>'+
       '<div class="row"><b>Carry the actual work</b><span>Generated operations and requested secondary work stay explicit.</span></div>'+
       '<div class="row"><b>Keep exclusions visible</b><span>Connection design, installation, finishing and structural evaluation do not become Store work by implication.</span></div>'+
@@ -2414,7 +2355,7 @@ function buildYardJourney(snapshot){
   return {
     stage:'yard',
     headline:'Yard response · what Store Zero established',
-    mainHtml:'<p class="stage-tag">6 · YARD</p><h1>Yard response · what Store Zero established</h1>'+
+    mainHtml:'<p class="stage-tag">5 · YARD</p><h1>Yard response · what Store Zero established</h1>'+
       '<p class="lede">The yard answers from declared Store facts. It may support, adjust, defer, refuse or report a shortage. It may not solve a project problem by silently changing the project.</p>'+
       jSection('Who is answering',
         '<p>Store Zero is the declared reference lumberyard / fixture for this demonstration. Its answer is deterministic against the identified catalog clock, engine, capability references and commit. It is not a live merchant response.</p>'+
@@ -2444,7 +2385,7 @@ function buildYardJourney(snapshot){
       )+
       jCallout('<b>Yard response is not acceptance.</b> A returned Store answer is still separate from offer, acceptance, settlement, allocation and release.',false)+
       jStageBottom('request','terms'),
-    railHtml:'<p class="hd">06 · YARD · BUILD GUIDE</p><p class="goal">Return facts, reasons and limits.</p>'+
+    railHtml:'<p class="hd">05 · YARD · BUILD GUIDE</p><p class="goal">Return facts, reasons and limits.</p>'+
       '<div class="row"><b>Material is a Store question</b><span>Mapping and stated availability belong here, not in the project definition.</span></div>'+
       '<div class="row"><b>Capability stays separate</b><span>A material can be mapped while a service remains unresolved.</span></div>'+
       '<div class="row"><b>Timing needs evidence</b><span>Modeled cycle time is not a live promise or measured production time.</span></div>'+
@@ -2477,13 +2418,13 @@ function buildTermsJourney(snapshot){
   return {
     stage:'terms',
     headline:'Terms · keep the verbs separate',
-    mainHtml:'<p class="stage-tag">7 · TERMS</p><h1>Terms · keep the verbs separate</h1>'+
+    mainHtml:'<p class="stage-tag">6 · TERMS</p><h1>Terms · keep the verbs separate</h1>'+
       '<p class="lede">The sequence is ordinary. The discipline is simply that one event does not impersonate the next.</p>'+
       jCallout('<div class="ws-journey-flow">definition<br>≠ request<br>≠ offer<br>≠ acceptance<br>≠ payment<br>≠ allocation<br>≠ production release<br>≠ machine readiness<br>≠ Cycle Start</div>',false)+
       html+
       jCallout('<b>Current Window Seat truth.</b> Definition and reference Store processing may be present. Commercial offer, acceptance, settlement, allocation, production release, machine readiness and physical execution remain absent unless separately evidenced.',false)+
       jStageBottom('yard','recap'),
-    railHtml:'<p class="hd">07 · TERMS · BUILD GUIDE</p><p class="goal">One sequence. Different authorities.</p>'+
+    railHtml:'<p class="hd">06 · TERMS · BUILD GUIDE</p><p class="goal">One sequence. Different authorities.</p>'+
       '<div class="row"><b>Definition ≠ request</b><span>The project says what is wanted. The request asks another party to answer it.</span></div>'+
       '<div class="row"><b>Request ≠ offer</b><span>A Store answer is not automatically a commercial offer.</span></div>'+
       '<div class="row"><b>Acceptance ≠ payment</b><span>Agreement and settlement are distinct records.</span></div>'+
@@ -2524,13 +2465,13 @@ function buildRecapJourney(snapshot){
   return {
     stage:'recap',
     headline:'What happened · Window Seat',
-    mainHtml:'<p class="stage-tag">8 · RECAP</p><h1>What happened · Window Seat</h1>'+
+    mainHtml:'<p class="stage-tag">7 · RECAP</p><h1>What happened · Window Seat</h1>'+
       '<p class="lede">Read forward, this is the chronology. Read backward, it is the audit. Missing events remain missing.</p>'+
       html+
       (open.length?jSection('Open conditions carried forward',openConditionHtml(open)):'')+
       jCallout('<b>Revision rule.</b> If a consequential change follows confirmation or Store evaluation, the old revision remains historical, a new revision is created, the prior Store answer becomes historical, and dependent checks rerun.',false)+
       jStageBottom('terms','record'),
-    railHtml:'<p class="hd">08 · RECAP · BUILD GUIDE</p><p class="goal">Write forward, not backward from the ending.</p>'+
+    railHtml:'<p class="hd">07 · RECAP · BUILD GUIDE</p><p class="goal">Write forward, not backward from the ending.</p>'+
       '<div class="row"><b>Keep the source</b><span>Evidence remains distinguishable from observations and the definition.</span></div>'+
       '<div class="row"><b>Keep nulls honest</b><span>Offer, payment, allocation, execution and custody remain visible even when they did not happen.</span></div>'+
       '<div class="row"><b>Do not promote wording</b><span>A favorable Store answer cannot fill later events by implication.</span></div>'+
@@ -2553,7 +2494,7 @@ function buildRecordJourney(snapshot){
   return {
     stage:'record',
     headline:'Keep the Window Seat owner record',
-    mainHtml:'<p class="stage-tag">9 · RECORD</p><h1>Keep the Window Seat owner record</h1>'+
+    mainHtml:'<p class="stage-tag">8 · RECORD</p><h1>Keep the Window Seat owner record</h1>'+
       '<p class="lede">The record preserves what this project actually established and names what remains absent. It does not turn a reference demonstration into a completed physical order.</p>'+
       jSection('Project / revision',
         jGrid([
@@ -2580,7 +2521,7 @@ function buildRecordJourney(snapshot){
       jCallout('<b>Replacement-component payoff.</b> A later replacement can start from the exact recorded occurrence, revision and material basis instead of re-measuring and guessing.',false)+
       jCallout('<b>That record does not authorize fabrication.</b> Current material, Store, capability, safety and production gates run again.',true)+
       jStageBottom('recap',null),
-    railHtml:'<p class="hd">09 · RECORD · BUILD GUIDE</p><p class="goal">Owner-held, exact, and honest about what did not happen.</p>'+
+    railHtml:'<p class="hd">08 · RECORD · BUILD GUIDE</p><p class="goal">Owner-held, exact, and honest about what did not happen.</p>'+
       '<div class="row"><b>Keep project identity</b><span>Project class, revision and original evidence stay attached.</span></div>'+
       '<div class="row"><b>Keep occurrence identity</b><span>Every current finished part can be named exactly; historical occurrence identities are not silently recycled.</span></div>'+
       '<div class="row"><b>Keep Store evidence</b><span>Request, response and pins remain distinguishable from commercial or physical outcome.</span></div>'+
@@ -2590,7 +2531,6 @@ function buildRecordJourney(snapshot){
 }
 function buildJourneyStage(stage,snapshot){
   if(stage==='store')return buildStoreJourney(snapshot);
-  if(stage==='review')return buildReviewJourney(snapshot);
   if(stage==='request')return buildRequestJourney(snapshot);
   if(stage==='yard')return buildYardJourney(snapshot);
   if(stage==='terms')return buildTermsJourney(snapshot);
@@ -2617,7 +2557,7 @@ function renderContinuousJourney(){
   var host=$('ws-continuous-journey');
   if(!host)return;
   var snapshot=currentJourneySnapshot(false);
-  host.innerHTML=['store','review','request','yard','terms','recap','record']
+  host.innerHTML=['store','request','yard','terms','recap','record']
     .map(function(stage){return journeyStageSection(buildJourneyStage(stage,snapshot))}).join('');
 }
 document.addEventListener('click',function(e){
