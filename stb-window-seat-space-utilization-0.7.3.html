@@ -497,11 +497,14 @@
 
       <div class="ws-journey-boundary" id="ws-journey-boundary">
         <p class="lb">CONTINUE THROUGH THE PROJECT</p>
-        <p><b>This project can be viewed two ways.</b></p>
-        <p class="dim">Use <b>Next</b> to follow the standard Scan-to-Build gates one step at a time, or simply <b>keep scrolling</b> to see the same journey continuously.</p>
-        <p class="dim">Both views carry this same Window Seat project, revision, definition and Store request. Nothing is recalculated or replaced when you change views.</p>
-        <p class="dim"><b>Project definition complete for this revision.</b> Next: ask the Store what it can actually satisfy.</p>
-        <div class="btns"><button class="go" id="ws-guided" disabled>NEXT → STORE ZERO</button></div>
+        <p><b>Follow the standard Scan-to-Build gates one step at a time with Next, or keep scrolling to read the same project as one continuous record.</b></p>
+        <p class="dim">Both paths use this same confirmed Window Seat project and revision. Changing the view does not recalculate or replace the definition.</p>
+        <p class="dim">The continuous page is also a teaching and reference surface. <b style="color:var(--text)">Viewing the next section does not submit, order, pay, reserve material, allocate material or authorize fabrication.</b></p>
+        <div class="stage-bottom" style="margin-top:10px">
+          <button type="button" data-ws-scroll="#ws-configure-work">← Back</button>
+          <span class="stage-fine">Same project · same revision · different navigation only</span>
+          <button class="next go" id="ws-guided" disabled>NEXT → STORE ZERO</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1983,7 +1986,7 @@ function cycle(){
   $('chain').innerHTML=chain.map(function(c,i){
     return '<a href="'+c[2]+'" class="node"><b>'+c[0]+'</b><span>'+c[1]+'</span></a>'
       +(i<chain.length-1?'<i>→</i>':'')}).join('');
-  renderContinuousJourney();
+  scheduleContinuousJourney();
 }
 function lv_ok(d){return d.indexOf('SUPPORTABLE')===0||d.indexOf('NOT REQUIRED')===0}
 
@@ -2469,6 +2472,16 @@ function journeyStageSection(stageObj){
   return '<section class="ws-journey-stage" id="ws-stage-'+stageObj.stage+'" data-ws-canonical-stage="'+stageObj.stage+'">'+
     '<main>'+stageObj.mainHtml+'</main><aside class="rail">'+stageObj.railHtml+'</aside></section>'
 }
+var journeyRenderTimer=null;
+function scheduleContinuousJourney(){
+  if(journeyRenderTimer)clearTimeout(journeyRenderTimer);
+  journeyRenderTimer=setTimeout(function(){
+    try{renderContinuousJourney()}catch(e){
+      var host=$('ws-continuous-journey');
+      if(host)host.innerHTML='<section class="ws-journey-stage"><main><p class="stage-tag">DOWNSTREAM CONTEXT</p><h1>Project journey unavailable</h1><div class="ws-journey-callout warn"><b>Fail closed.</b> Configure remains available. No Alcove project state is substituted.</div></main></section>';
+    }
+  },0);
+}
 function renderContinuousJourney(){
   var host=$('ws-continuous-journey');
   if(!host)return;
@@ -2491,7 +2504,7 @@ window.STBWindowSeatJourney=Object.freeze({
   evaluateCurrent:function(){ return currentJourneySnapshot(true); },
   setDoctrine:function(value){
     journeyDoctrine=Object.assign({storeIntro:'',storeGuide:'',storeProcess:''},cloneJourneyValue(value||{}));
-    renderContinuousJourney();
+    scheduleContinuousJourney();
     return true;
   },
   stage:function(stage){
