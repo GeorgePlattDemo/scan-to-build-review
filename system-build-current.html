@@ -62,6 +62,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
     let activeJourneyProject = null;
     let seatJourneySnapshot = null;
+    let seatJourneyDoctrine = null;
 
     const home = doc.getElementById('projects');
     if (home) {
@@ -178,6 +179,18 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         <div class="row"><b>20 · Use Store Zero as the test surface</b><span>Realistic demand meets declared Store assets. Support, refusal and burden tell the research program what — if anything — is worth adding.</span></div>
         <div class="row"><b>Why this is buildable</b><span>Nothing exotic: preserve the source, freeze the definition, ask bounded questions, answer from declared facts, and never let a later step rewrite an earlier one.</span></div>
       `;
+    }
+
+    if (canonicalStore) {
+      const storeIntro = canonicalStore.querySelector(':scope > .main > .band:first-child p');
+      const storeGuide = canonicalStore.querySelector(':scope > .rail');
+      const storeProcess = [...canonicalStore.querySelectorAll(':scope > .main > .s, :scope > .main > .close')]
+        .map(node => node.outerHTML).join('');
+      seatJourneyDoctrine = {
+        storeIntro: storeIntro?.innerHTML || '',
+        storeGuide: storeGuide?.innerHTML || '',
+        storeProcess
+      };
     }
 
     const intent = doc.getElementById('playhouse-s001');
@@ -432,6 +445,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
     const originalShow = win.show;
 
+    seatFrame()?.addEventListener('load', () => {
+      setTimeout(syncSeatDoctrine, 0);
+    });
+    syncSeatDoctrine();
+
     const seatStageIds = Object.freeze({
       store: 'seat-store',
       review: 'seat-review',
@@ -455,6 +473,17 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
     function seatFrame() {
       return doc.querySelector('#window-seat-live .window-seat-shell-frame');
+    }
+
+    function syncSeatDoctrine() {
+      const bridge = seatFrame()?.contentWindow?.STBWindowSeatJourney;
+      if (!bridge || !seatJourneyDoctrine) return false;
+      try {
+        bridge.setDoctrine(seatJourneyDoctrine);
+        return true;
+      } catch {
+        return false;
+      }
     }
 
     function cloneSeat(value) {
