@@ -586,12 +586,24 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       }
     });
 
-    doc.addEventListener('click', function(event) {
-      const tile = event.target.closest('#projects .tile[data-go]');
+    const PROJECT_TILE_TO_JOURNEY = Object.freeze({
+      'alcove-capture': 'alcove',
+      'window-parts': 'playhouse',
+      'picnic-chooser': 'picnic'
+    });
+
+    // Project identity is selected at the window-capture boundary so it runs
+    // before the older front-door preview handler can stop propagation.
+    // A route or stage change never selects a project implicitly.
+    win.addEventListener('click', function(event) {
+      const tile = event.target.closest?.('#projects .tile[data-go]');
       if (!tile) return;
       const target = tile.getAttribute('data-go');
-      if (target === 'alcove-capture') selectJourneyProject('alcove');
-      else selectJourneyProject(null);
+      if (target === 'start-own') {
+        selectJourneyProject(null);
+        return;
+      }
+      selectJourneyProject(PROJECT_TILE_TO_JOURNEY[target] || null);
     }, true);
 
     win.show = function(id) {
