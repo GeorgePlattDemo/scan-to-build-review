@@ -253,7 +253,8 @@
     .rail .row,.rail .goal{margin-bottom:16px}
   }
 </style>
-<script src="store-zero-canonical-doctrine.js?v=906af215"></script>
+<script src="stb-canonical-journey.js?v=e0619841"></script>
+<script src="store-zero-canonical-doctrine.js?v=f2106553"></script>
 </head>
 <body>
 <div class="wrap">
@@ -2086,14 +2087,14 @@ function openConditionHtml(open){
 function reviewUnresolvedHtml(snapshot){
   var req=snapshot.storeRequest||{}, def=snapshot.definition||{}, ref=snapshot.storeReference||snapshot.storeAnswer||null;
   var conds=snapshot.openConditions||[], rows=[];
-  conds.forEach(function(o){rows.push([o.t||'Project condition',(o.block?'BLOCKS':'CARRIED')+' · '+(o.d||o.w||'recorded condition')])});
+  conds.forEach(function(o){rows.push(['PROJECT · '+(o.t||'Project condition'),(o.block?'BLOCKS':'CARRIED')+' · '+(o.d||o.w||'recorded condition')])});
   if(ref){
     (ref.lines||[]).filter(function(l){return l.disposition!=='SUPPORTABLE'}).forEach(function(l){
-      rows.push(['Store '+String(l.disposition||'UNRESOLVED').toLowerCase(),l.why||'Store-owned resolution required']);
+      rows.push(['STORE · '+String(l.disposition||'UNRESOLVED').toLowerCase(),l.why||'Store-owned resolution required']);
     });
-    (ref.shortages||[]).forEach(function(s){rows.push(['Store availability',s])});
-    (ref.unpriced||[]).forEach(function(u){rows.push(['Store pricing',u])});
-  }else rows.push(['Store reference','NOT EVALUATED']);
+    (ref.shortages||[]).forEach(function(s){rows.push(['STORE · availability',s])});
+    (ref.unpriced||[]).forEach(function(u){rows.push(['STORE · pricing',u])});
+  }else rows.push(['STORE · reference','NOT EVALUATED']);
   var body=rows.length?jGrid(rows):jCallout('<b>No unresolved project-definition condition is currently reported.</b> Store, commercial and physical authority remain separate.',false);
   body+=jCallout('<b>Structure / connection.</b> Structural evaluation, connection design and fastener selection remain excluded. <b>Installation.</b> Installation remains excluded. <b>Physical machine authority.</b> No machine readiness or Cycle Start authority is established here.',false);
   return body;
@@ -2411,24 +2412,28 @@ function buildJourneyStage(stage,snapshot){
   if(stage==='record')return buildRecordJourney(snapshot);
   return null;
 }
-var JOURNEY_GATES={
-  scan:{previous:'SCAN',control:'CONTINUE TO CONFIGURE →',next:'CONFIGURE',consequence:'Scrolling does not execute the gate.'},
-  configure:{previous:'CONFIGURE',control:'SEND TO STORE ZERO →',next:'STORE',consequence:'Scrolling does not submit anything.'},
-  store:{previous:'STORE',control:'NEXT →',next:'REVIEW',consequence:'Scrolling does not promote the Store answer.'},
-  review:{previous:'REVIEW',control:'CONFIRM THIS VERSION',next:'REQUEST',consequence:'Scrolling does not confirm the project.'},
-  request:{previous:'REQUEST',control:'SEND TO THE YARD / NEXT →',next:'YARD',consequence:'Scrolling does not submit the request.'},
-  yard:{previous:'YARD',control:'CONTINUE TO TERMS / NEXT →',next:'TERMS',consequence:'Scrolling does not accept terms.'},
-  terms:{previous:'TERMS',control:'NEXT →',next:'RECAP',consequence:'Scrolling does not create a commercial event.'},
-  recap:{previous:'RECAP',control:'NEXT →',next:'RECORD',consequence:'Scrolling does not close the project.'}
-};
-function journeyGateHtml(key){
-  var g=JOURNEY_GATES[key]; if(!g)return'';
-  return '<div class="ws-gate-separator" data-ws-gate="'+key+'"><p class="gate-tag">STANDARD JOURNEY GATE</p>'+
-    '<div class="gate-grid"><b>Previous stage</b><span>'+g.previous+'</span>'+
-    '<b>Guided action</b><span>'+g.control+'</span>'+
-    '<b>Next canonical stage</b><span>'+g.next+'</span>'+
-    '<b>Gate consequence</b><span>'+g.consequence+'</span></div>'+
-    '<p class="gate-safety">Continuous view: the canonical '+g.next+' stage follows below. Scrolling only reveals the next stage; it does not submit, confirm, order, pay, allocate, release, authorize, execute, transfer custody, or close the project.</p></div>';
+function getCanonicalJourney(){
+  return window.STB_CANONICAL_JOURNEY||null;
+}
+function canonicalJourneyReady(){
+  var contract=getCanonicalJourney();
+  if(!contract||!Array.isArray(contract.stages)||!Array.isArray(contract.gates))return false;
+  return contract.stages.join('>')==='scan>configure>store>review>request>yard>terms>recap>record'
+    && contract.gates.length===8;
+}
+function canonicalGate(source){
+  var contract=getCanonicalJourney();
+  if(!contract)return null;
+  return contract.gates.filter(function(g){return g.source===source})[0]||null;
+}
+function journeyGateHtml(source){
+  var g=canonicalGate(source); if(!g)return'';
+  return '<div class="ws-gate-separator" data-ws-gate="'+source+'"><p class="gate-tag">STANDARD JOURNEY GATE</p>'+
+    '<div class="gate-grid"><b>Previous stage</b><span>'+String(g.source).toUpperCase()+'</span>'+
+    '<b>Guided action</b><span>'+jEsc(g.action)+'</span>'+
+    '<b>Next canonical stage</b><span>'+String(g.destination).toUpperCase()+'</span>'+
+    '<b>Gate consequence</b><span>'+jEsc(g.scrollConsequence)+'</span></div>'+
+    '<p class="gate-safety">Continuous view: the canonical '+String(g.destination).toUpperCase()+' stage follows below. Scrolling only reveals the next stage; it does not submit, confirm, order, pay, allocate, release, authorize, execute, transfer custody, or close the project.</p></div>';
 }
 function renderStaticGates(){
   var a=$('ws-gate-scan-configure'),b=$('ws-gate-configure-store');
@@ -2448,7 +2453,12 @@ function renderContinuousJourney(force){
   if(!host)return;
   if(!force&&journeyRendered&&!journeyDirty)return;
   var snapshot=currentJourneySnapshot(false);
-  var stages=['store','review','request','yard','terms','recap','record'];
+  var contract=getCanonicalJourney();
+  if(!canonicalJourneyReady()){
+    host.innerHTML='<section class="ws-journey-stage"><main><h1>CANONICAL JOURNEY CONTENT UNAVAILABLE</h1><div class="ws-journey-callout warn"><b>Fail closed.</b> The shared bounded-project journey contract is unavailable or out of order.</div></main></section>';
+    journeyRendered=true; journeyDirty=false; return;
+  }
+  var stages=contract.stages.slice(contract.stages.indexOf('store'));
   var html='';
   stages.forEach(function(stage,index){
     html+=journeyStageSection(buildJourneyStage(stage,snapshot));
@@ -2489,7 +2499,9 @@ function setSeatView(mode,stage){
   document.body.dataset.wsView=guided?'guided':'continuous';
   if(guided){
     var target=stage||'scan';
-    if(['store','review','request','yard','terms','recap','record'].indexOf(target)>=0)refreshJourneyIfNeeded();
+    var contract=getCanonicalJourney();
+    if(!canonicalJourneyReady()||contract.stages.indexOf(target)<0)return false;
+    if(contract.stages.indexOf(target)>=contract.stages.indexOf('store'))refreshJourneyIfNeeded();
     document.body.dataset.wsStage=target;
   }else{
     delete document.body.dataset.wsStage;
@@ -2517,6 +2529,7 @@ document.addEventListener('click',function(e){
 window.STBWindowSeatJourney=Object.freeze({
   projectId:'window-seat',
   artifactVersion:'0.7.3',
+  contractVersion:function(){ var c=getCanonicalJourney(); return c?c.version:null; },
   snapshot:function(){ return currentJourneySnapshot(false); },
   evaluateCurrent:function(){ return currentJourneySnapshot(true); },
   showContinuous:function(){ return setSeatView('continuous'); },
@@ -2547,6 +2560,10 @@ controls();
 readFacts();
 buildOps(buildDefinition());
 cycle();
+if(!canonicalJourneyReady()){
+  document.body.innerHTML='<div class="wrap"><section class="page"><div class="capbody"><h1>CANONICAL JOURNEY CONTENT UNAVAILABLE</h1><p class="dim">The shared bounded-project journey contract is unavailable or out of order. Window Seat fails closed rather than inventing a route.</p></div></section></div>';
+  return;
+}
 renderStaticGates();
 setSeatView('continuous');
 setupJourneyObserver();
