@@ -638,3 +638,36 @@ Sequenced so nothing in the current UI changes for any step — which remains th
 8. **Metrics surfaces** — per-home and per-region rollups; refusal-corpus analytics feeding envelope and curriculum review.
 9. **IFC-mapped export** — as-built outcomes exportable toward professional BIM toolchains; the owner's twin as a first-class citizen of the built-environment data ecosystem.
 10. **The second home** — multi-home owners; then the second region.
+
+
+---
+
+## 16. Canonical bounded-project journey contract
+
+The current reference journey is intentionally small and fixed. Window Seat is the reference implementation; later bounded projects should conform to this order rather than inventing their own:
+
+`scan → configure → store → review → request → yard → terms → recap → record`
+
+The machine-readable declaration is `/stb-canonical-journey.js`. It is declarative only: it names stages, gates, permitted state changes, and authority that a gate must not imply. It does not execute routing.
+
+| Action | Source | Destination | May change | Must not imply |
+| --- | --- | --- | --- | --- |
+| CONTINUE TO CONFIGURE | scan | configure | active stage | confirmation, Store answer, commerce, production |
+| SEND TO STORE ZERO | configure | store | active stage; Store reference answer for current revision | confirmation, order, offer, acceptance, payment, allocation, release, execution |
+| NEXT | store | review | active stage | Store-answer promotion or confirmation |
+| CONFIRM THIS VERSION | review | request | active stage; revision confirmation | order, payment, allocation, release, readiness, Cycle Start, fabrication |
+| SEND TO THE YARD / NEXT | request | yard | active stage; request event state | acceptance, payment, allocation, production |
+| CONTINUE TO TERMS / NEXT | yard | terms | active stage | acceptance |
+| NEXT | terms | recap | active stage | missing transaction history |
+| NEXT | recap | record | active stage | custody, closeout, fabricated outcome |
+
+Two presentations consume the same journey:
+
+- **Guided View** isolates one current stage and exposes the appropriate explicit gate.
+- **Continuous View** places the same stage bodies vertically and adds one standard gate separator between them.
+
+Continuous scrolling is observational. It must never execute a gate or create confirmation, Store submission/answer, offer, acceptance, payment, allocation, production release, machine readiness, Cycle Start, physical outcome, staging, custody, or closeout.
+
+Alcove DOM ids such as `alcove-capture`, `alcove-config`, and `alcove-review` are compatibility implementation details. They are not stage names in the reference contract.
+
+**NO BLOOD ON WOOD.**
