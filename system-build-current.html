@@ -60,6 +60,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     `;
     doc.head.append(style);
 
+    let activeJourneyProject = null;
+    let seatJourneySnapshot = null;
+
     const home = doc.getElementById('projects');
     if (home) {
       home.querySelector('[data-canonical-home-return]')?.remove();
@@ -97,6 +100,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
           windowSeatTile.addEventListener('click', event => {
             event.preventDefault();
             event.stopImmediatePropagation();
+            activeJourneyProject = 'window-seat';
+            doc.documentElement.dataset.activeJourneyProject = 'window-seat';
             win.show('window-seat-live');
           }, true);
         }
@@ -426,9 +431,360 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     sync();
 
     const originalShow = win.show;
+
+    const seatStageIds = Object.freeze({
+      store: 'seat-store',
+      review: 'seat-review',
+      request: 'seat-request',
+      yard: 'seat-yard',
+      terms: 'seat-terms',
+      recap: 'seat-recap',
+      record: 'seat-record'
+    });
+    const seatNavTargets = Object.freeze({
+      capture: 'alcove-capture',
+      configure: 'alcove-config',
+      store: 'store',
+      review: 'alcove-review',
+      request: 'request',
+      yard: 'yard',
+      terms: 'terms',
+      recap: 'recap',
+      record: 'record'
+    });
+
+    function seatFrame() {
+      return doc.querySelector('#window-seat-live .window-seat-shell-frame');
+    }
+
+    function cloneSeat(value) {
+      return value == null ? value : JSON.parse(JSON.stringify(value));
+    }
+
+    function refreshSeatSnapshot(evaluate, supplied) {
+      if (supplied) seatJourneySnapshot = cloneSeat(supplied);
+      const bridge = seatFrame()?.contentWindow?.STBWindowSeatJourney;
+      if (bridge) {
+        try {
+          seatJourneySnapshot = cloneSeat(evaluate ? bridge.evaluateCurrent() : bridge.snapshot());
+        } catch {}
+      }
+      return seatJourneySnapshot;
+    }
+
+    function escapeSeat(value) {
+      return String(value == null ? '—' : value)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function moneySeat(value) {
+      const n = Number(value);
+      return Number.isFinite(n) ? '$' + n.toFixed(2) : '—';
+    }
+
+    function seatCard(label, value) {
+      return '<div><b>' + escapeSeat(label) + '</b><span>' + escapeSeat(value) + '</span></div>';
+    }
+
+    function seatList(items, emptyText) {
+      if (!items || !items.length) return '<p class="dim">' + escapeSeat(emptyText) + '</p>';
+      return '<div class="s001-v2-order">' + items.map(function(item) {
+        return seatCard(item[0], item[1]);
+      }).join('') + '</div>';
+    }
+
+    function ensureSeatStagePage(stage) {
+      const id = seatStageIds[stage];
+      let page = doc.getElementById(id);
+      if (page) return page;
+      page = doc.createElement('section');
+      page.className = 'page transaction seat-guided-stage';
+      page.id = id;
+      page.innerHTML = '<main class="main"></main><aside class="rail"><p class="hd">WINDOW SEAT · GUIDED JOURNEY</p><p class="goal">Same project. Same revision.</p><div class="row"><b>Project owns facts</b><span>The long-form Window Seat remains the source of project definition, revision and Store demand.</span></div><div class="row"><b>Shell owns stages</b><span>Store, Review, Request, Yard, Terms, Recap and Record render against that active project.</span></div><div class="row"><b>No authority smuggled</b><span>Favorable reference answers do not create order, payment, allocation, release, readiness or Cycle Start.</span></div></aside>';
+      doc.querySelector('.wrap')?.append(page);
+      return page;
+    }
+
+    function seatBottom(backStage, nextStage, nextLabel) {
+      const back = backStage === 'project'
+        ? '<button type="button" data-seat-stage="project">Back to Window Seat</button>'
+        : '<button type="button" data-seat-stage="' + backStage + '">Back</button>';
+      const next = nextStage
+        ? '<button class="next" type="button" data-seat-stage="' + nextStage + '">' + escapeSeat(nextLabel || 'Next →') + '</button>'
+        : '<button class="next" type="button" data-seat-stage="project">Return to Window Seat</button>';
+      return '<div class="bottom">' + back + '<span class="fine">Window Seat · project-owned journey</span>' + next + '</div>';
+    }
+
+    function renderSeatStage(stage, supplied) {
+      const snapshot = refreshSeatSnapshot(false, supplied);
+      const page = ensureSeatStagePage(stage);
+      const main = page.querySelector(':scope > .main');
+      if (!snapshot || !main) {
+        if (main) main.innerHTML = '<h1>WINDOW SEAT · ' + escapeSeat(stage.toUpperCase()) + '</h1><div class="band warn"><b>Project context unavailable.</b> Return to the Window Seat project view and carry the current revision forward.</div>' + seatBottom('project', null);
+        return page;
+      }
+
+      const req = snapshot.storeRequest || {};
+      const ans = snapshot.storeAnswer || null;
+      const revision = snapshot.revision || {};
+      const project = snapshot.project || {};
+      const open = snapshot.openConditions || [];
+      const blocking = open.filter(function(item){ return item && item.block; });
+      const occurrences = req.partOccurrences || [];
+      const materials = req.materialRequirements || [];
+      const ops = req.requestedOperations || [];
+      const exclusions = req.exclusions || [];
+      const answerOps = ans?.ops || [];
+      const lines = ans?.lines || [];
+      const authority = snapshot.authority || {};
+      const header =
+        '<p class="tag">STB · WINDOW SEAT · ' + escapeSeat(stage.toUpperCase()) + '</p>' +
+        '<h1>' + escapeSeat(stage === 'store' ? 'Store Zero · Window Seat' :
+          stage === 'review' ? 'Review · Window Seat' :
+          stage === 'request' ? 'Request / commercial handoff' :
+          stage === 'yard' ? 'Yard response · Window Seat' :
+          stage === 'terms' ? 'Terms · authority remains separate' :
+          stage === 'recap' ? 'What happened · Window Seat' :
+          'Keep the Window Seat project record') + '</h1>' +
+        '<div class="hdr"><div><b>PROJECT</b><span>Window Seat</span></div><div><b>REVISION</b><span>' +
+        escapeSeat(revision.number) + (revision.confirmed ? ' · confirmed' : ' · candidate') +
+        '</span></div><div><b>CLASS</b><span>' + escapeSeat(project.projectClass) +
+        '</span></div><div><b>AUTHORITY</b><span>reference / no physical execution</span></div></div>';
+
+      if (stage === 'store') {
+        const nextStep = blocking.length
+          ? 'Return to the project, create a new revision, and rerun dependent checks'
+          : !ans
+            ? 'Evaluate the confirmed Window Seat revision with Store Zero'
+            : ans.stale
+              ? 'Return to the project and evaluate the current revision'
+              : 'Review the Store answer against this exact Window Seat revision';
+        const stateRows = ans ? [
+          ['Material mapping', ans.states?.mapping || '—'],
+          ['Availability', ans.states?.availability || '—'],
+          ['Edge milling', ans.states?.edgeMill || '—'],
+          ['Price evidence', ans.states?.price || '—'],
+          ['Job disposition', ans.jobDisposition || ans.status || '—'],
+          ['Known reference basis', moneySeat(ans.q)],
+          ['Recovery basis', moneySeat(ans.recovery) + ' fabrication / fulfillment recovery'],
+          ['Cell consumption basis', moneySeat(ans.cellConsumption)],
+          ['Catalog / engine', (ans.pin?.clock || '—') + ' · ' + (ans.pin?.engine || '—')],
+          ['Commercial authority', 'NOT ESTABLISHED'],
+          ['Production authority', 'NOT ESTABLISHED'],
+          ['Next legitimate step', nextStep]
+        ] : [
+          ['Store answer', 'NOT YET EVALUATED'],
+          ['Commercial authority', 'NOT ESTABLISHED'],
+          ['Production authority', 'NOT ESTABLISHED'],
+          ['Next legitimate step', nextStep]
+        ];
+        const demandRows = [
+          ['Submitted revision', revision.number],
+          ['Finished occurrences', occurrences.length],
+          ['Material requirements', materials.length],
+          ['Requested operations', ops.length],
+          ['Hardware', req.hardwareSelection ? (req.hardwareSelection.description + ' × ' + req.hardwareSelection.quantity) : 'none selected'],
+          ['Unresolved carried', (req.unresolvedConditions || []).length]
+        ];
+        const lineRows = lines.map(function(line, i){
+          const request = line.request || {};
+          return ['Material line ' + (i + 1),
+            (request.finishedLength || '—') + ' × ' + (request.finishedWidth || '—') + ' in · ' +
+            (request.quantity || '—') + ' runs · ' + (line.disposition || '—') +
+            (line.sku ? ' · ' + line.sku : '')];
+        });
+        const opRows = answerOps.map(function(op){ return [op.name || op.id, (op.disposition || '—') + ' · ' + (op.priceNote || op.why || '')]; });
+        main.innerHTML = header +
+          '<p class="lede">The exact current Window Seat definition is the input. Store answers material, mapping, price, availability and process capability separately.</p>' +
+          '<h2>What demand traveled</h2>' + seatList(demandRows, 'No demand available.') +
+          '<h2>What Store Zero answered</h2>' + seatList(stateRows, 'No Store answer yet.') +
+          (lineRows.length ? '<h2>Material mapping / availability</h2>' + seatList(lineRows, '') : '') +
+          (opRows.length ? '<h2>Requested operations</h2>' + seatList(opRows, '') : '') +
+          '<div class="s001-boundary"><b>Store authority stops here.</b> ' +
+          (ans ? 'This answer is held against Window Seat revision ' + escapeSeat(ans.atRevision || revision.number) + '. ' : '') +
+          'It is not an order, payment, reservation, allocation, production release, machine readiness statement or Cycle Start.</div>' +
+          (blocking.length ? '<div class="band warn"><b>STOP:</b> ' + escapeSeat(blocking.map(function(x){return x.t;}).join('; ')) + '. Revise the project; do not rewrite this version in place.</div>' : '') +
+          seatBottom('project', 'review', 'Next → Review');
+      } else if (stage === 'review') {
+        const reviewRows = [
+          ['Revision', revision.number + (revision.confirmed ? ' · confirmed' : ' · candidate')],
+          ['Top-level modules', (req.modules || []).map(function(m){return m.id;}).join(' · ') || '—'],
+          ['Finished occurrences', occurrences.length],
+          ['Material family', req.materialClass?.family || '—'],
+          ['Store answer', ans ? ((ans.stale ? 'HISTORICAL · ' : 'CURRENT · ') + (ans.jobDisposition || ans.status || '')) : 'NOT YET EVALUATED'],
+          ['Open conditions', open.length + ' · ' + blocking.length + ' blocking']
+        ];
+        main.innerHTML = header +
+          '<p class="lede">Review shows the Window Seat facts and Store answer without turning unresolved work into capability or authority.</p>' +
+          seatList(reviewRows, '') +
+          (open.length ? '<h2>Unresolved / carried conditions</h2>' + seatList(open.map(function(item){return [item.t || 'Condition', (item.block ? 'BLOCKING · ' : 'carried · ') + (item.w || '')];}), '') : '<div class="band"><b>No project blocking condition is reported by the current long-form revision.</b> Store and commercial boundaries still remain separate.</div>') +
+          '<div class="s001-boundary">Review is not order, payment, allocation, production release, machine readiness or physical execution authorization.</div>' +
+          seatBottom('store', 'request', 'Next → Request');
+      } else if (stage === 'request') {
+        const requestRows = [
+          ['Project / revision', 'Window Seat · ' + revision.number],
+          ['Definition demand', occurrences.length + ' finished occurrences · ' + materials.length + ' material requirements'],
+          ['Store request', req.projectClass ? 'identified · ' + req.projectClass : 'not identified'],
+          ['Store disposition', ans ? (ans.jobDisposition || ans.status || '—') : 'not evaluated'],
+          ['Known reference selling basis', ans ? moneySeat(ans.q) : 'not established'],
+          ['Commercial authority', 'NOT ESTABLISHED']
+        ];
+        main.innerHTML = header +
+          '<p class="lede">This is the request / commercial handoff for the same identified Window Seat revision. It does not create a second definition.</p>' +
+          seatList(requestRows, '') +
+          '<h2>Project exclusions remain exclusions</h2>' + seatList(exclusions.map(function(x){return ['Outside this definition', x];}), 'No exclusions listed.') +
+          '<div class="s001-boundary"><b>REQUEST ≠ ORDER.</b> No payment, reservation, allocation, seller-of-record offer, production release or physical fabrication authority is created on this reference path.</div>' +
+          seatBottom('review', 'yard', 'Next → Yard');
+      } else if (stage === 'yard') {
+        const yardRows = [
+          ['Material mapping', ans?.states?.mapping || 'not evaluated'],
+          ['Availability', ans?.states?.availability || 'not evaluated'],
+          ['Process capability', ans?.jobDisposition || 'not evaluated'],
+          ['Unpriced services', (ans?.unpriced || []).length ? ans.unpriced.join('; ') : 'none reported at current answer'],
+          ['Shortages', (ans?.shortages || []).length ? ans.shortages.join('; ') : 'none reported at current answer'],
+          ['Reference amount', ans ? moneySeat(ans.q) : 'not established']
+        ];
+        main.innerHTML = header +
+          '<p class="lede">The yard view returns the Store facts without silently changing Window Seat geometry, material identity, requested work or revision.</p>' +
+          seatList(yardRows, '') +
+          '<div class="s001-boundary">A supported or priced component may coexist with an unresolved service or unavailable material. Those answers remain separate.</div>' +
+          seatBottom('request', 'terms', 'Next → Terms');
+      } else if (stage === 'terms') {
+        const termsRows = [
+          ['Definition review', 'recorded in this guided demonstration'],
+          ['Store reference answer', ans ? 'held for revision ' + (ans.atRevision || revision.number) : 'not evaluated'],
+          ['Commercial offer', 'NOT ESTABLISHED'],
+          ['Payment', 'NOT ESTABLISHED'],
+          ['Material allocation', 'NOT ESTABLISHED'],
+          ['Production release', 'NOT ESTABLISHED'],
+          ['Machine readiness', authority.machineReadiness === true ? 'true' : 'false / not established'],
+          ['Cycle Start', authority.cycleStart === true ? 'true' : 'local only / not authorized here']
+        ];
+        main.innerHTML = header +
+          '<p class="lede">Terms keeps the commercial sequence visible without manufacturing a success path merely to complete the screen.</p>' +
+          seatList(termsRows, '') +
+          '<div class="s001-boundary">Commercial completion does not start a machine. Local readiness and local Cycle Start remain separate authorities.</div>' +
+          seatBottom('yard', 'recap', 'Next → Recap');
+      } else if (stage === 'recap') {
+        const recapRows = [
+          ['SOURCE', (req.evidence || []).length + ' retained source references'],
+          ['FACTS', (req.controllingFacts || []).length + ' controlling facts'],
+          ['CONFIGURATION', (req.modules || []).length + ' top-level modules'],
+          ['DEFINITION', 'Window Seat revision ' + revision.number],
+          ['STORE REQUEST', req.projectClass ? 'identified' : 'missing'],
+          ['STORE RESPONSE', ans ? (ans.jobDisposition || ans.status || 'recorded') : 'missing'],
+          ['COMMERCIAL', 'not established'],
+          ['PHYSICAL EXECUTION', 'not recorded'],
+          ['CUSTODY', 'not transferred']
+        ];
+        main.innerHTML = header +
+          '<p class="lede">One project. One revision lineage. Missing later events stay missing.</p>' +
+          seatList(recapRows, '') +
+          '<div class="s001-v2-callout"><b>The first version may stop for a reason.</b>A revision answers the reason by creating a new version and rerunning dependent checks. It never edits the stopped version into a pass.</div>' +
+          seatBottom('terms', 'record', 'Next → Record');
+      } else {
+        const occurrenceRows = occurrences.slice(0, 16).map(function(o){
+          return [o.id || 'occurrence', (o.assembly || '—') + ' · ' + (o.role || '—') + ' · ' +
+            (o.finishedLength || '—') + ' × ' + (o.finishedDepth || '—') + ' × ' + (o.finishedThickness || '—') + ' in · ' +
+            (o.materialFamily || req.materialClass?.family || '—')];
+        });
+        if (occurrences.length > 16) occurrenceRows.push(['Additional occurrences', (occurrences.length - 16) + ' more retained in this revision']);
+        main.innerHTML = header +
+          '<p class="lede">The owner record keeps the exact Window Seat project identity, revision and stable component occurrences that this journey actually established.</p>' +
+          seatList([
+            ['Project', 'Space utilization · Window seat'],
+            ['Revision', revision.number],
+            ['Project class', project.projectClass || req.projectClass || '—'],
+            ['Finished occurrences', occurrences.length],
+            ['Material family', req.materialClass?.family || '—'],
+            ['Store answer', ans ? (ans.jobDisposition || ans.status || 'recorded') : 'not recorded'],
+            ['Physical outcome', 'NOT RECORDED'],
+            ['Custody', 'NOT TRANSFERRED']
+          ], '') +
+          '<h2>Component identity retained</h2>' + seatList(occurrenceRows, 'No occurrence identities available.') +
+          '<div class="s001-v2-callout"><b>Replacement payoff.</b>A later replacement request can identify the exact occurrence, revision and material basis rather than re-measuring and guessing. That does not authorize fabrication. Current material, Store, safety, capability and production gates run again.</div>' +
+          seatBottom('recap', null);
+      }
+      return page;
+    }
+
+    function syncSeatNav(stage) {
+      const wanted = seatNavTargets[stage] || null;
+      doc.querySelectorAll('.recovery-nav button').forEach(function(button) {
+        const target = button.getAttribute('data-go') || button.getAttribute('data-canonical-go');
+        if (wanted && target === wanted) button.setAttribute('aria-current', 'step');
+        else button.removeAttribute('aria-current');
+      });
+    }
+
+    function showSeatProject(anchor) {
+      activeJourneyProject = 'window-seat';
+      doc.documentElement.dataset.activeJourneyProject = 'window-seat';
+      originalShow.call(win, 'window-seat-live');
+      if (anchor) {
+        setTimeout(function(){
+          try { seatFrame()?.contentDocument?.querySelector(anchor)?.scrollIntoView({behavior:'smooth',block:'start'}); } catch {}
+        }, 0);
+      }
+      syncSeatNav(anchor === '#pg-capture' ? 'capture' : 'configure');
+    }
+
+    function showSeatStage(stage, supplied) {
+      activeJourneyProject = 'window-seat';
+      doc.documentElement.dataset.activeJourneyProject = 'window-seat';
+      renderSeatStage(stage, supplied);
+      originalShow.call(win, seatStageIds[stage]);
+      syncSeatNav(stage);
+    }
+
+    doc.addEventListener('click', function(event) {
+      const stageButton = event.target.closest('[data-seat-stage]');
+      if (!stageButton) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const stage = stageButton.getAttribute('data-seat-stage');
+      if (stage === 'project') showSeatProject('#pg-configure');
+      else showSeatStage(stage);
+    }, true);
+
+    window.addEventListener('message', function(event) {
+      if (event.origin !== window.location.origin) return;
+      if (event.source !== seatFrame()?.contentWindow) return;
+      if (event.data?.type !== 'stb-window-seat-guided-handoff') return;
+      showSeatStage('store', event.data.snapshot || null);
+    });
+
+    doc.addEventListener('click', function(event) {
+      const tile = event.target.closest('#projects .tile[data-go]');
+      if (!tile) return;
+      if (tile.getAttribute('data-go') !== 'window-intake') {
+        activeJourneyProject = null;
+        seatJourneySnapshot = null;
+        delete doc.documentElement.dataset.activeJourneyProject;
+      }
+    }, true);
+
     win.show = function(id) {
+      const target = String(id);
+      if (activeJourneyProject === 'window-seat') {
+        if (target === 'alcove-capture') { showSeatProject('#pg-capture'); return; }
+        if (target === 'alcove-config') { showSeatProject('#pg-configure'); return; }
+        if (target === 'store') { showSeatStage('store'); return; }
+        if (target === 'alcove-review') { showSeatStage('review'); return; }
+        if (target === 'request') { showSeatStage('request'); return; }
+        if (target === 'yard') { showSeatStage('yard'); return; }
+        if (target === 'terms') { showSeatStage('terms'); return; }
+        if (target === 'recap') { showSeatStage('recap'); return; }
+        if (target === 'record') { showSeatStage('record'); return; }
+        if (target === 'projects' || target === 'landing' || target === 'my-projects' || target === 'archive') {
+          activeJourneyProject = null;
+          seatJourneySnapshot = null;
+          delete doc.documentElement.dataset.activeJourneyProject;
+        }
+      }
       const result = originalShow.apply(this, arguments);
-      if (String(id).startsWith('playhouse')) setTimeout(sync, 0);
+      if (target.startsWith('playhouse')) setTimeout(sync, 0);
       return result;
     };
     return true;
