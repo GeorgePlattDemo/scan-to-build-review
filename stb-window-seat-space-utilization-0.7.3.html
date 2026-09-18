@@ -212,6 +212,32 @@
   .ws-journey-stage .ops .chain{font:11.5px/1.9 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--text-2);margin:0 0 8px}
   .ws-journey-stage .close{border-top:1px solid var(--border-accent);margin-top:16px;padding-top:14px}
   .ws-journey-stage .close p{margin:0 0 9px;color:var(--text-2)}
+  .ws-view-switch{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 18px;padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:var(--surface);font-size:11.5px;color:var(--text-2)}
+  .ws-view-switch b{color:var(--text)}
+  .ws-gate-separator{margin:8px 0 24px;padding:14px 16px;border-top:1px solid var(--border-accent);border-bottom:1px solid var(--border-accent);background:var(--surface)}
+  .ws-gate-separator .gate-tag{margin:0 0 8px;font-size:9.5px;font-weight:700;letter-spacing:.08em;color:var(--accent)}
+  .ws-gate-separator .gate-grid{display:grid;grid-template-columns:170px minmax(0,1fr);gap:4px 12px;font-size:11.5px}
+  .ws-gate-separator .gate-grid b{color:var(--text-2)}
+  .ws-gate-separator .gate-grid span{color:var(--text)}
+  .ws-gate-separator .gate-safety{margin:9px 0 0;font-size:11px;color:var(--text-2)}
+  .ws-stage-actions{display:flex;align-items:center;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)}
+  .ws-stage-actions .next{margin-left:auto}
+  body[data-ws-view="guided"] .ws-view-switch,
+  body[data-ws-view="guided"] .ws-gate-separator,
+  body[data-ws-view="guided"] .wrap>p.tag,
+  body[data-ws-view="guided"] .wrap>p.note{display:none!important}
+  body[data-ws-view="guided"] #pg-capture,
+  body[data-ws-view="guided"] #pg-configure,
+  body[data-ws-view="guided"] #ws-continuous-journey .ws-journey-stage{display:none!important}
+  body[data-ws-view="guided"][data-ws-stage="scan"] #pg-capture,
+  body[data-ws-view="guided"][data-ws-stage="configure"] #pg-configure,
+  body[data-ws-view="guided"][data-ws-stage="store"] #ws-stage-store,
+  body[data-ws-view="guided"][data-ws-stage="review"] #ws-stage-review,
+  body[data-ws-view="guided"][data-ws-stage="request"] #ws-stage-request,
+  body[data-ws-view="guided"][data-ws-stage="yard"] #ws-stage-yard,
+  body[data-ws-view="guided"][data-ws-stage="terms"] #ws-stage-terms,
+  body[data-ws-view="guided"][data-ws-stage="recap"] #ws-stage-recap,
+  body[data-ws-view="guided"][data-ws-stage="record"] #ws-stage-record{display:grid!important}
   @media (max-width:1100px){ .cfg{grid-template-columns:240px minmax(0,1fr)} .cfg>div:last-child{grid-column:1/-1} }
   @media (max-width:800px){
     .page{grid-template-columns:1fr}
@@ -227,6 +253,7 @@
     .rail .row,.rail .goal{margin-bottom:16px}
   }
 </style>
+<script src="store-zero-canonical-doctrine.js?v=906af215"></script>
 </head>
 <body>
 <div class="wrap">
@@ -234,6 +261,11 @@
 <p class="tag">SCAN-TO-BUILD · WINDOW SEAT · SPACE UTILIZATION 0.7.3</p>
 <p class="note">Project definition begins with two pages: capture, then configure. One project class, exactly three top-level modules — <b>ASM-LEFT</b> full-height shelving tower, <b>ASM-CENTER</b> one complete window-seat module (upper storage · window opening · seat · lower cubbies), <b>ASM-RIGHT</b> full-height shelving tower. The outer towers attach directly to the outside faces of ASM-CENTER on site. Solid board demand throughout, 3/4 in finished thickness. The project states demand; a local pinned Store Zero fixture adapter answers it offline, and every number it returns names its pin. Collaborator note: this prototype demonstrates bounded part definition and Store demand for the Space Utilization project. It does not implement the governed Project B review model. The right rail is written for reviewers, not customers.</p>
 
+
+<div class="ws-view-switch">
+  <span><b>CONTINUOUS VIEW</b> · the canonical journey flattened into one scroll. Gates are shown, never executed by scrolling.</span>
+  <button type="button" data-ws-guided-stage="scan">GUIDED VIEW · START AT SCAN →</button>
+</div>
 
 <!-- ══════════ 1 · CAPTURE ══════════ -->
 <section class="page" id="pg-capture">
@@ -318,7 +350,7 @@
       <div class="btns">
         <button disabled title="Planned. Not implemented in this standalone demonstration.">UPLOAD A SCAN, PHOTO OR PLAN — PLANNED, INACTIVE HERE</button>
         <button disabled title="Planned. The measurement fields above are the working entry point in this demonstration.">TYPE THE NUMBERS — USE THE FIELDS ABOVE</button>
-        <button class="go" onclick="document.getElementById('pg-configure').scrollIntoView({behavior:'smooth'})">CONTINUE TO CONFIGURE</button>
+        <button class="go" type="button" data-ws-guided-stage="configure">CONTINUE TO CONFIGURE →</button>
       </div>
     </div>
   </div>
@@ -344,6 +376,8 @@
   </div>
 </section>
 
+
+<div class="ws-gate-separator" id="ws-gate-scan-configure" data-ws-gate="scan"></div>
 
 <!-- ══════════ 2 · CONFIGURE ══════════ -->
 <section class="page" id="pg-configure">
@@ -442,69 +476,29 @@
         <div class="bd two" id="o-travel" style="padding:10px 0 0"></div>
       </details>
 
-      <section class="ws-review-freeze" id="ws-review-this-version">
-        <h2 style="font-size:17px;margin:0 0 4px">Review this version</h2>
-        <p class="sub"><b style="color:var(--text)">This is exactly what gets frozen. Read it before you confirm it.</b></p>
-
-        <div class="box">
-          <h4 id="sum-head">SPACE UTILIZATION — WINDOW SEAT</h4>
-          <div class="bd two" id="ws-sum"></div>
+      <div class="box" id="ws-store-tools">
+        <h4>STORE REFERENCE TOOLS — TECHNICAL / NON-COMMERCIAL</h4>
+        <div class="bd">
+          <p class="dim" style="margin:0 0 8px">These controls inspect or calculate the pinned reference Store basis for the current candidate. They do not replace the canonical SEND TO STORE ZERO gate below.</p>
+          <div class="btns" style="margin-top:8px">
+            <button class="go" id="ws-send">EVALUATE WITH STORE ZERO</button>
+            <button id="btn-inspect">INSPECT THE STORE REQUEST</button>
+          </div>
+          <p class="dim" style="font-size:11.5px;margin:7px 0 0"><b>EVALUATE WITH STORE ZERO</b> calculates or refreshes the held reference answer. It is not confirmation, submission, an order, commercial acceptance, production release, machine readiness, or Cycle Start.</p>
         </div>
-
-        <h2 style="font-size:15px;margin:18px 0 6px">Still unresolved</h2>
-        <div class="box"><div class="bd" id="ws-open"></div></div>
-
-        <h2 style="font-size:15px;margin:18px 0 6px">What confirm means</h2>
-        <p><b>Confirm freezes this exact definition as one identified version.</b> <span class="dim">Change anything afterward and that creates a new revision. This one remains in project history.</span></p>
-        <div class="ws-confirm-chain">confirmed definition
-≠ ordered
-≠ paid
-≠ material reserved
-≠ allocated
-≠ production released
-≠ machine ready
-≠ Cycle Start
-≠ cut</div>
-
-        <div class="box">
-          <h4>REVIEW YOUR DEFINITION</h4>
-          <div class="bd two" id="ws-confirm-summary"></div>
-          <div class="ws-journey-callout" style="margin-bottom:0"><b>Meaning of Confirm.</b> You affirm the intended definition and acknowledge the displayed Store basis and unresolved conditions. The Store Zero number is a budgetary reference estimate, not a commercial offer.</div>
-        </div>
-
-        <div class="ws-confirm-actions">
-          <button class="primary" id="ws-confirm">CONFIRM THIS VERSION</button>
-          <button id="ws-keep-editing" type="button">KEEP EDITING</button>
-        </div>
-        <p class="ws-review-status" id="ws-confirm-status"></p>
-        <p class="ws-review-status" id="ws-gate"></p>
-
-        <div class="btns" style="margin-top:14px">
-          <button class="go" id="ws-send" disabled>EVALUATE WITH STORE ZERO</button>
-          <button id="btn-inspect">INSPECT THE STORE REQUEST</button>
-        </div>
-        <p class="dim" style="font-size:11.5px;margin:5px 0 0"><b>EVALUATE WITH STORE ZERO</b> evaluates or refreshes the reference Store answer for this revision. It is not confirmation, Next, an order, Store submission, or commercial acceptance.</p>
-
-        <div class="box" id="ans-box" style="display:none;margin-top:14px">
-          <h4 id="ans-head">STORE ZERO ANSWER</h4>
-          <div class="bd" id="ans-body"></div>
-        </div>
-        <div class="box" id="req-box" style="display:none;margin-top:12px">
-          <h4>STORE REQUEST OBJECT — EXACTLY WHAT TRAVELS</h4>
-          <div class="bd"><pre id="req-json"></pre></div>
-        </div>
-      </section>
-
-      <div class="ws-journey-boundary" id="ws-journey-boundary">
-        <p class="lb">CONTINUE THROUGH THE PROJECT</p>
-        <p><b>Follow the standard Scan-to-Build gates one step at a time with Next, or keep scrolling to read the same project as one continuous record.</b></p>
-        <p class="dim">Both paths use this same confirmed Window Seat project and revision. Changing the view does not recalculate or replace the definition.</p>
-        <p class="dim">The continuous page is also a teaching and reference surface. <b style="color:var(--text)">Viewing the next section does not submit, order, pay, reserve material, allocate material or authorize fabrication.</b></p>
-        <div class="stage-bottom" style="margin-top:10px">
-          <button type="button" data-ws-scroll="#ws-configure-work">← Back</button>
-          <span class="stage-fine">Same project · same revision · different navigation only</span>
-          <button class="next go" id="ws-guided" disabled>NEXT → STORE ZERO</button>
-        </div>
+      </div>
+      <div class="box" id="ans-box" style="display:none;margin-top:12px">
+        <h4 id="ans-head">STORE ZERO ANSWER</h4>
+        <div class="bd" id="ans-body"></div>
+      </div>
+      <div class="box" id="req-box" style="display:none;margin-top:12px">
+        <h4>STORE REQUEST OBJECT — EXACTLY WHAT TRAVELS</h4>
+        <div class="bd"><pre id="req-json"></pre></div>
+      </div>
+      <div class="ws-stage-actions">
+        <button type="button" data-ws-guided-stage="scan">← Back to Scan</button>
+        <span class="stage-fine" id="ws-configure-gate">Candidate definition · Store gate not yet taken</span>
+        <button class="next go" id="ws-guided" type="button">SEND TO STORE ZERO →</button>
       </div>
     </div>
   </div>
@@ -565,6 +559,8 @@
     <div class="foot"><p>Store Zero pin f88ec61c42… · D001-BOARD-EDGE-MILL-REF-0.3 · STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0.1 · guide/UI + adapter 0.7.3.</p></div>
   </div>
 </section>
+
+<div class="ws-gate-separator" id="ws-gate-configure-store" data-ws-gate="configure"></div>
 
 <div id="ws-continuous-journey" aria-label="Window Seat downstream journey"></div>
 
@@ -1828,24 +1824,6 @@ function cycle(){
   if(!answer)storeOwned.push({t:'Store Zero evaluation',w:'not yet asked for revision '+rev.n});
   else if(answer.stale)storeOwned.push({t:'Store Zero answer is historical',w:'held for revision '+answer.atRevision+'; current definition is revision '+rev.n});
 
-  function unresolvedRows(rows,empty){
-    return rows.length?rows.map(function(o){
-      return '<div class="ln"><span>'+esc(o.t)+' <span class="dim">— '+esc(o.w||'')+'</span></span><span class="chip '
-        +(o.block?'no':'warn')+'">'+(o.block?'BLOCKS':'CARRIED')+'</span></div>'}).join('')
-      :'<p class="dim" style="margin:0">'+esc(empty)+'</p>';
-  }
-  $('ws-open').innerHTML=
-    '<div class="ws-unresolved-group"><p>PROJECT DEFINITION</p>'
-      +unresolvedRows(definitionOpen,'No unresolved project-definition condition is currently reported. The definition may still carry supporting context.')+'</div>'
-    +'<div class="ws-unresolved-group"><p>STORE-OWNED QUESTIONS</p>'
-      +unresolvedRows(storeOwned,'No additional Store-owned question is currently reported by the reference evaluation.')+'</div>'
-    +'<div class="ws-unresolved-group"><p>STRUCTURE / CONNECTION</p><p class="dim" style="margin:0">'
-      +'Structural evaluation, connection design and fastener selection are excluded from this definition. No adequacy or connection claim is made here.</p></div>'
-    +'<div class="ws-unresolved-group"><p>INSTALLATION</p><p class="dim" style="margin:0">'
-      +'Installation remains excluded. Recording fit and geometry does not establish installation readiness.</p></div>'
-    +'<div class="ws-unresolved-group"><p>PHYSICAL MACHINE AUTHORITY</p><p class="dim" style="margin:0">'
-      +'No local machine readiness or Cycle Start authority is established by this project, confirmation, Store answer, price, or viewing action.</p></div>';
-
   /* measurement ledger — every answer the customer gave keeps a disposition */
   var led=[];
   FACTS.forEach(function(f){
@@ -1871,65 +1849,13 @@ function cycle(){
     +'front board and material — travel as the definition itself and are listed in the review summary on the next page.</span>'
     +'<span class="chip ok">CARRIED</span></div>';
 
-  /* review summary */
-  var ctl=FACTS.filter(function(f){return f.sts===0&&f.num!==null});
-  var ctx=FACTS.filter(function(f){return f.sts===1});
-  $('sum-head').textContent='SPACE UTILIZATION — WINDOW SEAT · REVISION '+rev.n+(rev.confirmed?' · CONFIRMED':' · CANDIDATE');
-  $('ws-sum').innerHTML=
-    '<div>'+kv('Project','space utilization · window seat')
-    +kv('Revision',rev.n+(rev.confirmed?' · confirmed':' · candidate'))
-    +kv('Controlling room / opening facts',(ctl.length?ctl.map(function(f){return f.label+' '+f.v+' in'}).join('; '):'none marked controlling'))
-    +kv('Overall finished width',inch(def.W))
-    +kv('Overall height',inch(def.H))
-    +kv('Finished depth',inch(def.depth))
-    +kv('ASM-LEFT',inch(P.W.LEFT)+' wide · '+P.SH.LEFT+' shelves · finished shelf '+fmt(P.W.LEFT-2*T)+' × '+fmt(P.depth)+' × ¾ in')
-    +kv('ASM-CENTER',inch(P.W.CENTER)+' wide · upper storage '+inch(P.upperH)+' · '+P.bays+' bays · window clear opening '
-      +fmt(def.center.windowW)+' × '+fmt(Math.max(def.center.windowH,0))+' in · seat '+inch(P.seat)+' · '+P.cub+' lower cubbies'
-      +(P.front?' · front board':''))
-    +kv('ASM-RIGHT',inch(P.W.RIGHT)+' wide · '+P.SH.RIGHT+' shelves · finished shelf '+fmt(P.W.RIGHT-2*T)+' × '+fmt(P.depth)+' × ¾ in')
-    +kv('Assembly','towers attach directly to the outside faces of ASM-CENTER on site')+'</div>'
-    +'<div>'+kv('Finished parts',def.feats.length)
-    +kv('Board runs',def.runs.length)
-    +kv('Material family / form',famName()+' · solid board · ¾ in finished thickness')
-    +kv('Hardware choice',live.hw?(live.hw.name+' × '+live.hw.qty+' · '+money(live.hardware)+' · Store merchandise'):'none selected')
-    +kv('Requested secondary operations',OPS.filter(function(o){return o.requested&&!o.generated}).map(function(o){return o.name}).join(', ')||'none selected')
-    +kv('Generated operations',OPS.filter(function(o){return o.requested&&o.generated}).map(function(o){return o.name}).join(', ')||'none')
-    +kv('Known Store Zero reference selling basis',money(live.q)+' · '+live.states.price)
-    +kv('Store basis / pin',FIX.identity.canonicalDoc+' · '+FIX.identity.canonicalCommit.slice(0,10)+'… · catalog '+FIX.identity.catalogClock+' · '+FIX.engine.id+' v'+FIX.engine.version)
-    +kv('Material mapping',live.states.mapping)
-    +kv('Availability',live.states.availability)
-    +kv('Supporting context',(ctx.map(function(f){return f.label}).concat(
-        OFF.filter(function(c){return c.on}).map(function(c){return c.t})).join('; ')||'none'))
-    +kv('Preferences',(PREF.filter(function(c){return c.on}).map(function(c){return c.t}).join('; ')||'none'))
-    +kv('Exclusions',req.exclusions.join(', '))
-    +kv('Open conditions',open.length+' ('+open.filter(function(o){return o.block}).length+' blocking)')
-    +kv('Store answer','<b>'+(answer?(answer.stale?'HISTORICAL — revision '+answer.atRevision
-        :'held for revision '+answer.atRevision):'NOT YET EVALUATED')+'</b>')+'</div>';
-
-  $('ws-confirm-summary').innerHTML=
-    '<div>'+kv('Revision',rev.n+(rev.confirmed?' · confirmed':' · candidate'))
-    +kv('Overall',fmt(def.W)+' W × '+fmt(def.H)+' H × '+fmt(def.depth)+' D in')
-    +kv('Modules','ASM-LEFT · ASM-CENTER · ASM-RIGHT')
-    +kv('Finished parts · board runs',def.feats.length+' · '+def.runs.length)+'</div>'
-    +'<div>'+kv('Material',famName()+' · ¾ in solid board')
-    +kv('Window clear opening',fmt(def.center.windowW)+' W × '+fmt(Math.max(def.center.windowH,0))+' H in')
-    +kv('Reference selling basis',money(live.q)+' · budgetary / reference')
-    +kv('Unresolved',open.length+' total · '+open.filter(function(o){return o.block}).length+' blocking')+'</div>';
-
-  /* gate */
-  var blocking=open.filter(function(o){return o.block}).length;
-  $('ws-send').disabled=!(blocking===0&&rev.confirmed);
-  $('ws-guided').disabled=!(blocking===0&&rev.confirmed);
-  $('ws-confirm').disabled=rev.confirmed;
-  $('ws-confirm').textContent=rev.confirmed?'CONFIRMED · REVISION '+rev.n:'CONFIRM THIS VERSION';
-  $('ws-confirm-status').textContent=rev.confirmed
-    ? 'Revision '+rev.n+' is frozen as the current identified definition. Change any project fact afterward and the next consequential change creates a new revision; this one remains historical.'
-    : 'This revision is still a candidate. Confirm freezes the definition only; it does not create later transaction or physical authority.';
-  $('ws-gate').textContent=blocking
-    ? blocking+' project-definition condition'+(blocking===1?'':'s')+' must be settled before Next can enter Store Zero. You may keep scrolling to read the process; viewing it does not submit anything.'
-    : (rev.confirmed
-      ? 'Revision '+rev.n+' is confirmed. Next may enter Store Zero. Viewing Store content does not submit, order, pay, reserve material, allocate material or authorize fabrication.'
-      : 'Confirm this version before the guided Next control can enter Store Zero.');
+  /* canonical Configure -> Store gate */
+  var blocking=cond.filter(function(o){return o.block}).length;
+  $('ws-send').disabled=blocking>0;
+  $('ws-guided').disabled=blocking>0;
+  $('ws-configure-gate').textContent=blocking
+    ? blocking+' project-definition condition'+(blocking===1?'':'s')+' must be settled before SEND TO STORE ZERO.'
+    : 'Candidate revision '+rev.n+' · SEND TO STORE ZERO opens the canonical Store stage. Viewing the continuous Store section does not submit anything.';
 
   /* frozen Store answer */
   if(answer){
@@ -1979,27 +1905,19 @@ function cycle(){
              ['PARTS',def.feats.length+' parts','#pt-count'],
              ['MATERIAL',def.runs.length+' runs','#o-lines'],
              ['WORK',OPS.filter(function(o){return o.requested}).length+' requested','#ops-panel'],
-             ['CONDITIONS',blocking+' blocking','#ws-open'],
+             ['CONDITIONS',blocking+' blocking','#p-cond'],
              ['DEMAND','store request','#o-travel'],
              ['KNOWN COST',money(live.q),'#p-price'],
              ['STORE ANSWER',answer?(answer.stale?'historical':'held'):'not asked','#ans-box']];
   $('chain').innerHTML=chain.map(function(c,i){
     return '<a href="'+c[2]+'" class="node"><b>'+c[0]+'</b><span>'+c[1]+'</span></a>'
       +(i<chain.length-1?'<i>→</i>':'')}).join('');
-  scheduleContinuousJourney();
+  markJourneyDirty();
 }
 function lv_ok(d){return d.indexOf('SUPPORTABLE')===0||d.indexOf('NOT REQUIRED')===0}
 
 /* ═══════════ 14 · ACTIONS ═══════════ */
 function into(el){if(el&&el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'center'})}
-$('ws-confirm').onclick=function(){
-  rev.confirmed=true;
-  cycle();
-  into($('ws-review-this-version'));
-};
-$('ws-keep-editing').onclick=function(){
-  into($('ws-configure-work'));
-};
 $('ws-send').onclick=function(){
   var def=buildDefinition(), req=buildRequest(def);
   answer=StoreZeroAdapter.evaluate(req,famSp());
@@ -2037,7 +1955,16 @@ function currentJourneySnapshot(ensureAnswer){
   });
 }
 
-var journeyDoctrine={storeIntro:'',storeGuide:'',storeProcess:''};
+function getStoreDoctrine(){
+  return window.STBStoreZeroCanonicalDoctrine||null;
+}
+function storeDoctrineReady(){
+  var d=getStoreDoctrine();
+  if(!d)return false;
+  var box=document.createElement('div');
+  box.innerHTML=d.processStepsHtml||'';
+  return box.querySelectorAll('.s').length===d.expectedProcessStepCount&&d.expectedProcessStepCount===12;
+}
 function jEsc(v){return esc(v==null?'—':v)}
 function jMoney(v){return (v==null||!isFinite(Number(v)))?'—':money(Number(v))}
 function jGrid(rows){
@@ -2181,10 +2108,11 @@ function seatProcessFacts(snapshot,index){
   return jGrid(rows);
 }
 function renderSeatStoreProcess(snapshot){
-  if(!journeyDoctrine.storeProcess)
-    return jCallout('<b>Canonical process unavailable.</b> The twelve-step Store / transaction doctrine was not supplied. No Alcove project facts are substituted.',true);
+  var doctrine=getStoreDoctrine();
+  if(!doctrine||!storeDoctrineReady())
+    return '<h1>CANONICAL STORE CONTENT UNAVAILABLE</h1>';
   var box=document.createElement('div');
-  box.innerHTML=journeyDoctrine.storeProcess;
+  box.innerHTML=doctrine.processStepsHtml;
   var steps=[].slice.call(box.querySelectorAll('.s'));
   if(steps.length!==12)
     return jCallout('<b>Canonical process incomplete.</b> Expected 12 accepted process steps; received '+steps.length+'. The Window Seat path fails closed rather than silently dropping a step.',true);
@@ -2215,15 +2143,30 @@ function renderSeatStoreProcess(snapshot){
   return box.innerHTML;
 }
 function buildStoreJourney(snapshot){
+  var doctrine=getStoreDoctrine();
+  if(!doctrine||!storeDoctrineReady()){
+    return {
+      stage:'store',
+      headline:'CANONICAL STORE CONTENT UNAVAILABLE',
+      mainHtml:'<p class="stage-tag">3 · STORE</p><h1>CANONICAL STORE CONTENT UNAVAILABLE</h1><div class="ws-journey-callout warn"><b>Fail closed.</b> The shared Store Zero definition or the expected twelve canonical process steps are unavailable. No shortened Store page and no project-fact substitute is rendered.</div>',
+      railHtml:'<p class="hd">03 · STORE · BUILD GUIDE</p><p class="goal">Fail closed</p><div class="row"><b>Canonical doctrine required</b><span>Do not invent replacement Store prose or borrow project facts as doctrine.</span></div>'
+    };
+  }
+  if(!snapshot||!snapshot.storeRequest||!snapshot.project){
+    return {
+      stage:'store',
+      headline:'WINDOW SEAT PROJECT FACTS UNAVAILABLE',
+      mainHtml:'<p class="stage-tag">3 · STORE</p><h1>WINDOW SEAT PROJECT FACTS UNAVAILABLE</h1><div class="ws-journey-callout warn"><b>Fail closed.</b> Canonical Store doctrine exists, but this Window Seat project snapshot is unavailable.</div>',
+      railHtml:doctrine.buildGuideHtml.replace('04 · STORE · BUILD GUIDE','03 · STORE · BUILD GUIDE')
+    };
+  }
   var req=snapshot.storeRequest||{}, ans=snapshot.storeAnswer||null, rev=snapshot.revision||{}, project=snapshot.project||{};
   var modules=req.modules||[], occ=req.partOccurrences||[], mats=req.materialRequirements||[], ops=req.requestedOperations||[];
   var runCount=occ.reduce(function(n,o){return n+(o.boardRuns||[]).length},0);
   var generated=ops.filter(function(o){return o.basis==='GENERATED FROM DEFINITION'});
   var requested=ops.filter(function(o){return o.basis!=='GENERATED FROM DEFINITION'});
   var unresolved=req.unresolvedConditions||[], exclusions=req.exclusions||[];
-  var intro=journeyDoctrine.storeIntro
-    ? '<div class="ws-journey-callout">'+journeyDoctrine.storeIntro+'</div>'
-    : jCallout('<b>Store Zero definition unavailable.</b> The shell has not supplied the canonical Store doctrine. No Alcove fallback is used.',true);
+  var intro='<div class="band" style="font-size:12px;line-height:1.55"><p style="margin:0">'+doctrine.definitionHtml+'</p></div>';
   var demand=jSection('What the Window Seat asked for',
     jGrid([
       ['Project','Space utilization · Window seat'],
@@ -2283,11 +2226,7 @@ function buildStoreJourney(snapshot){
     jCallout('<b>Authority boundary.</b> No order · no payment · no reservation · no allocation · no production release · no machine readiness · no Cycle Start. SUPPORTABLE is a Store/reference answer, not commissioned physical capability.',false);
   }
 
-  var process=jSection('What happens next',
-    '<p class="lede">Your confirmed version stays unchanged unless you approve a new one.</p>'+
-    '<p class="lede">Nothing below is complicated. It is only kept apart. Each step names who owns it, what it establishes, and what it does not.</p>'+
-    '<div class="ws-journey-callout"><b>Viewing is not an event.</b> The statuses below describe this Window Seat revision honestly. A visible process step does not mean that event occurred.</div>'+
-    renderSeatStoreProcess(snapshot));
+  var process=doctrine.processIntroHtml+renderSeatStoreProcess(snapshot);
   return {
     stage:'store',
     headline:'Store Zero · Window Seat',
@@ -2297,13 +2236,103 @@ function buildStoreJourney(snapshot){
       jSection('Window Seat · Store demand and reference evidence',
         '<p class="lede">The complete process above stays fixed. These are the project-specific facts and reference answers carried by this Window Seat revision.</p>'+
         demand+jSection('Store Zero reference / held answer',answerHtml))+
-      jStageBottom('review','request'),
-    railHtml:journeyDoctrine.storeGuide||'<p class="hd">STORE · BUILD GUIDE</p><p class="goal">Canonical Store guide unavailable</p><div class="row"><b>Fail closed</b><span>No project-independent Store doctrine is borrowed from another project when unavailable.</span></div>'
+      jStageBottom('configure','review'),
+    railHtml:doctrine.buildGuideHtml.replace('04 · STORE · BUILD GUIDE','03 · STORE · BUILD GUIDE')
   }
 }
 function openConditionHtml(open){
   if(!open||!open.length)return jCallout('<b>No blocking project condition is reported by this revision.</b> Store, commercial and physical authority boundaries still remain separate.',false);
   return jGrid(open.map(function(o){return [o.t||'Condition',(o.block?'STOP / BLOCKING':'CARRIED')+' · '+(o.w||'recorded condition')]}))
+}
+function reviewUnresolvedHtml(snapshot){
+  var req=snapshot.storeRequest||{}, def=snapshot.definition||{}, ref=snapshot.storeReference||snapshot.storeAnswer||null;
+  var conds=snapshot.openConditions||[], rows=[];
+  conds.forEach(function(o){rows.push([o.t||'Project condition',(o.block?'BLOCKS':'CARRIED')+' · '+(o.d||o.w||'recorded condition')])});
+  if(ref){
+    (ref.lines||[]).filter(function(l){return l.disposition!=='SUPPORTABLE'}).forEach(function(l){
+      rows.push(['Store '+String(l.disposition||'UNRESOLVED').toLowerCase(),l.why||'Store-owned resolution required']);
+    });
+    (ref.shortages||[]).forEach(function(s){rows.push(['Store availability',s])});
+    (ref.unpriced||[]).forEach(function(u){rows.push(['Store pricing',u])});
+  }else rows.push(['Store reference','NOT EVALUATED']);
+  var body=rows.length?jGrid(rows):jCallout('<b>No unresolved project-definition condition is currently reported.</b> Store, commercial and physical authority remain separate.',false);
+  body+=jCallout('<b>Structure / connection.</b> Structural evaluation, connection design and fastener selection remain excluded. <b>Installation.</b> Installation remains excluded. <b>Physical machine authority.</b> No machine readiness or Cycle Start authority is established here.',false);
+  return body;
+}
+function buildReviewJourney(snapshot){
+  if(!snapshot||!snapshot.storeRequest||!snapshot.definition){
+    return {stage:'review',headline:'WINDOW SEAT PROJECT FACTS UNAVAILABLE',
+      mainHtml:'<p class="stage-tag">4 · REVIEW</p><h1>WINDOW SEAT PROJECT FACTS UNAVAILABLE</h1><div class="ws-journey-callout warn"><b>Fail closed.</b> Review cannot substitute Alcove facts.</div>',
+      railHtml:'<p class="hd">04 · REVIEW · BUILD GUIDE</p><p class="goal">Fail closed</p>'};
+  }
+  var req=snapshot.storeRequest, def=snapshot.definition, rev=snapshot.revision||{}, ref=snapshot.storeReference||snapshot.storeAnswer||null;
+  var occ=req.partOccurrences||[], modules=req.modules||[], open=snapshot.openConditions||[];
+  var blocking=open.filter(function(o){return o&&o.block}).length;
+  var ctl=(req.controllingFacts||[]).map(function(f){return f.describes+' '+fmt(f.value)+' '+(f.unit||'')+' · '+(f.source||'')});
+  var requested=(req.requestedOperations||[]).filter(function(o){return o.basis!=='GENERATED FROM DEFINITION'}).map(function(o){return o.name});
+  var generated=(req.requestedOperations||[]).filter(function(o){return o.basis==='GENERATED FROM DEFINITION'}).map(function(o){return o.name});
+  var storeStatus=snapshot.storeAnswer
+    ? (snapshot.storeAnswer.stale?'HISTORICAL — revision '+snapshot.storeAnswer.atRevision:'HELD · revision '+(snapshot.storeAnswer.atRevision||rev.number))
+    : 'REFERENCE VIEW · no submitted Store event';
+  var summary=
+    '<div>'+jGrid([
+      ['Project','space utilization · window seat'],
+      ['Revision',String(rev.number)+(rev.confirmed?' · confirmed':' · candidate')],
+      ['Controlling room / opening facts',ctl.length?ctl.join('; '):'none marked controlling'],
+      ['Overall finished width',fmt(def.W)+' in'],
+      ['Overall height',fmt(def.H)+' in'],
+      ['Finished depth',fmt(def.depth)+' in'],
+      ['ASM-LEFT',moduleSummary(modules.filter(function(m){return m.id==='ASM-LEFT'})[0])],
+      ['ASM-CENTER',moduleSummary(modules.filter(function(m){return m.id==='ASM-CENTER'})[0])],
+      ['ASM-RIGHT',moduleSummary(modules.filter(function(m){return m.id==='ASM-RIGHT'})[0])]
+    ])+'</div>'+
+    '<div>'+jGrid([
+      ['Finished parts',occ.length],
+      ['Board runs',occ.reduce(function(n,o){return n+(o.boardRuns||[]).length},0)],
+      ['Material family / form',req.materialClass?(req.materialClass.family+' · '+req.materialClass.form+' · '+fmt(req.materialClass.thickness)+' in finished'):'—'],
+      ['Hardware choice',req.hardwareSelection?(req.hardwareSelection.description+' × '+req.hardwareSelection.quantity):'none selected'],
+      ['Requested secondary operations',requested.join(', ')||'none selected'],
+      ['Generated operations',generated.join(', ')||'none'],
+      ['Known Store Zero reference selling basis',ref?jMoney(ref.q)+' · '+(ref.states&&ref.states.price||'reference'):'not evaluated'],
+      ['Store answer',storeStatus],
+      ['Exclusions',(req.exclusions||[]).join(', ')||'none listed']
+    ])+'</div>';
+  var confirmStatus=rev.confirmed
+    ? '<p class="ws-review-status">Revision '+jEsc(rev.number)+' is already confirmed. A consequential project change creates a new revision; this one remains historical.</p>'
+    : '<p class="ws-review-status">This revision is still a candidate. Confirm freezes this definition only; it creates no later commercial or physical authority.</p>';
+  return {
+    stage:'review',
+    headline:'Review this version',
+    mainHtml:'<p class="stage-tag">4 · REVIEW</p><h1>Review this version</h1>'+
+      '<p class="lede"><b>This is exactly what gets frozen. Read it before you confirm it.</b></p>'+
+      jSection('Space utilization · Window Seat',summary)+
+      jSection('Still unresolved',reviewUnresolvedHtml(snapshot))+
+      jSection('What confirm means',
+        '<p><b>Confirm freezes this exact definition as one identified version.</b> Change anything afterward and that creates a new revision. This one remains in project history.</p>'+
+        '<div class="ws-journey-flow">confirmed definition<br>≠ ordered<br>≠ paid<br>≠ material reserved<br>≠ allocated<br>≠ production released<br>≠ machine ready<br>≠ Cycle Start<br>≠ cut</div>')+
+      jSection('Review your definition',
+        jGrid([
+          ['Revision',String(rev.number)+(rev.confirmed?' · confirmed':' · candidate')],
+          ['Overall',fmt(def.W)+' W × '+fmt(def.H)+' H × '+fmt(def.depth)+' D in'],
+          ['Modules','ASM-LEFT · ASM-CENTER · ASM-RIGHT'],
+          ['Finished parts',occ.length],
+          ['Material',req.materialClass?(req.materialClass.family+' · ¾ in solid board'):'—'],
+          ['Reference selling basis',ref?jMoney(ref.q)+' · budgetary / reference':'not evaluated'],
+          ['Unresolved',open.length+' total · '+blocking+' blocking']
+        ])+
+        jCallout('<b>Meaning of Confirm.</b> You affirm the intended definition and acknowledge the displayed Store basis and unresolved conditions. The Store Zero number is a budgetary reference estimate, not a commercial offer.',false)
+      )+
+      '<div class="ws-confirm-actions"><button type="button" data-ws-guided-stage="store">← Back to Store</button>'+
+      '<button type="button" data-ws-guided-stage="configure">KEEP EDITING</button>'+
+      '<button class="primary" type="button" data-ws-confirm'+(rev.confirmed?' disabled':'')+'>'+(rev.confirmed?'CONFIRMED · REVISION '+jEsc(rev.number):'CONFIRM THIS VERSION')+'</button></div>'+
+      confirmStatus+
+      (blocking?'<div class="ws-journey-callout warn"><b>STOP.</b> '+blocking+' project-definition condition'+(blocking===1?'':'s')+' must be settled before confirmation.</div>':''),
+    railHtml:'<p class="hd">04 · REVIEW · BUILD GUIDE</p><p class="goal">The exact version, not a status card.</p>'+
+      '<div class="row"><b>Show the exact version</b><span>Controlling facts, derived consequences, material, operations and exclusions remain visible.</span></div>'+
+      '<div class="row"><b>Show the Store basis</b><span>Reference mapping, availability, capability and price evidence stay attached to the version reviewed.</span></div>'+
+      '<div class="row"><b>Confirm ≠ contract</b><span>Order, payment, allocation, release, readiness and Cycle Start remain separate.</span></div>'+
+      '<div class="row"><b>Leave a way back</b><span>Keep editing remains explicit.</span></div>'
+  };
 }
 function buildRequestJourney(snapshot){
   var req=snapshot.storeRequest||{}, ans=snapshot.storeAnswer||null, rev=snapshot.revision||{};
@@ -2319,7 +2348,7 @@ function buildRequestJourney(snapshot){
   return {
     stage:'request',
     headline:'Request · bind the exact Window Seat revision',
-    mainHtml:'<p class="stage-tag">4 · REQUEST</p><h1>Request · bind the exact Window Seat revision</h1>'+
+    mainHtml:'<p class="stage-tag">5 · REQUEST</p><h1>Request · bind the exact Window Seat revision</h1>'+
       '<p class="lede">A request asks the Store to act on one identified definition. It carries the revision and requested work forward without converting the project into an order.</p>'+
       jSection('What is being requested',
         jGrid([
@@ -2342,8 +2371,8 @@ function buildRequestJourney(snapshot){
         '<p><b>Store may not silently rewrite the Window Seat definition.</b> Geometry, material family, occurrence identity and requested work remain project-owned.</p>'
       )+
       jCallout('<b>REQUEST ≠ ORDER.</b> A request is not an accepted offer, payment, material reservation, allocation, production release, machine readiness or Cycle Start.',false)+
-      jStageBottom('store','yard'),
-    railHtml:'<p class="hd">04 · REQUEST · BUILD GUIDE</p><p class="goal">Ask against one frozen version.</p>'+
+      jStageBottom('review','yard'),
+    railHtml:'<p class="hd">05 · REQUEST · BUILD GUIDE</p><p class="goal">Ask against one frozen version.</p>'+
       '<div class="row"><b>Bind the revision</b><span>The Store request names the exact Window Seat revision it is about.</span></div>'+
       '<div class="row"><b>Carry the actual work</b><span>Generated operations and requested secondary work stay explicit.</span></div>'+
       '<div class="row"><b>Keep exclusions visible</b><span>Connection design, installation, finishing and structural evaluation do not become Store work by implication.</span></div>'+
@@ -2359,7 +2388,7 @@ function buildYardJourney(snapshot){
   return {
     stage:'yard',
     headline:'Yard response · what Store Zero established',
-    mainHtml:'<p class="stage-tag">5 · YARD</p><h1>Yard response · what Store Zero established</h1>'+
+    mainHtml:'<p class="stage-tag">6 · YARD</p><h1>Yard response · what Store Zero established</h1>'+
       '<p class="lede">The yard answers from declared Store facts. It may support, adjust, defer, refuse or report a shortage. It may not solve a project problem by silently changing the project.</p>'+
       jSection('Who is answering',
         '<p>Store Zero is the declared reference lumberyard / fixture for this demonstration. Its answer is deterministic against the identified catalog clock, engine, capability references and commit. It is not a live merchant response.</p>'+
@@ -2389,7 +2418,7 @@ function buildYardJourney(snapshot){
       )+
       jCallout('<b>Yard response is not acceptance.</b> A returned Store answer is still separate from offer, acceptance, settlement, allocation and release.',false)+
       jStageBottom('request','terms'),
-    railHtml:'<p class="hd">05 · YARD · BUILD GUIDE</p><p class="goal">Return facts, reasons and limits.</p>'+
+    railHtml:'<p class="hd">06 · YARD · BUILD GUIDE</p><p class="goal">Return facts, reasons and limits.</p>'+
       '<div class="row"><b>Material is a Store question</b><span>Mapping and stated availability belong here, not in the project definition.</span></div>'+
       '<div class="row"><b>Capability stays separate</b><span>A material can be mapped while a service remains unresolved.</span></div>'+
       '<div class="row"><b>Timing needs evidence</b><span>Modeled cycle time is not a live promise or measured production time.</span></div>'+
@@ -2422,13 +2451,13 @@ function buildTermsJourney(snapshot){
   return {
     stage:'terms',
     headline:'Terms · keep the verbs separate',
-    mainHtml:'<p class="stage-tag">6 · TERMS</p><h1>Terms · keep the verbs separate</h1>'+
+    mainHtml:'<p class="stage-tag">7 · TERMS</p><h1>Terms · keep the verbs separate</h1>'+
       '<p class="lede">The sequence is ordinary. The discipline is simply that one event does not impersonate the next.</p>'+
       jCallout('<div class="ws-journey-flow">definition<br>≠ request<br>≠ offer<br>≠ acceptance<br>≠ payment<br>≠ allocation<br>≠ production release<br>≠ machine readiness<br>≠ Cycle Start</div>',false)+
       html+
       jCallout('<b>Current Window Seat truth.</b> Definition and reference Store processing may be present. Commercial offer, acceptance, settlement, allocation, production release, machine readiness and physical execution remain absent unless separately evidenced.',false)+
       jStageBottom('yard','recap'),
-    railHtml:'<p class="hd">06 · TERMS · BUILD GUIDE</p><p class="goal">One sequence. Different authorities.</p>'+
+    railHtml:'<p class="hd">07 · TERMS · BUILD GUIDE</p><p class="goal">One sequence. Different authorities.</p>'+
       '<div class="row"><b>Definition ≠ request</b><span>The project says what is wanted. The request asks another party to answer it.</span></div>'+
       '<div class="row"><b>Request ≠ offer</b><span>A Store answer is not automatically a commercial offer.</span></div>'+
       '<div class="row"><b>Acceptance ≠ payment</b><span>Agreement and settlement are distinct records.</span></div>'+
@@ -2469,13 +2498,13 @@ function buildRecapJourney(snapshot){
   return {
     stage:'recap',
     headline:'What happened · Window Seat',
-    mainHtml:'<p class="stage-tag">7 · RECAP</p><h1>What happened · Window Seat</h1>'+
+    mainHtml:'<p class="stage-tag">8 · RECAP</p><h1>What happened · Window Seat</h1>'+
       '<p class="lede">Read forward, this is the chronology. Read backward, it is the audit. Missing events remain missing.</p>'+
       html+
       (open.length?jSection('Open conditions carried forward',openConditionHtml(open)):'')+
       jCallout('<b>Revision rule.</b> If a consequential change follows confirmation or Store evaluation, the old revision remains historical, a new revision is created, the prior Store answer becomes historical, and dependent checks rerun.',false)+
       jStageBottom('terms','record'),
-    railHtml:'<p class="hd">07 · RECAP · BUILD GUIDE</p><p class="goal">Write forward, not backward from the ending.</p>'+
+    railHtml:'<p class="hd">08 · RECAP · BUILD GUIDE</p><p class="goal">Write forward, not backward from the ending.</p>'+
       '<div class="row"><b>Keep the source</b><span>Evidence remains distinguishable from observations and the definition.</span></div>'+
       '<div class="row"><b>Keep nulls honest</b><span>Offer, payment, allocation, execution and custody remain visible even when they did not happen.</span></div>'+
       '<div class="row"><b>Do not promote wording</b><span>A favorable Store answer cannot fill later events by implication.</span></div>'+
@@ -2498,7 +2527,7 @@ function buildRecordJourney(snapshot){
   return {
     stage:'record',
     headline:'Keep the Window Seat owner record',
-    mainHtml:'<p class="stage-tag">8 · RECORD</p><h1>Keep the Window Seat owner record</h1>'+
+    mainHtml:'<p class="stage-tag">9 · RECORD</p><h1>Keep the Window Seat owner record</h1>'+
       '<p class="lede">The record preserves what this project actually established and names what remains absent. It does not turn a reference demonstration into a completed physical order.</p>'+
       jSection('Project / revision',
         jGrid([
@@ -2525,7 +2554,7 @@ function buildRecordJourney(snapshot){
       jCallout('<b>Replacement-component payoff.</b> A later replacement can start from the exact recorded occurrence, revision and material basis instead of re-measuring and guessing.',false)+
       jCallout('<b>That record does not authorize fabrication.</b> Current material, Store, capability, safety and production gates run again.',true)+
       jStageBottom('recap',null),
-    railHtml:'<p class="hd">08 · RECORD · BUILD GUIDE</p><p class="goal">Owner-held, exact, and honest about what did not happen.</p>'+
+    railHtml:'<p class="hd">09 · RECORD · BUILD GUIDE</p><p class="goal">Owner-held, exact, and honest about what did not happen.</p>'+
       '<div class="row"><b>Keep project identity</b><span>Project class, revision and original evidence stay attached.</span></div>'+
       '<div class="row"><b>Keep occurrence identity</b><span>Every current finished part can be named exactly; historical occurrence identities are not silently recycled.</span></div>'+
       '<div class="row"><b>Keep Store evidence</b><span>Request, response and pins remain distinguishable from commercial or physical outcome.</span></div>'+
@@ -2535,6 +2564,7 @@ function buildRecordJourney(snapshot){
 }
 function buildJourneyStage(stage,snapshot){
   if(stage==='store')return buildStoreJourney(snapshot);
+  if(stage==='review')return buildReviewJourney(snapshot);
   if(stage==='request')return buildRequestJourney(snapshot);
   if(stage==='yard')return buildYardJourney(snapshot);
   if(stage==='terms')return buildTermsJourney(snapshot);
@@ -2542,34 +2572,93 @@ function buildJourneyStage(stage,snapshot){
   if(stage==='record')return buildRecordJourney(snapshot);
   return null;
 }
+var JOURNEY_GATES={
+  scan:{previous:'SCAN',control:'CONTINUE TO CONFIGURE →',next:'CONFIGURE',consequence:'Scrolling does not execute the gate.'},
+  configure:{previous:'CONFIGURE',control:'SEND TO STORE ZERO →',next:'STORE',consequence:'Scrolling does not submit anything.'},
+  store:{previous:'STORE',control:'NEXT →',next:'REVIEW',consequence:'Scrolling does not promote the Store answer.'},
+  review:{previous:'REVIEW',control:'CONFIRM THIS VERSION',next:'REQUEST',consequence:'Scrolling does not confirm the project.'},
+  request:{previous:'REQUEST',control:'SEND TO THE YARD / NEXT →',next:'YARD',consequence:'Scrolling does not submit the request.'},
+  yard:{previous:'YARD',control:'CONTINUE TO TERMS / NEXT →',next:'TERMS',consequence:'Scrolling does not accept terms.'},
+  terms:{previous:'TERMS',control:'NEXT →',next:'RECAP',consequence:'Scrolling does not create a commercial event.'},
+  recap:{previous:'RECAP',control:'NEXT →',next:'RECORD',consequence:'Scrolling does not close the project.'}
+};
+function journeyGateHtml(key){
+  var g=JOURNEY_GATES[key]; if(!g)return'';
+  return '<div class="ws-gate-separator" data-ws-gate="'+key+'"><p class="gate-tag">STANDARD JOURNEY GATE</p>'+
+    '<div class="gate-grid"><b>Previous stage</b><span>'+g.previous+'</span>'+
+    '<b>Guided action</b><span>'+g.control+'</span>'+
+    '<b>Next canonical stage</b><span>'+g.next+'</span>'+
+    '<b>Gate consequence</b><span>'+g.consequence+'</span></div>'+
+    '<p class="gate-safety">Continuous view: the canonical '+g.next+' stage follows below. Scrolling only reveals the next stage; it does not submit, confirm, order, pay, allocate, release, authorize, execute, transfer custody, or close the project.</p></div>';
+}
+function renderStaticGates(){
+  var a=$('ws-gate-scan-configure'),b=$('ws-gate-configure-store');
+  if(a)a.innerHTML=journeyGateHtml('scan').replace(/^<div[^>]*>|<\/div>$/g,'');
+  if(b)b.innerHTML=journeyGateHtml('configure').replace(/^<div[^>]*>|<\/div>$/g,'');
+}
 function journeyStageSection(stageObj){
   if(!stageObj)return'';
   return '<section class="ws-journey-stage" id="ws-stage-'+stageObj.stage+'" data-ws-canonical-stage="'+stageObj.stage+'">'+
     '<main>'+stageObj.mainHtml+'</main><aside class="rail">'+stageObj.railHtml+'</aside></section>'
 }
-var journeyRenderTimer=null;
-function scheduleContinuousJourney(){
-  if(journeyRenderTimer)clearTimeout(journeyRenderTimer);
-  journeyRenderTimer=setTimeout(function(){
-    try{renderContinuousJourney()}catch(e){
-      var host=$('ws-continuous-journey');
-      if(host)host.innerHTML='<section class="ws-journey-stage"><main><p class="stage-tag">DOWNSTREAM CONTEXT</p><h1>Project journey unavailable</h1><div class="ws-journey-callout warn"><b>Fail closed.</b> Configure remains available. No Alcove project state is substituted.</div></main></section>';
-    }
-  },0);
-}
-function renderContinuousJourney(){
+var journeyDirty=true;
+var journeyRendered=false;
+function markJourneyDirty(){ journeyDirty=true; }
+function renderContinuousJourney(force){
   var host=$('ws-continuous-journey');
   if(!host)return;
+  if(!force&&journeyRendered&&!journeyDirty)return;
   var snapshot=currentJourneySnapshot(false);
-  host.innerHTML=['store','request','yard','terms','recap','record']
-    .map(function(stage){return journeyStageSection(buildJourneyStage(stage,snapshot))}).join('');
+  var stages=['store','review','request','yard','terms','recap','record'];
+  var html='';
+  stages.forEach(function(stage,index){
+    html+=journeyStageSection(buildJourneyStage(stage,snapshot));
+    if(index<stages.length-1)html+=journeyGateHtml(stage);
+  });
+  host.innerHTML=html;
+  journeyRendered=true;
+  journeyDirty=false;
+}
+function refreshJourneyIfNeeded(){ renderContinuousJourney(false); }
+function setupJourneyObserver(){
+  if(!('IntersectionObserver' in window))return;
+  var target=$('ws-gate-configure-store');
+  if(!target)return;
+  var observer=new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting&&document.body.dataset.wsView!=='guided')refreshJourneyIfNeeded();
+    });
+  },{root:null,rootMargin:'500px 0px 500px 0px'});
+  observer.observe(target);
+}
+function setSeatView(mode,stage){
+  var guided=mode==='guided';
+  document.body.dataset.wsView=guided?'guided':'continuous';
+  if(guided){
+    var target=stage||'scan';
+    if(['store','review','request','yard','terms','recap','record'].indexOf(target)>=0)refreshJourneyIfNeeded();
+    document.body.dataset.wsStage=target;
+  }else{
+    delete document.body.dataset.wsStage;
+    refreshJourneyIfNeeded();
+  }
+  window.scrollTo({top:0,behavior:'instant'});
+  return true;
 }
 document.addEventListener('click',function(e){
-  var jump=e.target.closest('[data-ws-scroll]');
-  if(jump){var target=document.querySelector(jump.getAttribute('data-ws-scroll'));if(target)target.scrollIntoView({behavior:'smooth',block:'start'});return}
   var stage=e.target.closest('[data-ws-guided-stage]');
   if(stage){
     window.top.postMessage({type:'stb-window-seat-guided-stage',stage:stage.getAttribute('data-ws-guided-stage'),snapshot:currentJourneySnapshot(false)},'*');
+    return;
+  }
+  var confirm=e.target.closest('[data-ws-confirm]');
+  if(confirm){
+    var blocking=conditions(buildDefinition()).filter(function(o){return o.block}).length;
+    if(blocking)return;
+    rev.confirmed=true;
+    cycle();
+    renderContinuousJourney(true);
+    window.top.postMessage({type:'stb-window-seat-guided-stage',stage:'request',snapshot:currentJourneySnapshot(false)},'*');
   }
 });
 window.STBWindowSeatJourney=Object.freeze({
@@ -2577,22 +2666,15 @@ window.STBWindowSeatJourney=Object.freeze({
   artifactVersion:'0.7.3',
   snapshot:function(){ return currentJourneySnapshot(false); },
   evaluateCurrent:function(){ return currentJourneySnapshot(true); },
-  setDoctrine:function(value){
-    journeyDoctrine=Object.assign({storeIntro:'',storeGuide:'',storeProcess:''},cloneJourneyValue(value||{}));
-    scheduleContinuousJourney();
-    return true;
-  },
-  stage:function(stage){
-    return cloneJourneyValue(buildJourneyStage(stage,currentJourneySnapshot(false)));
-  }
+  showContinuous:function(){ return setSeatView('continuous'); },
+  showGuided:function(stage){ return setSeatView('guided',stage); },
+  refreshContinuous:function(){ renderContinuousJourney(true); return true; },
+  stage:function(stage){ return cloneJourneyValue(buildJourneyStage(stage,currentJourneySnapshot(false))); }
 });
 $('ws-guided').onclick=function(){
-  var snapshot=currentJourneySnapshot(false);
-  window.top.postMessage({
-    type:'stb-window-seat-guided-handoff',
-    stage:'store',
-    snapshot:snapshot
-  },'*');
+  var blocking=conditions(buildDefinition()).filter(function(o){return o.block}).length;
+  if(blocking)return;
+  window.top.postMessage({type:'stb-window-seat-guided-handoff',stage:'store',snapshot:currentJourneySnapshot(false)},'*');
 };
 $('btn-inspect').onclick=function(){
   var box=$('req-box'), show=box.style.display==='none';
@@ -2610,6 +2692,9 @@ controls();
 readFacts();
 buildOps(buildDefinition());
 cycle();
+renderStaticGates();
+setSeatView('continuous');
+setupJourneyObserver();
 })();
 </script>
 </body>
