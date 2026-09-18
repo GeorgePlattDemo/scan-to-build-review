@@ -476,25 +476,15 @@
         <div class="bd two" id="o-travel" style="padding:10px 0 0"></div>
       </details>
 
-      <div class="box" id="ws-store-tools">
-        <h4>STORE REFERENCE TOOLS — TECHNICAL / NON-COMMERCIAL</h4>
-        <div class="bd">
-          <p class="dim" style="margin:0 0 8px">These controls inspect or calculate the pinned reference Store basis for the current candidate. They do not replace the canonical SEND TO STORE ZERO gate below.</p>
-          <div class="btns" style="margin-top:8px">
-            <button class="go" id="ws-send">EVALUATE WITH STORE ZERO</button>
-            <button id="btn-inspect">INSPECT THE STORE REQUEST</button>
-          </div>
-          <p class="dim" style="font-size:11.5px;margin:7px 0 0"><b>EVALUATE WITH STORE ZERO</b> calculates or refreshes the held reference answer. It is not confirmation, submission, an order, commercial acceptance, production release, machine readiness, or Cycle Start.</p>
+      <details style="margin-bottom:12px">
+        <summary>INSPECT THE STORE REQUEST — TECHNICAL</summary>
+        <p class="dim" style="font-size:11.5px;margin:4px 0 8px">This only exposes the exact request object derived from the current Window Seat definition. It does not submit it.</p>
+        <button id="btn-inspect" type="button">INSPECT THE STORE REQUEST</button>
+        <div class="box" id="req-box" style="display:none;margin-top:10px">
+          <h4>STORE REQUEST OBJECT — EXACTLY WHAT WOULD TRAVEL</h4>
+          <div class="bd"><pre id="req-json"></pre></div>
         </div>
-      </div>
-      <div class="box" id="ans-box" style="display:none;margin-top:12px">
-        <h4 id="ans-head">STORE ZERO ANSWER</h4>
-        <div class="bd" id="ans-body"></div>
-      </div>
-      <div class="box" id="req-box" style="display:none;margin-top:12px">
-        <h4>STORE REQUEST OBJECT — EXACTLY WHAT TRAVELS</h4>
-        <div class="bd"><pre id="req-json"></pre></div>
-      </div>
+      </details>
       <div class="ws-stage-actions">
         <button type="button" data-ws-guided-stage="scan">← Back to Scan</button>
         <span class="stage-fine" id="ws-configure-gate">Candidate definition · Store gate not yet taken</span>
@@ -1851,51 +1841,10 @@ function cycle(){
 
   /* canonical Configure -> Store gate */
   var blocking=cond.filter(function(o){return o.block}).length;
-  $('ws-send').disabled=blocking>0;
   $('ws-guided').disabled=blocking>0;
   $('ws-configure-gate').textContent=blocking
     ? blocking+' project-definition condition'+(blocking===1?'':'s')+' must be settled before SEND TO STORE ZERO.'
     : 'Candidate revision '+rev.n+' · SEND TO STORE ZERO opens the canonical Store stage. Viewing the continuous Store section does not submit anything.';
-
-  /* frozen Store answer */
-  if(answer){
-    $('ans-box').style.display='block';
-    $('ans-head').textContent='STORE ZERO ANSWER · REVISION '+answer.atRevision+(answer.stale?' · HISTORICAL':' · CURRENT');
-    var a=answer;
-    $('ans-body').innerHTML=
-      (a.stale?'<div class="ln"><span><b>This answer is historical.</b> <span class="dim">The definition moved to revision '+rev.n
-        +'. Confirm again and re-evaluate for a current answer. The live reference estimate above is the candidate, not this.</span></span>'
-        +'<span class="chip warn">HISTORICAL</span></div>':'')
-      +'<p class="ws-h" style="margin:8px 0 4px">MATERIAL</p>'
-      +a.lines.map(function(m){var r=m.request;
-        return '<div class="ln"><span>'+fmt(r.finishedLength)+' × '+fmt(r.finishedWidth)+' in × '+r.quantity+' runs'
-          +' <span class="dim">— '+(m.disposition==='SUPPORTABLE'?(m.sku+' · '+m.boards+' board'+(m.boards===1?'':'s')+' · '
-            +money(m.extension)+' · on hand '+m.onHand+(m.width.mode==='MILL'?' · '+esc(m.width.why):'')):esc(m.why||''))
-          +'</span></span><span class="chip '+(m.disposition==='SUPPORTABLE'?'ok':'no')+'">'+m.disposition+'</span></div>'}).join('')
-      +(a.shortages.length?a.shortages.map(function(s){return '<div class="ln"><span>'+esc(s)
-        +'</span><span class="chip warn">UNAVAILABLE</span></div>'}).join(''):'')
-      +'<p class="ws-h" style="margin:10px 0 4px">OPERATIONS</p>'
-      +a.ops.map(function(o){return '<div class="ln"><span>'+o.name+' <span class="dim">— '+esc(o.why)+' · '+esc(o.priceNote)
-        +'</span></span><span class="chip '+(lv_ok(o.disposition)?'ok':'no')+'">'+o.disposition+'</span></div>'}).join('')
-      +'<p class="ws-h" style="margin:10px 0 4px">REFERENCE SELLING BASIS</p>'
-      +'<div class="ln"><span>Material '+money(a.material)+' + fabrication / fulfillment recovery '+money(a.recovery)
-      +' + hardware '+money(a.hardware)
-      +(a.hw?' ('+a.hw.sku+' × '+a.hw.qty+')':'')
-      +'<br><span class="dim">cell consumption '+money(a.cellConsumption)+' · '+a.sticks+' parents · '+a.minutes
-      +' modeled min · '+a.profile.chipClass+' · '+a.profile.feedInPerMin+' IPM edge feed · '+a.millMinutes+' edge-mill min'
-      +'<br>'+a.pin.recovery+' · '+a.pin.envelope+' · catalog clock '+a.pin.clock+' · '+a.pin.adapter
-      +'<br>'+a.pin.doc+' at commit '+a.pin.commit.slice(0,10)+'… on '+a.pin.branch
-      +' · Stage-2 path pin '+a.pin.stage2.slice(0,10)+'…</span></span>'
-      +'<span style="font-weight:600;color:'+(a.status.indexOf('COMPLETE')>0?'var(--accent)':'var(--warn)')+'">'
-      +money(a.q)+'</span></div>'
-      +(a.unpriced.length?'<div class="ln"><span class="dim">Unresolved price components — '+a.unpriced.map(esc).join('; ')
-        +'</span><span class="chip no">'+a.status+'</span></div>':'')
-      +'<p class="ws-h" style="margin:10px 0 4px">LIMITS</p>'
-      +'<div class="ln"><span class="dim">'+esc(a.classNote)+' No order · no payment · no reservation · no allocation · '
-      +'no production release · no machine readiness · no Cycle Start. A reference estimate from a declared fixture Store is not a '
-      +'commercial quote, and SUPPORTABLE does not mean authorised, machine-ready or commissioned.</span>'
-      +'<span class="chip warn">AUTHORITY BOUNDARY</span></div>';
-  } else { $('ans-box').style.display='none' }
 
   /* the chain */
   var chain=[['SOURCE',req.evidence.length+' kept','#pg-capture'],
@@ -1918,12 +1867,7 @@ function lv_ok(d){return d.indexOf('SUPPORTABLE')===0||d.indexOf('NOT REQUIRED')
 
 /* ═══════════ 14 · ACTIONS ═══════════ */
 function into(el){if(el&&el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'center'})}
-$('ws-send').onclick=function(){
-  var def=buildDefinition(), req=buildRequest(def);
-  answer=StoreZeroAdapter.evaluate(req,famSp());
-  answer.atRevision=rev.n; answer.stale=false; cycle();
-  into($('ans-box'));
-};
+
 
 function cloneJourneyValue(value){ return JSON.parse(JSON.stringify(value)); }
 function currentJourneySnapshot(ensureAnswer){
@@ -1979,13 +1923,14 @@ function jCallout(body,warn){
   return '<div class="ws-journey-callout'+(warn?' warn':'')+'">'+body+'</div>'
 }
 function jStageBottom(previous,next){
-  var back=previous==='configure'
-    ? '<button type="button" data-ws-scroll="#ws-configure-work">Back to Configure</button>'
-    : previous==='review'
-      ? '<button type="button" data-ws-scroll="#ws-review-this-version">Back to Review</button>'
-      : '<button type="button" data-ws-guided-stage="'+previous+'">Back</button>';
+  var back=previous
+    ? '<button type="button" data-ws-guided-stage="'+previous+'">'+(previous==='configure'?'← Back to Configure':'Back')+'</button>'
+    : '';
+  var label='Next →';
+  if(previous==='review'&&next==='yard')label='SEND TO THE YARD';
+  else if(previous==='request'&&next==='terms')label='CONTINUE TO TERMS';
   var forward=next
-    ? '<button class="next" type="button" data-ws-guided-stage="'+next+'">Next → '+next.charAt(0).toUpperCase()+next.slice(1)+'</button>'
+    ? '<button class="next" type="button" data-ws-guided-stage="'+next+'">'+label+'</button>'
     : '';
   return '<div class="stage-bottom">'+back+'<span class="stage-fine">Same Window Seat project · same revision</span>'+forward+'</div>'
 }
@@ -2191,7 +2136,7 @@ function buildStoreJourney(snapshot){
 
   var answerHtml;
   if(!ans){
-    answerHtml=jCallout('<b>Store answer not yet held.</b> Confirm the revision before gated Next. Use EVALUATE WITH STORE ZERO only to calculate or refresh the held reference answer; Next only navigates. The Store stage does not borrow an answer from another project.',true);
+    answerHtml=jCallout('<b>Store answer not yet held.</b> This can occur when Store is opened directly or revealed by Continuous View without executing SEND TO STORE ZERO. The reference facts below may still be displayed, but no Store submission / answer event is inferred. The Store stage does not borrow an answer from another project.',true);
   }else{
     var lineRows=(ans.lines||[]).map(function(line,i){return ['Material line '+(i+1),storeLineSummary(line)]});
     var opRows=(ans.ops||[]).map(function(o){return [o.name||o.id,(o.disposition||'—')+' · '+(o.why||'')+' · '+(o.priceNote||'')]});
@@ -2631,6 +2576,20 @@ function setupJourneyObserver(){
   },{root:null,rootMargin:'500px 0px 500px 0px'});
   observer.observe(target);
 }
+var journeyScrollQueued=false;
+function maybeRefreshJourneyOnScroll(){
+  if(journeyScrollQueued)return;
+  journeyScrollQueued=true;
+  requestAnimationFrame(function(){
+    journeyScrollQueued=false;
+    if(!journeyDirty||document.body.dataset.wsView==='guided')return;
+    var host=$('ws-continuous-journey');
+    if(!host)return;
+    var r=host.getBoundingClientRect();
+    if(r.top<window.innerHeight+500&&r.bottom>-500)refreshJourneyIfNeeded();
+  });
+}
+window.addEventListener('scroll',maybeRefreshJourneyOnScroll,{passive:true});
 function setSeatView(mode,stage){
   var guided=mode==='guided';
   document.body.dataset.wsView=guided?'guided':'continuous';
@@ -2674,12 +2633,14 @@ window.STBWindowSeatJourney=Object.freeze({
 $('ws-guided').onclick=function(){
   var blocking=conditions(buildDefinition()).filter(function(o){return o.block}).length;
   if(blocking)return;
-  window.top.postMessage({type:'stb-window-seat-guided-handoff',stage:'store',snapshot:currentJourneySnapshot(false)},'*');
+  var snapshot=currentJourneySnapshot(true);
+  markJourneyDirty();
+  window.top.postMessage({type:'stb-window-seat-guided-handoff',stage:'store',snapshot:snapshot},'*');
 };
 $('btn-inspect').onclick=function(){
   var box=$('req-box'), show=box.style.display==='none';
   box.style.display=show?'block':'none';
-  if(show){ $('req-json').textContent=JSON.stringify(buildRequest(buildDefinition()),null,1); into(box) }
+  if(show)$('req-json').textContent=JSON.stringify(buildRequest(buildDefinition()),null,1);
 };
 document.addEventListener('click',function(e){
   var b=e.target.closest('[data-w]'); if(!b)return;
