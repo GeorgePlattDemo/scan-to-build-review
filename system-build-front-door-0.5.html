@@ -186,7 +186,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     }
 
     doc.querySelectorAll('#projects .tile[data-go]').forEach(tile => {
-      if (tile.getAttribute('data-go') === 'start-own' || tile.querySelector('.canonical-use-project')) return;
+      const target = tile.getAttribute('data-go');
+      if (target === 'start-own' || target === 'alcove-capture' || tile.querySelector('.canonical-use-project')) return;
       const small = doc.createElement('span');
       small.className = 'canonical-use-project';
       small.textContent = 'USE THIS PROJECT';
@@ -469,6 +470,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       if (!project) return;
       ownedOpen = null;
       restoreState(publishedBaseline);
+      if (project.key === 'alcove') {
+        preview = null;
+        canonicalShow(project.rootId);
+        return;
+      }
       preview = { project, editing:false, visited:new Set([project.rootId]) };
       canonicalShow(project.rootId);
     }
