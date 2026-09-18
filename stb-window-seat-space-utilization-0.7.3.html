@@ -119,6 +119,8 @@
   .ctl{font-size:12.5px}
   .ws-draw{background:#f2ece2;border-radius:9px;border:1px solid var(--border);padding:6px}
   .ws-draw svg{width:100%;display:block}
+  .diagram-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-top:10px;align-items:start}
+  .diagram-pair .grp{margin-bottom:0}
   .ws-lab{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px;gap:8px}
   .ws-lab span:first-child{font-weight:600}
   .ws-lab span:last-child{font-size:11px;color:var(--text-3);white-space:nowrap}
@@ -163,6 +165,7 @@
     .page{grid-template-columns:1fr}
     .page>div:first-child{border-right:0}
     .ws-cap,.cfg{grid-template-columns:1fr}
+    .diagram-pair{grid-template-columns:1fr}
     #mfields{grid-template-columns:1fr}
     .cfg>div:last-child{grid-column:auto}
     .two{grid-template-columns:1fr}
@@ -300,6 +303,7 @@
       <div class="ctl" id="ctlcol"></div>
       <div>
         <div class="ws-draw"><svg id="elev" viewBox="0 0 520 400" role="img" aria-label="Window seat elevation — left tower, center window-seat module with upper storage, right tower"></svg></div>
+        <div class="diagram-pair" id="diagram-pair"></div>
         <div class="box" style="margin:12px 0 0">
           <h4>CURRENT PROJECT — FINISHED SHELVES AND OPENINGS</h4>
           <div class="bd two fs" id="p-feat"></div>
@@ -1133,7 +1137,7 @@ function controls(){
     +stepper('RIGHT','v-wR2','Right width')
     +lab('Right shelf count','v-shR')+rng('c-shR',0,8,1,P.SH.RIGHT,0)
     +'</div>';
-  h+='<div class="grp"><p class="gh">5 · MATERIAL</p>'
+  h+='<div class="grp" id="material-panel"><p class="gh">5 · MATERIAL</p>'
     +'<div id="species" style="display:grid;grid-template-columns:1fr 1fr;gap:4px"></div>'
     +'<p class="dim" style="font-size:10.5px;margin:9px 0 4px">Solid board, ¾ in finished. No plywood, MDF, glued panel or sheet substitute.</p>'
     +'<div class="ws-lab"><span>Board runs across the depth</span><span id="v-runs">—</span></div>'
@@ -1164,6 +1168,13 @@ function controls(){
     +'<div id="ops-body" style="padding-top:10px"></div></details>';
   h+='<button class="mini2" id="btn-reset" style="width:100%">RESET TO THE SUPPLIED VERSION</button>';
   $('ctlcol').innerHTML=h;
+  var pair=$('diagram-pair');
+  if(pair){
+    pair.innerHTML='';
+    var materialPanel=$('material-panel'), opsPanel=$('ops-panel');
+    if(materialPanel)pair.appendChild(materialPanel);
+    if(opsPanel)pair.appendChild(opsPanel);
+  }
 
   function on(id,fn){var e=$(id); if(e)e.oninput=function(){fn(this);bump();cycle()}}
   on('c-H',function(e){P.H=+e.value});
