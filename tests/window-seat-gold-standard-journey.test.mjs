@@ -91,8 +91,8 @@ assert.equal(/alcove|window seat|45½|94½/i.test(doctrine.definitionHtml+doctri
 // Shared sources must be loaded directly by both Seat and shell.
 assert.match(seat,/stb-canonical-journey\.js\?v=e0619841/);
 assert.match(shell,/stb-canonical-journey\.js\?v=e0619841/);
-assert.match(seat,/store-zero-canonical-doctrine\.js\?v=f2106553/);
-assert.match(shell,/store-zero-canonical-doctrine\.js\?v=f2106553/);
+assert.match(seat,/store-zero-canonical-doctrine\.js\?v=65366367/);
+assert.match(shell,/store-zero-canonical-doctrine\.js\?v=65366367/);
 assert.equal(shell.includes('seatJourneyDoctrine'),false,'shell still scrapes Store doctrine from Alcove');
 assert.equal(seat.includes('setDoctrine:function'),false,'Seat still accepts runtime Store doctrine injection');
 
