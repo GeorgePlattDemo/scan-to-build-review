@@ -516,7 +516,7 @@ var FIX={
   engine:{id:'STB-STORE-ZERO-PRICE-1',version:'0.2.2',clock:'2026-09-10',
     rule:{id:'SZ-MARK-ON-5',formula:'sellingPrice = ROUND(list_reference x 1.05, 2)',note:'material mark-on only; not the Window Seat recovery model'}},
   recovery:{id:'STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0.1',basis:'DECLARED REFERENCE / UNMEASURED',
-    fixedReferenceFulfillment:365.0,cellConsumptionBaseline:60.0,pineBaselineCycleMin:56.16,
+    fixedReferenceFulfillment:365.0,cellConsumptionBaseline:60.0,pineBaselineCycleMin:56.159065,
     components:{materialHandlingFabrication:110.0,inspectLabelBundleStage:75.0,
       facilityAdminRework:70.0,serviceCommercialReserve:110.0},
     species:{
@@ -883,7 +883,7 @@ var StoreZeroAdapter={
         width.chipClass=prof.chipClass;
         width.chipLoadIpt=prof.chipLoadIpt;
         width.travelInEach=r3(width.passes*req.finishedLength);
-        width.minutesEach=r3(width.travelInEach/prof.feedInPerMin);
+        width.minutesEach=width.travelInEach/prof.feedInPerMin;
         width.why='bounded longitudinal edge milling over the full offered parent length at '+env.id+': '
           +fmt(aw)+' in parent → mill edge to '+fmt(req.finishedWidth)+' in finished, '+fmt(red)
           +' in removed in '+width.passes+' pass'+(width.passes===1?'':'es')+'; '+prof.chipClass
@@ -906,7 +906,7 @@ var StoreZeroAdapter={
          parentLength:best.b.L, parentWidth:best.b.aw, perParent:best.per, boards:boards,
          extension:Math.round(boards*best.b.p*100)/100, ops:best.b.ops, path:best.b.path, lim:best.b.lim,
          mapping:'IDENTIFIED', supportNote:env.supportRule,
-         millMinutes:(width.mode==='MILL'&&width.supported)?r3(width.minutesEach*req.quantity):0,
+         millMinutes:(width.mode==='MILL'&&width.supported)?width.minutesEach*req.quantity:0,
          millTravelIn:(width.mode==='MILL'&&width.supported)?r3(width.travelInEach*req.quantity):0};
     out.disposition=width.supported?'SUPPORTABLE':'UNRESOLVED';
     if(!width.supported) out.why=width.why+' — the offering and its price are known, the required width finishing is not';
@@ -993,10 +993,11 @@ var StoreZeroAdapter={
     });
     opAns.filter(function(o){return !o.priced}).forEach(function(o){unpriced.push(o.name+' — '+o.priceNote)});
 
-    var otherMinutes=sticks?(C.jobSetupMin+sticks*(C.loadSeatMin+C.releaseLabelMin+C.cutsPerStick*C.crosscutMin)):0;
-    otherMinutes=r3(otherMinutes);
-    var minutes=sticks?r3(otherMinutes+millMin):0;
-    var cycleFactor=sticks?minutes/R.pineBaselineCycleMin:0;
+    var otherMinutesRaw=sticks?(C.jobSetupMin+sticks*(C.loadSeatMin+C.releaseLabelMin+C.cutsPerStick*C.crosscutMin)):0;
+    var minutesRaw=sticks?(otherMinutesRaw+millMin):0;
+    var otherMinutes=sticks?Math.round(otherMinutesRaw*100)/100:0;
+    var minutes=sticks?Math.round(minutesRaw*100)/100:0;
+    var cycleFactor=sticks?minutesRaw/R.pineBaselineCycleMin:0;
     var cellConsumption=sticks?Math.round((R.cellConsumptionBaseline*cycleFactor*prof.wearFactor)*100)/100:0;
     var recovery=sticks?Math.round((R.fixedReferenceFulfillment+cellConsumption)*100)/100:0;
     material=Math.round(material*100)/100;
@@ -1021,7 +1022,7 @@ var StoreZeroAdapter={
     var basis=JSON.stringify({sku:bySku,hw:hw?hw.sku+'×'+hw.qty:'',
       ops:opAns.map(function(o){return o.id+':'+o.disposition}),mill:millMin,cycle:minutes,wear:prof.wearFactor,sticks:sticks});
     return {revision:req.revision, family:sp, lines:lines, ops:opAns, sticks:sticks,
-      material:material, minutes:minutes, otherMinutes:otherMinutes, millMinutes:r3(millMin),millTravelIn:r3(millTravelIn),
+      material:material, minutes:minutes, otherMinutes:otherMinutes, millMinutes:Math.round(millMin*100)/100,millTravelIn:Math.round(millTravelIn*100)/100,
       recovery:recovery,cellConsumption:cellConsumption,
       recoveryBreakdown:{materialHandlingFabrication:R.components.materialHandlingFabrication,
         inspectLabelBundleStage:R.components.inspectLabelBundleStage,
