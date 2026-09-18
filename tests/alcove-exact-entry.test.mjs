@@ -17,9 +17,9 @@ assert.match(source,/id="x-n" type="number" min="2" max="7" step="1"/);
 assert.match(source,/NEXT → CONFIGURE/);
 assert.equal(source.includes('>TYPE THE NUMBERS<'),false);
 
-// Precision controls survive the Alcove human-journey trial.
-assert.match(source,/data-go="alcove-review">REVIEW THIS VERSION →/);
+// Existing gates and Store path are unchanged.
+assert.match(source,/data-go="store">SEND TO STORE ZERO/);
 assert.match(source,/id="confirm-alcove"/);
-assert.match(source,/show\('store'\)/);
+assert.match(source,/show\('request'\)/);
 
 console.log('PASS · Alcove exact-entry regression checks');
