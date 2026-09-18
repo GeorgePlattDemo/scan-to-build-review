@@ -17,6 +17,7 @@
     Object.freeze({
       id:"scan-to-configure",
       action:"CONTINUE TO CONFIGURE",
+      scrollConsequence:"Scrolling does not execute the gate.",
       source:"scan",
       destination:"configure",
       may:Object.freeze(["activeStage"]),
@@ -25,6 +26,7 @@
     Object.freeze({
       id:"configure-to-store",
       action:"SEND TO STORE ZERO",
+      scrollConsequence:"Scrolling does not submit anything.",
       source:"configure",
       destination:"store",
       may:Object.freeze(["activeStage","storeReferenceAnswerForCurrentRevision"]),
@@ -33,6 +35,7 @@
     Object.freeze({
       id:"store-to-review",
       action:"NEXT",
+      scrollConsequence:"Scrolling does not promote the Store answer.",
       source:"store",
       destination:"review",
       may:Object.freeze(["activeStage"]),
@@ -41,6 +44,7 @@
     Object.freeze({
       id:"review-to-request",
       action:"CONFIRM THIS VERSION",
+      scrollConsequence:"Scrolling does not confirm the project.",
       source:"review",
       destination:"request",
       may:Object.freeze(["activeStage","revisionConfirmation"]),
@@ -49,6 +53,7 @@
     Object.freeze({
       id:"request-to-yard",
       action:"SEND TO THE YARD / NEXT",
+      scrollConsequence:"Scrolling does not submit the request.",
       source:"request",
       destination:"yard",
       may:Object.freeze(["activeStage","requestEventState"]),
@@ -57,6 +62,7 @@
     Object.freeze({
       id:"yard-to-terms",
       action:"CONTINUE TO TERMS / NEXT",
+      scrollConsequence:"Scrolling does not accept terms.",
       source:"yard",
       destination:"terms",
       may:Object.freeze(["activeStage"]),
@@ -65,6 +71,7 @@
     Object.freeze({
       id:"terms-to-recap",
       action:"NEXT",
+      scrollConsequence:"Scrolling does not create a commercial event.",
       source:"terms",
       destination:"recap",
       may:Object.freeze(["activeStage"]),
@@ -73,6 +80,7 @@
     Object.freeze({
       id:"recap-to-record",
       action:"NEXT",
+      scrollConsequence:"Scrolling does not close the project.",
       source:"recap",
       destination:"record",
       may:Object.freeze(["activeStage"]),
