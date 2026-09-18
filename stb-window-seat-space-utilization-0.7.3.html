@@ -2067,8 +2067,9 @@ function buildStoreJourney(snapshot){
     stage:'store',
     headline:'Store Zero · Window Seat',
     mainHtml:'<p class="stage-tag">3 · STORE</p><h1>Store Zero · Window Seat</h1>'+
+      intro+
       '<p class="lede">The definition is the input. Store answers what it can satisfy against declared facts and identified pins.</p>'+
-      jSection('Store Zero — full definition',intro)+demand+jSection('What Store Zero answered',answerHtml)+process+jStageBottom('configure','review'),
+      demand+jSection('What Store Zero answered',answerHtml)+process+jStageBottom('configure','review'),
     railHtml:journeyDoctrine.storeGuide||'<p class="hd">STORE · BUILD GUIDE</p><p class="goal">Canonical Store guide unavailable</p><div class="row"><b>Fail closed</b><span>No project-independent Store doctrine is borrowed from another project when unavailable.</span></div>'
   }
 }
@@ -2408,7 +2409,7 @@ window.STBWindowSeatJourney=Object.freeze({
   }
 });
 $('ws-guided').onclick=function(){
-  var snapshot=currentJourneySnapshot(true);
+  var snapshot=currentJourneySnapshot(false);
   window.top.postMessage({
     type:'stb-window-seat-guided-handoff',
     stage:'store',
