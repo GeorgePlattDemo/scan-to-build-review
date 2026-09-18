@@ -2188,12 +2188,14 @@ function renderSeatStoreProcess(snapshot){
   var steps=[].slice.call(box.querySelectorAll('.s'));
   if(steps.length!==12)
     return jCallout('<b>Canonical process incomplete.</b> Expected 12 accepted process steps; received '+steps.length+'. The Window Seat path fails closed rather than silently dropping a step.',true);
+  var reference=snapshot.storeReference||snapshot.storeAnswer||null;
+  var mappingState=reference&&reference.states&&reference.states.mapping||'NOT EVALUATED';
   var statuses=[
     'REQUEST · <b>'+(snapshot.storeAnswer?(snapshot.storeAnswer.stale?'HISTORICAL':'REFERENCE ANSWER HELD'):'VIEW ONLY · NOT SUBMITTED')+'</b>',
     'TERMS · <b>NOT ESTABLISHED</b>',
     'YOU · <b>NOT ESTABLISHED</b>',
     'PAYMENT · <b>NOT ESTABLISHED</b>',
-    'STORE · <b>REFERENCE MAPPED · NOT ALLOCATED</b>',
+    'STORE · <b>'+jEsc(mappingState)+' · NOT ALLOCATED</b>',
     'JOB · <b>NOT RELEASED</b>',
     'CELL · <b>READINESS NOT ESTABLISHED</b>',
     'PARTS · <b>NOT RECORDED</b>',
@@ -2246,7 +2248,7 @@ function buildStoreJourney(snapshot){
 
   var answerHtml;
   if(!ans){
-    answerHtml=jCallout('<b>Store answer not yet held.</b> Confirm the revision and use EVALUATE WITH STORE ZERO or NEXT → STORE ZERO. The Store stage does not borrow an answer from another project.',true);
+    answerHtml=jCallout('<b>Store answer not yet held.</b> Confirm the revision before gated Next. Use EVALUATE WITH STORE ZERO only to calculate or refresh the held reference answer; Next only navigates. The Store stage does not borrow an answer from another project.',true);
   }else{
     var lineRows=(ans.lines||[]).map(function(line,i){return ['Material line '+(i+1),storeLineSummary(line)]});
     var opRows=(ans.ops||[]).map(function(o){return [o.name||o.id,(o.disposition||'—')+' · '+(o.why||'')+' · '+(o.priceNote||'')]});
@@ -2305,6 +2307,7 @@ function openConditionHtml(open){
 }
 function buildRequestJourney(snapshot){
   var req=snapshot.storeRequest||{}, ans=snapshot.storeAnswer||null, rev=snapshot.revision||{};
+  var reference=snapshot.storeReference||ans||null;
   var ops=req.requestedOperations||[], generated=ops.filter(function(o){return o.basis==='GENERATED FROM DEFINITION'});
   var secondary=ops.filter(function(o){return o.basis!=='GENERATED FROM DEFINITION'});
   var exclusions=req.exclusions||[];
@@ -2325,7 +2328,7 @@ function buildRequestJourney(snapshot){
           ['Project class',req.projectClass||'—'],
           ['Definition demand',(req.partOccurrences||[]).length+' finished occurrences · '+(req.materialRequirements||[]).length+' material requirements'],
           ['Store response already held',ans?(ans.stale?'historical revision '+ans.atRevision:'current revision '+(ans.atRevision||rev.number)):'no'],
-          ['Known reference basis',ans?jMoney(ans.q):'not established']
+          ['Known reference basis',reference?jMoney(reference.q)+' · reference / budgetary':'not established']
         ])+
         '<p class="lb">WORK / SERVICES CARRIED</p>'+jGrid(included.map(function(v,i){return ['Carried '+(i+1),v]}))+
         (ops.length?'<p class="lb">EXACT OPERATIONS</p>'+jGrid(ops.map(function(o){return [o.name,requestOperationSummary(o)]})):'')
@@ -2349,7 +2352,8 @@ function buildRequestJourney(snapshot){
 }
 function buildYardJourney(snapshot){
   var ans=snapshot.storeAnswer||null, rev=snapshot.revision||{};
-  var lines=ans&&ans.lines||[], ops=ans&&ans.ops||[], shortages=ans&&ans.shortages||[], unpriced=ans&&ans.unpriced||[];
+  var reference=snapshot.storeReference||ans||null;
+  var lines=reference&&reference.lines||[], ops=reference&&reference.ops||[], shortages=reference&&reference.shortages||[], unpriced=reference&&reference.unpriced||[];
   var materialRows=lines.map(function(line,i){return ['Material '+(i+1),storeLineSummary(line)]});
   var opRows=ops.map(function(o){return [o.name||o.id,(o.disposition||'—')+' · '+(o.why||'')+' · '+(o.priceNote||'')]});
   return {
@@ -2361,10 +2365,10 @@ function buildYardJourney(snapshot){
         '<p>Store Zero is the declared reference lumberyard / fixture for this demonstration. Its answer is deterministic against the identified catalog clock, engine, capability references and commit. It is not a live merchant response.</p>'+
         jGrid([
           ['Against revision',ans?(ans.atRevision||rev.number):rev.number],
-          ['Answer status',ans?(ans.stale?'HISTORICAL':(ans.jobDisposition||ans.status||'recorded')):'not evaluated'],
-          ['Catalog clock',ans&&ans.pin&&ans.pin.clock||'—'],
-          ['Engine',ans&&ans.pin&&ans.pin.engine||'—'],
-          ['Canonical Store commit',ans&&ans.pin&&ans.pin.commit||'—']
+          ['Answer status',ans?(ans.stale?'HISTORICAL':(ans.jobDisposition||ans.status||'recorded')):'REFERENCE VIEW · NOT HELD'],
+          ['Catalog clock',reference&&reference.pin&&reference.pin.clock||'—'],
+          ['Engine',reference&&reference.pin&&reference.pin.engine||'—'],
+          ['Canonical Store commit',reference&&reference.pin&&reference.pin.commit||'—']
         ])
       )+
       jSection('Material / availability',
@@ -2377,7 +2381,7 @@ function buildYardJourney(snapshot){
         jGrid([
           ['Shortages',shortages.length?shortages.join('; '):'none reported at the held reference answer'],
           ['Unpriced services',unpriced.length?unpriced.join('; '):'none reported at the held reference answer'],
-          ['Modeled cycle basis',ans&&ans.minutes!=null?(ans.minutes+' modeled min · not measured production time'):'not established'],
+          ['Modeled cycle basis',reference&&reference.minutes!=null?(reference.minutes+' modeled min · not measured production time'):'not established'],
           ['Live fulfillment timing','NOT ESTABLISHED'],
           ['Substitution','No silent substitution. A changed material identity requires an explicit new decision / revision as applicable.']
         ])+
