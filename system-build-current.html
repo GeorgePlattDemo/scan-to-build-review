@@ -549,6 +549,100 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     });
     sync();
 
+
+    const picnicConfigNext = doc.querySelector('#picnic-config [data-go="picnic-review"]');
+    if (picnicConfigNext) {
+      picnicConfigNext.removeAttribute('data-go');
+      picnicConfigNext.setAttribute('data-canonical-go', 'picnic-store');
+      picnicConfigNext.textContent = 'SEND TO STORE ZERO →';
+    }
+    const picnicConfirm = doc.getElementById('confirm-picnic');
+    if (picnicConfirm) {
+      picnicConfirm.textContent = 'CONFIRM THIS VERSION';
+      picnicConfirm.setAttribute('data-picnic-confirm', 'true');
+    }
+
+    const picnicDoctrine = (!canonicalDoctrine || canonicalDoctrine.expectedProcessStepCount !== 12)
+      ? '<h1>CANONICAL STORE CONTENT UNAVAILABLE</h1><div class="s001-boundary"><b>Fail closed.</b> Shared Store doctrine is unavailable.</div>'
+      : '<div class="band" style="font-size:12px;line-height:1.55"><p style="margin:0">' + canonicalDoctrine.definitionHtml + '</p></div>' +
+        canonicalDoctrine.processIntroHtml +
+        canonicalDoctrine.processStepsHtml;
+
+    ensureProjectJourneyPage('picnic-store',
+      picnicDoctrine +
+      '<div class="s001-v2-callout"><b>CURRENT PICNIC-TABLE STATUS</b>The project is admitted. The Store question is not yet stable enough to submit because this class does not yet publish a complete part/material demand packet.</div>' +
+      '<p class="stage-tag">3 · STORE</p><h1>PICNIC TABLE · STORE QUESTION</h1>' +
+      '<div class="s001-v2-order">' +
+        '<div><b>FORM / SCOPE</b><span id="picnic-store-form"></span></div>' +
+        '<div><b>LENGTH</b><span id="picnic-store-length"></span></div>' +
+        '<div><b>MATERIAL PREFERENCE</b><span id="picnic-store-material"></span></div>' +
+        '<div><b>STORE REQUEST</b><span>DEFERRED · BRIDGE-GAP</span></div>' +
+        '<div><b>PRICE</b><span>UNRESOLVED</span></div>' +
+        '<div><b>PHYSICAL AUTHORITY</b><span>NOT AUTHORIZED</span></div>' +
+      '</div>' +
+      '<div class="s001-boundary"><b>This is not a failed job.</b> The user choices are valid project facts. The missing piece is the project-to-Store bridge: stable part geometry / material demand has not yet been published for this class. No SKU, price, capability, or refusal is invented to make the screen green.</div>' +
+      '<div class="btns"><button type="button" data-canonical-go="picnic-config">BACK TO CONFIGURE</button><button type="button" data-canonical-go="picnic-review">NEXT → REVIEW</button></div>',
+      '<p class="goal">Admit broadly, stop narrowly</p><div class="row"><b>User choices are not the problem</b><span>Form, scope, length and material preference remain valid.</span></div><div class="row"><b>Bridge gap is explicit</b><span>Store cannot answer a demand packet the project has not yet published.</span></div>'
+    );
+
+    const picnicReviewMain = doc.querySelector('#picnic-review > .main');
+    if (picnicReviewMain) {
+      const unresolved = picnicReviewMain.querySelector('.flash.warn');
+      if (unresolved) unresolved.insertAdjacentHTML('afterend', '<div class="flash warn"><b>STORE BRIDGE:</b> No complete Picnic Store request exists yet. This is a BRIDGE-GAP, not a reason to discard the project definition.</div>');
+      const first = picnicReviewMain.querySelector('.btns');
+      if (first && !first.querySelector('[data-canonical-go="picnic-store"]')) first.insertAdjacentHTML('afterbegin','<button type="button" data-canonical-go="picnic-store">← Back to Store</button>');
+    }
+
+    ensureProjectJourneyPage('picnic-request',
+      '<p class="stage-tag">5 · REQUEST</p><h1>REQUEST · PICNIC TABLE</h1>' +
+      '<p class="sub">The definition can be retained, but there is not yet a Store-submittable demand packet for this class.</p>' +
+      '<div class="s001-v2-order">' +
+        '<div><b>FORM / SCOPE</b><span id="picnic-request-form"></span></div>' +
+        '<div><b>LENGTH</b><span id="picnic-request-length"></span></div>' +
+        '<div><b>MATERIAL PREFERENCE</b><span id="picnic-request-material"></span></div>' +
+        '<div><b>REQUEST EVENT</b><span>DEFERRED · NOT SUBMITTED</span></div>' +
+        '<div><b>OWNER</b><span>BRIDGE-GAP · project-to-Store demand packet</span></div>' +
+        '<div><b>PROJECT STATUS</b><span>RETAINED · NOT REJECTED</span></div>' +
+      '</div>' +
+      '<div class="s001-boundary"><b>STOP AT THE REAL GATE.</b> SEND TO THE YARD is unavailable until a complete Store request can be formed. This does not erase the project or force the user to re-enter valid choices.</div>' +
+      '<div class="btns"><button type="button" data-canonical-go="picnic-review">BACK TO REVIEW</button><button type="button" disabled title="Bridge gap: a complete Picnic Store request is not yet implemented.">SEND TO THE YARD — DEFERRED</button></div>',
+      '<p class="goal">A refusal can be a pass</p><div class="row"><b>What stopped</b><span>The Store request bridge, not the customer project.</span></div><div class="row"><b>What remains</b><span>The exact choices and unresolved conditions stay in the project record.</span></div>'
+    );
+
+    ensureProjectJourneyPage('picnic-yard',
+      '<p class="stage-tag">6 · YARD</p><h1>YARD · NOT REACHED</h1><p class="sub">No yard submission exists for the current Picnic class.</p><div class="s001-boundary">This stage is intentionally inaccessible from the current Request gate. Nothing is inferred past the bridge gap.</div>',
+      '<p class="goal">Not reached</p><div class="row"><b>No invented response</b><span>No request means no yard response.</span></div>'
+    );
+    ensureProjectJourneyPage('picnic-terms',
+      '<p class="stage-tag">7 · TERMS</p><h1>TERMS · NOT REACHED</h1><p class="sub">Offer, acceptance, payment and allocation remain NOT ESTABLISHED.</p>',
+      '<p class="goal">Not reached</p><div class="row"><b>Null stays null</b><span>A missing Request event cannot produce later commercial events.</span></div>'
+    );
+    ensureProjectJourneyPage('picnic-recap',
+      '<p class="stage-tag">8 · RECAP</p><h1>RECAP · PICNIC TABLE</h1><p class="sub">Project admitted → choices retained → Store bridge deferred. No later transaction event is claimed.</p>',
+      '<p class="goal">Truthful chronology</p><div class="row"><b>Do not backfill</b><span>Later stages remain absent until the bridge is implemented.</span></div>'
+    );
+    ensureProjectJourneyPage('picnic-record',
+      '<p class="stage-tag">9 · RECORD</p><h1>PICNIC TABLE · OWNER RECORD</h1><p class="sub">The record preserves the project even though the current journey stops at Request.</p><div class="s001-v2-order"><div><b>FORM / SCOPE</b><span id="picnic-record-form"></span></div><div><b>LENGTH</b><span id="picnic-record-length"></span></div><div><b>MATERIAL PREFERENCE</b><span id="picnic-record-material"></span></div><div><b>STORE REQUEST</b><span>NOT FORMED · BRIDGE-GAP</span></div><div><b>COMMERCIAL STATUS</b><span>NOT ESTABLISHED</span></div><div><b>PHYSICAL STATUS</b><span>NOT AUTHORIZED / NOT RECORDED</span></div></div>',
+      '<p class="goal">Keep the project, not a fiction</p><div class="row"><b>Valid inputs survive</b><span>The next implementation pass should start from this retained definition.</span></div>'
+    );
+
+    function syncPicnicJourney() {
+      const title = doc.getElementById('picnic-title')?.textContent || 'Picnic table';
+      const length = doc.getElementById('plen-label')?.textContent || '—';
+      const material = doc.getElementById('pmat-label')?.textContent || 'unresolved';
+      const set = (id, value) => { const el = doc.getElementById(id); if (el) el.textContent = value; };
+      ['picnic-store-form','picnic-request-form','picnic-record-form'].forEach(id => set(id, title));
+      ['picnic-store-length','picnic-request-length','picnic-record-length'].forEach(id => set(id, length));
+      ['picnic-store-material','picnic-request-material','picnic-record-material'].forEach(id => set(id, material));
+    }
+    doc.addEventListener('input', function(event) {
+      if (event.target.closest?.('#picnic-config')) setTimeout(syncPicnicJourney, 0);
+    });
+    doc.addEventListener('click', function(event) {
+      if (event.target.closest?.('#picnic-chooser,#picnic-config')) setTimeout(syncPicnicJourney, 0);
+    });
+    syncPicnicJourney();
+
     const originalShow = win.show;
 
     const canonicalJourney = window.STB_CANONICAL_JOURNEY || null;
@@ -675,6 +769,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     }
 
     function showMappedProjectStage(projectId, stage) {
+      if (projectId === 'picnic' && ['yard','terms','recap','record'].includes(stage)) {
+        originalShow.call(win, 'picnic-request');
+        if (typeof syncPicnicJourney === 'function') setTimeout(syncPicnicJourney, 0);
+        return true;
+      }
       const target = PROJECT_STAGE_TARGETS[projectId]?.[stage] || null;
       if (!target || !doc.getElementById(target)) return false;
       originalShow.call(win, target);
@@ -721,6 +820,20 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       if (showMappedProjectStage(activeJourneyProject, stage)) {
         event.preventDefault();
         event.stopImmediatePropagation();
+      }
+    }, true);
+
+    win.addEventListener('click', function(event) {
+      if (activeJourneyProject === 'picnic' && event.target.closest?.('#confirm-picnic')) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        doc.documentElement.dataset.picnicRevisionConfirmed = 'true';
+        originalShow.call(win, 'picnic-request');
+        setTimeout(syncPicnicJourney, 0);
+        return;
+      }
+      if (activeJourneyProject === 'playhouse' && event.target.closest?.('#playhouse-review [data-canonical-go="playhouse-request"]')) {
+        doc.documentElement.dataset.playhouseRevisionConfirmed = 'true';
       }
     }, true);
 
