@@ -66,6 +66,18 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
           const tile = ribbon.querySelector(`.tile[data-go="${id}"]`);
           if (tile) ribbon.append(tile);
         });
+
+        const windowSeatTile = ribbon.querySelector('.tile[data-go="window-intake"]');
+        if (windowSeatTile) {
+          windowSeatTile.removeAttribute('data-go');
+          windowSeatTile.dataset.windowSeatArtifact = 'stb-window-seat-space-utilization-0.7.1.html';
+          windowSeatTile.title = 'Space utilization · Window seat · live 0.7.1';
+          windowSeatTile.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            win.top.location.href = 'stb-window-seat-space-utilization-0.7.1.html?v=46eddf82';
+          }, true);
+        }
       }
 
       const body = home.querySelector(':scope > .split > .body');
