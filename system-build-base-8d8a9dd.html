@@ -303,7 +303,7 @@ function syncTransaction(){
  document.getElementById('review-shelves').textContent=n;
  document.getElementById('review-unit').textContent=fmt(h)+' H × '+fmt(w)+' W';
  document.getElementById('review-span').textContent=fmt(span)+' in nominal';
- document.getElementById('terms-truth').innerHTML='<b>Current Alcove truth:</b> Confirmed definition '+fmt(h)+'″ high × '+fmt(w)+'″ wide × '+fmt(d)+'″ deep with a '+fmt(span)+'″ nominal interior span; '+(gap<0.0001?'no built-in gap allowance':fmt(gap)+'″ total opening clearance')+'. Structure, installation execution, commercial terms and allocation remain unresolved.';
+ document.getElementById('terms-truth').innerHTML='<b>Current demonstration truth:</b> Version 1 is confirmed and Store Zero returned a reference amount of '+price+'. Live acceptance, payment, allocation, production release and physical execution remain unestablished.';
  document.getElementById('request-summary').textContent=`Definition example · ${fmt(h)}″ H × ${fmt(w)}″ W × ${fmt(d)}″ D · ${n} shelves · ${sp.name} · ${fmt(span)}″ nominal span · back none`;
 }
 document.addEventListener('click',e=>{
