@@ -2085,7 +2085,7 @@ function openConditionHtml(open){
   return jGrid(open.map(function(o){return [o.t||'Condition',(o.block?'STOP / BLOCKING':'CARRIED')+' · '+(o.w||'recorded condition')]}))
 }
 function reviewUnresolvedHtml(snapshot){
-  var req=snapshot.storeRequest||{}, def=snapshot.definition||{}, ref=snapshot.storeReference||snapshot.storeAnswer||null;
+  var req=snapshot.storeRequest||{}, def=snapshot.definition||{}, ref=snapshot.storeAnswer||snapshot.storeReference||null;
   var conds=snapshot.openConditions||[], rows=[];
   conds.forEach(function(o){rows.push(['PROJECT · '+(o.t||'Project condition'),(o.block?'BLOCKS':'CARRIED')+' · '+(o.d||o.w||'recorded condition')])});
   if(ref){
@@ -2105,7 +2105,7 @@ function buildReviewJourney(snapshot){
       mainHtml:'<p class="stage-tag">4 · REVIEW</p><h1>WINDOW SEAT PROJECT FACTS UNAVAILABLE</h1><div class="ws-journey-callout warn"><b>Fail closed.</b> Review cannot substitute Alcove facts.</div>',
       railHtml:'<p class="hd">04 · REVIEW · BUILD GUIDE</p><p class="goal">Fail closed</p>'};
   }
-  var req=snapshot.storeRequest, def=snapshot.definition, rev=snapshot.revision||{}, ref=snapshot.storeReference||snapshot.storeAnswer||null;
+  var req=snapshot.storeRequest, def=snapshot.definition, rev=snapshot.revision||{}, ref=snapshot.storeAnswer||snapshot.storeReference||null;
   var occ=req.partOccurrences||[], modules=req.modules||[], open=snapshot.openConditions||[];
   var blocking=open.filter(function(o){return o&&o.block}).length;
   var ctl=(req.controllingFacts||[]).map(function(f){return f.describes+' '+fmt(f.value)+' '+(f.unit||'')+' · '+(f.source||'')});
@@ -2176,7 +2176,7 @@ function buildReviewJourney(snapshot){
 }
 function buildRequestJourney(snapshot){
   var req=snapshot.storeRequest||{}, ans=snapshot.storeAnswer||null, rev=snapshot.revision||{};
-  var reference=snapshot.storeReference||ans||null;
+  var reference=ans||snapshot.storeReference||null;
   var ops=req.requestedOperations||[], generated=ops.filter(function(o){return o.basis==='GENERATED FROM DEFINITION'});
   var secondary=ops.filter(function(o){return o.basis!=='GENERATED FROM DEFINITION'});
   var exclusions=req.exclusions||[];
@@ -2353,7 +2353,12 @@ function buildRecapJourney(snapshot){
 }
 function buildRecordJourney(snapshot){
   var req=snapshot.storeRequest||{}, ans=snapshot.storeAnswer||null, rev=snapshot.revision||{};
+  var reference=ans||snapshot.storeReference||null, pin=reference&&reference.pin||{};
   var occ=req.partOccurrences||[], open=snapshot.openConditions||[], hist=snapshot.occurrenceHistory||{};
+  var storeOpen=[];
+  (reference&&reference.lines||[]).filter(function(l){return l.disposition!=='SUPPORTABLE'}).forEach(function(l){storeOpen.push(['STORE · '+(l.disposition||'UNRESOLVED'),l.why||'Store resolution required'])});
+  (reference&&reference.shortages||[]).forEach(function(s){storeOpen.push(['STORE · availability',s])});
+  (reference&&reference.unpriced||[]).forEach(function(u){storeOpen.push(['STORE · pricing',u])});
   var currentIds={};occ.forEach(function(o){currentIds[o.id]=1});
   var historicalIds=Object.keys(hist).filter(function(id){return !currentIds[id]});
   var evidenceRows=(req.evidence||[]).map(function(e){return [e.ref,(e.kind||'source')+' · '+(e.role||'')+(e.retained?' · retained':'')]});
@@ -2390,7 +2395,21 @@ function buildRecordJourney(snapshot){
       jSection('Revision history',jGrid(revRows)+
         (ans&&ans.stale?jCallout('<b>Historical Store answer:</b> the held answer belongs to revision '+jEsc(ans.atRevision)+', not current revision '+jEsc(rev.number)+'.',true):'')
       )+
-      jSection('Unresolved conditions',openConditionHtml(open))+
+      jSection('Store basis / pins',
+        jGrid([
+          ['Catalog clock',pin.clock||'—'],
+          ['Pricing engine',pin.engine||'—'],
+          ['Recovery basis',pin.recovery||'—'],
+          ['Capability envelope',pin.envelope||'—'],
+          ['Store document',pin.doc||'—'],
+          ['Canonical Store commit',pin.commit||'—'],
+          ['Stage-2 path pin',pin.stage2||'—']
+        ])
+      )+
+      jSection('Unresolved conditions',
+        openConditionHtml(open)+
+        (storeOpen.length?'<p class="lb">STORE-OWNED UNRESOLVED</p>'+jGrid(storeOpen):'')
+      )+
       jCallout('<b>Replacement-component payoff.</b> A later replacement can start from the exact recorded occurrence, revision and material basis instead of re-measuring and guessing.',false)+
       jCallout('<b>That record does not authorize fabrication.</b> Current material, Store, capability, safety and production gates run again.',true)+
       jStageBottom('recap',null),
