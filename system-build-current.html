@@ -12,7 +12,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 </head>
 <body>
 <iframe id="stb-current" title="Scan-to-Build System" src="system-build-front-door-0.5.html?v=7e4ea998"></iframe>
-<script src="store-zero-canonical-doctrine.js?v=906af215"></script>
+<script src="stb-canonical-journey.js?v=e0619841"></script>
+<script src="store-zero-canonical-doctrine.js?v=f2106553"></script>
 <script>
 (() => {
   const shell = document.getElementById('stb-current');
@@ -122,7 +123,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 <iframe
                   class="window-seat-shell-frame"
                   title="Space utilization · Window seat"
-                  src="stb-window-seat-space-utilization-0.7.3.html?v=9f0edce6"
+                  src="stb-window-seat-space-utilization-0.7.3.html?v=eeb786ad"
                 ></iframe>
               </div>
             `;
@@ -132,6 +133,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
           windowSeatTile.addEventListener('click', event => {
             event.preventDefault();
             event.stopImmediatePropagation();
+            selectJourneyProject('window-seat');
             showSeatContinuous();
           }, true);
         }
@@ -468,7 +470,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
     const originalShow = win.show;
 
-    const seatNavTargets = Object.freeze({
+    const canonicalJourney = window.STB_CANONICAL_JOURNEY || null;
+    const ALCOVE_STAGE_TARGETS = Object.freeze({
       scan: 'alcove-capture',
       configure: 'alcove-config',
       store: 'store',
@@ -479,6 +482,24 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       recap: 'recap',
       record: 'record'
     });
+    const LEGACY_TARGET_TO_STAGE = Object.freeze(Object.fromEntries(
+      Object.entries(ALCOVE_STAGE_TARGETS).map(([stage,target]) => [target,stage])
+    ));
+
+    function canonicalJourneyReady() {
+      return !!canonicalJourney
+        && Array.isArray(canonicalJourney.stages)
+        && canonicalJourney.stages.join('>') === 'scan>configure>store>review>request>yard>terms>recap>record'
+        && Array.isArray(canonicalJourney.gates)
+        && canonicalJourney.gates.length === 8;
+    }
+
+    function selectJourneyProject(projectId) {
+      activeJourneyProject = projectId || null;
+      seatJourneySnapshot = null;
+      if (activeJourneyProject) doc.documentElement.dataset.activeJourneyProject = activeJourneyProject;
+      else delete doc.documentElement.dataset.activeJourneyProject;
+    }
 
     function seatFrame() {
       return doc.querySelector('#window-seat-live .window-seat-shell-frame');
@@ -497,11 +518,17 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       return seatJourneySnapshot;
     }
 
-    function syncSeatNav(stage) {
-      const wanted = seatNavTargets[stage] || null;
+    function annotateJourneyNav() {
       doc.querySelectorAll('.recovery-nav button').forEach(function(button) {
         const target = button.getAttribute('data-go') || button.getAttribute('data-canonical-go');
-        if (wanted && target === wanted) button.setAttribute('aria-current', 'step');
+        const stage = LEGACY_TARGET_TO_STAGE[target] || null;
+        if (stage) button.dataset.journeyStage = stage;
+      });
+    }
+
+    function syncSeatNav(stage) {
+      doc.querySelectorAll('.recovery-nav button').forEach(function(button) {
+        if (stage && button.dataset.journeyStage === stage) button.setAttribute('aria-current', 'step');
         else button.removeAttribute('aria-current');
       });
     }
@@ -520,22 +547,25 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     }
 
     function openSeatView(mode, stage) {
-      activeJourneyProject = 'window-seat';
-      doc.documentElement.dataset.activeJourneyProject = 'window-seat';
+      if (activeJourneyProject !== 'window-seat') return false;
+      if (!canonicalJourneyReady()) return false;
+      if (mode === 'guided' && canonicalJourney.stages.indexOf(stage || 'scan') < 0) return false;
       pendingSeatView = {mode: mode, stage: stage || null};
       originalShow.call(win, 'window-seat-live');
       if (!applyPendingSeatView()) setTimeout(applyPendingSeatView, 0);
       if (mode === 'guided') syncSeatNav(stage || 'scan');
       else syncSeatNav(null);
+      return true;
     }
 
     function showSeatContinuous() {
-      openSeatView('continuous', null);
+      return openSeatView('continuous', null);
     }
 
     function showSeatGuided(stage, supplied) {
+      if (activeJourneyProject !== 'window-seat') return false;
       if (supplied) refreshSeatSnapshot(false, supplied);
-      openSeatView('guided', stage);
+      return openSeatView('guided', stage);
     }
 
     seatFrame()?.addEventListener('load', () => {
@@ -546,6 +576,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     window.addEventListener('message', function(event) {
       if (event.origin !== window.location.origin) return;
       if (event.source !== seatFrame()?.contentWindow) return;
+      if (activeJourneyProject !== 'window-seat') return;
       if (event.data?.type === 'stb-window-seat-guided-handoff') {
         showSeatGuided(event.data.stage || 'store', event.data.snapshot || null);
         return;
@@ -558,36 +589,28 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     doc.addEventListener('click', function(event) {
       const tile = event.target.closest('#projects .tile[data-go]');
       if (!tile) return;
-      if (tile.getAttribute('data-go') !== 'window-intake') {
-        activeJourneyProject = null;
-        seatJourneySnapshot = null;
-        delete doc.documentElement.dataset.activeJourneyProject;
-      }
+      const target = tile.getAttribute('data-go');
+      if (target === 'alcove-capture') selectJourneyProject('alcove');
+      else selectJourneyProject(null);
     }, true);
 
     win.show = function(id) {
       const target = String(id);
       if (activeJourneyProject === 'window-seat') {
-        if (target === 'alcove-capture') { showSeatGuided('scan'); return; }
-        if (target === 'alcove-config') { showSeatGuided('configure'); return; }
-        if (target === 'store') { showSeatGuided('store'); return; }
-        if (target === 'alcove-review') { showSeatGuided('review'); return; }
-        if (target === 'request') { showSeatGuided('request'); return; }
-        if (target === 'yard') { showSeatGuided('yard'); return; }
-        if (target === 'terms') { showSeatGuided('terms'); return; }
-        if (target === 'recap') { showSeatGuided('recap'); return; }
-        if (target === 'record') { showSeatGuided('record'); return; }
+        const stage = LEGACY_TARGET_TO_STAGE[target] || null;
+        if (stage) { showSeatGuided(stage); return; }
         if (target === 'projects' || target === 'landing' || target === 'my-projects' || target === 'archive') {
-          activeJourneyProject = null;
-          seatJourneySnapshot = null;
+          selectJourneyProject(null);
           pendingSeatView = {mode:'continuous',stage:null};
-          delete doc.documentElement.dataset.activeJourneyProject;
         }
       }
       const result = originalShow.apply(this, arguments);
       if (target.startsWith('playhouse')) setTimeout(sync, 0);
       return result;
     };
+    annotateJourneyNav();
+    if (!canonicalJourneyReady()) return false;
+    doc.documentElement.dataset.canonicalJourneyVersion = canonicalJourney.version;
     return true;
   };
 
