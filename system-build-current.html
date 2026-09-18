@@ -200,7 +200,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         const bands = main.querySelectorAll(':scope > .band');
         if (title && sharedTitle) title.innerHTML = sharedTitle.innerHTML;
         ledes.forEach((node,index) => { if (sharedLedes[index]) node.innerHTML = sharedLedes[index].innerHTML; });
-        if (bands[1] && sharedBand) bands[1].innerHTML = sharedBand.innerHTML;
+        if (bands[1] && sharedBand) bands[1].innerHTML = sharedBand.innerHTML.replace('Reference journey shown before confirmation.','Confirmed version sent to Store Zero.');
 
         const tempSteps = doc.createElement('div');
         tempSteps.innerHTML = canonicalDoctrine.processStepsHtml;
@@ -699,6 +699,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       seatJourneySnapshot = null;
       if (activeJourneyProject) doc.documentElement.dataset.activeJourneyProject = activeJourneyProject;
       else delete doc.documentElement.dataset.activeJourneyProject;
+      const alcoveReviewNav = doc.querySelector('.recovery-nav button[data-go="alcove-review"]');
+      if (alcoveReviewNav) alcoveReviewNav.hidden = activeJourneyProject === 'alcove';
     }
 
     function seatFrame() {
