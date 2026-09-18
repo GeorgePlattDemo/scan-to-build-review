@@ -43,13 +43,16 @@ for(const [project,map] of Object.entries(expectedTargets)){
   }
 }
 
-// Alcove still owns the complete canonical path already present in the retained base.
+// Alcove retains the canonical event surfaces, but confirmation is inline beneath Configure.
 for(const id of Object.values(expectedTargets.alcove)) assert.ok(base.includes('id="'+id+'"'),'missing Alcove page '+id);
-assert.match(base,/data-go="store">SEND TO STORE ZERO/);
-assert.match(base,/id="confirm-alcove"/);
-assert.match(base,/show\('request'\)/);
+assert.match(base,/id="confirm-alcove-inline"/);
+assert.match(base,/CONFIRM &amp; SEND TO STORE ZERO →/);
+assert.match(base,/show\('store'\)/);
+assert.match(base,/data-go="request">Next →/);
 assert.match(base,/data-go="yard">SEND TO THE YARD/);
 assert.match(base,/data-go="terms">CONTINUE TO TERMS/);
+assert.match(shell,/alcoveReviewNav\.hidden = activeJourneyProject === 'alcove'/);
+assert.match(shell,/Confirmed version sent to Store Zero\./);
 
 // Shared Store doctrine is valid before confirmation and does not claim a completed event.
 assert.match(doctrine.processIntroHtml,/This identified version stays unchanged unless you create or approve a new one\./);
