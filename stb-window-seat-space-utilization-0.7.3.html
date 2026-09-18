@@ -1960,132 +1960,24 @@ function storeLineSummary(line){
   if(line.why)bits.push(line.why);
   return bits.join(' · ')
 }
-function seatProcessFacts(snapshot,index){
+function seatStoreStatusHtml(snapshot){
   var req=snapshot.storeRequest||{}, rev=snapshot.revision||{}, ans=snapshot.storeAnswer||null;
   var ref=snapshot.storeReference||ans||null;
   var currentAnswer=!!(ans&&!ans.stale&&Number(ans.atRevision)===Number(rev.number));
-  var lines=ref&&ref.lines||[], ops=ref&&ref.ops||[], shortages=ref&&ref.shortages||[], unpriced=ref&&ref.unpriced||[];
-  var occurrenceCount=(req.partOccurrences||[]).length;
-  var runCount=(req.partOccurrences||[]).reduce(function(n,o){return n+(o.boardRuns||[]).length},0);
-  var rows=[];
-  if(index===0){
-    rows=[
-      ['Window Seat revision',String(rev.number)+(rev.confirmed?' · confirmed':' · candidate')],
-      ['Store interaction',currentAnswer?'reference answer held':ans&&ans.stale?'prior answer historical':'VIEW ONLY · no submitted Store event'],
-      ['Demand',occurrenceCount+' finished parts · '+runCount+' board runs · '+(req.requestedOperations||[]).length+' requested operations'],
-      ['Definition blockers',(req.unresolvedConditions||[]).length]
-    ];
-  }else if(index===1){
-    rows=[
-      ['Commercial offer','NOT ESTABLISHED'],
-      ['Reference selling basis',ref?jMoney(ref.q):'not established'],
-      ['Price evidence',ref&&ref.states&&ref.states.price||'not established'],
-      ['Meaning','Reference / budgetary evidence only; not seller-of-record terms']
-    ];
-  }else if(index===2){
-    rows=[
-      ['Acceptance','NOT ESTABLISHED'],
-      ['Project version','Window Seat revision '+rev.number+(rev.confirmed?' · confirmed':' · candidate')],
-      ['Change rule','A changed definition creates a new revision; this one is not edited in place']
-    ];
-  }else if(index===3){
-    rows=[
-      ['Payment / settlement','NOT ESTABLISHED'],
-      ['Reference amount',ref?jMoney(ref.q):'not established'],
-      ['Authority','No payment event is inferred from confirmation, Store support or viewing']
-    ];
-  }else if(index===4){
-    rows=[
-      ['Material requirement',req.materialClass?(req.materialClass.family+' · '+req.materialClass.form+' · '+fmt(req.materialClass.thickness)+' in finished'):'—'],
-      ['Reference mapping',ref&&ref.states&&ref.states.mapping||'not evaluated'],
-      ['Reference availability',ref&&ref.states&&ref.states.availability||'not evaluated'],
-      ['Mapped parents',lines.filter(function(x){return x.sku}).map(function(x){return x.sku+' × '+(x.boards||0)+' parent'+((x.boards||0)===1?'':'s')}).join('; ')||'none identified'],
-      ['Shortages',shortages.length?shortages.join('; '):'none reported by reference evaluation'],
-      ['Allocation','NOT ESTABLISHED']
-    ];
-  }else if(index===5){
-    rows=[
-      ['Production release','NOT ESTABLISHED'],
-      ['Store disposition',ref?(ref.jobDisposition||ref.status||'—'):'not evaluated'],
-      ['Boundary','Reference Store support does not authorize production']
-    ];
-  }else if(index===6){
-    rows=[
-      ['Machine readiness','NOT ESTABLISHED'],
-      ['Reference capability',ref?(ref.jobDisposition||'reference only'):'not evaluated'],
-      ['Cycle Start','LOCAL ONLY · NOT AUTHORIZED HERE'],
-      ['Physical authority','false']
-    ];
-  }else if(index===7){
-    rows=[
-      ['Requested operations',(req.requestedOperations||[]).map(function(o){return o.name}).join('; ')||'none'],
-      ['Reference dispositions',ops.map(function(o){return (o.name||o.id)+': '+(o.disposition||'—')}).join('; ')||'not evaluated'],
-      ['Physical work','NOT RECORDED']
-    ];
-  }else if(index===8){
-    rows=[
-      ['Secondary / residual work',unpriced.length?unpriced.join('; '):'no unpriced service reported by reference evaluation'],
-      ['Project exclusions',(req.exclusions||[]).join('; ')||'none listed'],
-      ['Inspection / labels / staging','NOT RECORDED']
-    ];
-  }else if(index===9){
-    rows=[
-      ['Staging','NOT RECORDED'],
-      ['READY notice','NOT ISSUED'],
-      ['Pickup timing','No live fulfillment clock has started']
-    ];
-  }else if(index===10){
-    rows=[
-      ['Custody','NOT TRANSFERRED'],
-      ['Handoff','NOT RECORDED'],
-      ['Project close','NOT ESTABLISHED']
-    ];
-  }else{
-    rows=[
-      ['Owner record','Window Seat revision '+rev.number+' · reference journey'],
-      ['Finished occurrences',occurrenceCount],
-      ['Store answer',currentAnswer?'held for revision '+rev.number:ans&&ans.stale?'historical revision '+ans.atRevision:'not held'],
-      ['Commercial status','NOT ESTABLISHED'],
-      ['Physical status','NOT RECORDED'],
-      ['Custody','NOT TRANSFERRED']
-    ];
-  }
-  return jGrid(rows);
-}
-function renderSeatStoreProcess(snapshot){
-  var doctrine=getStoreDoctrine();
-  if(!doctrine||!storeDoctrineReady())
-    return '<h1>CANONICAL STORE CONTENT UNAVAILABLE</h1>';
-  var box=document.createElement('div');
-  box.innerHTML=doctrine.processStepsHtml;
-  var steps=[].slice.call(box.querySelectorAll('.s'));
-  if(steps.length!==12)
-    return jCallout('<b>Canonical process incomplete.</b> Expected 12 accepted process steps; received '+steps.length+'. The Window Seat path fails closed rather than silently dropping a step.',true);
-  var reference=snapshot.storeReference||snapshot.storeAnswer||null;
-  var mappingState=reference&&reference.states&&reference.states.mapping||'NOT EVALUATED';
-  var statuses=[
-    'REQUEST · <b>'+(snapshot.storeAnswer?(snapshot.storeAnswer.stale?'HISTORICAL':'REFERENCE ANSWER HELD'):'VIEW ONLY · NOT SUBMITTED')+'</b>',
-    'TERMS · <b>NOT ESTABLISHED</b>',
-    'YOU · <b>NOT ESTABLISHED</b>',
-    'PAYMENT · <b>NOT ESTABLISHED</b>',
-    'STORE · <b>'+jEsc(mappingState)+' · NOT ALLOCATED</b>',
-    'JOB · <b>NOT RELEASED</b>',
-    'CELL · <b>READINESS NOT ESTABLISHED</b>',
-    'PARTS · <b>NOT RECORDED</b>',
-    'SECONDARY WORK · <b>NOT RECORDED</b>',
-    'READY · <b>NOT ISSUED</b>',
-    'HANDOFF · <b>NOT TRANSFERRED</b>',
-    'RECORD · <b>REFERENCE / CURRENT REVISION</b>'
-  ];
-  steps.forEach(function(step,index){
-    var st=step.querySelector('.st');
-    if(st)st.innerHTML=statuses[index];
-    var facts=document.createElement('div');
-    facts.className='ws-journey-callout';
-    facts.innerHTML='<b>WINDOW SEAT · CURRENT STATUS</b>'+seatProcessFacts(snapshot,index);
-    step.appendChild(facts);
-  });
-  return box.innerHTML;
+  return jGrid([
+    ['01 · Yard review',currentAnswer?'REFERENCE ANSWER HELD':ans&&ans.stale?'PRIOR ANSWER HISTORICAL':'VIEW ONLY · NOT SUBMITTED'],
+    ['02 · Offer','NOT ESTABLISHED'],
+    ['03 · Acceptance','NOT ESTABLISHED'],
+    ['04 · Settlement','NOT ESTABLISHED'],
+    ['05 · Material',(ref&&ref.states&&ref.states.mapping||'NOT EVALUATED')+' · NOT ALLOCATED'],
+    ['06 · Production release','NOT ESTABLISHED'],
+    ['07 · Local cell','READINESS NOT ESTABLISHED · Cycle Start NOT AUTHORIZED HERE'],
+    ['08 · Primary operations','NOT RECORDED'],
+    ['09 · Completion','NOT RECORDED'],
+    ['10 · Handoff','READY NOTICE NOT ISSUED'],
+    ['11 · Custody','NOT TRANSFERRED'],
+    ['12 · Owner record','REFERENCE VIEW · revision '+rev.number]
+  ]);
 }
 function buildStoreJourney(snapshot){
   var doctrine=getStoreDoctrine();
@@ -2171,15 +2063,17 @@ function buildStoreJourney(snapshot){
     jCallout('<b>Authority boundary.</b> No order · no payment · no reservation · no allocation · no production release · no machine readiness · no Cycle Start. SUPPORTABLE is a Store/reference answer, not commissioned physical capability.',false);
   }
 
-  var process=doctrine.processIntroHtml+renderSeatStoreProcess(snapshot);
+  var process=doctrine.processIntroHtml+doctrine.processStepsHtml;
   return {
     stage:'store',
     headline:'Store Zero · Window Seat',
-    mainHtml:'<p class="stage-tag">3 · STORE</p><h1>Store Zero · Window Seat</h1>'+
-      intro+
+    mainHtml:intro+
       process+
+      jSection('Window Seat · current process status',
+        '<p class="lede">The twelve steps above are the canonical process explanation. The rows below state only what this Window Seat revision has actually established.</p>'+
+        seatStoreStatusHtml(snapshot))+
       jSection('Window Seat · Store demand and reference evidence',
-        '<p class="lede">The complete process above stays fixed. These are the project-specific facts and reference answers carried by this Window Seat revision.</p>'+
+        '<p class="lede">These are the project-specific facts and reference answers carried by this Window Seat revision.</p>'+
         demand+jSection('Store Zero reference / held answer',answerHtml))+
       jStageBottom('configure','review'),
     railHtml:doctrine.buildGuideHtml.replace('04 · STORE · BUILD GUIDE','03 · STORE · BUILD GUIDE')
