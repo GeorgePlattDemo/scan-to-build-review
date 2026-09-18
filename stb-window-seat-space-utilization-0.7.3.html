@@ -351,7 +351,7 @@
       <div class="btns">
         <button disabled title="Planned. Not implemented in this standalone demonstration.">UPLOAD A SCAN, PHOTO OR PLAN — PLANNED, INACTIVE HERE</button>
         <button disabled title="Planned. The measurement fields above are the working entry point in this demonstration.">TYPE THE NUMBERS — USE THE FIELDS ABOVE</button>
-        <button class="go" type="button" data-ws-guided-stage="configure">CONTINUE TO CONFIGURE →</button>
+        <button class="go" id="ws-scan-next" type="button" data-ws-guided-stage="configure">CONTINUE TO CONFIGURE →</button>
       </div>
     </div>
   </div>
@@ -1927,9 +1927,9 @@ function jStageBottom(previous,next){
   var back=previous
     ? '<button type="button" data-ws-guided-stage="'+previous+'">'+(previous==='configure'?'← Back to Configure':'Back')+'</button>'
     : '';
-  var label='Next →';
-  if(previous==='review'&&next==='yard')label='SEND TO THE YARD';
-  else if(previous==='request'&&next==='terms')label='CONTINUE TO TERMS';
+  var gate=null, contract=getCanonicalJourney();
+  if(next&&contract)gate=contract.gates.filter(function(g){return g.destination===next})[0]||null;
+  var label=gate?jEsc(gate.action):'NEXT';
   var forward=next
     ? '<button class="next" type="button" data-ws-guided-stage="'+next+'">'+label+'</button>'
     : '';
@@ -2164,7 +2164,7 @@ function buildReviewJourney(snapshot){
       )+
       '<div class="ws-confirm-actions"><button type="button" data-ws-guided-stage="store">← Back to Store</button>'+
       '<button type="button" data-ws-guided-stage="configure">KEEP EDITING</button>'+
-      '<button class="primary" type="button" data-ws-confirm'+(rev.confirmed?' disabled':'')+'>'+(rev.confirmed?'CONFIRMED · REVISION '+jEsc(rev.number):'CONFIRM THIS VERSION')+'</button></div>'+
+      '<button class="primary" type="button" data-ws-confirm'+(rev.confirmed?' disabled':'')+'>'+(rev.confirmed?'CONFIRMED · REVISION '+jEsc(rev.number):jEsc(canonicalGate('review')?canonicalGate('review').action:'CONFIRM THIS VERSION'))+'</button></div>'+
       confirmStatus+
       (blocking?'<div class="ws-journey-callout warn"><b>STOP.</b> '+blocking+' project-definition condition'+(blocking===1?'':'s')+' must be settled before confirmation.</div>':''),
     railHtml:'<p class="hd">04 · REVIEW · BUILD GUIDE</p><p class="goal">The exact version, not a status card.</p>'+
@@ -2458,6 +2458,9 @@ function renderStaticGates(){
   var a=$('ws-gate-scan-configure'),b=$('ws-gate-configure-store');
   if(a)a.innerHTML=journeyGateHtml('scan').replace(/^<div[^>]*>|<\/div>$/g,'');
   if(b)b.innerHTML=journeyGateHtml('configure').replace(/^<div[^>]*>|<\/div>$/g,'');
+  var scanGate=canonicalGate('scan'), configureGate=canonicalGate('configure');
+  if($('ws-scan-next')&&scanGate)$('ws-scan-next').textContent=scanGate.action+' →';
+  if($('ws-guided')&&configureGate)$('ws-guided').textContent=configureGate.action+' →';
 }
 function journeyStageSection(stageObj){
   if(!stageObj)return'';
