@@ -161,6 +161,17 @@
   pre{white-space:pre-wrap;word-break:break-word;font-size:10.5px;line-height:1.45;margin:0;
     max-height:340px;overflow:auto;color:var(--text-2)}
   #occ-wrap summary{font-size:11.5px;font-weight:600}
+  .ws-review-freeze{margin-top:20px;padding-top:16px;border-top:1px solid var(--border-accent)}
+  .ws-review-freeze>.sub{margin:0 0 12px;color:var(--text-2);font-size:13px}
+  .ws-confirm-chain{margin:10px 0 14px;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;font:11.5px/1.75 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--text-2)}
+  .ws-confirm-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px}
+  .ws-confirm-actions button{font:inherit;font-size:11.5px;padding:7px 11px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text);cursor:pointer}
+  .ws-confirm-actions button.primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700}
+  .ws-confirm-actions button[disabled]{opacity:.55;cursor:not-allowed}
+  .ws-review-status{margin:8px 0 0;font-size:11.5px;color:var(--text-2)}
+  .ws-unresolved-group{margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+  .ws-unresolved-group:first-child{margin-top:0;padding-top:0;border-top:0}
+  .ws-unresolved-group>p:first-child{margin:0 0 5px;font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--accent)}
   .ws-journey-boundary{margin:22px 0 4px;padding:16px 0;border-top:1px solid var(--border-accent);border-bottom:1px solid var(--border-accent)}
   .ws-journey-boundary .lb{margin-bottom:6px}
   .ws-journey-boundary p{margin:0 0 8px;max-width:780px}
@@ -343,7 +354,7 @@
       <div class="chain" id="chain"></div>
     </div>
 
-    <div class="cfg">
+    <div class="cfg" id="ws-configure-work">
       <div class="ctl" id="ctlcol"></div>
       <div>
         <div class="ws-draw"><svg id="elev" viewBox="0 0 520 400" role="img" aria-label="Window seat elevation — left tower, center window-seat module with upper storage, right tower"></svg></div>
@@ -431,34 +442,58 @@
         <div class="bd two" id="o-travel" style="padding:10px 0 0"></div>
       </details>
 
-      <div class="box">
-        <h4>STILL NEEDS AN ANSWER</h4>
-        <div class="bd" id="ws-open"></div>
-      </div>
+      <section class="ws-review-freeze" id="ws-review-this-version">
+        <h2 style="font-size:17px;margin:0 0 4px">Review this version</h2>
+        <p class="sub"><b style="color:var(--text)">This is exactly what gets frozen. Read it before you confirm it.</b></p>
 
-      <h2 style="font-size:15px;margin:18px 0 6px">Review this version</h2>
-      <div class="box">
-        <h4 id="sum-head">SPACE UTILIZATION — WINDOW SEAT</h4>
-        <div class="bd two" id="ws-sum"></div>
-      </div>
-      <label class="ws-conf"><input type="checkbox" id="ws-ok"><span>These are the facts, dimensions, materials and choices I want carried in this version.</span></label>
-      <p class="dim" style="font-size:12px;margin:0 0 4px">Confirming does not order anything, pay for anything, reserve material or authorise any fabrication.</p>
-      <p class="dim" style="font-size:12px;margin:0" id="ws-gate"></p>
+        <div class="box">
+          <h4 id="sum-head">SPACE UTILIZATION — WINDOW SEAT</h4>
+          <div class="bd two" id="ws-sum"></div>
+        </div>
 
-      <div class="btns">
-        <button class="go" id="ws-send" disabled>EVALUATE WITH STORE ZERO</button>
-        <button id="btn-inspect">INSPECT THE STORE REQUEST</button>
-      </div>
-      <p class="dim" style="font-size:11.5px;margin:5px 0 0"><b>EVALUATE WITH STORE ZERO</b> calculates or refreshes the Store answer for this revision. It does not navigate the journey.</p>
+        <h2 style="font-size:15px;margin:18px 0 6px">Still unresolved</h2>
+        <div class="box"><div class="bd" id="ws-open"></div></div>
 
-      <div class="box" id="ans-box" style="display:none;margin-top:14px">
-        <h4 id="ans-head">STORE ZERO ANSWER</h4>
-        <div class="bd" id="ans-body"></div>
-      </div>
-      <div class="box" id="req-box" style="display:none;margin-top:12px">
-        <h4>STORE REQUEST OBJECT — EXACTLY WHAT TRAVELS</h4>
-        <div class="bd"><pre id="req-json"></pre></div>
-      </div>
+        <h2 style="font-size:15px;margin:18px 0 6px">What confirm means</h2>
+        <p><b>Confirm freezes this exact definition as one identified version.</b> <span class="dim">Change anything afterward and that creates a new revision. This one remains in project history.</span></p>
+        <div class="ws-confirm-chain">confirmed definition
+≠ ordered
+≠ paid
+≠ material reserved
+≠ allocated
+≠ production released
+≠ machine ready
+≠ Cycle Start
+≠ cut</div>
+
+        <div class="box">
+          <h4>REVIEW YOUR DEFINITION</h4>
+          <div class="bd two" id="ws-confirm-summary"></div>
+          <div class="ws-journey-callout" style="margin-bottom:0"><b>Meaning of Confirm.</b> You affirm the intended definition and acknowledge the displayed Store basis and unresolved conditions. The Store Zero number is a budgetary reference estimate, not a commercial offer.</div>
+        </div>
+
+        <div class="ws-confirm-actions">
+          <button class="primary" id="ws-confirm">CONFIRM THIS VERSION</button>
+          <button id="ws-keep-editing" type="button">KEEP EDITING</button>
+        </div>
+        <p class="ws-review-status" id="ws-confirm-status"></p>
+        <p class="ws-review-status" id="ws-gate"></p>
+
+        <div class="btns" style="margin-top:14px">
+          <button class="go" id="ws-send" disabled>EVALUATE WITH STORE ZERO</button>
+          <button id="btn-inspect">INSPECT THE STORE REQUEST</button>
+        </div>
+        <p class="dim" style="font-size:11.5px;margin:5px 0 0"><b>EVALUATE WITH STORE ZERO</b> evaluates or refreshes the reference Store answer for this revision. It is not confirmation, Next, an order, Store submission, or commercial acceptance.</p>
+
+        <div class="box" id="ans-box" style="display:none;margin-top:14px">
+          <h4 id="ans-head">STORE ZERO ANSWER</h4>
+          <div class="bd" id="ans-body"></div>
+        </div>
+        <div class="box" id="req-box" style="display:none;margin-top:12px">
+          <h4>STORE REQUEST OBJECT — EXACTLY WHAT TRAVELS</h4>
+          <div class="bd"><pre id="req-json"></pre></div>
+        </div>
+      </section>
 
       <div class="ws-journey-boundary" id="ws-journey-boundary">
         <p class="lb">CONTINUE THROUGH THE PROJECT</p>
@@ -1263,7 +1298,7 @@ function controls(){
   paintFam();
   $('btn-reset').onclick=function(){
     P=JSON.parse(JSON.stringify(START)); rev={n:rev.n+1,confirmed:false}; answer=null;
-    $('ws-ok').checked=false; controls(); cycle();
+    controls(); cycle();
   };
 }
 function paintFam(){var sw=$('species'); if(!sw)return;
@@ -1450,7 +1485,7 @@ function refreshOps(def){
 /* ═══════════ 12 · REVISION DISCIPLINE ═══════════ */
 function bump(){
   if(rev.confirmed||answer){
-    rev.n++; rev.confirmed=false; var ok=$('ws-ok'); if(ok)ok.checked=false;
+    rev.n++; rev.confirmed=false;
     if(answer)answer.stale=true;
   }
 }
@@ -1776,9 +1811,37 @@ function cycle(){
   if(!answer)open.push({t:'Store Zero evaluation',w:'not yet asked for revision '+rev.n,block:false});
   else if(answer.stale)open.push({t:'Store Zero answer is historical',
     w:'it belongs to revision '+answer.atRevision+'; this is revision '+rev.n,block:false});
-  $('ws-open').innerHTML=open.map(function(o){
-    return '<div class="ln"><span>'+esc(o.t)+' <span class="dim">— '+esc(o.w)+'</span></span><span class="chip '
-      +(o.block?'no':'warn')+'">'+(o.block?'NEEDED':'TRAVELS')+'</span></div>'}).join('');
+  var definitionOpen=[];
+  cond.forEach(function(c){definitionOpen.push({t:c.t,w:c.d,block:c.block})});
+  FACTS.filter(function(f){return f.sts===2}).forEach(function(f){
+    definitionOpen.push({t:f.label+' — needs checking',
+      w:'supporting context for this revision; no current part depends on it unless separately shown as blocking',block:false})});
+  var storeOwned=[];
+  live.lines.filter(function(l){return l.disposition!=='SUPPORTABLE'}).forEach(function(l){
+    storeOwned.push({t:'Store '+l.disposition.toLowerCase()+' — '+fmt(l.request.finishedLength)+' × '+fmt(l.request.finishedWidth)+' in runs',
+      w:l.why||'Store resolution required'})});
+  live.shortages.forEach(function(s){storeOwned.push({t:'Fixture stock short — '+s,w:'Store-owned availability answer; not a definition problem'})});
+  live.unpriced.forEach(function(u){storeOwned.push({t:'Not priced at this pin — '+u,w:'Store-owned pricing question; no value is invented'})});
+  if(!answer)storeOwned.push({t:'Store Zero evaluation',w:'not yet asked for revision '+rev.n});
+  else if(answer.stale)storeOwned.push({t:'Store Zero answer is historical',w:'held for revision '+answer.atRevision+'; current definition is revision '+rev.n});
+
+  function unresolvedRows(rows,empty){
+    return rows.length?rows.map(function(o){
+      return '<div class="ln"><span>'+esc(o.t)+' <span class="dim">— '+esc(o.w||'')+'</span></span><span class="chip '
+        +(o.block?'no':'warn')+'">'+(o.block?'BLOCKS':'CARRIED')+'</span></div>'}).join('')
+      :'<p class="dim" style="margin:0">'+esc(empty)+'</p>';
+  }
+  $('ws-open').innerHTML=
+    '<div class="ws-unresolved-group"><p>PROJECT DEFINITION</p>'
+      +unresolvedRows(definitionOpen,'No unresolved project-definition condition is currently reported. The definition may still carry supporting context.')+'</div>'
+    +'<div class="ws-unresolved-group"><p>STORE-OWNED QUESTIONS</p>'
+      +unresolvedRows(storeOwned,'No additional Store-owned question is currently reported by the reference evaluation.')+'</div>'
+    +'<div class="ws-unresolved-group"><p>STRUCTURE / CONNECTION</p><p class="dim" style="margin:0">'
+      +'Structural evaluation, connection design and fastener selection are excluded from this definition. No adequacy or connection claim is made here.</p></div>'
+    +'<div class="ws-unresolved-group"><p>INSTALLATION</p><p class="dim" style="margin:0">'
+      +'Installation remains excluded. Recording fit and geometry does not establish installation readiness.</p></div>'
+    +'<div class="ws-unresolved-group"><p>PHYSICAL MACHINE AUTHORITY</p><p class="dim" style="margin:0">'
+      +'No local machine readiness or Cycle Start authority is established by this project, confirmation, Store answer, price, or viewing action.</p></div>';
 
   /* measurement ledger — every answer the customer gave keeps a disposition */
   var led=[];
@@ -1812,38 +1875,58 @@ function cycle(){
   $('ws-sum').innerHTML=
     '<div>'+kv('Project','space utilization · window seat')
     +kv('Revision',rev.n+(rev.confirmed?' · confirmed':' · candidate'))
-    +kv('Controlling room facts',(ctl.length?ctl.map(function(f){return f.label+' '+f.v}).join('; '):'none marked'))
+    +kv('Controlling room / opening facts',(ctl.length?ctl.map(function(f){return f.label+' '+f.v+' in'}).join('; '):'none marked controlling'))
+    +kv('Overall finished width',inch(def.W))
+    +kv('Overall height',inch(def.H))
+    +kv('Finished depth',inch(def.depth))
     +kv('ASM-LEFT',inch(P.W.LEFT)+' wide · '+P.SH.LEFT+' shelves · finished shelf '+fmt(P.W.LEFT-2*T)+' × '+fmt(P.depth)+' × ¾ in')
-    +kv('ASM-CENTER',inch(P.W.CENTER)+' wide · upper storage '+inch(P.upperH)+' in '+P.bays+' bays · window '
-      +fmt(def.center.windowW)+' × '+fmt(Math.max(def.center.windowH,0))+' · seat '+inch(P.seat)+' · '+P.cub+' cubbies'
+    +kv('ASM-CENTER',inch(P.W.CENTER)+' wide · upper storage '+inch(P.upperH)+' · '+P.bays+' bays · window clear opening '
+      +fmt(def.center.windowW)+' × '+fmt(Math.max(def.center.windowH,0))+' in · seat '+inch(P.seat)+' · '+P.cub+' lower cubbies'
       +(P.front?' · front board':''))
     +kv('ASM-RIGHT',inch(P.W.RIGHT)+' wide · '+P.SH.RIGHT+' shelves · finished shelf '+fmt(P.W.RIGHT-2*T)+' × '+fmt(P.depth)+' × ¾ in')
-    +kv('Overall calculated',fmt(def.W)+' × '+fmt(def.H)+' × '+fmt(def.depth)+' in')
     +kv('Assembly','towers attach directly to the outside faces of ASM-CENTER on site')+'</div>'
-    +'<div>'+kv('Finished parts · board runs',def.feats.length+' · '+def.runs.length)
-    +kv('Material demand',famName()+', ¾ in solid board · '+def.mats.length+' finished requirements')
-    +kv('Hardware pack',live.hw?(live.hw.name+' × '+live.hw.qty+' · '+money(live.hardware)+' · Store merchandise'):'none selected')
+    +'<div>'+kv('Finished parts',def.feats.length)
+    +kv('Board runs',def.runs.length)
+    +kv('Material family / form',famName()+' · solid board · ¾ in finished thickness')
+    +kv('Hardware choice',live.hw?(live.hw.name+' × '+live.hw.qty+' · '+money(live.hardware)+' · Store merchandise'):'none selected')
+    +kv('Requested secondary operations',OPS.filter(function(o){return o.requested&&!o.generated}).map(function(o){return o.name}).join(', ')||'none selected')
+    +kv('Generated operations',OPS.filter(function(o){return o.requested&&o.generated}).map(function(o){return o.name}).join(', ')||'none')
+    +kv('Known Store Zero reference selling basis',money(live.q)+' · '+live.states.price)
+    +kv('Store basis / pin',FIX.identity.canonicalDoc+' · '+FIX.identity.canonicalCommit.slice(0,10)+'… · catalog '+FIX.identity.catalogClock+' · '+FIX.engine.id+' v'+FIX.engine.version)
     +kv('Material mapping',live.states.mapping)
-    +kv('Edge milling',live.states.edgeMill)
     +kv('Availability',live.states.availability)
-    +kv('Requested operations',OPS.filter(function(o){return o.requested}).map(function(o){return o.name}).join(', '))
     +kv('Supporting context',(ctx.map(function(f){return f.label}).concat(
         OFF.filter(function(c){return c.on}).map(function(c){return c.t})).join('; ')||'none'))
     +kv('Preferences',(PREF.filter(function(c){return c.on}).map(function(c){return c.t}).join('; ')||'none'))
     +kv('Exclusions',req.exclusions.join(', '))
     +kv('Open conditions',open.length+' ('+open.filter(function(o){return o.block}).length+' blocking)')
-    +kv('Unaccounted requests',unaccounted(def))
-    +kv('Known reference selling basis',money(live.q)+' · '+live.states.price)
     +kv('Store answer','<b>'+(answer?(answer.stale?'HISTORICAL — revision '+answer.atRevision
         :'held for revision '+answer.atRevision):'NOT YET EVALUATED')+'</b>')+'</div>';
+
+  $('ws-confirm-summary').innerHTML=
+    '<div>'+kv('Revision',rev.n+(rev.confirmed?' · confirmed':' · candidate'))
+    +kv('Overall',fmt(def.W)+' W × '+fmt(def.H)+' H × '+fmt(def.depth)+' D in')
+    +kv('Modules','ASM-LEFT · ASM-CENTER · ASM-RIGHT')
+    +kv('Finished parts · board runs',def.feats.length+' · '+def.runs.length)+'</div>'
+    +'<div>'+kv('Material',famName()+' · ¾ in solid board')
+    +kv('Window clear opening',fmt(def.center.windowW)+' W × '+fmt(Math.max(def.center.windowH,0))+' H in')
+    +kv('Reference selling basis',money(live.q)+' · budgetary / reference')
+    +kv('Unresolved',open.length+' total · '+open.filter(function(o){return o.block}).length+' blocking')+'</div>';
 
   /* gate */
   var blocking=open.filter(function(o){return o.block}).length;
   $('ws-send').disabled=!(blocking===0&&rev.confirmed);
   $('ws-guided').disabled=!(blocking===0&&rev.confirmed);
+  $('ws-confirm').disabled=rev.confirmed;
+  $('ws-confirm').textContent=rev.confirmed?'CONFIRMED · REVISION '+rev.n:'CONFIRM THIS VERSION';
+  $('ws-confirm-status').textContent=rev.confirmed
+    ? 'Revision '+rev.n+' is frozen as the current identified definition. Change any project fact afterward and the next consequential change creates a new revision; this one remains historical.'
+    : 'This revision is still a candidate. Confirm freezes the definition only; it does not create later transaction or physical authority.';
   $('ws-gate').textContent=blocking
-    ? blocking+' condition'+(blocking===1?'':'s')+' must be settled before this version can go to the Store. The rest travel with the request.'
-    : (rev.confirmed?'Revision '+rev.n+' is ready to evaluate with Store Zero.':'Tick the box to carry these facts and choices forward.');
+    ? blocking+' project-definition condition'+(blocking===1?'':'s')+' must be settled before Next can enter Store Zero. You may keep scrolling to read the process; viewing it does not submit anything.'
+    : (rev.confirmed
+      ? 'Revision '+rev.n+' is confirmed. Next may enter Store Zero. Viewing Store content does not submit, order, pay, reserve material, allocate material or authorize fabrication.'
+      : 'Confirm this version before the guided Next control can enter Store Zero.');
 
   /* frozen Store answer */
   if(answer){
@@ -1906,7 +1989,14 @@ function lv_ok(d){return d.indexOf('SUPPORTABLE')===0||d.indexOf('NOT REQUIRED')
 
 /* ═══════════ 14 · ACTIONS ═══════════ */
 function into(el){if(el&&el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'center'})}
-$('ws-ok').onchange=function(){rev.confirmed=this.checked;cycle()};
+$('ws-confirm').onclick=function(){
+  rev.confirmed=true;
+  cycle();
+  into($('ws-review-this-version'));
+};
+$('ws-keep-editing').onclick=function(){
+  into($('ws-configure-work'));
+};
 $('ws-send').onclick=function(){
   var def=buildDefinition(), req=buildRequest(def);
   answer=StoreZeroAdapter.evaluate(req,famSp());
