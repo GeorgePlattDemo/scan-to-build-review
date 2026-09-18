@@ -2016,12 +2016,14 @@ function currentJourneySnapshot(ensureAnswer){
     cycle();
     def=buildDefinition(); req=buildRequest(def); open=conditions(def);
   }
+  var reference=StoreZeroAdapter.evaluate(req,famSp());
   return cloneJourneyValue({
     protocol:'stb.project-owned-journey/0.1',
     project:{id:'window-seat',label:'Space utilization · Window seat',artifact:'0.7.3',projectClass:def.cls},
     revision:{number:rev.n,confirmed:rev.confirmed},
     definition:def,
     storeRequest:req,
+    storeReference:reference,
     storeAnswer:answer,
     openConditions:open,
     occurrenceHistory:occHistory,
@@ -2083,6 +2085,130 @@ function storeLineSummary(line){
   if(line.extension!=null)bits.push(jMoney(line.extension));
   if(line.why)bits.push(line.why);
   return bits.join(' · ')
+}
+function seatProcessFacts(snapshot,index){
+  var req=snapshot.storeRequest||{}, rev=snapshot.revision||{}, ans=snapshot.storeAnswer||null;
+  var ref=snapshot.storeReference||ans||null;
+  var currentAnswer=!!(ans&&!ans.stale&&Number(ans.atRevision)===Number(rev.number));
+  var lines=ref&&ref.lines||[], ops=ref&&ref.ops||[], shortages=ref&&ref.shortages||[], unpriced=ref&&ref.unpriced||[];
+  var occurrenceCount=(req.partOccurrences||[]).length;
+  var runCount=(req.partOccurrences||[]).reduce(function(n,o){return n+(o.boardRuns||[]).length},0);
+  var rows=[];
+  if(index===0){
+    rows=[
+      ['Window Seat revision',String(rev.number)+(rev.confirmed?' · confirmed':' · candidate')],
+      ['Store interaction',currentAnswer?'reference answer held':ans&&ans.stale?'prior answer historical':'VIEW ONLY · no submitted Store event'],
+      ['Demand',occurrenceCount+' finished parts · '+runCount+' board runs · '+(req.requestedOperations||[]).length+' requested operations'],
+      ['Definition blockers',(req.unresolvedConditions||[]).length]
+    ];
+  }else if(index===1){
+    rows=[
+      ['Commercial offer','NOT ESTABLISHED'],
+      ['Reference selling basis',ref?jMoney(ref.q):'not established'],
+      ['Price evidence',ref&&ref.states&&ref.states.price||'not established'],
+      ['Meaning','Reference / budgetary evidence only; not seller-of-record terms']
+    ];
+  }else if(index===2){
+    rows=[
+      ['Acceptance','NOT ESTABLISHED'],
+      ['Project version','Window Seat revision '+rev.number+(rev.confirmed?' · confirmed':' · candidate')],
+      ['Change rule','A changed definition creates a new revision; this one is not edited in place']
+    ];
+  }else if(index===3){
+    rows=[
+      ['Payment / settlement','NOT ESTABLISHED'],
+      ['Reference amount',ref?jMoney(ref.q):'not established'],
+      ['Authority','No payment event is inferred from confirmation, Store support or viewing']
+    ];
+  }else if(index===4){
+    rows=[
+      ['Material requirement',req.materialClass?(req.materialClass.family+' · '+req.materialClass.form+' · '+fmt(req.materialClass.thickness)+' in finished'):'—'],
+      ['Reference mapping',ref&&ref.states&&ref.states.mapping||'not evaluated'],
+      ['Reference availability',ref&&ref.states&&ref.states.availability||'not evaluated'],
+      ['Mapped parents',lines.filter(function(x){return x.sku}).map(function(x){return x.sku+' × '+(x.boards||0)+' parent'+((x.boards||0)===1?'':'s')}).join('; ')||'none identified'],
+      ['Shortages',shortages.length?shortages.join('; '):'none reported by reference evaluation'],
+      ['Allocation','NOT ESTABLISHED']
+    ];
+  }else if(index===5){
+    rows=[
+      ['Production release','NOT ESTABLISHED'],
+      ['Store disposition',ref?(ref.jobDisposition||ref.status||'—'):'not evaluated'],
+      ['Boundary','Reference Store support does not authorize production']
+    ];
+  }else if(index===6){
+    rows=[
+      ['Machine readiness','NOT ESTABLISHED'],
+      ['Reference capability',ref?(ref.jobDisposition||'reference only'):'not evaluated'],
+      ['Cycle Start','LOCAL ONLY · NOT AUTHORIZED HERE'],
+      ['Physical authority','false']
+    ];
+  }else if(index===7){
+    rows=[
+      ['Requested operations',(req.requestedOperations||[]).map(function(o){return o.name}).join('; ')||'none'],
+      ['Reference dispositions',ops.map(function(o){return (o.name||o.id)+': '+(o.disposition||'—')}).join('; ')||'not evaluated'],
+      ['Physical work','NOT RECORDED']
+    ];
+  }else if(index===8){
+    rows=[
+      ['Secondary / residual work',unpriced.length?unpriced.join('; '):'no unpriced service reported by reference evaluation'],
+      ['Project exclusions',(req.exclusions||[]).join('; ')||'none listed'],
+      ['Inspection / labels / staging','NOT RECORDED']
+    ];
+  }else if(index===9){
+    rows=[
+      ['Staging','NOT RECORDED'],
+      ['READY notice','NOT ISSUED'],
+      ['Pickup timing','No live fulfillment clock has started']
+    ];
+  }else if(index===10){
+    rows=[
+      ['Custody','NOT TRANSFERRED'],
+      ['Handoff','NOT RECORDED'],
+      ['Project close','NOT ESTABLISHED']
+    ];
+  }else{
+    rows=[
+      ['Owner record','Window Seat revision '+rev.number+' · reference journey'],
+      ['Finished occurrences',occurrenceCount],
+      ['Store answer',currentAnswer?'held for revision '+rev.number:ans&&ans.stale?'historical revision '+ans.atRevision:'not held'],
+      ['Commercial status','NOT ESTABLISHED'],
+      ['Physical status','NOT RECORDED'],
+      ['Custody','NOT TRANSFERRED']
+    ];
+  }
+  return jGrid(rows);
+}
+function renderSeatStoreProcess(snapshot){
+  if(!journeyDoctrine.storeProcess)
+    return jCallout('<b>Canonical process unavailable.</b> The twelve-step Store / transaction doctrine was not supplied. No Alcove project facts are substituted.',true);
+  var box=document.createElement('div');
+  box.innerHTML=journeyDoctrine.storeProcess;
+  var steps=[].slice.call(box.querySelectorAll('.s'));
+  if(steps.length!==12)
+    return jCallout('<b>Canonical process incomplete.</b> Expected 12 accepted process steps; received '+steps.length+'. The Window Seat path fails closed rather than silently dropping a step.',true);
+  var statuses=[
+    'REQUEST · <b>'+(snapshot.storeAnswer?(snapshot.storeAnswer.stale?'HISTORICAL':'REFERENCE ANSWER HELD'):'VIEW ONLY · NOT SUBMITTED')+'</b>',
+    'TERMS · <b>NOT ESTABLISHED</b>',
+    'YOU · <b>NOT ESTABLISHED</b>',
+    'PAYMENT · <b>NOT ESTABLISHED</b>',
+    'STORE · <b>REFERENCE MAPPED · NOT ALLOCATED</b>',
+    'JOB · <b>NOT RELEASED</b>',
+    'CELL · <b>READINESS NOT ESTABLISHED</b>',
+    'PARTS · <b>NOT RECORDED</b>',
+    'SECONDARY WORK · <b>NOT RECORDED</b>',
+    'READY · <b>NOT ISSUED</b>',
+    'HANDOFF · <b>NOT TRANSFERRED</b>',
+    'RECORD · <b>REFERENCE / CURRENT REVISION</b>'
+  ];
+  steps.forEach(function(step,index){
+    var st=step.querySelector('.st');
+    if(st)st.innerHTML=statuses[index];
+    var facts=document.createElement('div');
+    facts.className='ws-journey-callout';
+    facts.innerHTML='<b>WINDOW SEAT · CURRENT STATUS</b>'+seatProcessFacts(snapshot,index);
+    step.appendChild(facts);
+  });
+  return box.innerHTML;
 }
 function buildStoreJourney(snapshot){
   var req=snapshot.storeRequest||{}, ans=snapshot.storeAnswer||null, rev=snapshot.revision||{}, project=snapshot.project||{};
@@ -2153,16 +2279,21 @@ function buildStoreJourney(snapshot){
     jCallout('<b>Authority boundary.</b> No order · no payment · no reservation · no allocation · no production release · no machine readiness · no Cycle Start. SUPPORTABLE is a Store/reference answer, not commissioned physical capability.',false);
   }
 
-  var process=journeyDoctrine.storeProcess
-    ? jSection('What happens next', '<p class="lede">The confirmed definition stays unchanged unless a new revision is created. The stages below name the ordinary transaction and execution sequence; viewing them does not claim those events happened.</p>'+journeyDoctrine.storeProcess)
-    : '';
+  var process=jSection('What happens next',
+    '<p class="lede">Your confirmed version stays unchanged unless you approve a new one.</p>'+
+    '<p class="lede">Nothing below is complicated. It is only kept apart. Each step names who owns it, what it establishes, and what it does not.</p>'+
+    '<div class="ws-journey-callout"><b>Viewing is not an event.</b> The statuses below describe this Window Seat revision honestly. A visible process step does not mean that event occurred.</div>'+
+    renderSeatStoreProcess(snapshot));
   return {
     stage:'store',
     headline:'Store Zero · Window Seat',
     mainHtml:'<p class="stage-tag">3 · STORE</p><h1>Store Zero · Window Seat</h1>'+
       intro+
-      '<p class="lede">The definition is the input. Store answers what it can satisfy against declared facts and identified pins.</p>'+
-      demand+jSection('What Store Zero answered',answerHtml)+process+jStageBottom('configure','review'),
+      process+
+      jSection('Window Seat · Store demand and reference evidence',
+        '<p class="lede">The complete process above stays fixed. These are the project-specific facts and reference answers carried by this Window Seat revision.</p>'+
+        demand+jSection('Store Zero reference / held answer',answerHtml))+
+      jStageBottom('review','request'),
     railHtml:journeyDoctrine.storeGuide||'<p class="hd">STORE · BUILD GUIDE</p><p class="goal">Canonical Store guide unavailable</p><div class="row"><b>Fail closed</b><span>No project-independent Store doctrine is borrowed from another project when unavailable.</span></div>'
   }
 }
