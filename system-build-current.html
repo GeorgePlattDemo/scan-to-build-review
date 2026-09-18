@@ -11,7 +11,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 </style>
 </head>
 <body>
-<iframe id="stb-current" title="Scan-to-Build System" src="system-build-front-door-0.5.html?v=22694564"></iframe>
+<iframe id="stb-current" title="Scan-to-Build System" src="system-build-front-door-0.5.html?v=5ac9677b"></iframe>
 <script src="stb-canonical-journey.js?v=e0619841"></script>
 <script src="store-zero-canonical-doctrine.js?v=65366367"></script>
 <script>
@@ -181,13 +181,40 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     const canonicalStore = doc.getElementById('store');
     const canonicalDoctrine = window.STBStoreZeroCanonicalDoctrine || null;
     if (canonicalStore) {
-      const ledger = canonicalStore.querySelector('#alcove-event-ledger-body');
-      const next = canonicalStore.querySelector('.bottom .next');
+      const main = canonicalStore.querySelector(':scope > .main');
+      const rail = canonicalStore.querySelector(':scope > .rail');
       if (!canonicalDoctrine || canonicalDoctrine.expectedProcessStepCount !== 12) {
-        if (ledger) ledger.innerHTML = '<div class="band warn"><b>Fail closed.</b> The shared twelve-event Store ledger is unavailable.</div>';
-        if (next) next.disabled = true;
-      } else if (ledger) {
-        ledger.innerHTML = canonicalDoctrine.processStepsHtml;
+        if (main) main.innerHTML = '<h1>CANONICAL STORE CONTENT UNAVAILABLE</h1><div class="band warn"><b>Fail closed.</b> The shared Store Zero doctrine is unavailable or does not declare exactly twelve canonical process steps.</div>';
+        if (rail) rail.innerHTML = '<p class="hd">04 · STORE · BUILD GUIDE</p><p class="goal">Fail closed</p>';
+      } else if (main) {
+        const intro = main.querySelector(':scope > .band:first-child p');
+        if (intro) intro.innerHTML = canonicalDoctrine.definitionHtml;
+
+        const tempIntro = doc.createElement('div');
+        tempIntro.innerHTML = canonicalDoctrine.processIntroHtml;
+        const sharedTitle = tempIntro.querySelector('h1');
+        const sharedLedes = tempIntro.querySelectorAll('.lede');
+        const sharedBand = tempIntro.querySelector('.band');
+        const title = main.querySelector(':scope > h1');
+        const ledes = main.querySelectorAll(':scope > .lede');
+        const bands = main.querySelectorAll(':scope > .band');
+        if (title && sharedTitle) title.innerHTML = sharedTitle.innerHTML;
+        ledes.forEach((node,index) => { if (sharedLedes[index]) node.innerHTML = sharedLedes[index].innerHTML; });
+        if (bands[1] && sharedBand) bands[1].innerHTML = sharedBand.innerHTML.replace('Reference journey shown before confirmation.','Confirmed version sent to Store Zero.');
+
+        const tempSteps = doc.createElement('div');
+        tempSteps.innerHTML = canonicalDoctrine.processStepsHtml;
+        const sharedSteps = [...tempSteps.querySelectorAll(':scope > .s')];
+        const sharedClose = tempSteps.querySelector(':scope > .close');
+        if (sharedSteps.length !== 12 || !sharedClose) {
+          main.innerHTML = '<h1>CANONICAL STORE CONTENT UNAVAILABLE</h1><div class="band warn"><b>Fail closed.</b> Expected exactly twelve canonical Store process steps.</div>';
+        } else {
+          main.querySelectorAll(':scope > .s, :scope > .close').forEach(node => node.remove());
+          const bottom = main.querySelector(':scope > .bottom');
+          sharedSteps.forEach(node => bottom?.before(node.cloneNode(true)));
+          bottom?.before(sharedClose.cloneNode(true));
+        }
+        if (rail) rail.innerHTML = canonicalDoctrine.buildGuideHtml;
       }
     }
 
@@ -672,7 +699,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       seatJourneySnapshot = null;
       if (activeJourneyProject) doc.documentElement.dataset.activeJourneyProject = activeJourneyProject;
       else delete doc.documentElement.dataset.activeJourneyProject;
-      syncProjectNavPresentation(activeJourneyProject);
+      const alcoveReviewNav = doc.querySelector('.recovery-nav button[data-go="alcove-review"]');
+      if (alcoveReviewNav) alcoveReviewNav.hidden = activeJourneyProject === 'alcove';
     }
 
     function seatFrame() {
@@ -695,30 +723,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     function annotateJourneyNav() {
       doc.querySelectorAll('.recovery-nav button').forEach(function(button) {
         const target = button.getAttribute('data-go') || button.getAttribute('data-canonical-go');
-        if (!button.dataset.defaultLabel) button.dataset.defaultLabel = button.textContent;
         const stage = LEGACY_TARGET_TO_STAGE[target] || null;
         if (stage) button.dataset.journeyStage = stage;
       });
-    }
-
-    function syncProjectNavPresentation(projectId) {
-      const nav = doc.querySelector('.recovery-nav');
-      if (!nav) return;
-      const buttons = [...nav.querySelectorAll('button')];
-      const byTarget = Object.fromEntries(buttons.map(button => [button.getAttribute('data-go') || button.getAttribute('data-canonical-go'), button]));
-      buttons.forEach(button => {
-        button.hidden = false;
-        if (button.dataset.defaultLabel) button.textContent = button.dataset.defaultLabel;
-      });
-      const defaultOrder = ['landing','projects','intake','alcove-capture','alcove-config','store','alcove-review','request','yard','terms','recap','record'];
-      const alcoveOrder = ['landing','projects','intake','alcove-capture','alcove-config','alcove-review','store','terms','recap','record','request','yard'];
-      (projectId === 'alcove' ? alcoveOrder : defaultOrder).forEach(target => { if (byTarget[target]) nav.append(byTarget[target]); });
-      if (projectId === 'alcove') {
-        if (byTarget.request) byTarget.request.hidden = true;
-        if (byTarget.yard) byTarget.yard.hidden = true;
-        if (byTarget.terms) byTarget.terms.textContent = 'Accept / pay';
-        if (byTarget.recap) byTarget.recap.textContent = 'Status';
-      }
     }
 
     function syncSeatNav(stage) {
@@ -862,7 +869,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       return result;
     };
     annotateJourneyNav();
-    syncProjectNavPresentation(activeJourneyProject);
     if (!canonicalJourneyReady()) return false;
     doc.documentElement.dataset.canonicalJourneyVersion = canonicalJourney.version;
     return true;

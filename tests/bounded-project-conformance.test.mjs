@@ -43,18 +43,16 @@ for(const [project,map] of Object.entries(expectedTargets)){
   }
 }
 
-// Alcove retains every canonical event surface, but is the human-journey trial:
-// configure → review/confirm → Store response → terms → status → record.
-// Request and Yard remain retained reference/event surfaces rather than customer navigation steps.
+// Alcove retains the canonical event surfaces, but confirmation is inline beneath Configure.
 for(const id of Object.values(expectedTargets.alcove)) assert.ok(base.includes('id="'+id+'"'),'missing Alcove page '+id);
-assert.match(base,/data-go="alcove-review">REVIEW THIS VERSION →/);
+assert.match(base,/id="confirm-alcove-inline"/);
 assert.match(base,/CONFIRM &amp; SEND TO STORE ZERO →/);
 assert.match(base,/show\('store'\)/);
-assert.match(base,/data-go="terms">REVIEW TERMS →/);
-assert.match(base,/data-go="recap">SHOW ORDER STATUS →/);
-assert.match(base,/data-go="record">KEEP PROJECT RECORD →/);
-assert.match(shell,/if \(projectId === 'alcove'\)[\s\S]*byTarget\.request\.hidden = true/);
-assert.match(shell,/if \(byTarget\.yard\) byTarget\.yard\.hidden = true/);
+assert.match(base,/data-go="request">Next →/);
+assert.match(base,/data-go="yard">SEND TO THE YARD/);
+assert.match(base,/data-go="terms">CONTINUE TO TERMS/);
+assert.match(shell,/alcoveReviewNav\.hidden = activeJourneyProject === 'alcove'/);
+assert.match(shell,/Confirmed version sent to Store Zero\./);
 
 // Shared Store doctrine is valid before confirmation and does not claim a completed event.
 assert.match(doctrine.processIntroHtml,/This identified version stays unchanged unless you create or approve a new one\./);
