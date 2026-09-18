@@ -144,6 +144,13 @@ assert.equal(openSeat.includes("activeJourneyProject = 'window-seat'"),false);
 const messages=between(shell,"window.addEventListener('message', function(event) {","doc.addEventListener('click', function(event) {");
 assert.match(messages,/activeJourneyProject !== 'window-seat'/,'iframe messages can implicitly revive Window Seat');
 assert.match(shell,/if \(target === 'alcove-capture'\) selectJourneyProject\('alcove'\)/,'Alcove project selection is not explicit');
+const shellShow=between(shell,'win.show = function(id) {','const result = originalShow.apply');
+assert.equal(shellShow.includes('selectJourneyProject(null)'),false,'top-nav/library navigation changes project identity');
+assert.match(shell,/else selectJourneyProject\(null\);/,'non-Seat/non-Alcove project tiles do not explicitly clear project-specific journey context');
+
+assert.match(seat,/ref=snapshot\.storeAnswer\|\|snapshot\.storeReference\|\|null/,'Review does not prefer the held Store answer');
+assert.match(seat,/jSection\('Store basis \/ pins'/,'Owner Record does not preserve Store pins');
+assert.match(seat,/STORE-OWNED UNRESOLVED/,'Owner Record does not preserve Store-owned unresolved conditions');
 
 // STOP/null/historical truth remains first class.
 assert.match(seat,/must be settled before SEND TO STORE ZERO/);
