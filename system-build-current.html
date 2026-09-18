@@ -319,7 +319,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     const storeMain = store?.querySelector('.main');
     const storeRail = store?.querySelector('.rail');
     if (storeMain) storeMain.innerHTML = `
-      <h1>STORE ZERO · JOB CHECK</h1>
+      <h1>PLAYHOUSE · CURRENT STORE ANSWER</h1>
       <p class="sub">Store separates what the pinned S-001 routed envelope can support from requested work that still belongs to a separate operation path.</p>
       <div class="s001-v2-store-split">
         <section class="s001-v2-store-card s001-v2-pass"><h3>ROUTED ARCHED OPENING</h3><p><b>SUPPORTABLE · REFERENCE</b></p><p>Request: <code>SHEET_MODE2_ARCHED_APERTURE_V0</code><br>Envelope: <code>S001-MODE2-ARCHED-APERTURE-V0</code></p><p id="s001-store-opening"></p><p id="s001-store-radius"></p><p>4 requested tabs · Store reference plan 5 · physical retention NOT MEASURED.</p></section>
@@ -338,6 +338,20 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     `;
     if (storeRail) storeRail.innerHTML = `<p class="hd">BUILD GUIDE</p><p class="goal">The Store is a membrane</p><div class="row"><b>Supported</b><span>The bounded arched route inside the pinned reference envelope.</span></div><div class="row"><b>Retained, not invented</b><span>Additional requested features stay in the job even when this Store envelope does not yet admit them.</span></div>`;
 
+    if (storeMain) {
+      if (!canonicalDoctrine || canonicalDoctrine.expectedProcessStepCount !== 12) {
+        storeMain.innerHTML = '<h1>CANONICAL STORE CONTENT UNAVAILABLE</h1><div class="s001-boundary"><b>Fail closed.</b> Shared Store doctrine is unavailable. The Playhouse Store stage will not invent a shortened replacement.</div>';
+      } else {
+        const projectAnswer = storeMain.innerHTML;
+        storeMain.innerHTML =
+          '<div class="band" style="font-size:12px;line-height:1.55"><p style="margin:0">' + canonicalDoctrine.definitionHtml + '</p></div>' +
+          canonicalDoctrine.processIntroHtml +
+          canonicalDoctrine.processStepsHtml +
+          '<div class="s001-v2-callout"><b>CURRENT PLAYHOUSE STATUS</b>The process above is the shared journey. The section below is the actual reference answer for this project; unresolved work remains unresolved.</div>' +
+          projectAnswer;
+      }
+    }
+
     const review = doc.getElementById('playhouse-review');
     const reviewMain = review?.querySelector('.main');
     if (reviewMain) reviewMain.innerHTML = `
@@ -354,14 +368,14 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         <div><b>HARDWARE</b><span>Not included</span></div>
       </div>
       <div class="s001-boundary">Confirming this review retains the job definition. It is not payment, reservation, production release, machine readiness, or physical execution authorization.</div>
-      <div class="btns"><button type="button" data-canonical-go="playhouse-store">BACK TO STORE</button><button type="button" data-canonical-go="playhouse-result">CONFIRM JOB FACTS →</button></div>
+      <div class="btns"><button type="button" data-canonical-go="playhouse-store">BACK TO STORE</button><button type="button" data-canonical-go="playhouse-request">CONFIRM THIS VERSION →</button></div>
     `;
 
     const result = doc.getElementById('playhouse-result');
     const resultMain = result?.querySelector('.main');
     if (resultMain) resultMain.innerHTML = `
-      <h1>RESULT · JOB DEFINITION RETAINED</h1>
-      <p class="sub">The journey reached a truthful Store result: one bounded operation is supported in reference software; the additional requested operations remain explicit and unresolved at this Store envelope.</p>
+      <p class="stage-tag">8 · RECAP</p><h1>RECAP · WHAT HAPPENED</h1>
+      <p class="sub">Read forward, this is the chronology. Read backward, it is the audit. The job was admitted, defined, answered as far as the Store could answer it, and unresolved events remained unresolved.</p>
       <div class="s001-v2-order">
         <div><b>CLASS</b><span>S001_CENTERED_ARCHED_SHEET_V0</span></div>
         <div><b>GEOMETRY</b><span id="s001-result-geometry"></span></div>
@@ -399,6 +413,71 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       <div class="btns"><button type="button" data-canonical-go="playhouse-s001">RETURN TO INTENT</button><button type="button" data-canonical-go="projects">HOME</button></div>
     `;
     if (recordRail) recordRail.innerHTML = `<p class="hd">BUILD GUIDE</p><p class="goal">Facts at the end</p><div class="row"><b>What happened</b><span>A bounded project definition reached a truthful Store evaluation.</span></div><div class="row"><b>What did not happen</b><span>No physical production event is invented into the record.</span></div>`;
+
+    function ensureProjectJourneyPage(id, mainHtml, railHtml) {
+      let page = doc.getElementById(id);
+      if (!page) {
+        page = doc.createElement('section');
+        page.className = 'page';
+        page.id = id;
+        page.innerHTML = '<div class="main">' + mainHtml + '</div><aside class="rail"><p class="hd">BUILD GUIDE</p>' + railHtml + '</aside>';
+        doc.querySelector('.wrap')?.append(page);
+      } else {
+        const main = page.querySelector(':scope > .main');
+        const rail = page.querySelector(':scope > .rail');
+        if (main) main.innerHTML = mainHtml;
+        if (rail) rail.innerHTML = '<p class="hd">BUILD GUIDE</p>' + railHtml;
+      }
+      return page;
+    }
+
+    ensureProjectJourneyPage('playhouse-request',
+      '<p class="stage-tag">5 · REQUEST</p><h1>REQUEST · PLAYHOUSE WINDOW</h1>' +
+      '<p class="sub">Carry one identified project definition forward without turning the reference Store answer into an order.</p>' +
+      '<div class="s001-v2-order">' +
+        '<div><b>PROJECT</b><span>Playhouse arched window</span></div>' +
+        '<div><b>GEOMETRY</b><span id="s001-request-geometry"></span></div>' +
+        '<div><b>PRIMARY ROUTE</b><span>SUPPORTABLE · REFERENCE</span></div>' +
+        '<div><b>ADDITIONAL OPS</b><span>Internal center route + two straight cuts · unresolved / separate path</span></div>' +
+        '<div><b>FULL COMMERCIAL OFFER</b><span>NOT ESTABLISHED</span></div>' +
+        '<div><b>PHYSICAL AUTHORITY</b><span>NOT AUTHORIZED</span></div>' +
+      '</div>' +
+      '<div class="s001-boundary"><b>REQUEST ≠ ORDER.</b> The project may continue through the journey while unsupported or unpriced work stays explicit. Nothing here accepts terms, pays, allocates material, releases production, or starts a machine.</div>' +
+      '<div class="btns"><button type="button" data-canonical-go="playhouse-review">BACK TO REVIEW</button><button type="button" data-canonical-go="playhouse-yard">SEND TO THE YARD →</button></div>',
+      '<p class="goal">Carry the exact ask</p><div class="row"><b>Do not drop the extra work</b><span>Unresolved center-route and straight-cut requests remain part of the project.</span></div><div class="row"><b>Do not promote the Store answer</b><span>Reference supportability is not an order or offer.</span></div>'
+    );
+
+    ensureProjectJourneyPage('playhouse-yard',
+      '<p class="stage-tag">6 · YARD</p><h1>YARD · REFERENCE RESPONSE</h1>' +
+      '<p class="sub">The yard can answer what its current reference surface knows and leave the rest open.</p>' +
+      '<div class="s001-v2-order">' +
+        '<div><b>PROJECT</b><span>Playhouse arched window</span></div>' +
+        '<div><b>GEOMETRY</b><span id="s001-yard-geometry"></span></div>' +
+        '<div><b>ROUTED OPENING</b><span>SUPPORTABLE · REFERENCE</span></div>' +
+        '<div><b>MATERIAL-ONLY REFERENCE</b><span>$26.55</span></div>' +
+        '<div><b>CENTER ROUTE / STRAIGHT CUTS</b><span>UNRESOLVED · separate operation path</span></div>' +
+        '<div><b>SELLER-OF-RECORD OFFER</b><span>NOT ESTABLISHED</span></div>' +
+      '</div>' +
+      '<div class="s001-boundary">A mixed answer is still a valid answer. Supported work stays supported; unresolved work stays visible. The project is not rejected merely because every requested operation is not yet inside one Store envelope.</div>' +
+      '<div class="btns"><button type="button" data-canonical-go="playhouse-request">BACK TO REQUEST</button><button type="button" data-canonical-go="playhouse-terms">CONTINUE TO TERMS →</button></div>',
+      '<p class="goal">Answer only what the yard owns</p><div class="row"><b>Material / capability</b><span>Reference evidence may be stated.</span></div><div class="row"><b>Commercial authority</b><span>Still absent unless separately established.</span></div>'
+    );
+
+    ensureProjectJourneyPage('playhouse-terms',
+      '<p class="stage-tag">7 · TERMS</p><h1>TERMS · KEEP THE EVENTS APART</h1>' +
+      '<p class="sub">This project has a bounded definition and a reference Store answer. The later commercial and physical events remain null.</p>' +
+      '<div class="s001-v2-order">' +
+        '<div><b>OFFER</b><span>NOT ESTABLISHED</span></div>' +
+        '<div><b>ACCEPTANCE</b><span>NOT ESTABLISHED</span></div>' +
+        '<div><b>PAYMENT</b><span>NOT ESTABLISHED</span></div>' +
+        '<div><b>ALLOCATION</b><span>NOT ESTABLISHED</span></div>' +
+        '<div><b>PRODUCTION RELEASE</b><span>NOT ESTABLISHED</span></div>' +
+        '<div><b>MACHINE READINESS / CYCLE START</b><span>NOT ESTABLISHED / NOT AUTHORIZED</span></div>' +
+      '</div>' +
+      '<div class="s001-boundary">definition ≠ request ≠ offer ≠ acceptance ≠ payment ≠ allocation ≠ production release ≠ machine readiness ≠ Cycle Start</div>' +
+      '<div class="btns"><button type="button" data-canonical-go="playhouse-yard">BACK TO YARD</button><button type="button" data-canonical-go="playhouse-result">NEXT → RECAP</button></div>',
+      '<p class="goal">Null is honest</p><div class="row"><b>Do not fill the blanks</b><span>The journey can continue as a record even when commercial events have not happened.</span></div>'
+    );
 
     const oldStoreBack = doc.querySelector('#playhouse-store [data-canonical-go="playhouse-s001"]');
     if (oldStoreBack) oldStoreBack.setAttribute('data-canonical-go', 'playhouse-machine');
@@ -456,6 +535,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       text('s001-store-radius', `Circular segment · ${fmt(g.radius)} in derived radius`);
       text('s001-review-opening', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise · ${fmt(g.total)} total height`);
       text('s001-result-geometry', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise · ${fmt(g.total)} total height`);
+      text('s001-request-geometry', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise · ${fmt(g.total)} total height`);
+      text('s001-yard-geometry', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise · ${fmt(g.total)} total height`);
       text('s001-record-geometry', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise`);
     };
 
@@ -485,6 +566,31 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     const LEGACY_TARGET_TO_STAGE = Object.freeze(Object.fromEntries(
       Object.entries(ALCOVE_STAGE_TARGETS).map(([stage,target]) => [target,stage])
     ));
+    const PROJECT_STAGE_TARGETS = Object.freeze({
+      alcove: ALCOVE_STAGE_TARGETS,
+      playhouse: Object.freeze({
+        scan: 'playhouse-s001',
+        configure: 'playhouse-machine',
+        store: 'playhouse-store',
+        review: 'playhouse-review',
+        request: 'playhouse-request',
+        yard: 'playhouse-yard',
+        terms: 'playhouse-terms',
+        recap: 'playhouse-result',
+        record: 'playhouse-record'
+      }),
+      picnic: Object.freeze({
+        scan: 'picnic-chooser',
+        configure: 'picnic-config',
+        store: 'picnic-store',
+        review: 'picnic-review',
+        request: 'picnic-request',
+        yard: 'picnic-yard',
+        terms: 'picnic-terms',
+        recap: 'picnic-recap',
+        record: 'picnic-record'
+      })
+    });
 
     function canonicalJourneyReady() {
       return !!canonicalJourney
@@ -568,6 +674,15 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       return openSeatView('guided', stage);
     }
 
+    function showMappedProjectStage(projectId, stage) {
+      const target = PROJECT_STAGE_TARGETS[projectId]?.[stage] || null;
+      if (!target || !doc.getElementById(target)) return false;
+      originalShow.call(win, target);
+      if (projectId === 'playhouse') setTimeout(sync, 0);
+      if (projectId === 'picnic' && typeof syncPicnicJourney === 'function') setTimeout(syncPicnicJourney, 0);
+      return true;
+    }
+
     seatFrame()?.addEventListener('load', () => {
       setTimeout(applyPendingSeatView, 0);
     });
@@ -592,6 +707,23 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       'picnic-chooser': 'picnic'
     });
 
+    win.addEventListener('click', function(event) {
+      const navButton = event.target.closest?.('.recovery-nav button[data-journey-stage]');
+      if (!navButton || !activeJourneyProject) return;
+      const stage = navButton.dataset.journeyStage;
+      if (!stage) return;
+      if (activeJourneyProject === 'window-seat') {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        showSeatGuided(stage);
+        return;
+      }
+      if (showMappedProjectStage(activeJourneyProject, stage)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    }, true);
+
     // Project identity is selected at the window-capture boundary so it runs
     // before the older front-door preview handler can stop propagation.
     // A route or stage change never selects a project implicitly.
@@ -608,12 +740,14 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
     win.show = function(id) {
       const target = String(id);
+      const stage = LEGACY_TARGET_TO_STAGE[target] || null;
       if (activeJourneyProject === 'window-seat') {
-        const stage = LEGACY_TARGET_TO_STAGE[target] || null;
         if (stage) { showSeatGuided(stage); return; }
         if (target === 'projects' || target === 'landing' || target === 'my-projects' || target === 'archive') {
           pendingSeatView = {mode:'continuous',stage:null};
         }
+      } else if (stage && activeJourneyProject && showMappedProjectStage(activeJourneyProject, stage)) {
+        return;
       }
       const result = originalShow.apply(this, arguments);
       if (target.startsWith('playhouse')) setTimeout(sync, 0);
