@@ -189,6 +189,18 @@
   .ws-journey-callout{margin:11px 0;padding:10px 12px;border-left:3px solid var(--border-accent);background:var(--bg);font-size:12px;line-height:1.5}
   .ws-journey-callout.warn{border-left-color:var(--warn)}
   .ws-journey-flow{font:11px/1.8 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--text-2)}
+  .ws-journey-stage .s{padding:13px 0;border-top:1px solid var(--border)}
+  .ws-journey-stage .s .h{display:flex;gap:9px;align-items:baseline;margin-bottom:5px;flex-wrap:wrap}
+  .ws-journey-stage .s .num{font-size:10px;font-weight:700;letter-spacing:.07em;color:var(--text-3)}
+  .ws-journey-stage .s .name{font-size:13.5px;font-weight:600}
+  .ws-journey-stage .s .st{margin-left:auto;font-size:9.5px;font-weight:700;letter-spacing:.05em;padding:2px 7px;border-radius:3px;background:var(--bg);color:var(--text-3);border:1px solid var(--border)}
+  .ws-journey-stage .s p{margin:0 0 7px;color:var(--text-2)}
+  .ws-journey-stage .s p.q{color:var(--text-3);font-size:12px;padding-left:11px;border-left:2px solid var(--border-accent)}
+  .ws-journey-stage .ops{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin:11px 0 3px}
+  .ws-journey-stage .ops .t{margin:0 0 7px;font-size:9.5px;font-weight:700;letter-spacing:.08em;color:var(--accent)}
+  .ws-journey-stage .ops .chain{font:11.5px/1.9 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--text-2);margin:0 0 8px}
+  .ws-journey-stage .close{border-top:1px solid var(--border-accent);margin-top:16px;padding-top:14px}
+  .ws-journey-stage .close p{margin:0 0 9px;color:var(--text-2)}
   @media (max-width:1100px){ .cfg{grid-template-columns:240px minmax(0,1fr)} .cfg>div:last-child{grid-column:1/-1} }
   @media (max-width:800px){
     .page{grid-template-columns:1fr}
@@ -1888,6 +1900,7 @@ function cycle(){
   $('chain').innerHTML=chain.map(function(c,i){
     return '<a href="'+c[2]+'" class="node"><b>'+c[0]+'</b><span>'+c[1]+'</span></a>'
       +(i<chain.length-1?'<i>→</i>':'')}).join('');
+  renderContinuousJourney();
 }
 function lv_ok(d){return d.indexOf('SUPPORTABLE')===0||d.indexOf('NOT REQUIRED')===0}
 
@@ -1928,11 +1941,173 @@ function currentJourneySnapshot(ensureAnswer){
     }
   });
 }
+
+var journeyDoctrine={storeIntro:'',storeGuide:'',storeProcess:''};
+function jEsc(v){return esc(v==null?'—':v)}
+function jMoney(v){return (v==null||!isFinite(Number(v)))?'—':money(Number(v))}
+function jGrid(rows){
+  return '<div class="ws-journey-grid">'+rows.map(function(r){
+    return '<div class="kv"><span>'+jEsc(r[0])+'</span><span>'+jEsc(r[1])+'</span></div>'
+  }).join('')+'</div>'
+}
+function jSection(title,body){
+  return '<section class="ws-journey-section"><h2>'+jEsc(title)+'</h2>'+body+'</section>'
+}
+function jCallout(body,warn){
+  return '<div class="ws-journey-callout'+(warn?' warn':'')+'">'+body+'</div>'
+}
+function jStageBottom(previous,next){
+  var back=previous==='configure'
+    ? '<button type="button" data-ws-scroll="#ws-journey-boundary">Back to Configure</button>'
+    : '<button type="button" data-ws-guided-stage="'+previous+'">Back</button>';
+  var forward=next
+    ? '<button class="next" type="button" data-ws-guided-stage="'+next+'">Next → '+next.charAt(0).toUpperCase()+next.slice(1)+'</button>'
+    : '';
+  return '<div class="stage-bottom">'+back+'<span class="stage-fine">Same Window Seat project · same revision</span>'+forward+'</div>'
+}
+function moduleSummary(m){
+  if(!m)return'—';
+  var bits=[m.role||''];
+  if(m.width!=null)bits.push(fmt(m.width)+' in wide');
+  if(m.shelves!=null)bits.push(m.shelves+' shelves');
+  if(m.upperStorage)bits.push(m.upperStorage.bays+' upper bays');
+  if(m.windowOpening)bits.push('window '+fmt(m.windowOpening.clearWidth)+' × '+fmt(m.windowOpening.clearHeight)+' in');
+  if(m.cubbies!=null)bits.push(m.cubbies+' lower cubbies');
+  return bits.filter(Boolean).join(' · ')
+}
+function materialRequirementSummary(m){
+  return fmt(m.finishedLength)+' × '+fmt(m.finishedWidth)+' × '+fmt(m.thickness)+' in · '+m.quantity+' board run'+(m.quantity===1?'':'s')+' · '+m.family
+}
+function requestOperationSummary(o){
+  return (o.basis||'REQUESTED')+' · '+(o.applies||'')+(o.technicalName?' · '+o.technicalName:'')
+}
+function storeLineSummary(line){
+  var r=line.request||{};
+  var bits=[fmt(r.finishedLength)+' × '+fmt(r.finishedWidth)+' in', (r.quantity||0)+' runs', line.disposition||'—'];
+  if(line.sku)bits.push(line.sku);
+  if(line.boards!=null)bits.push(line.boards+' parent'+(line.boards===1?'':'s'));
+  if(line.onHand!=null)bits.push('on hand '+line.onHand);
+  if(line.extension!=null)bits.push(jMoney(line.extension));
+  if(line.why)bits.push(line.why);
+  return bits.join(' · ')
+}
+function buildStoreJourney(snapshot){
+  var req=snapshot.storeRequest||{}, ans=snapshot.storeAnswer||null, rev=snapshot.revision||{}, project=snapshot.project||{};
+  var modules=req.modules||[], occ=req.partOccurrences||[], mats=req.materialRequirements||[], ops=req.requestedOperations||[];
+  var runCount=occ.reduce(function(n,o){return n+(o.boardRuns||[]).length},0);
+  var generated=ops.filter(function(o){return o.basis==='GENERATED FROM DEFINITION'});
+  var requested=ops.filter(function(o){return o.basis!=='GENERATED FROM DEFINITION'});
+  var unresolved=req.unresolvedConditions||[], exclusions=req.exclusions||[];
+  var intro=journeyDoctrine.storeIntro
+    ? '<div class="ws-journey-callout">'+journeyDoctrine.storeIntro+'</div>'
+    : jCallout('<b>Store Zero definition unavailable.</b> The shell has not supplied the canonical Store doctrine. No Alcove fallback is used.',true);
+  var demand=jSection('What the Window Seat asked for',
+    jGrid([
+      ['Project','Space utilization · Window seat'],
+      ['Revision',String(rev.number)+(rev.confirmed?' · confirmed':' · candidate')],
+      ['Project class',req.projectClass||project.projectClass||'—'],
+      ['Top-level modules',modules.length],
+      ['Finished part occurrences',occ.length],
+      ['Board-run demand',runCount],
+      ['Material',req.materialClass?(req.materialClass.family+' · '+req.materialClass.form+' · '+fmt(req.materialClass.thickness)+' in finished'):'—'],
+      ['Hardware',req.hardwareSelection?(req.hardwareSelection.description+' × '+req.hardwareSelection.quantity):'none selected'],
+      ['Generated operations',generated.length],
+      ['Requested secondary operations',requested.length],
+      ['Unresolved conditions',unresolved.length],
+      ['Exclusions',exclusions.length]
+    ])+
+    (modules.length?'<p class="lb">THREE TOP-LEVEL MODULES</p>'+jGrid(modules.map(function(m){return [m.id,moduleSummary(m)]})):'')+
+    (mats.length?'<p class="lb">MATERIAL REQUIREMENTS</p>'+jGrid(mats.map(function(m,i){return ['Demand '+(i+1),materialRequirementSummary(m)]})):'')+
+    (ops.length?'<p class="lb">OPERATIONS</p>'+jGrid(ops.map(function(o){return [o.name,requestOperationSummary(o)]})):'')+
+    (unresolved.length?jCallout('<b>Unresolved carried with this revision:</b> '+unresolved.map(jEsc).join('; '),true):'')+
+    (exclusions.length?'<p class="dim"><b>Excluded from this definition:</b> '+exclusions.map(jEsc).join(' · ')+'</p>':'')
+  );
+
+  var answerHtml;
+  if(!ans){
+    answerHtml=jCallout('<b>Store answer not yet held.</b> Confirm the revision and use EVALUATE WITH STORE ZERO or NEXT → STORE ZERO. The Store stage does not borrow an answer from another project.',true);
+  }else{
+    var lineRows=(ans.lines||[]).map(function(line,i){return ['Material line '+(i+1),storeLineSummary(line)]});
+    var opRows=(ans.ops||[]).map(function(o){return [o.name||o.id,(o.disposition||'—')+' · '+(o.why||'')+' · '+(o.priceNote||'')]});
+    var shortages=ans.shortages||[], unpriced=ans.unpriced||[];
+    answerHtml=jGrid([
+      ['Answer held for revision',String(ans.atRevision||rev.number)+(ans.stale?' · HISTORICAL':' · CURRENT')],
+      ['Material mapping',ans.states&&ans.states.mapping||'—'],
+      ['Availability',ans.states&&ans.states.availability||'—'],
+      ['Edge milling',ans.states&&ans.states.edgeMill||'—'],
+      ['Price evidence',ans.states&&ans.states.price||'—'],
+      ['Job disposition',ans.jobDisposition||ans.status||'—'],
+      ['Known reference selling basis',jMoney(ans.q)],
+      ['Fabrication / fulfillment recovery',jMoney(ans.recovery)],
+      ['Cell consumption basis',jMoney(ans.cellConsumption)],
+      ['Modeled cycle',ans.minutes!=null?(ans.minutes+' min · '+(ans.profile&&ans.profile.chipClass||'')+' · '+(ans.profile&&ans.profile.feedInPerMin||'—')+' IPM edge feed'):'—'],
+      ['Shortages',shortages.length?shortages.join('; '):'none reported'],
+      ['Unpriced services',unpriced.length?unpriced.join('; '):'none reported'],
+      ['Commercial authority','NOT ESTABLISHED'],
+      ['Production authority','NOT ESTABLISHED']
+    ])+
+    (lineRows.length?'<p class="lb">MAPPED MATERIAL / PARENTS / AVAILABILITY</p>'+jGrid(lineRows):'')+
+    (opRows.length?'<p class="lb">OPERATION DISPOSITIONS</p>'+jGrid(opRows):'')+
+    '<p class="lb">STORE PINS / BASIS</p>'+jGrid([
+      ['Catalog clock',ans.pin&&ans.pin.clock||'—'],
+      ['Engine',ans.pin&&ans.pin.engine||'—'],
+      ['Recovery basis',ans.pin&&ans.pin.recovery||'—'],
+      ['Envelope',ans.pin&&ans.pin.envelope||'—'],
+      ['Store document',ans.pin&&ans.pin.doc||'—'],
+      ['Canonical commit',ans.pin&&ans.pin.commit||'—'],
+      ['Stage-2 path pin',ans.pin&&ans.pin.stage2||'—']
+    ])+
+    jCallout('<b>Authority boundary.</b> No order · no payment · no reservation · no allocation · no production release · no machine readiness · no Cycle Start. SUPPORTABLE is a Store/reference answer, not commissioned physical capability.',false);
+  }
+
+  var process=journeyDoctrine.storeProcess
+    ? jSection('What happens next', '<p class="lede">The confirmed definition stays unchanged unless a new revision is created. The stages below name the ordinary transaction and execution sequence; viewing them does not claim those events happened.</p>'+journeyDoctrine.storeProcess)
+    : '';
+  return {
+    stage:'store',
+    headline:'Store Zero · Window Seat',
+    mainHtml:'<p class="stage-tag">3 · STORE</p><h1>Store Zero · Window Seat</h1>'+
+      '<p class="lede">The definition is the input. Store answers what it can satisfy against declared facts and identified pins.</p>'+
+      jSection('Store Zero — full definition',intro)+demand+jSection('What Store Zero answered',answerHtml)+process+jStageBottom('configure','review'),
+    railHtml:journeyDoctrine.storeGuide||'<p class="hd">STORE · BUILD GUIDE</p><p class="goal">Canonical Store guide unavailable</p><div class="row"><b>Fail closed</b><span>No project-independent Store doctrine is borrowed from another project when unavailable.</span></div>'
+  }
+}
+function buildJourneyStage(stage,snapshot){
+  if(stage==='store')return buildStoreJourney(snapshot);
+  return null;
+}
+function journeyStageSection(stageObj){
+  if(!stageObj)return'';
+  return '<section class="ws-journey-stage" id="ws-stage-'+stageObj.stage+'" data-ws-canonical-stage="'+stageObj.stage+'">'+
+    '<main>'+stageObj.mainHtml+'</main><aside class="rail">'+stageObj.railHtml+'</aside></section>'
+}
+function renderContinuousJourney(){
+  var host=$('ws-continuous-journey');
+  if(!host)return;
+  var snapshot=currentJourneySnapshot(false);
+  host.innerHTML=['store'].map(function(stage){return journeyStageSection(buildJourneyStage(stage,snapshot))}).join('');
+}
+document.addEventListener('click',function(e){
+  var jump=e.target.closest('[data-ws-scroll]');
+  if(jump){var target=document.querySelector(jump.getAttribute('data-ws-scroll'));if(target)target.scrollIntoView({behavior:'smooth',block:'start'});return}
+  var stage=e.target.closest('[data-ws-guided-stage]');
+  if(stage){
+    window.top.postMessage({type:'stb-window-seat-guided-stage',stage:stage.getAttribute('data-ws-guided-stage'),snapshot:currentJourneySnapshot(false)},'*');
+  }
+});
 window.STBWindowSeatJourney=Object.freeze({
   projectId:'window-seat',
   artifactVersion:'0.7.3',
   snapshot:function(){ return currentJourneySnapshot(false); },
-  evaluateCurrent:function(){ return currentJourneySnapshot(true); }
+  evaluateCurrent:function(){ return currentJourneySnapshot(true); },
+  setDoctrine:function(value){
+    journeyDoctrine=Object.assign({storeIntro:'',storeGuide:'',storeProcess:''},cloneJourneyValue(value||{}));
+    renderContinuousJourney();
+    return true;
+  },
+  stage:function(stage){
+    return cloneJourneyValue(buildJourneyStage(stage,currentJourneySnapshot(false)));
+  }
 });
 $('ws-guided').onclick=function(){
   var snapshot=currentJourneySnapshot(true);
