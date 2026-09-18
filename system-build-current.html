@@ -13,7 +13,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 <body>
 <iframe id="stb-current" title="Scan-to-Build System" src="system-build-front-door-0.5.html?v=7e4ea998"></iframe>
 <script src="stb-canonical-journey.js?v=e0619841"></script>
-<script src="store-zero-canonical-doctrine.js?v=f2106553"></script>
+<script src="store-zero-canonical-doctrine.js?v=65366367"></script>
 <script>
 (() => {
   const shell = document.getElementById('stb-current');
@@ -123,7 +123,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 <iframe
                   class="window-seat-shell-frame"
                   title="Space utilization · Window seat"
-                  src="stb-window-seat-space-utilization-0.7.3.html?v=1045761c"
+                  src="stb-window-seat-space-utilization-0.7.3.html?v=825a9bce"
                 ></iframe>
               </div>
             `;
@@ -319,7 +319,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     const storeMain = store?.querySelector('.main');
     const storeRail = store?.querySelector('.rail');
     if (storeMain) storeMain.innerHTML = `
-      <h1>STORE ZERO · JOB CHECK</h1>
+      <h1>PLAYHOUSE · CURRENT STORE ANSWER</h1>
       <p class="sub">Store separates what the pinned S-001 routed envelope can support from requested work that still belongs to a separate operation path.</p>
       <div class="s001-v2-store-split">
         <section class="s001-v2-store-card s001-v2-pass"><h3>ROUTED ARCHED OPENING</h3><p><b>SUPPORTABLE · REFERENCE</b></p><p>Request: <code>SHEET_MODE2_ARCHED_APERTURE_V0</code><br>Envelope: <code>S001-MODE2-ARCHED-APERTURE-V0</code></p><p id="s001-store-opening"></p><p id="s001-store-radius"></p><p>4 requested tabs · Store reference plan 5 · physical retention NOT MEASURED.</p></section>
@@ -338,6 +338,20 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     `;
     if (storeRail) storeRail.innerHTML = `<p class="hd">BUILD GUIDE</p><p class="goal">The Store is a membrane</p><div class="row"><b>Supported</b><span>The bounded arched route inside the pinned reference envelope.</span></div><div class="row"><b>Retained, not invented</b><span>Additional requested features stay in the job even when this Store envelope does not yet admit them.</span></div>`;
 
+    if (storeMain) {
+      if (!canonicalDoctrine || canonicalDoctrine.expectedProcessStepCount !== 12) {
+        storeMain.innerHTML = '<h1>CANONICAL STORE CONTENT UNAVAILABLE</h1><div class="s001-boundary"><b>Fail closed.</b> Shared Store doctrine is unavailable. The Playhouse Store stage will not invent a shortened replacement.</div>';
+      } else {
+        const projectAnswer = storeMain.innerHTML;
+        storeMain.innerHTML =
+          '<div class="band" style="font-size:12px;line-height:1.55"><p style="margin:0">' + canonicalDoctrine.definitionHtml + '</p></div>' +
+          canonicalDoctrine.processIntroHtml +
+          canonicalDoctrine.processStepsHtml +
+          '<div class="s001-v2-callout"><b>CURRENT PLAYHOUSE STATUS</b>The process above is the shared journey. The section below is the actual reference answer for this project; unresolved work remains unresolved.</div>' +
+          projectAnswer;
+      }
+    }
+
     const review = doc.getElementById('playhouse-review');
     const reviewMain = review?.querySelector('.main');
     if (reviewMain) reviewMain.innerHTML = `
@@ -354,14 +368,14 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         <div><b>HARDWARE</b><span>Not included</span></div>
       </div>
       <div class="s001-boundary">Confirming this review retains the job definition. It is not payment, reservation, production release, machine readiness, or physical execution authorization.</div>
-      <div class="btns"><button type="button" data-canonical-go="playhouse-store">BACK TO STORE</button><button type="button" data-canonical-go="playhouse-result">CONFIRM JOB FACTS →</button></div>
+      <div class="btns"><button type="button" data-canonical-go="playhouse-store">BACK TO STORE</button><button type="button" data-canonical-go="playhouse-request">CONFIRM THIS VERSION →</button></div>
     `;
 
     const result = doc.getElementById('playhouse-result');
     const resultMain = result?.querySelector('.main');
     if (resultMain) resultMain.innerHTML = `
-      <h1>RESULT · JOB DEFINITION RETAINED</h1>
-      <p class="sub">The journey reached a truthful Store result: one bounded operation is supported in reference software; the additional requested operations remain explicit and unresolved at this Store envelope.</p>
+      <p class="stage-tag">8 · RECAP</p><h1>RECAP · WHAT HAPPENED</h1>
+      <p class="sub">Read forward, this is the chronology. Read backward, it is the audit. The job was admitted, defined, answered as far as the Store could answer it, and unresolved events remained unresolved.</p>
       <div class="s001-v2-order">
         <div><b>CLASS</b><span>S001_CENTERED_ARCHED_SHEET_V0</span></div>
         <div><b>GEOMETRY</b><span id="s001-result-geometry"></span></div>
@@ -399,6 +413,71 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       <div class="btns"><button type="button" data-canonical-go="playhouse-s001">RETURN TO INTENT</button><button type="button" data-canonical-go="projects">HOME</button></div>
     `;
     if (recordRail) recordRail.innerHTML = `<p class="hd">BUILD GUIDE</p><p class="goal">Facts at the end</p><div class="row"><b>What happened</b><span>A bounded project definition reached a truthful Store evaluation.</span></div><div class="row"><b>What did not happen</b><span>No physical production event is invented into the record.</span></div>`;
+
+    function ensureProjectJourneyPage(id, mainHtml, railHtml) {
+      let page = doc.getElementById(id);
+      if (!page) {
+        page = doc.createElement('section');
+        page.className = 'page';
+        page.id = id;
+        page.innerHTML = '<div class="main">' + mainHtml + '</div><aside class="rail"><p class="hd">BUILD GUIDE</p>' + railHtml + '</aside>';
+        doc.querySelector('.wrap')?.append(page);
+      } else {
+        const main = page.querySelector(':scope > .main');
+        const rail = page.querySelector(':scope > .rail');
+        if (main) main.innerHTML = mainHtml;
+        if (rail) rail.innerHTML = '<p class="hd">BUILD GUIDE</p>' + railHtml;
+      }
+      return page;
+    }
+
+    ensureProjectJourneyPage('playhouse-request',
+      '<p class="stage-tag">5 · REQUEST</p><h1>REQUEST · PLAYHOUSE WINDOW</h1>' +
+      '<p class="sub">Carry one identified project definition forward without turning the reference Store answer into an order.</p>' +
+      '<div class="s001-v2-order">' +
+        '<div><b>PROJECT</b><span>Playhouse arched window</span></div>' +
+        '<div><b>GEOMETRY</b><span id="s001-request-geometry"></span></div>' +
+        '<div><b>PRIMARY ROUTE</b><span>SUPPORTABLE · REFERENCE</span></div>' +
+        '<div><b>ADDITIONAL OPS</b><span>Internal center route + two straight cuts · unresolved / separate path</span></div>' +
+        '<div><b>FULL COMMERCIAL OFFER</b><span>NOT ESTABLISHED</span></div>' +
+        '<div><b>PHYSICAL AUTHORITY</b><span>NOT AUTHORIZED</span></div>' +
+      '</div>' +
+      '<div class="s001-boundary"><b>REQUEST ≠ ORDER.</b> The project may continue through the journey while unsupported or unpriced work stays explicit. Nothing here accepts terms, pays, allocates material, releases production, or starts a machine.</div>' +
+      '<div class="btns"><button type="button" data-canonical-go="playhouse-review">BACK TO REVIEW</button><button type="button" data-canonical-go="playhouse-yard">SEND TO THE YARD →</button></div>',
+      '<p class="goal">Carry the exact ask</p><div class="row"><b>Do not drop the extra work</b><span>Unresolved center-route and straight-cut requests remain part of the project.</span></div><div class="row"><b>Do not promote the Store answer</b><span>Reference supportability is not an order or offer.</span></div>'
+    );
+
+    ensureProjectJourneyPage('playhouse-yard',
+      '<p class="stage-tag">6 · YARD</p><h1>YARD · REFERENCE RESPONSE</h1>' +
+      '<p class="sub">The yard can answer what its current reference surface knows and leave the rest open.</p>' +
+      '<div class="s001-v2-order">' +
+        '<div><b>PROJECT</b><span>Playhouse arched window</span></div>' +
+        '<div><b>GEOMETRY</b><span id="s001-yard-geometry"></span></div>' +
+        '<div><b>ROUTED OPENING</b><span>SUPPORTABLE · REFERENCE</span></div>' +
+        '<div><b>MATERIAL-ONLY REFERENCE</b><span>$26.55</span></div>' +
+        '<div><b>CENTER ROUTE / STRAIGHT CUTS</b><span>UNRESOLVED · separate operation path</span></div>' +
+        '<div><b>SELLER-OF-RECORD OFFER</b><span>NOT ESTABLISHED</span></div>' +
+      '</div>' +
+      '<div class="s001-boundary">A mixed answer is still a valid answer. Supported work stays supported; unresolved work stays visible. The project is not rejected merely because every requested operation is not yet inside one Store envelope.</div>' +
+      '<div class="btns"><button type="button" data-canonical-go="playhouse-request">BACK TO REQUEST</button><button type="button" data-canonical-go="playhouse-terms">CONTINUE TO TERMS →</button></div>',
+      '<p class="goal">Answer only what the yard owns</p><div class="row"><b>Material / capability</b><span>Reference evidence may be stated.</span></div><div class="row"><b>Commercial authority</b><span>Still absent unless separately established.</span></div>'
+    );
+
+    ensureProjectJourneyPage('playhouse-terms',
+      '<p class="stage-tag">7 · TERMS</p><h1>TERMS · KEEP THE EVENTS APART</h1>' +
+      '<p class="sub">This project has a bounded definition and a reference Store answer. The later commercial and physical events remain null.</p>' +
+      '<div class="s001-v2-order">' +
+        '<div><b>OFFER</b><span>NOT ESTABLISHED</span></div>' +
+        '<div><b>ACCEPTANCE</b><span>NOT ESTABLISHED</span></div>' +
+        '<div><b>PAYMENT</b><span>NOT ESTABLISHED</span></div>' +
+        '<div><b>ALLOCATION</b><span>NOT ESTABLISHED</span></div>' +
+        '<div><b>PRODUCTION RELEASE</b><span>NOT ESTABLISHED</span></div>' +
+        '<div><b>MACHINE READINESS / CYCLE START</b><span>NOT ESTABLISHED / NOT AUTHORIZED</span></div>' +
+      '</div>' +
+      '<div class="s001-boundary">definition ≠ request ≠ offer ≠ acceptance ≠ payment ≠ allocation ≠ production release ≠ machine readiness ≠ Cycle Start</div>' +
+      '<div class="btns"><button type="button" data-canonical-go="playhouse-yard">BACK TO YARD</button><button type="button" data-canonical-go="playhouse-result">NEXT → RECAP</button></div>',
+      '<p class="goal">Null is honest</p><div class="row"><b>Do not fill the blanks</b><span>The journey can continue as a record even when commercial events have not happened.</span></div>'
+    );
 
     const oldStoreBack = doc.querySelector('#playhouse-store [data-canonical-go="playhouse-s001"]');
     if (oldStoreBack) oldStoreBack.setAttribute('data-canonical-go', 'playhouse-machine');
@@ -456,6 +535,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       text('s001-store-radius', `Circular segment · ${fmt(g.radius)} in derived radius`);
       text('s001-review-opening', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise · ${fmt(g.total)} total height`);
       text('s001-result-geometry', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise · ${fmt(g.total)} total height`);
+      text('s001-request-geometry', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise · ${fmt(g.total)} total height`);
+      text('s001-yard-geometry', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise · ${fmt(g.total)} total height`);
       text('s001-record-geometry', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise`);
     };
 
@@ -467,6 +548,100 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       sync();
     });
     sync();
+
+
+    const picnicConfigNext = doc.querySelector('#picnic-config [data-go="picnic-review"]');
+    if (picnicConfigNext) {
+      picnicConfigNext.removeAttribute('data-go');
+      picnicConfigNext.setAttribute('data-canonical-go', 'picnic-store');
+      picnicConfigNext.textContent = 'SEND TO STORE ZERO →';
+    }
+    const picnicConfirm = doc.getElementById('confirm-picnic');
+    if (picnicConfirm) {
+      picnicConfirm.textContent = 'CONFIRM THIS VERSION';
+      picnicConfirm.setAttribute('data-picnic-confirm', 'true');
+    }
+
+    const picnicDoctrine = (!canonicalDoctrine || canonicalDoctrine.expectedProcessStepCount !== 12)
+      ? '<h1>CANONICAL STORE CONTENT UNAVAILABLE</h1><div class="s001-boundary"><b>Fail closed.</b> Shared Store doctrine is unavailable.</div>'
+      : '<div class="band" style="font-size:12px;line-height:1.55"><p style="margin:0">' + canonicalDoctrine.definitionHtml + '</p></div>' +
+        canonicalDoctrine.processIntroHtml +
+        canonicalDoctrine.processStepsHtml;
+
+    ensureProjectJourneyPage('picnic-store',
+      picnicDoctrine +
+      '<div class="s001-v2-callout"><b>CURRENT PICNIC-TABLE STATUS</b>The project is admitted. The Store question is not yet stable enough to submit because this class does not yet publish a complete part/material demand packet.</div>' +
+      '<p class="stage-tag">3 · STORE</p><h1>PICNIC TABLE · STORE QUESTION</h1>' +
+      '<div class="s001-v2-order">' +
+        '<div><b>FORM / SCOPE</b><span id="picnic-store-form"></span></div>' +
+        '<div><b>LENGTH</b><span id="picnic-store-length"></span></div>' +
+        '<div><b>MATERIAL PREFERENCE</b><span id="picnic-store-material"></span></div>' +
+        '<div><b>STORE REQUEST</b><span>DEFERRED · BRIDGE-GAP</span></div>' +
+        '<div><b>PRICE</b><span>UNRESOLVED</span></div>' +
+        '<div><b>PHYSICAL AUTHORITY</b><span>NOT AUTHORIZED</span></div>' +
+      '</div>' +
+      '<div class="s001-boundary"><b>This is not a failed job.</b> The user choices are valid project facts. The missing piece is the project-to-Store bridge: stable part geometry / material demand has not yet been published for this class. No SKU, price, capability, or refusal is invented to make the screen green.</div>' +
+      '<div class="btns"><button type="button" data-canonical-go="picnic-config">BACK TO CONFIGURE</button><button type="button" data-canonical-go="picnic-review">NEXT → REVIEW</button></div>',
+      '<p class="goal">Admit broadly, stop narrowly</p><div class="row"><b>User choices are not the problem</b><span>Form, scope, length and material preference remain valid.</span></div><div class="row"><b>Bridge gap is explicit</b><span>Store cannot answer a demand packet the project has not yet published.</span></div>'
+    );
+
+    const picnicReviewMain = doc.querySelector('#picnic-review > .main');
+    if (picnicReviewMain) {
+      const unresolved = picnicReviewMain.querySelector('.flash.warn');
+      if (unresolved) unresolved.insertAdjacentHTML('afterend', '<div class="flash warn"><b>STORE BRIDGE:</b> No complete Picnic Store request exists yet. This is a BRIDGE-GAP, not a reason to discard the project definition.</div>');
+      const first = picnicReviewMain.querySelector('.btns');
+      if (first && !first.querySelector('[data-canonical-go="picnic-store"]')) first.insertAdjacentHTML('afterbegin','<button type="button" data-canonical-go="picnic-store">← Back to Store</button>');
+    }
+
+    ensureProjectJourneyPage('picnic-request',
+      '<p class="stage-tag">5 · REQUEST</p><h1>REQUEST · PICNIC TABLE</h1>' +
+      '<p class="sub">The definition can be retained, but there is not yet a Store-submittable demand packet for this class.</p>' +
+      '<div class="s001-v2-order">' +
+        '<div><b>FORM / SCOPE</b><span id="picnic-request-form"></span></div>' +
+        '<div><b>LENGTH</b><span id="picnic-request-length"></span></div>' +
+        '<div><b>MATERIAL PREFERENCE</b><span id="picnic-request-material"></span></div>' +
+        '<div><b>REQUEST EVENT</b><span>DEFERRED · NOT SUBMITTED</span></div>' +
+        '<div><b>OWNER</b><span>BRIDGE-GAP · project-to-Store demand packet</span></div>' +
+        '<div><b>PROJECT STATUS</b><span>RETAINED · NOT REJECTED</span></div>' +
+      '</div>' +
+      '<div class="s001-boundary"><b>STOP AT THE REAL GATE.</b> SEND TO THE YARD is unavailable until a complete Store request can be formed. This does not erase the project or force the user to re-enter valid choices.</div>' +
+      '<div class="btns"><button type="button" data-canonical-go="picnic-review">BACK TO REVIEW</button><button type="button" disabled title="Bridge gap: a complete Picnic Store request is not yet implemented.">SEND TO THE YARD — DEFERRED</button></div>',
+      '<p class="goal">A refusal can be a pass</p><div class="row"><b>What stopped</b><span>The Store request bridge, not the customer project.</span></div><div class="row"><b>What remains</b><span>The exact choices and unresolved conditions stay in the project record.</span></div>'
+    );
+
+    ensureProjectJourneyPage('picnic-yard',
+      '<p class="stage-tag">6 · YARD</p><h1>YARD · NOT REACHED</h1><p class="sub">No yard submission exists for the current Picnic class.</p><div class="s001-boundary">This stage is intentionally inaccessible from the current Request gate. Nothing is inferred past the bridge gap.</div>',
+      '<p class="goal">Not reached</p><div class="row"><b>No invented response</b><span>No request means no yard response.</span></div>'
+    );
+    ensureProjectJourneyPage('picnic-terms',
+      '<p class="stage-tag">7 · TERMS</p><h1>TERMS · NOT REACHED</h1><p class="sub">Offer, acceptance, payment and allocation remain NOT ESTABLISHED.</p>',
+      '<p class="goal">Not reached</p><div class="row"><b>Null stays null</b><span>A missing Request event cannot produce later commercial events.</span></div>'
+    );
+    ensureProjectJourneyPage('picnic-recap',
+      '<p class="stage-tag">8 · RECAP</p><h1>RECAP · PICNIC TABLE</h1><p class="sub">Project admitted → choices retained → Store bridge deferred. No later transaction event is claimed.</p>',
+      '<p class="goal">Truthful chronology</p><div class="row"><b>Do not backfill</b><span>Later stages remain absent until the bridge is implemented.</span></div>'
+    );
+    ensureProjectJourneyPage('picnic-record',
+      '<p class="stage-tag">9 · RECORD</p><h1>PICNIC TABLE · OWNER RECORD</h1><p class="sub">The record preserves the project even though the current journey stops at Request.</p><div class="s001-v2-order"><div><b>FORM / SCOPE</b><span id="picnic-record-form"></span></div><div><b>LENGTH</b><span id="picnic-record-length"></span></div><div><b>MATERIAL PREFERENCE</b><span id="picnic-record-material"></span></div><div><b>STORE REQUEST</b><span>NOT FORMED · BRIDGE-GAP</span></div><div><b>COMMERCIAL STATUS</b><span>NOT ESTABLISHED</span></div><div><b>PHYSICAL STATUS</b><span>NOT AUTHORIZED / NOT RECORDED</span></div></div>',
+      '<p class="goal">Keep the project, not a fiction</p><div class="row"><b>Valid inputs survive</b><span>The next implementation pass should start from this retained definition.</span></div>'
+    );
+
+    function syncPicnicJourney() {
+      const title = doc.getElementById('picnic-title')?.textContent || 'Picnic table';
+      const length = doc.getElementById('plen-label')?.textContent || '—';
+      const material = doc.getElementById('pmat-label')?.textContent || 'unresolved';
+      const set = (id, value) => { const el = doc.getElementById(id); if (el) el.textContent = value; };
+      ['picnic-store-form','picnic-request-form','picnic-record-form'].forEach(id => set(id, title));
+      ['picnic-store-length','picnic-request-length','picnic-record-length'].forEach(id => set(id, length));
+      ['picnic-store-material','picnic-request-material','picnic-record-material'].forEach(id => set(id, material));
+    }
+    doc.addEventListener('input', function(event) {
+      if (event.target.closest?.('#picnic-config')) setTimeout(syncPicnicJourney, 0);
+    });
+    doc.addEventListener('click', function(event) {
+      if (event.target.closest?.('#picnic-chooser,#picnic-config')) setTimeout(syncPicnicJourney, 0);
+    });
+    syncPicnicJourney();
 
     const originalShow = win.show;
 
@@ -485,6 +660,31 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     const LEGACY_TARGET_TO_STAGE = Object.freeze(Object.fromEntries(
       Object.entries(ALCOVE_STAGE_TARGETS).map(([stage,target]) => [target,stage])
     ));
+    const PROJECT_STAGE_TARGETS = Object.freeze({
+      alcove: ALCOVE_STAGE_TARGETS,
+      playhouse: Object.freeze({
+        scan: 'playhouse-s001',
+        configure: 'playhouse-machine',
+        store: 'playhouse-store',
+        review: 'playhouse-review',
+        request: 'playhouse-request',
+        yard: 'playhouse-yard',
+        terms: 'playhouse-terms',
+        recap: 'playhouse-result',
+        record: 'playhouse-record'
+      }),
+      picnic: Object.freeze({
+        scan: 'picnic-chooser',
+        configure: 'picnic-config',
+        store: 'picnic-store',
+        review: 'picnic-review',
+        request: 'picnic-request',
+        yard: 'picnic-yard',
+        terms: 'picnic-terms',
+        recap: 'picnic-recap',
+        record: 'picnic-record'
+      })
+    });
 
     function canonicalJourneyReady() {
       return !!canonicalJourney
@@ -568,6 +768,20 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       return openSeatView('guided', stage);
     }
 
+    function showMappedProjectStage(projectId, stage) {
+      if (projectId === 'picnic' && ['yard','terms','recap','record'].includes(stage)) {
+        originalShow.call(win, 'picnic-request');
+        if (typeof syncPicnicJourney === 'function') setTimeout(syncPicnicJourney, 0);
+        return true;
+      }
+      const target = PROJECT_STAGE_TARGETS[projectId]?.[stage] || null;
+      if (!target || !doc.getElementById(target)) return false;
+      originalShow.call(win, target);
+      if (projectId === 'playhouse') setTimeout(sync, 0);
+      if (projectId === 'picnic' && typeof syncPicnicJourney === 'function') setTimeout(syncPicnicJourney, 0);
+      return true;
+    }
+
     seatFrame()?.addEventListener('load', () => {
       setTimeout(applyPendingSeatView, 0);
     });
@@ -586,22 +800,67 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       }
     });
 
-    doc.addEventListener('click', function(event) {
-      const tile = event.target.closest('#projects .tile[data-go]');
+    const PROJECT_TILE_TO_JOURNEY = Object.freeze({
+      'alcove-capture': 'alcove',
+      'window-parts': 'playhouse',
+      'picnic-chooser': 'picnic'
+    });
+
+    win.addEventListener('click', function(event) {
+      const navButton = event.target.closest?.('.recovery-nav button[data-journey-stage]');
+      if (!navButton || !activeJourneyProject) return;
+      const stage = navButton.dataset.journeyStage;
+      if (!stage) return;
+      if (activeJourneyProject === 'window-seat') {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        showSeatGuided(stage);
+        return;
+      }
+      if (showMappedProjectStage(activeJourneyProject, stage)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    }, true);
+
+    win.addEventListener('click', function(event) {
+      if (activeJourneyProject === 'picnic' && event.target.closest?.('#confirm-picnic')) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        doc.documentElement.dataset.picnicRevisionConfirmed = 'true';
+        originalShow.call(win, 'picnic-request');
+        setTimeout(syncPicnicJourney, 0);
+        return;
+      }
+      if (activeJourneyProject === 'playhouse' && event.target.closest?.('#playhouse-review [data-canonical-go="playhouse-request"]')) {
+        doc.documentElement.dataset.playhouseRevisionConfirmed = 'true';
+      }
+    }, true);
+
+    // Project identity is selected at the window-capture boundary so it runs
+    // before the older front-door preview handler can stop propagation.
+    // A route or stage change never selects a project implicitly.
+    win.addEventListener('click', function(event) {
+      const tile = event.target.closest?.('#projects .tile[data-go]');
       if (!tile) return;
       const target = tile.getAttribute('data-go');
-      if (target === 'alcove-capture') selectJourneyProject('alcove');
-      else selectJourneyProject(null);
+      if (target === 'start-own') {
+        selectJourneyProject(null);
+        return;
+      }
+      selectJourneyProject(PROJECT_TILE_TO_JOURNEY[target] || null);
     }, true);
 
     win.show = function(id) {
       const target = String(id);
+      const stage = LEGACY_TARGET_TO_STAGE[target] || null;
       if (activeJourneyProject === 'window-seat') {
-        const stage = LEGACY_TARGET_TO_STAGE[target] || null;
         if (stage) { showSeatGuided(stage); return; }
         if (target === 'projects' || target === 'landing' || target === 'my-projects' || target === 'archive') {
           pendingSeatView = {mode:'continuous',stage:null};
         }
+      } else if (stage && activeJourneyProject && showMappedProjectStage(activeJourneyProject, stage)) {
+        return;
       }
       const result = originalShow.apply(this, arguments);
       if (target.startsWith('playhouse')) setTimeout(sync, 0);

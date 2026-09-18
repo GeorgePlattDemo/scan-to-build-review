@@ -670,4 +670,21 @@ Continuous scrolling is observational. It must never execute a gate or create co
 
 Alcove DOM ids such as `alcove-capture`, `alcove-config`, and `alcove-review` are compatibility implementation details. They are not stage names in the reference contract.
 
+
+
+### Admission and stop discipline
+
+Canonical conformance does not mean every project must have every answer before it can enter the system.
+
+- Admit a reasonable project with the evidence and choices already available.
+- Carry missing facts that do not control the next gate.
+- Send Store-owned questions to Store instead of reclassifying them as project failures.
+- Keep supported work and unresolved work separate when a Store answer is mixed.
+- Stop only at the gate whose next event cannot yet be formed truthfully.
+- A STOP or DEFER preserves the project, the valid inputs, the owning layer, and the reason. It does not erase the job or force re-entry of facts already established.
+- Later commercial and physical stages remain visible as null states; they are not backfilled by wording.
+- `Start your own` is broad intake. It joins the bounded-project journey only after enough definition exists to form a project-owned request.
+
+The operating shorthand is: **admit broadly, stop narrowly, and never promote an unresolved fact to make a path look complete.**
+
 **NO BLOOD ON WOOD.**
