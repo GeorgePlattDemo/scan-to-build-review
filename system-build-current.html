@@ -82,7 +82,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             windowSeatPage = doc.createElement('section');
             windowSeatPage.className = 'page window-seat-shell-page';
             windowSeatPage.id = 'window-seat-live';
-            windowSeatPage.innerHTML = \`
+            windowSeatPage.innerHTML = `
               <div class="window-seat-shell-main">
                 <iframe
                   class="window-seat-shell-frame"
@@ -90,7 +90,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   src="stb-window-seat-space-utilization-0.7.3.html?v=d71fa199"
                 ></iframe>
               </div>
-            \`;
+            `;
             doc.querySelector('.wrap')?.append(windowSeatPage);
           }
 
