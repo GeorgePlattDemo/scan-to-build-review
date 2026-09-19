@@ -58,11 +58,12 @@
       projectId:'alcove',
       projectClass:'ALCOVE_INSERT',
       materialCatalogPin:'4402abeb6b0299a5b6db2eec85ed04c3b0236bcc',
-      capabilityBasis:'CURRENT_CANONICAL_STORE_ZERO',
+      capabilityBasis:'D001-BOARD-EDGE-MILL-REF-0.3',
       capabilityPin:'f88ec61c42446755d00259f88e7fd09f2702fd92',
-      economicsModel:null,
-      economicsStatus:'UNRESOLVED_CLASS_SCOPED_RECOVERY',
-      economicsReason:'No current Alcove class-scoped processing / fulfillment recovery model is published.',
+      economicsModel:'STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0.1',
+      economicsStatus:'DECLARED_REFERENCE',
+      economicsPin:'f88ec61c42446755d00259f88e7fd09f2702fd92',
+      economicsReason:'Alcove uses the published D-001 cycle model and Window Seat recovery formula on modeled crosscut time. Edge-mill travel is zero unless the definition demands it.',
       legacyGeneralRecoverySelected:false
     }),
     windowSeat: Object.freeze({
@@ -279,6 +280,135 @@
     return Object.freeze(selected);
   }
 
+
+  var D001_CYCLE = Object.freeze({
+    model:'STB-D001-CYCLE-MODEL-S2-0.1',
+    basis:'CALCULATED / MODELED',
+    measured:false,
+    jobSetupMin:8.0,
+    loadSeatMin:0.6,
+    releaseLabelMin:0.4,
+    crosscutMin:0.2548,
+    cutsPerStick:2
+  });
+
+  var D001_ENVELOPE = Object.freeze({
+    id:'D001-BOARD-EDGE-MILL-REF-0.3',
+    cutterDiameterIn:0.375,
+    cuttingEdges:2,
+    spindleRpm:18000,
+    feedFormula:'feed_rate_ipm = chip_load_in_per_tooth × cutting_edges × spindle_rpm'
+  });
+
+  var WINDOW_SEAT_RECOVERY = Object.freeze({
+    id:'STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0.1',
+    basis:'DECLARED REFERENCE / UNMEASURED',
+    fixedReferenceFulfillment:365.0,
+    cellConsumptionBaseline:60.0,
+    pineBaselineCycleMin:56.159065,
+    hardwareDefault:18.0,
+    components:Object.freeze({
+      materialHandlingFabrication:110.0,
+      inspectLabelBundleStage:75.0,
+      facilityAdminRework:70.0,
+      serviceCommercialReserve:110.0
+    }),
+    species:Object.freeze({
+      pine:Object.freeze({chipClass:'SOFT WOOD',chipLoadIpt:0.00675,feedInPerMin:243,wearFactor:1.00,sizeKey:'1x6p'}),
+      poplar:Object.freeze({chipClass:'HARD WOOD',chipLoadIpt:0.00600,feedInPerMin:216,wearFactor:1.05,sizeKey:'1x6w'}),
+      cherry:Object.freeze({chipClass:'HARD WOOD',chipLoadIpt:0.00600,feedInPerMin:216,wearFactor:1.10,sizeKey:'1x6c'}),
+      oak:Object.freeze({chipClass:'HARD WOOD',chipLoadIpt:0.00600,feedInPerMin:216,wearFactor:1.15,sizeKey:'1x6o'})
+    }),
+    formula:'recovery = 365 + 60 × (modeled_cycle_minutes / 56.16) × species_wear_factor'
+  });
+
+  function money2(v){
+    return Math.round(Number(v)*100)/100;
+  }
+
+  function quoteModeledRecovery(input){
+    input = input || {};
+    var speciesKey = String(input.species || 'pine');
+    var prof = WINDOW_SEAT_RECOVERY.species[speciesKey] || WINDOW_SEAT_RECOVERY.species.pine;
+    var sticks = Math.max(0, Number(input.sticks) || 0);
+    var millMinutes = Math.max(0, Number(input.millMinutes) || 0);
+    var material = money2(input.material || 0);
+    var hardware = money2(input.hardware == null ? 0 : input.hardware);
+    var C = D001_CYCLE, R = WINDOW_SEAT_RECOVERY;
+    var otherMinutesRaw = sticks ? (C.jobSetupMin + sticks * (C.loadSeatMin + C.releaseLabelMin + C.cutsPerStick * C.crosscutMin)) : 0;
+    var minutesRaw = sticks ? (otherMinutesRaw + millMinutes) : 0;
+    var cycleFactor = sticks ? minutesRaw / R.pineBaselineCycleMin : 0;
+    var cellConsumption = sticks ? money2(R.cellConsumptionBaseline * cycleFactor * prof.wearFactor) : 0;
+    var recovery = sticks ? money2(R.fixedReferenceFulfillment + cellConsumption) : 0;
+    var feed = money2(prof.chipLoadIpt * D001_ENVELOPE.cuttingEdges * D001_ENVELOPE.spindleRpm);
+    return Object.freeze({
+      status:'DECLARED_REFERENCE',
+      complete:sticks>0,
+      material:material,
+      hardware:hardware,
+      recovery:recovery,
+      cellConsumption:cellConsumption,
+      total:money2(material + recovery + hardware),
+      sticks:sticks,
+      millMinutes:money2(millMinutes),
+      otherMinutes:money2(otherMinutesRaw),
+      minutes:money2(minutesRaw),
+      cycleFactor:cycleFactor,
+      profile:Object.freeze({
+        species:speciesKey,
+        chipClass:prof.chipClass,
+        chipLoadIpt:prof.chipLoadIpt,
+        feedInPerMin:feed,
+        wearFactor:prof.wearFactor,
+        cutterDiameterIn:D001_ENVELOPE.cutterDiameterIn,
+        cuttingEdges:D001_ENVELOPE.cuttingEdges,
+        spindleRpm:D001_ENVELOPE.spindleRpm
+      }),
+      recoveryBreakdown:R.components,
+      cycle:C,
+      envelope:D001_ENVELOPE,
+      recoveryModel:R,
+      formula:R.formula
+    });
+  }
+
+  function quoteAlcoveInsert(input){
+    input = input || {};
+    var speciesKey = String(input.species || 'pine');
+    var prof = WINDOW_SEAT_RECOVERY.species[speciesKey] || WINDOW_SEAT_RECOVERY.species.pine;
+    var shelves = Math.max(2, Number(input.shelves) || 5);
+    var depthIn = Number(input.depthIn) || 14;
+    var across = Math.ceil(depthIn / 5.5);
+    var boards96 = Math.ceil(across / 2) * shelves;
+    var boards72 = 4;
+    var offerings = startOwnOfferings(prof.sizeKey);
+    var row96 = offerings.filter(function(o){return o.stockL_in===96})[0];
+    var row72 = offerings.filter(function(o){return o.stockL_in===72})[0];
+    if(!row96 || !row72){
+      return Object.freeze({status:'UNRESOLVED',code:'STORE_OFFERING_NOT_MAPPED',species:speciesKey});
+    }
+    var material = money2(boards96 * row96.sellingPrice + boards72 * row72.sellingPrice);
+    var hardware = money2(input.hardware == null ? WINDOW_SEAT_RECOVERY.hardwareDefault : input.hardware);
+    var quote = quoteModeledRecovery({
+      species:speciesKey,
+      sticks:boards96 + boards72,
+      millMinutes:0,
+      material:material,
+      hardware:hardware
+    });
+    return Object.freeze(Object.assign({}, quote, {
+      projectClass:'ALCOVE_INSERT',
+      shelves:shelves,
+      depthIn:depthIn,
+      across:across,
+      lines:Object.freeze([
+        Object.freeze({sku:row96.storeSku,qty:boards96,stockL_in:96,unitPrice:row96.sellingPrice,extension:money2(boards96*row96.sellingPrice)}),
+        Object.freeze({sku:row72.storeSku,qty:boards72,stockL_in:72,unitPrice:row72.sellingPrice,extension:money2(boards72*row72.sellingPrice)})
+      ])
+    }));
+  }
+
+
   function storeAuthority(key){
     return STORE_AUTHORITIES[key] || null;
   }
@@ -387,7 +517,7 @@
   }
 
   root.STBStoreHandoffContract = Object.freeze({
-    version:'0.3',
+    version:'0.4',
     actorOrder:ACTOR_ORDER,
     currentArtifacts:CURRENT_ARTIFACTS,
     storeAuthorities:STORE_AUTHORITIES,
@@ -395,6 +525,11 @@
     startOwnStoreCatalog:START_OWN_STORE_CATALOG,
     startOwnOfferings:startOwnOfferings,
     resolveStartOwnMaterial:resolveStartOwnMaterial,
+    d001Cycle:D001_CYCLE,
+    d001Envelope:D001_ENVELOPE,
+    windowSeatRecovery:WINDOW_SEAT_RECOVERY,
+    quoteModeledRecovery:quoteModeledRecovery,
+    quoteAlcoveInsert:quoteAlcoveInsert,
     comparisonDemand:comparisonDemand,
     createComparisonHandoff:createComparisonHandoff,
     storeDemandIdentity:storeDemandIdentity,
