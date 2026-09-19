@@ -110,6 +110,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     let activeJourneyProject = null;
     let seatJourneySnapshot = null;
     let proofHandoff = null;
+    let captureStartOwnProof = () => {};
     let pendingSeatView = {mode:'continuous',stage:null};
 
     const home = doc.getElementById('projects');
@@ -199,7 +200,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             if (path === 'cuts.0.len') proofDecisions.add('finished_length');
             if (path === 'cuts.0.qty') proofDecisions.add('quantity');
           };
-          const captureStartOwnProof = () => {
+          captureStartOwnProof = () => {
             const state = proofFrame?.contentWindow?.S;
             if (!state) return;
             let semanticOutput = null;
