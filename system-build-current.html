@@ -286,7 +286,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         if (outdoorTile) {
           outdoorTile.removeAttribute('data-go');
           outdoorTile.dataset.outdoorBuildArtifact = 'stb-outdoor-build.html';
-          outdoorTile.title = 'Outdoor Build · Project 1 · detached bench leg';
+          outdoorTile.title = 'Outdoor Build · matching Sawhorse table + two benches';
 
           let outdoorPage = doc.getElementById('outdoor-build-live');
           if (!outdoorPage) {
@@ -297,8 +297,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
               <div class="outdoor-build-shell-main">
                 <iframe
                   class="outdoor-build-shell-frame"
-                  title="Outdoor Build · Project 1"
-                  src="stb-outdoor-build.html?v=9b16b8ff"
+                  title="Outdoor Build · Sawhorse table + matching benches"
+                  src="stb-outdoor-build.html?v=5279d330"
                 ></iframe>
               </div>
             `;
@@ -1021,7 +1021,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       +'</div>'
       +'<div class="band warn"><b>Why the familiar $50.81 recovery is not used here.</b> The current square-board control model carries an 8-minute modeled job setup, a $35 setup charge, and $100/hour modeled machine recovery. Its known one-board control returns material $3.13 + modeled cell recovery $50.81 = budgetary Q $53.94 at T_job 9.486 min. That is evidence for a different square-crosscut demand, not authority to price this double-bevel part.</div>'
       +proofStoreDoctrine
-      +'<div class="proof-nav"><button type="button" data-proof-library>← PROJECT LIBRARY</button><button class="next" type="button" data-proof-go="proof-accept">CONTINUE → ACCEPT / PAY</button></div>',
+      +'<div class="proof-nav"><button type="button" data-proof-library>← PROJECT LIBRARY</button><button type="button" data-proof-return-source>← PROJECT DEFINITION</button><button class="next" type="button" data-proof-go="proof-accept">CONTINUE → ACCEPT / PAY</button></div>',
       '<p class="goal">Same demand, same Store boundary</p><div class="row"><b>No second Store</b><span>Review presents the pinned Store identities and the real gap.</span></div><div class="row"><b>No fake price</b><span>Unresolved processing remains unresolved.</span></div>'
     );
 
@@ -1087,6 +1087,13 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         event.preventDefault();
         selectJourneyProject(null);
         originalShow.call(win,'projects');
+        return;
+      }
+      const source=event.target.closest?.('[data-proof-return-source]');
+      if(source){
+        event.preventDefault();
+        if(proofHandoff?.source==='start-own')originalShow.call(win,'start-own-live');
+        else if(proofHandoff?.source==='outdoor')originalShow.call(win,'outdoor-build-live');
         return;
       }
       const go=event.target.closest?.('[data-proof-go]');
