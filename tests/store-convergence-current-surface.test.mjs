@@ -14,7 +14,7 @@ vm.runInNewContext(contractSource,sandbox,{filename:'stb-store-handoff-contract.
 const contract = sandbox.window.STBStoreHandoffContract;
 
 assert.ok(contract,'shared Store handoff contract did not load');
-assert.equal(contract.version,'0.1');
+assert.equal(contract.version,'0.2');
 assert.deepEqual(
   Array.from(contract.actorOrder),
   ['project-definition','store-answer','accept-pay','store-yard','handoff-record','project-library']
@@ -25,6 +25,11 @@ assert.equal(contract.currentArtifacts.outdoor.artifact,'stb-outdoor-build.html'
 assert.equal(contract.currentArtifacts.alcove.artifact,'system-build-current.html#alcove-capture');
 assert.equal(contract.currentArtifacts.windowSeat.artifact,'stb-window-seat-space-utilization-0.7.4.html');
 assert.equal(contract.currentArtifacts.sheetS001.artifact,'system-build-current.html#playhouse-s001');
+
+assert.equal(contract.storeAuthority('startOwn').capabilityPin,'f88ec61c42446755d00259f88e7fd09f2702fd92');
+assert.equal(contract.storeAuthority('startOwn').materialCatalogPin,'4402abeb6b0299a5b6db2eec85ed04c3b0236bcc');
+assert.equal(contract.storeAuthority('startOwn').legacyGeneralRecoverySelected,false);
+assert.equal(contract.storeAuthority('windowSeat').economicsModel,'STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0.1');
 
 assert.match(shell,/stb-store-handoff-contract\.js\?v=/);
 assert.match(shell,/dataset\.startOwnArtifact = 'stb-start-own-0\.11\.html'/);
@@ -75,6 +80,7 @@ assert.match(startOwn,/S\.handoff=\{id:id,definition:/);
 assert.match(outdoor,/STB_OUTDOOR_CONFIRMED/);
 assert.match(outdoor,/normalizedPart:normalized/);
 assert.match(shell,/createComparisonStoreHandoff\('start-own'/);
+assert.match(shell,/payload\.storeReference\?\.unresolvedConditions/);
 assert.match(shell,/createComparisonStoreHandoff\('outdoor'/);
 assert.match(shell,/stb-proof-store-demand-equality/);
 assert.match(shell,/sameStoreDemand:storeHandoffContract\.sameStoreDemand\(job1,job2\)/);
