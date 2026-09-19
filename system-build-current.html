@@ -765,7 +765,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         <div class="band warn"><b>Reference commerce only.</b> This demonstration does not process money. Offer ≠ acceptance. Acceptance ≠ settlement. Settlement ≠ allocation. Allocation ≠ production release. Selecting reference acceptance below does not record payment or create downstream physical authority.</div>
         <div class="btns">
           <button type="button" data-alcove-commercial-action="change">CHANGE DEFINITION</button>
-          <button type="button" data-alcove-commercial-action="decline">DECLINE REFERENCE OFFER</button>
+          <button type="button" data-alcove-commercial-action="decline">DO NOT CONTINUE</button>
           <button class="primary" type="button" data-alcove-commercial-action="accept">ACKNOWLEDGE REFERENCE ANSWER</button>
           <button type="button" data-alcove-commercial-action="yard" disabled>CONTINUE REFERENCE DEMONSTRATION →</button>
         </div>
@@ -865,9 +865,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         return;
       }
       if (action === 'accept') {
-        doc.documentElement.dataset.alcoveReferenceDecision = 'accepted';
-        if (acceptance) acceptance.textContent = 'ACCEPTED · REFERENCE DEMONSTRATION';
-        if (note) note.textContent = 'Reference acceptance selected. Settlement / payment remains NOT ESTABLISHED because this is not live commerce.';
+        doc.documentElement.dataset.alcoveReferenceDecision = 'acknowledged';
+        if (acceptance) acceptance.textContent = 'NOT ESTABLISHED · NO COMMERCIAL OFFER';
+        if (note) note.textContent = 'Reference Store answer acknowledged. Commercial acceptance and settlement / payment remain NOT ESTABLISHED.';
         if (continueButton) continueButton.disabled = false;
         return;
       }
@@ -877,7 +877,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         return;
       }
       if (action === 'yard') {
-        if (doc.documentElement.dataset.alcoveReferenceDecision !== 'accepted') return;
+        if (doc.documentElement.dataset.alcoveReferenceDecision !== 'acknowledged') return;
         originalShow.call(win,'yard');
         setTimeout(syncAlcoveCommercialSurface,0);
         return;
