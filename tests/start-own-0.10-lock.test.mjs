@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 const read=p=>fs.readFileSync(p,'utf8');
 const artifact=read('stb-start-own-0.10.html');
 const shell=read('system-build-current.html');
+const candidate=read('stb-start-own-0.11.html');
 const seat=read('stb-window-seat-space-utilization-0.7.4.html');
 const doctrine=read('store-zero-canonical-doctrine.js');
 const base=read('system-build-base-8d8a9dd.html');
@@ -30,8 +31,11 @@ assert.match(artifact,/NO BLOOD ON WOOD/);
 
 assert.match(shell,/startOwnTile = ribbon\.querySelector\('\.tile\[data-go="start-own"\]'\)/);
 assert.match(shell,/startOwnTile\.removeAttribute\('data-go'\)/);
-assert.match(shell,/startOwnTile\.dataset\.startOwnArtifact = 'stb-start-own-0\.10\.html'/);
-assert.match(shell,/src="stb-start-own-0\.10\.html\?v=cbdb0299"/);
+assert.match(shell,/startOwnTile\.dataset\.startOwnArtifact = 'stb-start-own-0\.11\.html'/);
+assert.match(shell,/src="stb-start-own-0\.11\.html\?v=eaebb3bf"/);
+assert.equal(gitBlobSha(candidate),'eaebb3bf1d43a7b84dca2401752520bd64ae94fa','Start Your Own 0.11 candidate changed unexpectedly');
+assert.match(candidate,/ANGLED_CUT/);
+assert.match(candidate,/STB_START_OWN_CONFIRMED/);
 assert.match(shell,/originalShow\.call\(win, 'start-own-live'\)/);
 assert.match(shell,/selectJourneyProject\(null\)/);
 
@@ -40,4 +44,4 @@ assert.equal(gitBlobSha(seat),'96c85feef57b1196093e56495e7141452fc749a4','Window
 assert.equal(gitBlobSha(doctrine),'653663671f61dd77e0dae73917d33b8a8e896fd2','Store doctrine changed');
 assert.equal(gitBlobSha(base),'67f3c5324ac7ab2ccd798b0dc0d7179b0912eef4','Alcove base changed');
 
-console.log('PASS · Start Your Own 0.10 locked behind project tile');
+console.log('PASS · Start Your Own 0.10 locked; 0.11 active candidate');
