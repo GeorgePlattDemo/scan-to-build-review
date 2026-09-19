@@ -1683,11 +1683,15 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       selectJourneyProject(PROJECT_TILE_TO_JOURNEY[target] || null);
     }, true);
 
+    function openCurrentOutdoorBuildFromLegacyRoute() {
+      selectJourneyProject(null);
+      originalShow.call(win, 'outdoor-build-live');
+    }
+
     win.show = function(id) {
       const target = String(id);
       if (QUARANTINED_OUTDOOR_TARGETS.has(target)) {
-        selectJourneyProject(null);
-        originalShow.call(win, 'outdoor-build-live');
+        openCurrentOutdoorBuildFromLegacyRoute();
         return;
       }
       const stage = LEGACY_TARGET_TO_STAGE[target] || null;
