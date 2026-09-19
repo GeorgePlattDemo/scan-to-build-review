@@ -8,7 +8,7 @@ const base=read('system-build-base-8d8a9dd.html');
 const doctrine=read('store-zero-canonical-doctrine.js');
 const seat=read('stb-window-seat-space-utilization-0.7.3.html');
 
-const gitBlobSha=text=>crypto.createHash('sha1').update('blob '+Buffer.byteLength(text,'utf8')+'\\0'+text,'utf8').digest('hex');
+const gitBlobSha=text=>crypto.createHash('sha1').update('blob '+Buffer.byteLength(text,'utf8')+'\0'+text,'utf8').digest('hex');
 assert.equal(gitBlobSha(seat),'825a9bce833e982b727e0b48a7416a660543a358','Window Seat changed in Alcove actor-handoff pass');
 
 assert.match(base,/NEXT → CONFIGURE/);
