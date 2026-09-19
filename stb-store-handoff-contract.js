@@ -319,7 +319,7 @@
       cherry:Object.freeze({chipClass:'HARD WOOD',chipLoadIpt:0.00600,feedInPerMin:216,wearFactor:1.10,sizeKey:'1x6c'}),
       oak:Object.freeze({chipClass:'HARD WOOD',chipLoadIpt:0.00600,feedInPerMin:216,wearFactor:1.15,sizeKey:'1x6o'})
     }),
-    formula:'recovery = 365 + 60 × (modeled_cycle_minutes / 56.16) × species_wear_factor'
+    formula:'recovery = 425 × (modeled_cycle_minutes / 56.16) × species_wear_factor'
   });
 
   function money2(v){
@@ -338,8 +338,15 @@
     var otherMinutesRaw = sticks ? (C.jobSetupMin + sticks * (C.loadSeatMin + C.releaseLabelMin + C.cutsPerStick * C.crosscutMin)) : 0;
     var minutesRaw = sticks ? (otherMinutesRaw + millMinutes) : 0;
     var cycleFactor = sticks ? minutesRaw / R.pineBaselineCycleMin : 0;
-    var cellConsumption = sticks ? money2(R.cellConsumptionBaseline * cycleFactor * prof.wearFactor) : 0;
-    var recovery = sticks ? money2(R.fixedReferenceFulfillment + cellConsumption) : 0;
+    var scale = cycleFactor * prof.wearFactor;
+    var cellConsumption = sticks ? money2(R.cellConsumptionBaseline * scale) : 0;
+    var recovery = sticks ? money2((R.fixedReferenceFulfillment + R.cellConsumptionBaseline) * scale) : 0;
+    var breakdown = Object.freeze({
+      materialHandlingFabrication: money2(R.components.materialHandlingFabrication * scale),
+      inspectLabelBundleStage: money2(R.components.inspectLabelBundleStage * scale),
+      facilityAdminRework: money2(R.components.facilityAdminRework * scale),
+      serviceCommercialReserve: money2(R.components.serviceCommercialReserve * scale)
+    });
     var feed = money2(prof.chipLoadIpt * D001_ENVELOPE.cuttingEdges * D001_ENVELOPE.spindleRpm);
     return Object.freeze({
       status:'DECLARED_REFERENCE',
@@ -364,7 +371,7 @@
         cuttingEdges:D001_ENVELOPE.cuttingEdges,
         spindleRpm:D001_ENVELOPE.spindleRpm
       }),
-      recoveryBreakdown:R.components,
+      recoveryBreakdown:breakdown || R.components,
       cycle:C,
       envelope:D001_ENVELOPE,
       recoveryModel:R,

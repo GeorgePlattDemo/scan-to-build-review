@@ -6,7 +6,7 @@ const startOwn = read('stb-start-own-0.11.html');
 const shell = read('system-build-current.html');
 const contract = read('stb-store-handoff-contract.js');
 
-assert.match(startOwn, /stb-store-handoff-contract\.js\?v=59522da9/);
+assert.match(startOwn, /stb-store-handoff-contract\.js\?v=e810ce44/);
 assert.match(startOwn, /<div class="flowstack" id="flow">[\s\S]*operationPanel\(\)\+modeledWorkPanel\(\)\+referenceCostPanel\(\)/);
 assert.match(startOwn, /function currentStoreAuthority\(\)/);
 assert.match(startOwn, /function storeCapabilityModel\(\)/);
@@ -39,8 +39,8 @@ assert.match(contract, /legacyGeneralRecoverySelected:false/);
 assert.match(contract, /economicsModel:'STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0\.1'/);
 assert.match(contract, /projectId:'alcove'[\s\S]*economicsModel:'STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0\.1'[\s\S]*legacyGeneralRecoverySelected:false/);
 
-assert.match(shell, /stb-store-handoff-contract\.js\?v=59522da9/);
-assert.match(shell, /stb-start-own-0\.11\.html\?v=eeef28d3/);
+assert.match(shell, /stb-store-handoff-contract\.js\?v=e810ce44/);
+assert.match(shell, /stb-start-own-0\.11\.html\?v=5e148202/);
 assert.match(shell, /payload\.storeReference\?\.unresolvedConditions/);
 assert.match(shell, /Array\.isArray\(payload\.storeReference\?\.unresolvedConditions\)/);
 

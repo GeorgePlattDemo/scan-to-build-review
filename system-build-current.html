@@ -13,7 +13,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 <body>
 <iframe id="stb-current" title="Scan-to-Build System" src="system-build-front-door-0.5.html?v=5ac9677b"></iframe>
 <script src="stb-canonical-journey.js?v=e0619841"></script>
-<script src="stb-store-handoff-contract.js?v=59522da9"></script>
+<script src="stb-store-handoff-contract.js?v=e810ce44"></script>
 <script src="store-zero-canonical-doctrine.js?v=65366367"></script>
 <script>
 (() => {
@@ -173,7 +173,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   id="start-own-proof-frame"
                   class="start-own-shell-frame"
                   title="Start Your Own · definition to doing"
-                  src="stb-start-own-0.11.html?v=eeef28d3"
+                  src="stb-start-own-0.11.html?v=5e148202"
                 ></iframe>
               </div>
             `;
@@ -593,7 +593,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       setText('o-mat', money(quote.material));
       setText('o-hw', money(quote.hardware));
       setText('o-cyc', quote.minutes+' min modeled · '+quote.otherMinutes+' min other · mill '+quote.millMinutes+' min');
-      setText('o-rec', money(quote.recovery)+' · cell '+money(quote.cellConsumption));
+      setText('o-rec', money(quote.recovery)+' · cell '+money(quote.cellConsumption)+' · handle '+money(quote.recoveryBreakdown.materialHandlingFabrication)+' · inspect '+money(quote.recoveryBreakdown.inspectLabelBundleStage)+' · facility '+money(quote.recoveryBreakdown.facilityAdminRework)+' · service '+money(quote.recoveryBreakdown.serviceCommercialReserve));
 
       const how = cfg.querySelector('.how');
       if (how) {

@@ -32,6 +32,6 @@ assert.match(working, /location\.href='stb-outdoor-build\.html'/);
 // Locked Start Your Own remains provenance; 0.11 is the active generic operation candidate.
 assert.match(own, /Scan-to-Build · Start Your Own · Definition to Doing/);
 assert.match(candidate, /Start Your Own 0\.11 · Definition to Doing/);
-assert.match(shell, /stb-start-own-0\.11\.html\?v=eeef28d3/);
+assert.match(shell, /stb-start-own-0\.11\.html\?v=5e148202/);
 
 console.log('PASS · Outdoor Sawhorse proof wired behind the Outdoor Build tile');
