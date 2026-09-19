@@ -263,6 +263,16 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         'alcove-order-packaging':selectedDecision('Packaging'),
         'alcove-order-handoff':selectedDecision('Handoff'),
         'alcove-order-collector':selectedDecision('Who collects'),
+        'alcove-store-return-price':textOf('p-price')+' · reference / budgetary',
+        'alcove-store-return-packaging':selectedDecision('Packaging'),
+        'alcove-store-return-handoff':selectedDecision('Handoff'),
+        'alcove-store-return-collector':selectedDecision('Who collects'),
+        'alcove-accept-price':textOf('p-price')+' · reference / budgetary',
+        'alcove-accept-basis':textOf('p-basis'),
+        'alcove-accept-material':textOf('p-material')+' · '+textOf('o-sku')+' · '+textOf('o-oh')+' reference',
+        'alcove-accept-packaging':selectedDecision('Packaging'),
+        'alcove-accept-handoff':selectedDecision('Handoff'),
+        'alcove-accept-collector':selectedDecision('Who collects'),
         'alcove-yard-packaging':selectedDecision('Packaging'),
         'alcove-yard-handoff':selectedDecision('Handoff'),
         'alcove-yard-collector':selectedDecision('Who collects')
@@ -277,13 +287,16 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       const storePage = doc.getElementById('store');
       const storeMain = storePage?.querySelector(':scope > .main');
       const storeRail = storePage?.querySelector(':scope > .rail');
+      const requestPage = doc.getElementById('request');
+      const requestMain = requestPage?.querySelector(':scope > .main');
+      const requestRail = requestPage?.querySelector(':scope > .rail');
       const yardPage = doc.getElementById('yard');
       const yardMain = yardPage?.querySelector(':scope > .main');
       const yardRail = yardPage?.querySelector(':scope > .rail');
       const recordPage = doc.getElementById('record');
       const recordMain = recordPage?.querySelector(':scope > .main');
       const recordRail = recordPage?.querySelector(':scope > .rail');
-      if (!storeMain || !yardMain || !recordMain) return false;
+      if (!storeMain || !requestMain || !yardMain || !recordMain) return false;
       if (storeMain.dataset.alcoveCommercialReconciled === 'true') return true;
 
       const requestBlock = extractAlcoveLegacyMain('request','Full existing Store service and handoff choices');
@@ -358,33 +371,62 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
       const oldBottom = storeMain.querySelector(':scope > .bottom');
       oldBottom?.remove();
-      const decision = doc.createElement('section');
-      decision.id = 'alcove-commercial-decision';
-      decision.innerHTML = `
-        <h2>The customer decision</h2>
-        <p>Everything Store currently knows is above: what it received, what it can and cannot currently establish, material and availability, service choices, reference price basis, timing basis, unresolved conditions, and the full event model.</p>
+      const returnedOffer = doc.createElement('section');
+      returnedOffer.id = 'alcove-store-returned-offer';
+      returnedOffer.innerHTML = `
+        <h2>Complete returned Store answer</h2>
+        <p>Store has finished the answering work available to this reference surface. The confirmed definition is unchanged. All current capability, material, service, availability, price, timing, fulfillment, exception, and twelve-event evidence remains above.</p>
         <div class="cols">
           <div>
-            <div class="kv"><span>Packaging choice</span><span id="alcove-order-packaging">—</span></div>
-            <div class="kv"><span>Fulfillment choice</span><span id="alcove-order-handoff">—</span></div>
-            <div class="kv"><span>Pickup / handoff recipient</span><span id="alcove-order-collector">—</span></div>
+            <div class="kv"><span>Reference total</span><span id="alcove-store-return-price">—</span></div>
+            <div class="kv"><span>Packaging choice</span><span id="alcove-store-return-packaging">—</span></div>
+            <div class="kv"><span>Fulfillment choice</span><span id="alcove-store-return-handoff">—</span></div>
           </div>
           <div>
-            <div class="kv"><span>Offer / terms</span><span>REFERENCE ONLY</span></div>
-            <div class="kv"><span>Acceptance</span><span id="alcove-acceptance-state">NOT ESTABLISHED</span></div>
-            <div class="kv"><span>Settlement / payment</span><span id="alcove-settlement-state">NOT ESTABLISHED · NOT LIVE COMMERCE</span></div>
+            <div class="kv"><span>Pickup / handoff recipient</span><span id="alcove-store-return-collector">—</span></div>
+            <div class="kv"><span>Offer status</span><span>REFERENCE · RETURNED</span></div>
+            <div class="kv"><span>Settlement</span><span>NOT ESTABLISHED</span></div>
           </div>
         </div>
-        <div class="band"><b>Acceptance ≠ settlement ≠ allocation ≠ production release.</b> Selecting reference acceptance below records only a demonstration decision. It does not record payment, reserve material, release production, establish machine readiness, create Cycle Start, or claim a cut.</div>
+        <div class="band"><b>Store Answer is not customer acceptance.</b> Nothing on this page records acceptance, payment, allocation, production release, machine readiness, Cycle Start, or physical work.</div>
+        <div class="bottom"><button type="button" data-alcove-commercial-action="change">CHANGE DEFINITION</button><button class="primary" type="button" data-alcove-commercial-action="accept-page">ACCEPT STORE ANSWER →</button></div>
+      `;
+      storeMain.append(returnedOffer);
+
+      requestMain.innerHTML = `
+        <p class="tag">ALCOVE · ACCEPT / SETTLE</p>
+        <h1>Store answered. You decide.</h1>
+        <p class="sub">This is the customer handoff. The Store answer is complete enough for the current reference demonstration; now the holder may accept, decline, or return to Configure for a new version.</p>
+        <div class="hdr">
+          <div><b>VERSION</b><span>Version 1 · confirmed</span></div>
+          <div><b>STORE ANSWER</b><span>REFERENCE · RETURNED</span></div>
+          <div><b>ACCEPTANCE</b><span id="alcove-acceptance-state">NOT ESTABLISHED</span></div>
+          <div><b>SETTLEMENT</b><span id="alcove-settlement-state">NOT ESTABLISHED</span></div>
+        </div>
+        <h2>Final returned offer</h2>
+        <div class="cols">
+          <div>
+            <div class="kv"><span>Reference total</span><span id="alcove-accept-price">—</span></div>
+            <div class="kv"><span>Price basis</span><span id="alcove-accept-basis">—</span></div>
+            <div class="kv"><span>Material / availability</span><span id="alcove-accept-material">—</span></div>
+          </div>
+          <div>
+            <div class="kv"><span>Packaging</span><span id="alcove-accept-packaging">—</span></div>
+            <div class="kv"><span>Pickup / delivery</span><span id="alcove-accept-handoff">—</span></div>
+            <div class="kv"><span>Recipient</span><span id="alcove-accept-collector">—</span></div>
+          </div>
+        </div>
+        <div class="band"><b>Timing basis before acceptance.</b> Settlement → material allocation → production release → Store / Yard queue → local readiness → required operations → inspection / labels / packaging → staging → READY notice → pickup / delivery. Existing reference timing only: staging target ≤2 business hours after the last required cycle, then a 4-business-hour pickup window after READY. This is not a live ETA.</div>
+        <div class="band warn"><b>Reference commerce only.</b> This demonstration does not process money. Offer ≠ acceptance. Acceptance ≠ settlement. Settlement ≠ allocation. Allocation ≠ production release. Selecting reference acceptance below does not record payment or create downstream physical authority.</div>
         <div class="btns">
           <button type="button" data-alcove-commercial-action="change">CHANGE DEFINITION</button>
           <button type="button" data-alcove-commercial-action="decline">DECLINE REFERENCE OFFER</button>
           <button class="primary" type="button" data-alcove-commercial-action="accept">ACCEPT REFERENCE OFFER</button>
-          <button type="button" data-alcove-commercial-action="yard" disabled>CONTINUE TO STORE / YARD →</button>
+          <button type="button" data-alcove-commercial-action="yard" disabled>CONTINUE WITH THIS ORDER →</button>
         </div>
-        <p id="alcove-commercial-decision-note" class="fine">No commercial decision recorded.</p>
+        <p id="alcove-commercial-decision-note" class="fine">No customer decision recorded. Settlement / payment remains NOT ESTABLISHED.</p>
       `;
-      storeMain.append(decision);
+      if (requestRail) requestRail.innerHTML = '<p class="hd">ACCEPT / SETTLE</p><p class="goal">Store answered. The holder decides.</p><div class="row"><b>One real handoff</b><span>Store returns the answer; the customer decides whether to proceed.</span></div><div class="row"><b>Reference commerce</b><span>Acceptance can be demonstrated. Payment is not falsely claimed.</span></div><div class="row"><b>Keep the verbs separate</b><span>Accept ≠ settle ≠ allocate ≠ release.</span></div>';
 
       yardMain.innerHTML = `
         <p class="tag">ALCOVE · STORE / YARD FULFILLMENT</p>
@@ -460,6 +502,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       const continueButton = doc.querySelector('#alcove-commercial-decision [data-alcove-commercial-action="yard"]');
       if (action === 'change') {
         originalShow.call(win,'alcove-config');
+        return;
+      }
+      if (action === 'accept-page') {
+        originalShow.call(win,'request');
+        setTimeout(syncAlcoveCommercialSurface,0);
         return;
       }
       if (action === 'decline') {
