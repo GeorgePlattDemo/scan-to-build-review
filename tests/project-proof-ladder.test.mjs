@@ -34,7 +34,8 @@ assert.match(shell, /holeRequirement: 'NONE'/);
 // Job 2 carries bounded facts and requires the three project-specific answers.
 assert.match(outdoor, /SAME JOB · BOUNDED PROJECT/);
 assert.match(outdoor, /2×4 stock class, square ends and the cited 16½ in reference geometry/);
-assert.match(outdoor, /quantity, finished length choice, and whether measured hole spots are required/);
+assert.match(outdoor, /still supply the quantity and whether measured hole spots are required/);
+assert.match(outdoor, /16½ in finished length is carried by the bounded reference unless you change it/);
 assert.match(outdoor, /Quantity 8 is project-specific \/ user-declared/);
 assert.match(outdoor, /published plan as drawn uses 4 legs for two benches/);
 assert.match(outdoor, /These are not “standard” holes/);
