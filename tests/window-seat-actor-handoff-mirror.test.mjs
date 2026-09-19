@@ -50,7 +50,7 @@ for(const pair of [
   "store:'store-answer'","review:'store-answer'","request:'accept-pay'",
   "yard:'store-yard'","terms:'store-yard'","recap:'handoff-record'","record:'handoff-record'"
 ]) assert.ok(shell.includes(pair),'shell missing actor projection '+pair);
-assert.match(shell,/stb-window-seat-space-utilization-0\.7\.4\.html\?v=f12e0102/);
+assert.match(shell,/stb-window-seat-space-utilization-0\.7\.4\.html\?v=96c85fee/);
 
 // One canonical content source feeds both Guided and Continuous.
 // Guided only filters the same DOM nodes that Continuous renders.
@@ -68,6 +68,11 @@ assert.ok(actorBuilder.includes('buildRecordJourney(snapshot)'),'Handoff / Recor
 
 // Mirror gate is explicit, exhaustive, and can only return the two approved results.
 assert.match(seat,/function actorMirrorAudit\(\)/);
+assert.match(seat,/function captureActorMirror\(stage,mode\)/);
+assert.match(seat,/JSON\.stringify\(continuous\)===JSON\.stringify\(guided\)/);
+assert.match(seat,/data-ws-actor-gate="STORE ANSWER"/);
+assert.match(seat,/data-ws-actor-gate="ACCEPT \/ PAY"/);
+assert.match(seat,/data-ws-actor-gate="STORE \/ YARD"/);
 assert.match(seat,/EXACT MIRROR/);
 assert.match(seat,/DEFECT — NOT EXACT MIRROR/);
 for(const item of [
