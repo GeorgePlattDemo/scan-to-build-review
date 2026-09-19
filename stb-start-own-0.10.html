@@ -897,7 +897,8 @@ function dimRow(label,note,key,val,unit,step){
   return '<div class="dimblock"><div class="dim"><span class="lab">'+label+(note?'<i>'+note+'</i>':'')+'</span>'
     +stepper(key,val,unit,step)+'</div><div class="dimmeta">'+exactField(key,val,'dim')+'</div></div>';
 }
-function countRow(label,note,key,val,step,extra){  return '<div class="dimblock"><div class="dim"><span class="lab">'+label+(note?'<i>'+note+'</i>':'')+'</span>'
+function countRow(label,note,key,val,step,extra){
+  return '<div class="dimblock"><div class="dim"><span class="lab">'+label+(note?'<i>'+note+'</i>':'')+'</span>'
     +stepper(key,val,'',step)+(extra||'')+'</div><div class="dimmeta">'+exactField(key,val,'int')+'</div></div>';
 }
 function pills(key,vals,cur,unit){
