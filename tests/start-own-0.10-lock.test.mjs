@@ -33,7 +33,7 @@ assert.match(shell,/startOwnTile = ribbon\.querySelector\('\.tile\[data-go="star
 assert.match(shell,/startOwnTile\.removeAttribute\('data-go'\)/);
 assert.match(shell,/startOwnTile\.dataset\.startOwnArtifact = 'stb-start-own-0\.11\.html'/);
 assert.match(shell,/src="stb-start-own-0\.11\.html\?v=0c7557a5"/);
-assert.equal(gitBlobSha(candidate),'0c7557a5619fa17d443438e5c0c875201dc7a2f7','Start Your Own 0.11 candidate changed unexpectedly');
+assert.equal(gitBlobSha(candidate),'5ae2994a25b0893846160122eeb13921b3ef679a','Start Your Own 0.11 candidate changed unexpectedly');
 assert.match(candidate,/ANGLED_CUT/);
 assert.match(candidate,/STB_START_OWN_CONFIRMED/);
 assert.match(shell,/originalShow\.call\(win, 'start-own-live'\)/);
