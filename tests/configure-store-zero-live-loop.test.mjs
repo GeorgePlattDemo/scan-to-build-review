@@ -29,7 +29,7 @@ assert.match(contract, /economicsStatus:'UNRESOLVED_CLASS_SCOPED_RECOVERY'/);
 assert.match(contract, /legacyGeneralRecoverySelected:false/);
 assert.match(contract, /economicsModel:'STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0\.1'/);
 
-assert.match(shell, /stb-store-handoff-contract\.js\?v=0bc7c076/);
+assert.match(shell, /stb-store-handoff-contract\.js\?v=02a36f6f/);
 assert.match(shell, /stb-start-own-0\.11\.html\?v=0c7557a5/);
 assert.match(shell, /payload\.storeReference\?\.unresolvedConditions/);
 assert.match(shell, /Array\.isArray\(payload\.storeReference\?\.unresolvedConditions\)/);
