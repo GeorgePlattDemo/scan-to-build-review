@@ -21,10 +21,10 @@ assert.match(shell,/Handoff \/ Record/);
 assert.ok(shell.includes("returnedOffer.id = 'alcove-store-returned-offer'"));
 assert.match(shell,/ACCEPT STORE ANSWER →/);
 assert.ok(shell.includes('ALCOVE · ACCEPT / SETTLE'));
-assert.match(shell,/Store answered\. You decide\./);
+assert.match(shell,/Store answered\. The commercial event remains separate\./);
 assert.match(shell,/data-alcove-commercial-action="accept-page">ACCEPT STORE ANSWER →/);
-assert.match(shell,/data-alcove-commercial-action="accept">ACCEPT REFERENCE OFFER/);
-assert.match(shell,/data-alcove-commercial-action="yard" disabled>CONTINUE WITH THIS ORDER →/);
+assert.match(shell,/data-alcove-commercial-action="accept">ACKNOWLEDGE REFERENCE ANSWER/);
+assert.match(shell,/data-alcove-commercial-action="yard" disabled>CONTINUE REFERENCE DEMONSTRATION →/);
 const storeAnswer=shell.slice(shell.indexOf("returnedOffer.id = 'alcove-store-returned-offer'"),shell.indexOf("requestMain.innerHTML = `"));
 assert.equal(storeAnswer.includes('data-alcove-commercial-action="accept"'),false,'Store Answer still performs customer acceptance');
 
