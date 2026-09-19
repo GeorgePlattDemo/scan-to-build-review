@@ -24,7 +24,7 @@ assert.equal(artifact.includes('stb-start-own-0.4.html'), false);
 assert.match(shell, /outdoorTile = ribbon\.querySelector\('\.tile\[data-go="picnic-chooser"\]'\)/);
 assert.match(shell, /outdoorTile\.removeAttribute\('data-go'\)/);
 assert.match(shell, /outdoorTile\.dataset\.outdoorBuildArtifact = 'stb-outdoor-build\.html'/);
-assert.match(shell, /src="stb-outdoor-build\.html\?v=275ac88d"/);
+assert.match(shell, /src="stb-outdoor-build\.html\?v=92bd7339"/);
 assert.match(shell, /originalShow\.call\(win, 'outdoor-build-live'\)/);
 
 assert.match(working, /location\.href='stb-outdoor-build\.html'/);
