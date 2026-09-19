@@ -18,6 +18,79 @@
     sheetS001: Object.freeze({projectId:'sheet-s001', artifact:'system-build-current.html#playhouse-s001', projectClass:'SHEET_ROUTED_OPENING'})
   });
 
+  /*
+   * Store authority is path-specific. Do not collapse these into one universal
+   * Store pin: the current Store master explicitly preserves different pins for
+   * documentary doctrine, executable Stage-2 evidence, published jobs, and the
+   * class-scoped Window Seat recovery model.
+   */
+  var STORE_AUTHORITIES = Object.freeze({
+    canonical: Object.freeze({
+      repository:'GeorgePlattDemo/scan-to-build-store',
+      doctrineFile:'STORE-ZERO.md',
+      doctrinePin:'f88ec61c42446755d00259f88e7fd09f2702fd92',
+      catalogFile:'store-zero-catalog.json',
+      catalogPin:'4402abeb6b0299a5b6db2eec85ed04c3b0236bcc',
+      stage2ExecutablePin:'b40cdc60a405d6c2a63d846f2c2e89cddc5bb95d',
+      publishedJobsPin:'4402abeb6b0299a5b6db2eec85ed04c3b0236bcc'
+    }),
+    startOwn: Object.freeze({
+      projectId:'start-own',
+      projectClass:'USER_DEFINED_BOARD',
+      materialCatalogPin:'4402abeb6b0299a5b6db2eec85ed04c3b0236bcc',
+      capabilityBasis:'CURRENT_CANONICAL_STORE_ZERO',
+      capabilityPin:'f88ec61c42446755d00259f88e7fd09f2702fd92',
+      economicsModel:null,
+      economicsStatus:'UNRESOLVED_CLASS_SCOPED_RECOVERY',
+      legacyGeneralRecoverySelected:false
+    }),
+    outdoor: Object.freeze({
+      projectId:'outdoor-build',
+      projectClass:'BOUNDED_SOURCE_BACKED',
+      materialCatalogPin:'4402abeb6b0299a5b6db2eec85ed04c3b0236bcc',
+      capabilityBasis:'CURRENT_CANONICAL_STORE_ZERO',
+      capabilityPin:'f88ec61c42446755d00259f88e7fd09f2702fd92',
+      economicsModel:null,
+      economicsStatus:'UNRESOLVED_CLASS_SCOPED_RECOVERY',
+      legacyGeneralRecoverySelected:false
+    }),
+    alcove: Object.freeze({
+      projectId:'alcove',
+      projectClass:'ALCOVE_INSERT',
+      materialCatalogPin:'4402abeb6b0299a5b6db2eec85ed04c3b0236bcc',
+      capabilityBasis:'CURRENT_CANONICAL_STORE_ZERO',
+      capabilityPin:'f88ec61c42446755d00259f88e7fd09f2702fd92',
+      economicsModel:'STB-STORE-ZERO-PRICE-1 v0.2.2',
+      economicsStatus:'LEGACY_GENERAL_RECOVERY_STILL_VISIBLE_PENDING_MIGRATION',
+      legacyGeneralRecoverySelected:true
+    }),
+    windowSeat: Object.freeze({
+      projectId:'window-seat',
+      projectClass:'SPACE_UTILIZATION',
+      materialCatalogPin:'4402abeb6b0299a5b6db2eec85ed04c3b0236bcc',
+      capabilityBasis:'D001-BOARD-EDGE-MILL-REF-0.3',
+      capabilityPin:'f88ec61c42446755d00259f88e7fd09f2702fd92',
+      economicsModel:'STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0.1',
+      economicsPin:'f88ec61c42446755d00259f88e7fd09f2702fd92',
+      economicsStatus:'DECLARED_REFERENCE',
+      legacyGeneralRecoverySelected:false
+    }),
+    sheetS001: Object.freeze({
+      projectId:'sheet-s001',
+      projectClass:'SHEET_ROUTED_OPENING',
+      materialCatalogPin:'4402abeb6b0299a5b6db2eec85ed04c3b0236bcc',
+      capabilityBasis:'S001-MODE2-ARCHED-APERTURE-V0',
+      capabilityPin:'4402abeb6b0299a5b6db2eec85ed04c3b0236bcc',
+      economicsModel:null,
+      economicsStatus:'BUDGETARY_MATERIAL_ONLY',
+      legacyGeneralRecoverySelected:false
+    })
+  });
+
+  function storeAuthority(key){
+    return STORE_AUTHORITIES[key] || null;
+  }
+
   function clone(value){
     return value == null ? value : JSON.parse(JSON.stringify(value));
   }
@@ -122,9 +195,11 @@
   }
 
   root.STBStoreHandoffContract = Object.freeze({
-    version:'0.1',
+    version:'0.2',
     actorOrder:ACTOR_ORDER,
     currentArtifacts:CURRENT_ARTIFACTS,
+    storeAuthorities:STORE_AUTHORITIES,
+    storeAuthority:storeAuthority,
     comparisonDemand:comparisonDemand,
     createComparisonHandoff:createComparisonHandoff,
     storeDemandIdentity:storeDemandIdentity,

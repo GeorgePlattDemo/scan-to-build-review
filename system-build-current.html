@@ -13,7 +13,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 <body>
 <iframe id="stb-current" title="Scan-to-Build System" src="system-build-front-door-0.5.html?v=5ac9677b"></iframe>
 <script src="stb-canonical-journey.js?v=e0619841"></script>
-<script src="stb-store-handoff-contract.js?v=da6e2beb"></script>
+<script src="stb-store-handoff-contract.js?v=02a36f6f"></script>
 <script src="store-zero-canonical-doctrine.js?v=65366367"></script>
 <script>
 (() => {
@@ -173,7 +173,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   id="start-own-proof-frame"
                   class="start-own-shell-frame"
                   title="Start Your Own · definition to doing"
-                  src="stb-start-own-0.11.html?v=01bc520c"
+                  src="stb-start-own-0.11.html?v=0c7557a5"
                 ></iframe>
               </div>
             `;
@@ -371,7 +371,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             versionId:definitionId,
             physicalDemand:physicalDemand,
             sourceAuthority:sourceAuthority,
-            unresolvedConditions:['STORE-PRICING-BRIDGE-GAP']
+            unresolvedConditions:source === 'start-own'
+              ? (Array.isArray(payload.storeReference?.unresolvedConditions)
+                  ? payload.storeReference.unresolvedConditions
+                  : [])
+              : ['STORE-PRICING-BRIDGE-GAP']
           });
         } catch (_) {
           return null;
