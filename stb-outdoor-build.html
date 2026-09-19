@@ -696,13 +696,12 @@ function outdoorNormalizedPart(){
     cutPlane:'bevel-thickness',
     endIdentity:'both',
     endRelation:'parallel',
-    lengthDatum:'source-length',
-    sourcePart:'ANA-WHITE-SAW-HORSE-BENCH/END-LEG'
+    lengthDatum:'source-length'
   };
 }
 function sameProofPart(a,b){
   if(!a||!b)return false;
-  var keys=['stockClass','finishedLength','quantity','endCondition','straightCut','angleDegrees','angleReference','cutPlane','endIdentity','endRelation','lengthDatum','sourcePart'];
+  var keys=['stockClass','finishedLength','quantity','endCondition','straightCut','angleDegrees','angleReference','cutPlane','endIdentity','endRelation','lengthDatum'];
   return keys.every(function(k){
     return typeof a[k]==='number'?Math.abs(a[k]-b[k])<.00001:a[k]===b[k];
   });
@@ -811,7 +810,7 @@ function renderProofProject(){
   if($('outdoor-confirm'))$('outdoor-confirm').onclick=function(){
     if(O.heightRequest!=null)return;
     var normalized=outdoorNormalizedPart();
-    O.sent={id:'OB-SAW-'+hash32(JSON.stringify(normalized)),normalizedPart:normalized,project:OUTDOOR_FAMILY.id,assembly:O.assembly,occurrence:O.occurrence,storeEconomics:{status:'UNRESOLVED_CURRENT_MODEL_MISMATCH',engine:'STB-STORE-ZERO-PRICE-1',version:'0.2.2'}};
+    O.sent={id:'OB-SAW-'+hash32(JSON.stringify(normalized)),normalizedPart:normalized,sourceAuthority:{family:OUTDOOR_FAMILY.id,table:OUTDOOR_FAMILY.tableSource,bench:OUTDOOR_FAMILY.benchSource,part:'DB-02 / end-leg'},project:OUTDOOR_FAMILY.id,assembly:O.assembly,occurrence:O.occurrence,storeEconomics:{status:'UNRESOLVED_CURRENT_MODEL_MISMATCH',engine:'STB-STORE-ZERO-PRICE-1',version:'0.2.2'}};
     try{localStorage.setItem('stb-proof-ladder-job2',JSON.stringify({measured:true,semanticOutput:normalized,storeEconomics:O.sent.storeEconomics}))}catch(_){}
     renderProofProject();
     setTimeout(function(){document.getElementById('comparison-receipt')?.scrollIntoView({behavior:'smooth',block:'start'})},0);
