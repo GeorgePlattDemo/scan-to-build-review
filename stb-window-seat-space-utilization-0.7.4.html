@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Scan-to-Build — window seat · space utilization 0.7.3</title>
+<title>Scan-to-Build — window seat · space utilization 0.7.4</title>
 <style>
   :root{
     --bg:#faf9f7; --surface:#ffffff; --rail:#f4f2ef; --tint:#f6efe4;
@@ -226,18 +226,25 @@
   body[data-ws-view="guided"] .ws-gate-separator,
   body[data-ws-view="guided"] .wrap>p.tag,
   body[data-ws-view="guided"] .wrap>p.note{display:none!important}
+  #ws-configure-review{margin:0 0 24px}
+  #ws-continuous-journey .ws-actor-group{margin:0 0 24px}
+  #ws-continuous-journey .ws-actor-heading{padding:18px 20px;border:1px solid var(--border-accent);border-radius:9px 9px 0 0;background:var(--tint)}
+  #ws-continuous-journey .ws-actor-heading h1{margin:0 0 6px;font-size:22px}
+  #ws-continuous-journey .ws-actor-heading p{margin:0;color:var(--text-2)}
+  #ws-continuous-journey .ws-actor-group .stage-bottom{display:none!important}
+  #ws-continuous-journey .ws-actor-actions{display:flex;align-items:center;gap:8px;padding:14px 16px;border:1px solid var(--border);border-top:0;background:var(--surface)}
+  #ws-continuous-journey .ws-actor-actions .next{margin-left:auto}
   body[data-ws-view="guided"] #pg-capture,
   body[data-ws-view="guided"] #pg-configure,
-  body[data-ws-view="guided"] #ws-continuous-journey .ws-journey-stage{display:none!important}
+  body[data-ws-view="guided"] #ws-configure-review,
+  body[data-ws-view="guided"] #ws-continuous-journey .ws-actor-group{display:none!important}
   body[data-ws-view="guided"][data-ws-stage="scan"] #pg-capture,
-  body[data-ws-view="guided"][data-ws-stage="configure"] #pg-configure,
-  body[data-ws-view="guided"][data-ws-stage="store"] #ws-stage-store,
-  body[data-ws-view="guided"][data-ws-stage="review"] #ws-stage-review,
-  body[data-ws-view="guided"][data-ws-stage="request"] #ws-stage-request,
-  body[data-ws-view="guided"][data-ws-stage="yard"] #ws-stage-yard,
-  body[data-ws-view="guided"][data-ws-stage="terms"] #ws-stage-terms,
-  body[data-ws-view="guided"][data-ws-stage="recap"] #ws-stage-recap,
-  body[data-ws-view="guided"][data-ws-stage="record"] #ws-stage-record{display:grid!important}
+  body[data-ws-view="guided"][data-ws-stage="configure"] #pg-configure{display:grid!important}
+  body[data-ws-view="guided"][data-ws-stage="configure"] #ws-configure-review{display:block!important}
+  body[data-ws-view="guided"][data-ws-stage="store-answer"] #ws-continuous-journey .ws-actor-group[data-ws-actor-group="store-answer"],
+  body[data-ws-view="guided"][data-ws-stage="accept-pay"] #ws-continuous-journey .ws-actor-group[data-ws-actor-group="accept-pay"],
+  body[data-ws-view="guided"][data-ws-stage="store-yard"] #ws-continuous-journey .ws-actor-group[data-ws-actor-group="store-yard"],
+  body[data-ws-view="guided"][data-ws-stage="handoff-record"] #ws-continuous-journey .ws-actor-group[data-ws-actor-group="handoff-record"]{display:block!important}
   @media (max-width:1100px){ .cfg{grid-template-columns:240px minmax(0,1fr)} .cfg>div:last-child{grid-column:1/-1} }
   @media (max-width:800px){
     .page{grid-template-columns:1fr}
@@ -259,7 +266,7 @@
 <body>
 <div class="wrap">
 
-<p class="tag">SCAN-TO-BUILD · WINDOW SEAT · SPACE UTILIZATION 0.7.3</p>
+<p class="tag">SCAN-TO-BUILD · WINDOW SEAT · SPACE UTILIZATION 0.7.4</p>
 <p class="note">Project definition begins with two pages: capture, then configure. One project class, exactly three top-level modules — <b>ASM-LEFT</b> full-height shelving tower, <b>ASM-CENTER</b> one complete window-seat module (upper storage · window opening · seat · lower cubbies), <b>ASM-RIGHT</b> full-height shelving tower. The outer towers attach directly to the outside faces of ASM-CENTER on site. Solid board demand throughout, 3/4 in finished thickness. The project states demand; a local pinned Store Zero fixture adapter answers it offline, and every number it returns names its pin. Collaborator note: this prototype demonstrates bounded part definition and Store demand for the Space Utilization project. It does not implement the governed Project B review model. The right rail is written for reviewers, not customers.</p>
 
 
@@ -547,9 +554,11 @@
     <div class="row"><b>REFERENCE ≠ COMMISSIONED</b><span>Modeled capability is useful evidence, never a claim that a physical machine has been accepted for production.</span></div>
     <div class="row"><b>NO BLOOD ON WOOD</b><span>No convenience, price, schedule or UI state outranks local physical safety.</span></div>
 
-    <div class="foot"><p>Store Zero pin f88ec61c42… · D001-BOARD-EDGE-MILL-REF-0.3 · STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0.1 · guide/UI + adapter 0.7.3.</p></div>
+    <div class="foot"><p>Store Zero pin f88ec61c42… · D001-BOARD-EDGE-MILL-REF-0.3 · STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0.1 · guide/UI 0.7.4 · pinned adapter LOCAL-PINNED-FIXTURE-ADAPTER-0.7.3.</p></div>
   </div>
 </section>
+
+<div id="ws-configure-review" aria-label="Window Seat configure and confirm review"></div>
 
 <div class="ws-gate-separator" id="ws-gate-configure-store" data-ws-gate="configure"></div>
 
@@ -690,6 +699,7 @@ var START={fam:'pine', H:94, W:{LEFT:24,CENTER:55,RIGHT:24}, SH:{LEFT:4,RIGHT:4}
 var P=JSON.parse(JSON.stringify(START));
 var rev={n:1,confirmed:false};
 var answer=null;            /* frozen Store answer snapshot */
+var customerDecision={status:'UNDECIDED',atRevision:null}; /* reference decision only; never payment */
 var occHistory={};          /* occurrence IDs ever seen this session */
 var lastBasis=null;         /* for "same Store material/work basis" */
 var T=0.75;
@@ -1477,6 +1487,7 @@ function bump(){
   if(rev.confirmed||answer){
     rev.n++; rev.confirmed=false;
     if(answer)answer.stale=true;
+    customerDecision={status:'UNDECIDED',atRevision:null};
   }
 }
 
@@ -1873,7 +1884,7 @@ function into(el){if(el&&el.scrollIntoView)el.scrollIntoView({behavior:'smooth',
 function cloneJourneyValue(value){ return JSON.parse(JSON.stringify(value)); }
 function currentJourneySnapshot(ensureAnswer){
   var def=buildDefinition(), req=buildRequest(def), open=conditions(def);
-  if(ensureAnswer && (!answer || answer.stale || answer.atRevision!==rev.n)){
+  if(ensureAnswer && rev.confirmed && (!answer || answer.stale || answer.atRevision!==rev.n)){
     answer=StoreZeroAdapter.evaluate(req,famSp());
     answer.atRevision=rev.n; answer.stale=false;
     cycle();
@@ -1882,12 +1893,13 @@ function currentJourneySnapshot(ensureAnswer){
   var reference=StoreZeroAdapter.evaluate(req,famSp());
   return cloneJourneyValue({
     protocol:'stb.project-owned-journey/0.1',
-    project:{id:'window-seat',label:'Space utilization · Window seat',artifact:'0.7.3',projectClass:def.cls},
+    project:{id:'window-seat',label:'Space utilization · Window seat',artifact:'0.7.4',projectClass:def.cls},
     revision:{number:rev.n,confirmed:rev.confirmed},
     definition:def,
     storeRequest:req,
     storeReference:reference,
     storeAnswer:answer,
+    customerDecision:customerDecision,
     openConditions:open,
     occurrenceHistory:occHistory,
     authority:{
@@ -1963,12 +1975,15 @@ function storeLineSummary(line){
 }
 function seatStoreStatusHtml(snapshot){
   var req=snapshot.storeRequest||{}, rev=snapshot.revision||{}, ans=snapshot.storeAnswer||null;
-  var ref=snapshot.storeReference||ans||null;
+  var ref=snapshot.storeReference||ans||null, decision=snapshot.customerDecision||customerDecision;
   var currentAnswer=!!(ans&&!ans.stale&&Number(ans.atRevision)===Number(rev.number));
+  var acceptance=(decision&&decision.status==='ACCEPTED_REFERENCE'&&Number(decision.atRevision)===Number(rev.number))
+    ?'REFERENCE ANSWER ACCEPTED · COMMERCIAL ACCEPTANCE NOT ESTABLISHED'
+    :decision&&decision.status==='DECLINED'?'REFERENCE ANSWER DECLINED':'NOT ESTABLISHED';
   return jGrid([
     ['01 · Yard review',currentAnswer?'REFERENCE ANSWER HELD':ans&&ans.stale?'PRIOR ANSWER HISTORICAL':'VIEW ONLY · NOT SUBMITTED'],
     ['02 · Offer','NOT ESTABLISHED'],
-    ['03 · Acceptance','NOT ESTABLISHED'],
+    ['03 · Acceptance',acceptance],
     ['04 · Settlement','NOT ESTABLISHED'],
     ['05 · Material',(ref&&ref.states&&ref.states.mapping||'NOT EVALUATED')+' · NOT ALLOCATED'],
     ['06 · Production release','NOT ESTABLISHED'],
@@ -2162,12 +2177,12 @@ function buildReviewJourney(snapshot){
         ])+
         jCallout('<b>Meaning of Confirm.</b> You affirm the intended definition and acknowledge the displayed Store basis and unresolved conditions. The Store Zero number is a budgetary reference estimate, not a commercial offer.',false)
       )+
-      '<div class="ws-confirm-actions"><button type="button" data-ws-guided-stage="store">← Back to Store</button>'+
-      '<button type="button" data-ws-guided-stage="configure">KEEP EDITING</button>'+
-      '<button class="primary" type="button" data-ws-confirm'+(rev.confirmed?' disabled':'')+'>'+(rev.confirmed?'CONFIRMED · REVISION '+jEsc(rev.number):jEsc(canonicalGate('review')?canonicalGate('review').action:'CONFIRM THIS VERSION'))+'</button></div>'+
+      '<div class="ws-confirm-actions">'+
+      '<button type="button" data-ws-configure-edit>KEEP EDITING</button>'+
+      '<button class="primary" type="button" data-ws-confirm-send'+(rev.confirmed?' disabled':'')+'>'+(rev.confirmed?'CONFIRMED · REVISION '+jEsc(rev.number):'CONFIRM + SEND TO STORE')+'</button></div>'+
       confirmStatus+
       (blocking?'<div class="ws-journey-callout warn"><b>STOP.</b> '+blocking+' project-definition condition'+(blocking===1?'':'s')+' must be settled before confirmation.</div>':''),
-    railHtml:'<p class="hd">04 · REVIEW · BUILD GUIDE</p><p class="goal">The exact version, not a status card.</p>'+
+    railHtml:'<p class="hd">CONFIGURE + CONFIRM · BUILD GUIDE</p><p class="goal">The exact version, not a status card.</p>'+
       '<div class="row"><b>Show the exact version</b><span>Controlling facts, derived consequences, material, operations and exclusions remain visible.</span></div>'+
       '<div class="row"><b>Show the Store basis</b><span>Reference mapping, availability, capability and price evidence stay attached to the version reviewed.</span></div>'+
       '<div class="row"><b>Confirm ≠ contract</b><span>Order, payment, allocation, release, readiness and Cycle Start remain separate.</span></div>'+
@@ -2204,7 +2219,7 @@ function buildRequestJourney(snapshot){
       )+
       jSection('What is not being requested',
         (exclusions.length?jGrid(exclusions.map(function(x){return ['Excluded',x]})):jCallout('No exclusions were listed in the project request.',false))+
-        jCallout('<b>No hidden transaction choices.</b> This 0.7.3 project does not invent finishing, installation, delivery or engineering services merely to fill out a commercial screen.',false)
+        jCallout('<b>No hidden transaction choices.</b> This 0.7.4 project does not invent finishing, installation, delivery or engineering services merely to fill out a commercial screen.',false)
       )+
       jSection('What the Store may answer',
         '<p>Store may answer material identity and mapping, stated availability, supported or unresolved operations, price components, shortages, unpriced services and other declared Store conditions. It may return an adjustment or refusal with a reason.</p>'+
@@ -2431,6 +2446,135 @@ function buildJourneyStage(stage,snapshot){
   if(stage==='record')return buildRecordJourney(snapshot);
   return null;
 }
+
+var WINDOW_SEAT_ACTOR_STAGES=['scan','configure','store-answer','accept-pay','store-yard','handoff-record'];
+var WINDOW_SEAT_MIRROR_COVERAGE=['content','controls','current values','derived values','project state','occurrence identity','parts','board runs','material requirements','Store request','Store answer','service choices','unresolved conditions','warnings','gates','refusal / defer behavior','economics','authority statements','transaction states','machine boundaries','completion states','owner-record consequences','technical meaning'];
+function actorStageForTechnical(stage){
+  return ({scan:'scan',configure:'configure',store:'store-answer',review:'store-answer',request:'accept-pay',yard:'store-yard',terms:'store-yard',recap:'handoff-record',record:'handoff-record'})[stage]||stage;
+}
+function actorActionBar(previous,next,label,disabled){
+  var back=previous?'<button type="button" data-ws-actor-stage="'+previous+'">← Back</button>':'';
+  var forward=next?'<button class="next" type="button" data-ws-actor-stage="'+next+'"'+(disabled?' disabled':'')+'>'+jEsc(label||'NEXT')+' →</button>':'';
+  return '<div class="ws-actor-actions">'+back+'<span class="stage-fine">Same Window Seat project · same revision</span>'+forward+'</div>';
+}
+function actorHeading(label,copy){
+  return '<div class="ws-actor-heading"><p class="stage-tag">WINDOW SEAT · ACTOR HANDOFF</p><h1>'+jEsc(label)+'</h1><p>'+jEsc(copy)+'</p></div>';
+}
+function actorGroup(stage,label,copy,body,actions){
+  return '<div class="ws-actor-group" data-ws-actor-group="'+stage+'">'+actorHeading(label,copy)+body+(actions||'')+'</div>';
+}
+function buildAcceptPayActor(snapshot){
+  var ans=snapshot.storeAnswer||null, rev=snapshot.revision||{}, decision=snapshot.customerDecision||customerDecision;
+  var current=!!(ans&&!ans.stale&&Number(ans.atRevision)===Number(rev.number)&&rev.confirmed);
+  var accepted=!!(decision&&decision.status==='ACCEPTED_REFERENCE'&&Number(decision.atRevision)===Number(rev.number));
+  var declined=!!(decision&&decision.status==='DECLINED'&&Number(decision.atRevision)===Number(rev.number));
+  var rows=current?[
+    ['Revision',''+rev.number+' · confirmed'],
+    ['Store answer',ans.jobDisposition||ans.status||'REFERENCE ANSWER HELD'],
+    ['Reference selling basis',jMoney(ans.q)+' · budgetary / reference'],
+    ['Material',jMoney(ans.material)],
+    ['Fabrication / fulfillment recovery',jMoney(ans.recovery)],
+    ['Hardware',jMoney(ans.hardware)],
+    ['Payment / settlement','NOT ESTABLISHED · no live payment in this demonstration'],
+    ['Allocation','NOT ESTABLISHED'],
+    ['Production release','NOT ESTABLISHED'],
+    ['Machine readiness','NOT ESTABLISHED'],
+    ['Cycle Start','NOT AUTHORIZED HERE · remains local']
+  ]:[['Store answer','NO CURRENT HELD ANSWER'],['Payment / settlement','NOT ESTABLISHED']];
+  var status=accepted?'REFERENCE ANSWER ACCEPTED · payment still NOT ESTABLISHED':declined?'REFERENCE ANSWER DECLINED':'NO CUSTOMER DECISION RECORDED';
+  return {
+    stage:'accept-pay',
+    headline:'Accept / Pay',
+    mainHtml:'<p class="stage-tag">CUSTOMER HANDOFF</p><h1>Store answered. You decide.</h1>'+
+      '<p class="lede">The complete Store answer stays on the prior surface. This page records only the customer decision against that exact confirmed revision. This reference demonstration does not process money.</p>'+
+      jSection('Exact proposition carried forward',jGrid(rows))+
+      jCallout('<b>Current decision.</b> '+jEsc(status),false)+
+      jCallout('<b>Acceptance here is not payment.</b> It does not allocate material, release production, establish machine readiness, create Cycle Start, claim physical completion, issue READY, or transfer custody.',false)+
+      '<div class="ws-confirm-actions"><button type="button" data-ws-decision="change">CHANGE DEFINITION</button>'+
+      '<button type="button" data-ws-decision="decline"'+(!current?' disabled':'')+'>DECLINE</button>'+
+      '<button class="primary" type="button" data-ws-decision="accept"'+(!current||accepted?' disabled':'')+'>'+(accepted?'REFERENCE ANSWER ACCEPTED':'ACCEPT REFERENCE ANSWER')+'</button>'+
+      '<button type="button" data-ws-continue-yard'+(!accepted?' disabled':'')+'>CONTINUE TO STORE / YARD →</button></div>',
+    railHtml:'<p class="hd">ACCEPT / PAY · BUILD GUIDE</p><p class="goal">Customer decision only</p>'+
+      '<div class="row"><b>Store Answer ≠ acceptance</b><span>The Store surface finishes before the customer decision begins.</span></div>'+
+      '<div class="row"><b>Acceptance ≠ payment</b><span>This reference journey records no live settlement.</span></div>'+
+      '<div class="row"><b>Payment ≠ allocation</b><span>No downstream Store or Yard state is created by this control.</span></div>'
+  };
+}
+function buildStoreYardActor(snapshot){
+  var rev=snapshot.revision||{}, decision=snapshot.customerDecision||customerDecision;
+  var accepted=!!(decision&&decision.status==='ACCEPTED_REFERENCE'&&Number(decision.atRevision)===Number(rev.number));
+  return {
+    stage:'store-yard',
+    headline:'Store / Yard',
+    mainHtml:'<p class="stage-tag">STORE / YARD HANDOFF</p><h1>Store / Yard acts. The customer watches status.</h1>'+
+      '<p class="lede">Internal Store and Yard events stay separate, but none becomes a customer button. This reference journey records only what is actually evidenced.</p>'+
+      jSection('Actor boundary',jGrid([
+        ['Customer decision',accepted?'REFERENCE ANSWER ACCEPTED':'NOT ACCEPTED'],
+        ['Customer controls for allocation / release / readiness / machine work / inspection / staging','NONE'],
+        ['Cycle Start','LOCAL ONLY · NOT AUTHORIZED HERE'],
+        ['Safety','NO BLOOD ON WOOD']
+      ]))+
+      jSection('Canonical Store / Yard event state',seatStoreStatusHtml(snapshot))+
+      jCallout('<b>READY is not custody.</b> A READY notice, if it ever exists, is a handoff-notice event. Custody transfer remains a later, separate event.',false)+
+      jCallout('<b>No physical authority is invented here.</b> Material allocation, production release, machine readiness, primary operations, secondary completion, inspection, labeling, staging and pickup remain absent unless separately evidenced.',false),
+    railHtml:'<p class="hd">STORE / YARD · BUILD GUIDE</p><p class="goal">Observe events; do not manufacture them</p>'+
+      '<div class="row"><b>Customer does not run the Yard</b><span>No UI control creates allocation, release, readiness, machining, inspection or staging.</span></div>'+
+      '<div class="row"><b>READY ≠ custody</b><span>Notice and transfer stay distinct.</span></div>'+
+      '<div class="row"><b>Cycle Start stays local</b><span>No network path or Store answer starts motion.</span></div>'
+  };
+}
+function buildActorGroup(stage,snapshot){
+  if(stage==='store-answer'){
+    return actorGroup('store-answer','STORE ANSWER','Store answers one confirmed Window Seat revision. Full request, response, services, availability, pricing, capability, timing, exception and authority detail remains visible.',
+      journeyStageSection(buildStoreJourney(snapshot))+
+      journeyStageSection(buildRequestJourney(snapshot))+
+      journeyStageSection(buildYardJourney(snapshot))+
+      journeyStageSection(buildTermsJourney(snapshot)),
+      actorActionBar('configure','request','CONTINUE TO ACCEPT / PAY',false));
+  }
+  if(stage==='accept-pay'){
+    return actorGroup('accept-pay','ACCEPT / PAY','Store answered. The customer decides; payment remains a separate, unestablished event in this reference demonstration.',
+      journeyStageSection(buildAcceptPayActor(snapshot)),'');
+  }
+  if(stage==='store-yard'){
+    return actorGroup('store-yard','STORE / YARD','Store and Yard own downstream operational events. The customer does not manually advance them.',
+      journeyStageSection(buildStoreYardActor(snapshot)),
+      actorActionBar('request','record','VIEW HANDOFF / RECORD',false));
+  }
+  if(stage==='handoff-record'){
+    return actorGroup('handoff-record','HANDOFF / RECORD','READY notice, custody transfer and the owner record remain separate. Missing events remain missing.',
+      journeyStageSection(buildRecapJourney(snapshot))+journeyStageSection(buildRecordJourney(snapshot)),
+      actorActionBar('yard',null,null,false));
+  }
+  return '';
+}
+function renderConfigureReview(snapshot){
+  var host=$('ws-configure-review');
+  if(!host)return;
+  host.innerHTML=journeyStageSection(buildReviewJourney(snapshot));
+}
+function actorGateHtml(previous,next,action,consequence){
+  return '<div class="ws-gate-separator" data-ws-actor-gate="'+previous+'"><p class="gate-tag">ACTOR HANDOFF</p>'+
+    '<div class="gate-grid"><b>Previous</b><span>'+jEsc(previous)+'</span><b>Customer action</b><span>'+jEsc(action)+'</span>'+
+    '<b>Next</b><span>'+jEsc(next)+'</span><b>Consequence</b><span>'+jEsc(consequence)+'</span></div>'+
+    '<p class="gate-safety">Scrolling only reveals the next shared content group. It does not create acceptance, payment, allocation, release, readiness, machine motion, completion, READY, custody, or closeout.</p></div>';
+}
+function actorMirrorAudit(){
+  var groups=WINDOW_SEAT_ACTOR_STAGES.map(function(stage){
+    var count=stage==='scan'?($('pg-capture')?1:0)
+      :stage==='configure'?(($('pg-configure')&&$('ws-configure-review'))?1:0)
+      :document.querySelectorAll('[data-ws-actor-group="'+stage+'"]').length;
+    return {stage:stage,result:count===1?'EXACT MIRROR':'DEFECT — NOT EXACT MIRROR',sharedNodeCount:count};
+  });
+  var exact=groups.every(function(g){return g.result==='EXACT MIRROR'});
+  return cloneJourneyValue({
+    result:exact?'EXACT MIRROR':'DEFECT — NOT EXACT MIRROR',
+    groups:groups,
+    coverage:WINDOW_SEAT_MIRROR_COVERAGE,
+    projection:'ONE CANONICAL DOM CONTENT SOURCE → GUIDED VISIBILITY FILTER / CONTINUOUS FULL VISIBILITY'
+  });
+}
+
 function getCanonicalJourney(){
   return window.STB_CANONICAL_JOURNEY||null;
 }
@@ -2456,11 +2600,10 @@ function journeyGateHtml(source){
 }
 function renderStaticGates(){
   var a=$('ws-gate-scan-configure'),b=$('ws-gate-configure-store');
-  if(a)a.innerHTML=journeyGateHtml('scan').replace(/^<div[^>]*>|<\/div>$/g,'');
-  if(b)b.innerHTML=journeyGateHtml('configure').replace(/^<div[^>]*>|<\/div>$/g,'');
-  var scanGate=canonicalGate('scan'), configureGate=canonicalGate('configure');
-  if($('ws-scan-next')&&scanGate)$('ws-scan-next').textContent=scanGate.action+' →';
-  if($('ws-guided')&&configureGate)$('ws-guided').textContent=configureGate.action+' →';
+  if(a)a.innerHTML=actorGateHtml('SCAN','CONFIGURE + CONFIRM','CONTINUE TO CONFIGURE','The same project moves from evidence capture into bounded configuration.').replace(/^<div[^>]*>|<\/div>$/g,'');
+  if(b)b.innerHTML=actorGateHtml('CONFIGURE + CONFIRM','STORE ANSWER','CONFIRM + SEND TO STORE','The exact confirmed revision forms the Store request; only then may a held Store answer be created.').replace(/^<div[^>]*>|<\/div>$/g,'');
+  if($('ws-scan-next'))$('ws-scan-next').textContent='CONTINUE TO CONFIGURE →';
+  if($('ws-guided'))$('ws-guided').textContent='REVIEW + CONFIRM →';
 }
 function journeyStageSection(stageObj){
   if(!stageObj)return'';
@@ -2475,17 +2618,19 @@ function renderContinuousJourney(force){
   if(!host)return;
   if(!force&&journeyRendered&&!journeyDirty)return;
   var snapshot=currentJourneySnapshot(false);
-  var contract=getCanonicalJourney();
   if(!canonicalJourneyReady()){
     host.innerHTML='<section class="ws-journey-stage"><main><h1>CANONICAL JOURNEY CONTENT UNAVAILABLE</h1><div class="ws-journey-callout warn"><b>Fail closed.</b> The shared bounded-project journey contract is unavailable or out of order.</div></main></section>';
     journeyRendered=true; journeyDirty=false; return;
   }
-  var stages=contract.stages.slice(contract.stages.indexOf('store'));
+  renderConfigureReview(snapshot);
   var html='';
-  stages.forEach(function(stage,index){
-    html+=journeyStageSection(buildJourneyStage(stage,snapshot));
-    if(index<stages.length-1)html+=journeyGateHtml(stage);
-  });
+  html+=buildActorGroup('store-answer',snapshot);
+  html+=actorGateHtml('STORE ANSWER','ACCEPT / PAY','REVIEW STORE ANSWER','The Store handoff ends before the customer decision begins.');
+  html+=buildActorGroup('accept-pay',snapshot);
+  html+=actorGateHtml('ACCEPT / PAY','STORE / YARD','CUSTOMER DECISION','Acceptance does not create payment, allocation, release or machine authority.');
+  html+=buildActorGroup('store-yard',snapshot);
+  html+=actorGateHtml('STORE / YARD','HANDOFF / RECORD','VIEW STATUS / RECORD','Internal Store and Yard events remain event evidence, not customer controls.');
+  html+=buildActorGroup('handoff-record',snapshot);
   host.innerHTML=html;
   journeyRendered=true;
   journeyDirty=false;
@@ -2493,14 +2638,14 @@ function renderContinuousJourney(force){
 function refreshJourneyIfNeeded(){ renderContinuousJourney(false); }
 function setupJourneyObserver(){
   if(!('IntersectionObserver' in window))return;
-  var target=$('ws-gate-configure-store');
-  if(!target)return;
+  var targets=[$('ws-configure-review'),$('ws-gate-configure-store')].filter(Boolean);
+  if(!targets.length)return;
   var observer=new IntersectionObserver(function(entries){
     entries.forEach(function(entry){
       if(entry.isIntersecting&&document.body.dataset.wsView!=='guided')refreshJourneyIfNeeded();
     });
   },{root:null,rootMargin:'500px 0px 500px 0px'});
-  observer.observe(target);
+  targets.forEach(function(target){observer.observe(target)});
 }
 var journeyScrollQueued=false;
 function maybeRefreshJourneyOnScroll(){
@@ -2521,9 +2666,8 @@ function setSeatView(mode,stage){
   document.body.dataset.wsView=guided?'guided':'continuous';
   if(guided){
     var target=stage||'scan';
-    var contract=getCanonicalJourney();
-    if(!canonicalJourneyReady()||contract.stages.indexOf(target)<0)return false;
-    if(contract.stages.indexOf(target)>=contract.stages.indexOf('store'))refreshJourneyIfNeeded();
+    if(!canonicalJourneyReady()||WINDOW_SEAT_ACTOR_STAGES.indexOf(target)<0)return false;
+    if(target!=='scan')refreshJourneyIfNeeded();
     document.body.dataset.wsStage=target;
   }else{
     delete document.body.dataset.wsStage;
@@ -2532,39 +2676,66 @@ function setSeatView(mode,stage){
   window.scrollTo({top:0,behavior:'instant'});
   return true;
 }
-document.addEventListener('click',function(e){
-  var stage=e.target.closest('[data-ws-guided-stage]');
-  if(stage){
-    window.top.postMessage({type:'stb-window-seat-guided-stage',stage:stage.getAttribute('data-ws-guided-stage'),snapshot:currentJourneySnapshot(false)},'*');
-    return;
+function requestGuidedStage(technicalStage,snapshot){
+  var supplied=snapshot||currentJourneySnapshot(false);
+  if(window.top===window){
+    return setSeatView('guided',actorStageForTechnical(technicalStage));
   }
-  var confirm=e.target.closest('[data-ws-confirm]');
+  window.top.postMessage({type:'stb-window-seat-guided-stage',stage:technicalStage,snapshot:supplied},'*');
+  return true;
+}
+document.addEventListener('click',function(e){
+  var actor=e.target.closest('[data-ws-actor-stage]');
+  if(actor){ requestGuidedStage(actor.getAttribute('data-ws-actor-stage')); return; }
+  var stage=e.target.closest('[data-ws-guided-stage]');
+  if(stage){ requestGuidedStage(stage.getAttribute('data-ws-guided-stage')); return; }
+  var edit=e.target.closest('[data-ws-configure-edit]');
+  if(edit){ into($('ws-configure-work')); return; }
+  var confirm=e.target.closest('[data-ws-confirm-send]');
   if(confirm){
     var blocking=conditions(buildDefinition()).filter(function(o){return o.block}).length;
     if(blocking)return;
     rev.confirmed=true;
     cycle();
+    var snapshot=currentJourneySnapshot(true);
     renderContinuousJourney(true);
-    window.top.postMessage({type:'stb-window-seat-guided-stage',stage:'request',snapshot:currentJourneySnapshot(false)},'*');
+    requestGuidedStage('store',snapshot);
+    return;
+  }
+  var decision=e.target.closest('[data-ws-decision]');
+  if(decision){
+    var snap=currentJourneySnapshot(false), ans=snap.storeAnswer||null;
+    var current=!!(ans&&!ans.stale&&snap.revision.confirmed&&Number(ans.atRevision)===Number(snap.revision.number));
+    var action=decision.getAttribute('data-ws-decision');
+    if(action==='change'){ requestGuidedStage('configure',snap); return; }
+    if(!current)return;
+    customerDecision={status:action==='accept'?'ACCEPTED_REFERENCE':'DECLINED',atRevision:snap.revision.number};
+    markJourneyDirty(); renderContinuousJourney(true); return;
+  }
+  if(e.target.closest('[data-ws-continue-yard]')){
+    var s=currentJourneySnapshot(false), d=s.customerDecision||{};
+    if(d.status!=='ACCEPTED_REFERENCE'||Number(d.atRevision)!==Number(s.revision.number))return;
+    requestGuidedStage('yard',s); return;
   }
 });
 window.STBWindowSeatJourney=Object.freeze({
   projectId:'window-seat',
-  artifactVersion:'0.7.3',
+  artifactVersion:'0.7.4',
   contractVersion:function(){ var c=getCanonicalJourney(); return c?c.version:null; },
+  actorStages:WINDOW_SEAT_ACTOR_STAGES.slice(),
   snapshot:function(){ return currentJourneySnapshot(false); },
   evaluateCurrent:function(){ return currentJourneySnapshot(true); },
   showContinuous:function(){ return setSeatView('continuous'); },
   showGuided:function(stage){ return setSeatView('guided',stage); },
   refreshContinuous:function(){ renderContinuousJourney(true); return true; },
-  stage:function(stage){ return cloneJourneyValue(buildJourneyStage(stage,currentJourneySnapshot(false))); }
+  stage:function(stage){ return cloneJourneyValue(buildJourneyStage(stage,currentJourneySnapshot(false))); },
+  mirrorAudit:function(){ return actorMirrorAudit(); }
 });
 $('ws-guided').onclick=function(){
   var blocking=conditions(buildDefinition()).filter(function(o){return o.block}).length;
   if(blocking)return;
-  var snapshot=currentJourneySnapshot(true);
-  markJourneyDirty();
-  window.top.postMessage({type:'stb-window-seat-guided-handoff',stage:'store',snapshot:snapshot},'*');
+  renderContinuousJourney(true);
+  into($('ws-configure-review'));
 };
 $('btn-inspect').onclick=function(){
   var box=$('req-box'), show=box.style.display==='none';
