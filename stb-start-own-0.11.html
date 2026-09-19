@@ -238,6 +238,7 @@ pre.spec{margin:14px 0 0;padding:15px 16px;border-radius:12px;background:var(--p
 @media (max-width:980px){ .bench{grid-template-columns:1fr} .results{grid-template-columns:1fr} }
 @media (max-width:860px){ .grid3{grid-template-columns:1fr} }
 </style>
+<script src="stb-store-handoff-contract.js?v=0.2"></script>
 </head>
 <body>
 <div class="wrap" id="app"></div>
@@ -1068,37 +1069,99 @@ function operationPanel(){
   h+='<p class="hint">These operations are derived from the current parts. They are not controller commands and do not authorize physical execution.</p></div>';
   return h;
 }
+function currentStoreAuthority(){
+  var contract=window.STBStoreHandoffContract;
+  return contract&&typeof contract.storeAuthority==='function'?contract.storeAuthority('startOwn'):null;
+}
+function storeCapabilityModel(){
+  var issue=materialIssue(), b=buyList(), unresolved=[], status='SUPPORTABLE';
+  if(issue){
+    status='UNRESOLVED';
+    unresolved.push('MATERIAL_FORMATION_UNRESOLVED');
+  }else if(!b){
+    status='REFUSED';
+    unresolved.push('STOCK_CONTAINMENT_UNRESOLVED');
+  }
+  if(S.maker==='cuts'&&S.cutOps.angled){
+    if(operationValidation().length){
+      status='UNRESOLVED';
+      unresolved.push('ANGLED_CUT_DEFINITION_INCOMPLETE');
+    }else{
+      status='UNRESOLVED';
+      unresolved.push('STORE-PRICING-BRIDGE-GAP');
+      unresolved.push('MITER_RANGE_NOT_PUBLISHED');
+    }
+  }
+  return {
+    status:status,
+    unresolved:unresolved,
+    basis:'CURRENT_CANONICAL_STORE_ZERO',
+    authority:currentStoreAuthority()
+  };
+}
 function modeledWorkModel(){
-  var known=operationModel().filter(function(o){return !o.unresolved}), count=0;
+  var known=operationModel().filter(function(o){return !o.unresolved}), count=0, cap=storeCapabilityModel();
   known.forEach(function(o){count+=o.qty||0});
-  return {knownPartOperations:count,machineTime:null,cycleTimeBasis:null,issue:materialIssue()};
+  return {
+    knownPartOperations:count,
+    machineTime:null,
+    cycleTimeBasis:null,
+    capabilityStatus:cap.status,
+    unresolved:cap.unresolved,
+    authority:cap.authority,
+    issue:materialIssue()
+  };
 }
 function modeledWorkPanel(){
-  var m=modeledWorkModel();
-  return '<div class="panel flowpanel"><h3>Modeled work / reference basis</h3>'
+  var m=modeledWorkModel(), a=m.authority;
+  return '<div class="panel flowpanel"><h3>Store Zero · live work basis</h3>'
     +'<div class="basisgrid">'
     +'<div class="basisbox"><span class="k">Derived part operations</span><b>'+m.knownPartOperations+'</b></div>'
-    +'<div class="basisbox"><span class="k">Modeled machine time</span><b>Not established</b></div>'
-    +'<div class="basisbox"><span class="k">Cycle-time basis</span><b>Not carried by this donor</b></div>'
-    +'<div class="basisbox"><span class="k">Unresolved operation</span><b>'+(m.issue?'Yes':'None at this bench boundary')+'</b></div>'
-    +'</div><p class="hint">The donor has enough information to count the defined part operations. It does not contain trustworthy machine-time or cycle-time data, so none is invented.</p></div>';
+    +'<div class="basisbox"><span class="k">Store capability</span><b>'+esc(m.capabilityStatus)+'</b></div>'
+    +'<div class="basisbox"><span class="k">Modeled machine time</span><b>Not established for this project class</b></div>'
+    +'<div class="basisbox"><span class="k">Store authority</span><b>'+(a?'Current canonical Store Zero':'Unavailable')+'</b></div>'
+    +'</div><p class="hint">Every change above recomputes the material and operation demand sent to the Store reference. Capability and economics stay separate; no controller command or physical authority is created here.</p></div>';
 }
 function referenceCostModel(){
-  var issue=materialIssue(), b=buyList();
-  return {material:(issue||!b)?null:b.cost,operations:null,cell:null,other:null,total:(issue||!b)?null:b.cost,
-    issue:issue,complete:false};
+  var issue=materialIssue(), b=buyList(), authority=currentStoreAuthority(), cap=storeCapabilityModel();
+  var material=(issue||!b)?null:b.cost;
+  var unresolved=cap.unresolved.slice();
+  var economicsStatus=authority?authority.economicsStatus:'STORE_AUTHORITY_UNAVAILABLE';
+  if(!authority){
+    unresolved.push('STORE_AUTHORITY_UNAVAILABLE');
+  }else if(authority.economicsModel==null){
+    unresolved.push('START-OWN-CLASS-SCOPED-RECOVERY-NOT-PUBLISHED');
+  }
+  return {
+    material:material,
+    operations:null,
+    cell:null,
+    other:null,
+    total:null,
+    materialOnlyTotal:material,
+    issue:issue,
+    complete:false,
+    capabilityStatus:cap.status,
+    economicsStatus:economicsStatus,
+    unresolvedConditions:Array.from(new Set(unresolved)),
+    authority:authority
+  };
 }
 function referenceCostPanel(){
-  var c=referenceCostModel(), val=c.total==null?'Not established':money(c.total);
-  var why=c.issue?'Material / operation resolution is required before a material price basis can be established.'
-    :(c.total==null?'The current reference catalog has no offered stock that can contain the defined parts.'
-      :'The priced component currently available in this donor is material. Operations and modeled cell work remain visible but unpriced.');
-  return '<div class="panel flowpanel"><h3>Current reference cost</h3>'
-    +'<div class="costbig"><span>CURRENT PRICED BASIS</span><b>'+val+'</b></div>'
-    +'<div class="flowline"><div class="k">Material</div><div class="v"><b>'+(c.material==null?'Not established':money(c.material))+'</b></div></div>'
-    +'<div class="flowline"><div class="k">Operations / modeled cell work</div><div class="v">Visible above; <b>not priced by this donor</b></div></div>'
-    +'<div class="flowline"><div class="k">Other declared reference items</div><div class="v">None declared here</div></div>'
-    +'<p class="hint">'+why+' This is a reference basis, not a binding commercial offer.</p></div>';
+  var c=referenceCostModel(), a=c.authority;
+  var material=c.material==null?'Not established':money(c.material);
+  var econ=a&&a.economicsModel?esc(a.economicsModel):'UNRESOLVED · class-scoped recovery not published';
+  var auth=a?('Store Zero · '+String(a.capabilityPin).slice(0,12)+'…'):'Store authority unavailable';
+  var why=c.issue?'Material / operation resolution is required before the Store can establish a complete basis.'
+    :(c.material==null?'The current Store catalog has no offered stock that can contain the defined parts.'
+      :'Material is mapped and valued. A complete combined value is withheld until this project class has a current declared processing / fulfillment recovery model.');
+  return '<div class="panel flowpanel"><h3>Store Zero · live reference economics</h3>'
+    +'<div class="costbig"><span>CURRENT COMBINED BASIS</span><b>NOT COMPLETE</b></div>'
+    +'<div class="flowline"><div class="k">Material</div><div class="v"><b>'+material+'</b></div></div>'
+    +'<div class="flowline"><div class="k">Capability</div><div class="v"><b>'+esc(c.capabilityStatus)+'</b></div></div>'
+    +'<div class="flowline"><div class="k">Processing / fulfillment recovery</div><div class="v"><b>'+econ+'</b></div></div>'
+    +'<div class="flowline"><div class="k">Authority</div><div class="v">'+esc(auth)+'</div></div>'
+    +'<p class="hint">'+why+' The legacy general $35 setup + $100/hour recovery is not selected for Start Your Own. This is a reference basis, not a binding commercial offer.</p></div>';
 }
 function customerDefinition(){
   var d={grade:S.grade,size:S.size,maker:S.maker};
@@ -1125,27 +1188,44 @@ function materialRequestText(){
                   :(b.n+' × '+s.label+' × '+b.L+' in reference demand');
 }
 function storeAnswerModel(){
-  var issue=materialIssue(), b=buyList(), s=S_size(), angleGap=S.maker==='cuts'&&S.cutOps.angled;
-  var status=issue?'NEEDS RESOLUTION':(angleGap?'UNRESOLVED / CURRENT MODEL MISMATCH':(b?'SUPPORTED':'NOT SUPPORTED'));
+  var issue=materialIssue(), b=buyList(), cap=storeCapabilityModel(), c=referenceCostModel();
+  var status=issue?'NEEDS RESOLUTION':(!b?'NOT SUPPORTED':(cap.status==='SUPPORTABLE'?'CAPABILITY SUPPORTED · ECONOMICS UNRESOLVED':'UNRESOLVED / CURRENT STORE GAP'));
   return {
     status:status,
-    material:materialRequestText()+' The common Store actor owns final SKU identity and offering.',
-    capability:issue?'Known cut operations are derived; the unresolved material/operation method must be answered before the definition is fully supportable.'
-                    :(angleGap?'Angled-cut meaning is preserved in the project definition. Current common Store pricing / capability wiring does not publish a complete angled-board contract, so support is not invented here.'
-                       :(b?'The current reference bench can support the listed rectangular / cut-to-length definition boundary.':'One or more defined parts exceed the offered stock represented in this donor.')),
-    unresolved:issue?issue.detail:(angleGap?'STORE-PRICING-BRIDGE-GAP · current published Board endpoint is square-crosscut only; angled processing price remains Store-owned and unresolved.':(b?'None identified at this bench boundary.':'Stock containment / material resolution required.')),
-    service:'Common Store actor handoff owns service and economics.',
-    availability:'Not established by this candidate.',
-    timing:'Not established by this candidate.',
+    material:materialRequestText()+' Store Zero owns final SKU identity and offering.',
+    capability:cap.status==='SUPPORTABLE'
+      ?'Current canonical Store Zero recognizes the derived straight-cut / cut-to-length demand represented here.'
+      :'The current Store answer preserves the exact unresolved capability condition instead of widening capability.',
+    unresolved:c.unresolvedConditions.length?c.unresolvedConditions.join(' · '):'None',
+    unresolvedConditions:c.unresolvedConditions.slice(),
+    economics:{
+      material:c.material,
+      processRecovery:null,
+      total:null,
+      complete:false,
+      status:c.economicsStatus
+    },
+    service:'Store Zero owns material, capability, service and economics answers for this definition.',
+    availability:'Not established by this reference surface.',
+    timing:'Not established by this reference surface.',
     ready:'Not established. No allocation, production release or machine readiness has occurred.'
   };
 }
 function confirmToStore(){
   var errs=operationValidation();
   if(errs.length){flash('Complete the angled-cut definition before confirming');return}
-  var id=currentDefinitionId();
+  var id=currentDefinitionId(), live=referenceCostModel();
   S.handoff={id:id,definition:JSON.parse(JSON.stringify(customerDefinition())),
-    request:{parts:JSON.parse(JSON.stringify(parts())),operations:JSON.parse(JSON.stringify(operationModel())),material:materialRequestText(),referenceCost:referenceCostModel()},
+    request:{parts:JSON.parse(JSON.stringify(parts())),operations:JSON.parse(JSON.stringify(operationModel())),material:materialRequestText(),referenceCost:live},
+    storeReference:{
+      capabilityStatus:live.capabilityStatus,
+      economicsStatus:live.economicsStatus,
+      material:live.material,
+      combinedValue:live.total,
+      complete:live.complete,
+      unresolvedConditions:live.unresolvedConditions.slice(),
+      authority:live.authority?JSON.parse(JSON.stringify(live.authority)):null
+    },
     answer:storeAnswerModel()};
   render();
   var el=$('storeanswer'); if(el&&el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'nearest'});
@@ -1155,12 +1235,13 @@ function confirmToStore(){
   }
 }
 function storeSummarySentence(){
-  var issue=materialIssue(), b=buyList(), s=S_size(), sh=isSheet();
+  var issue=materialIssue(), b=buyList(), s=S_size(), sh=isSheet(), c=referenceCostModel();
   if(issue)return 'Store Zero needs one answer first: '+issue.detail+' Nothing is ordered.';
   if(!b)return 'Store Zero cannot fit this version into the reference stock shown here. Change the size or wood and try again. Nothing is ordered.';
   var stock=sh?(b.n+' × '+s.label+' sheet'+(b.n===1?'':'s')+', '+b.label+' in')
               :(b.n+' × '+s.label+' × '+b.L+' in');
-  return 'Store Zero can cut this from '+stock+', about '+money(b.cost)+'. Nothing is ordered.';
+  var cap=c.capabilityStatus==='SUPPORTABLE'?'capability is supported':'capability remains '+c.capabilityStatus.toLowerCase();
+  return 'Store Zero maps this version to '+stock+', material '+money(b.cost)+'; '+cap+'. Processing / fulfillment recovery is not yet published for this project class, so a complete combined value is not invented. Nothing is ordered.';
 }
 function storeHandoffPanel(){
   var id=currentDefinitionId(), sent=S.handoff, sameVersion=sent&&sent.id===id;
@@ -1271,7 +1352,7 @@ function cutListText(){
 
 function specText(){
   var s=S_size(), b=buyList(), list=parts(), mk=MAKERS.filter(function(m){return m.k===S.maker})[0], issue=materialIssue();
-  var L=[], ops=operationModel(), c=referenceCostModel();
+  var L=[], ops=operationModel(), c=referenceCostModel(), m=modeledWorkModel();
   L.push('SCAN-TO-BUILD · START YOUR OWN');
   L.push('DEFINITION '+currentDefinitionId());
   L.push(mk.name.toUpperCase()+' — '+s.label);
@@ -1284,7 +1365,7 @@ function specText(){
   list.forEach(function(p){L.push('  '+String(p.qty).padStart(2,' ')+' × '+p.name.padEnd(13,' ')+fmt(p.len)+' × '+fmt(p.wid)+' in')});
   L.push('');L.push('MATERIAL');
   if(issue)L.push('  Resolution required before reference stock demand can be established.');
-  else if(b)L.push('  '+materialRequestText()+' · material basis '+money(b.cost));
+  else if(b)L.push('  '+materialRequestText()+' · Store Zero material basis '+money(b.cost));
   else L.push('  No offered reference stock contains the current part set.');
   L.push('');L.push('OPERATIONS');
   ops.forEach(function(o){L.push('  '+(o.qty?o.qty+' × ':'')+o.part+' — '+o.op+' — '+o.detail)});
@@ -1295,22 +1376,28 @@ function specText(){
     L.push('  END IDENTITY           '+operationLabel(ao.endIdentity)+(ao.endIdentity==='both'?' · '+operationLabel(ao.endRelation):''));
     L.push('  LENGTH DATUM           '+operationLabel(ao.lengthDatum));
   }
-  L.push('');L.push('MODELED WORK / REFERENCE BASIS');
-  L.push('  Derived part operations  '+modeledWorkModel().knownPartOperations);
-  L.push('  Modeled machine time     NOT ESTABLISHED');
-  L.push('  Cycle-time basis         NOT CARRIED BY THIS DONOR');
-  L.push('');L.push('CURRENT REFERENCE COST');
+  L.push('');L.push('STORE ZERO · LIVE WORK BASIS');
+  L.push('  Derived part operations  '+m.knownPartOperations);
+  L.push('  Capability               '+m.capabilityStatus);
+  L.push('  Modeled machine time     NOT ESTABLISHED FOR THIS PROJECT CLASS');
+  L.push('');L.push('STORE ZERO · LIVE REFERENCE ECONOMICS');
   L.push('  Material                 '+(c.material==null?'NOT ESTABLISHED':money(c.material)));
-  L.push('  Operations / cell work   NOT PRICED BY THIS DONOR');
-  L.push('  Current priced basis     '+(c.total==null?'NOT ESTABLISHED':money(c.total)));
+  L.push('  Processing / recovery    UNRESOLVED · CLASS-SCOPED RECOVERY NOT PUBLISHED');
+  L.push('  Current combined basis   NOT COMPLETE');
+  L.push('  Legacy $35 + $100/hour   NOT SELECTED');
+  if(c.authority){
+    L.push('  Store doctrine pin       '+c.authority.capabilityPin);
+    L.push('  Material catalog pin     '+c.authority.materialCatalogPin);
+  }
+  if(c.unresolvedConditions.length){
+    L.push('  Unresolved               '+c.unresolvedConditions.join(' · '));
+  }
   L.push('');L.push('STORE HANDOFF');
   L.push('  Confirming this definition forms a Store request for this exact version.');
   L.push('  Confirmation is not payment, allocation, production release, machine readiness or Cycle Start.');
   L.push('');L.push('Saw kerf not counted. Reference basis, not a binding commercial offer. NO BLOOD ON WOOD.');
   return L.join('\n');
 }
-
-/* ═══════════════ 8 · RENDER ═══════════════ */
 function renderBench(){
   var s=S_size(), mk=MAKERS.filter(function(m){return m.k===S.maker})[0];
   var h=woodDefs();
@@ -1320,6 +1407,7 @@ function renderBench(){
   h+='<div class="bench"><div><div class="stage" id="stage">'+drawing()+'</div>'
     +'<div class="readout" id="read"></div></div><div id="controls">'+controls()+'</div></div>';
   h+='<div class="results" id="results">'+cutTable()+buyPanel()+'</div>';
+  h+='<div class="flowstack" id="flow">'+operationPanel()+modeledWorkPanel()+referenceCostPanel()+'</div>';
   h+='<div class="done-bar"><div class="t"><b>That is a project.</b>'
     +'<span>Pieces, sizes and what to buy. Keep playing, copy the cut list, or send this exact version to the Store.</span></div>'
     +'<button class="btn ghost sm" id="showspec">See it written out</button>'
