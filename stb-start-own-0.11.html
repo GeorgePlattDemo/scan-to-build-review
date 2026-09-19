@@ -524,50 +524,48 @@ function parts(){
   return out.filter(function(p){return p.len>0.5&&p.wid>0.5&&p.qty>0});
 }
 
-/* what to buy — boards get packed, sheets get counted piece by piece */
-function buyBoards(list,s){
-  var best=null;
-  Object.keys(s.lens).map(Number).forEach(function(L){
-    var price=s.lens[L], pieces=[];
-    list.forEach(function(p){for(var i=0;i<p.qty;i++)pieces.push(p.len)});
-    if(!pieces.length||pieces.some(function(x){return x>L}))return;
-    pieces.sort(function(a,b){return b-a});
-    var bins=[], cuts=[];
-    pieces.forEach(function(x){
-      var idx=-1;
-      for(var i=0;i<bins.length;i++)if(bins[i]>=x-0.0001){idx=i;break}
-      if(idx<0){bins.push(L-x); cuts.push([x])} else {bins[idx]-=x; cuts[idx].push(x)}
-    });
-    var cost=bins.length*price;
-    if(!best||cost<best.cost-0.001)best={L:L,n:bins.length,price:price,cost:cost,
-      cuts:cuts,left:bins.slice(),
-      waste:bins.reduce(function(a,b){return a+b},0)};
+/* what to buy — Store Zero resolves parent stock, SKU and material value */
+function storeMaterialResolution(){
+  if(materialIssue())return null;
+  var contract=window.STBStoreHandoffContract;
+  if(!contract||typeof contract.resolveStartOwnMaterial!=='function'){
+    return {status:'UNRESOLVED',code:'STORE_RESOLVER_UNAVAILABLE',details:'Shared Store Zero material resolver is unavailable.'};
+  }
+  return contract.resolveStartOwnMaterial({
+    sizeKey:S.size,
+    parts:parts()
   });
-  return best;
-}
-function yieldOf(pw,ph,w,h){
-  if(!(w>0)||!(h>0))return 0;
-  return Math.max(Math.floor(pw/w)*Math.floor(ph/h),Math.floor(ph/w)*Math.floor(pw/h));
-}
-function buySheets(list,s){
-  var best=null;
-  Object.keys(s.panels).forEach(function(key){
-    var d=key.split('x').map(Number), price=s.panels[key], total=0, okAll=true;
-    list.forEach(function(p){
-      var per=yieldOf(d[1],d[0],p.len,p.wid);
-      if(!per){okAll=false;return}
-      total+=Math.ceil(p.qty/per);
-    });
-    if(!okAll||!total)return;
-    var cost=total*price;
-    if(!best||cost<best.cost-0.001)best={label:d[0]+' × '+d[1],n:total,price:price,cost:cost};
-  });
-  return best;
 }
 function buyList(){
-  if(materialIssue())return null;
-  var s=S_size(), list=parts();
-  return isSheet()?buySheets(list,s):buyBoards(list,s);
+  var r=storeMaterialResolution();
+  if(!r||r.status!=='MAPPED')return null;
+  if(r.form==='sheet'){
+    return {
+      label:r.parentLabel,
+      n:r.quantity,
+      price:r.unitPrice,
+      cost:r.materialTotal,
+      storeSku:r.storeSku,
+      supportedOps:(r.supportedOps||[]).slice(),
+      cellFamily:(r.cellFamily||[]).slice(),
+      source:r.source,
+      storeResolution:r
+    };
+  }
+  return {
+    L:r.stockLengthIn,
+    n:r.quantity,
+    price:r.unitPrice,
+    cost:r.materialTotal,
+    cuts:(r.cuts||[]).map(function(row){return row.slice()}),
+    left:(r.left||[]).slice(),
+    waste:r.waste,
+    storeSku:r.storeSku,
+    supportedOps:(r.supportedOps||[]).slice(),
+    cellFamily:(r.cellFamily||[]).slice(),
+    source:r.source,
+    storeResolution:r
+  };
 }
 
 /* ═══════════════ 4 · THE PICK SCREEN ═══════════════ */
@@ -613,7 +611,7 @@ function renderPick(){
     +(mk?'<b>'+esc(mk.name)+'</b> in <b>'+esc(sz.label)+'</b>.'
         :'<b>'+esc(sz.label)+'</b> picked. Now choose what you are making.')
     +'</div><button class="btn" id="go"'+(mk?'':' disabled')+'>Take it to the bench →</button></div>';
-  h+='<p class="foot">Nothing is ordered here. The Store answers the version you send.</p>';
+  h+='<p class="foot">Nothing is ordered here. Store Zero resolves the material basis as this definition changes; confirmation later identifies the version you send.</p>';
   $('app').innerHTML=h;
   $('projectlibrary').onclick=returnProjectLibrary;
   $('go').onclick=function(){ if(S.maker){ seed(); S.screen='bench'; render(); window.scrollTo(0,0) } };
@@ -1073,29 +1071,52 @@ function currentStoreAuthority(){
   var contract=window.STBStoreHandoffContract;
   return contract&&typeof contract.storeAuthority==='function'?contract.storeAuthority('startOwn'):null;
 }
+function requiredStoreOps(){
+  var ops=[];
+  function add(op){if(ops.indexOf(op)<0)ops.push(op)}
+  if(isSheet()){
+    add('CROSSCUT');
+    add('RIP');
+  }else{
+    add('CROSSCUT');
+    if(S.maker==='cuts'&&S.cutOps.angled)add('MITER_LIMITED');
+  }
+  return ops;
+}
 function storeCapabilityModel(){
-  var issue=materialIssue(), b=buyList(), unresolved=[], status='SUPPORTABLE';
+  var issue=materialIssue(), resolution=storeMaterialResolution(), b=buyList(), unresolved=[], status='SUPPORTABLE';
+  var required=requiredStoreOps(), supported=b?(b.supportedOps||[]):[], missing=[];
   if(issue){
     status='UNRESOLVED';
     unresolved.push('MATERIAL_FORMATION_UNRESOLVED');
-  }else if(!b){
+  }else if(!resolution||resolution.status!=='MAPPED'){
     status='REFUSED';
-    unresolved.push('STOCK_CONTAINMENT_UNRESOLVED');
+    unresolved.push(resolution&&resolution.code?resolution.code:'STORE_MATERIAL_RESOLUTION_UNAVAILABLE');
+  }else{
+    missing=required.filter(function(op){return supported.indexOf(op)<0});
+    if(missing.length){
+      status='REFUSED';
+      missing.forEach(function(op){unresolved.push('STORE_OFFERING_MISSING_OPERATION:'+op)});
+    }
   }
   if(S.maker==='cuts'&&S.cutOps.angled){
     if(operationValidation().length){
       status='UNRESOLVED';
       unresolved.push('ANGLED_CUT_DEFINITION_INCOMPLETE');
-    }else{
+    }else if(status!=='REFUSED'){
       status='UNRESOLVED';
-      unresolved.push('STORE-PRICING-BRIDGE-GAP');
       unresolved.push('MITER_RANGE_NOT_PUBLISHED');
+      unresolved.push('START-OWN-ANGLED-PROCESS-ECONOMICS-NOT-PUBLISHED');
     }
   }
   return {
     status:status,
-    unresolved:unresolved,
-    basis:'CURRENT_CANONICAL_STORE_ZERO',
+    requiredOps:required,
+    supportedOps:supported.slice(),
+    missingOps:missing,
+    unresolved:Array.from(new Set(unresolved)),
+    basis:'PINNED_STORE_ZERO_OFFERING',
+    materialResolution:resolution,
     authority:currentStoreAuthority()
   };
 }
@@ -1109,6 +1130,9 @@ function modeledWorkModel(){
     capabilityStatus:cap.status,
     unresolved:cap.unresolved,
     authority:cap.authority,
+    materialResolution:cap.materialResolution,
+    storeSku:cap.materialResolution&&cap.materialResolution.status==='MAPPED'?cap.materialResolution.storeSku:null,
+    catalogSource:cap.materialResolution&&cap.materialResolution.source?cap.materialResolution.source:null,
     issue:materialIssue()
   };
 }
@@ -1119,17 +1143,22 @@ function modeledWorkPanel(){
     +'<div class="basisbox"><span class="k">Derived part operations</span><b>'+m.knownPartOperations+'</b></div>'
     +'<div class="basisbox"><span class="k">Store capability</span><b>'+esc(m.capabilityStatus)+'</b></div>'
     +'<div class="basisbox"><span class="k">Modeled machine time</span><b>Not established for this project class</b></div>'
+    +'<div class="basisbox"><span class="k">Store SKU</span><b>'+(m.storeSku?esc(m.storeSku):'Not mapped')+'</b></div>'
     +'<div class="basisbox"><span class="k">Store authority</span><b>'+(a?'Current canonical Store Zero':'Unavailable')+'</b></div>'
-    +'</div><p class="hint">Every change above recomputes the material and operation demand sent to the Store reference. Capability and economics stay separate; no controller command or physical authority is created here.</p></div>';
+    +'</div><p class="hint">Every change above recomputes the material and operation demand against the pinned Store Zero offering. Capability and economics stay separate; no controller command or physical authority is created here.</p></div>';
 }
 function referenceCostModel(){
-  var issue=materialIssue(), b=buyList(), authority=currentStoreAuthority(), cap=storeCapabilityModel();
+  var issue=materialIssue(), resolution=storeMaterialResolution(), b=buyList(), authority=currentStoreAuthority(), cap=storeCapabilityModel();
   var material=(issue||!b)?null:b.cost;
   var unresolved=cap.unresolved.slice();
   var economicsStatus=authority?authority.economicsStatus:'STORE_AUTHORITY_UNAVAILABLE';
   if(!authority){
     unresolved.push('STORE_AUTHORITY_UNAVAILABLE');
-  }else if(authority.economicsModel==null){
+  }
+  if(!resolution||resolution.status!=='MAPPED'){
+    unresolved.push(resolution&&resolution.code?resolution.code:'STORE_MATERIAL_RESOLUTION_UNAVAILABLE');
+  }
+  if(authority&&authority.economicsModel==null){
     unresolved.push('START-OWN-CLASS-SCOPED-RECOVERY-NOT-PUBLISHED');
   }
   return {
@@ -1139,6 +1168,7 @@ function referenceCostModel(){
     other:null,
     total:null,
     materialOnlyTotal:material,
+    materialResolution:resolution,
     issue:issue,
     complete:false,
     capabilityStatus:cap.status,
@@ -1148,19 +1178,21 @@ function referenceCostModel(){
   };
 }
 function referenceCostPanel(){
-  var c=referenceCostModel(), a=c.authority;
+  var c=referenceCostModel(), a=c.authority, r=c.materialResolution;
   var material=c.material==null?'Not established':money(c.material);
   var econ=a&&a.economicsModel?esc(a.economicsModel):'UNRESOLVED · class-scoped recovery not published';
-  var auth=a?('Store Zero · '+String(a.capabilityPin).slice(0,12)+'…'):'Store authority unavailable';
+  var sku=r&&r.status==='MAPPED'?r.storeSku:'Not mapped';
+  var source=r&&r.source?('catalog '+String(r.source.clock||'')+' · '+String(r.source.pin||'').slice(0,12)+'…'):'Store catalog unavailable';
   var why=c.issue?'Material / operation resolution is required before the Store can establish a complete basis.'
-    :(c.material==null?'The current Store catalog has no offered stock that can contain the defined parts.'
-      :'Material is mapped and valued. A complete combined value is withheld until this project class has a current declared processing / fulfillment recovery model.');
+    :(c.material==null?'The pinned Store Zero catalog has no offered stock that can contain the defined parts.'
+      :'Store Zero has mapped and valued the parent stock. A complete combined value is withheld until this project class has a current declared processing / fulfillment recovery model.');
   return '<div class="panel flowpanel"><h3>Store Zero · live reference economics</h3>'
     +'<div class="costbig"><span>CURRENT COMBINED BASIS</span><b>NOT COMPLETE</b></div>'
     +'<div class="flowline"><div class="k">Material</div><div class="v"><b>'+material+'</b></div></div>'
+    +'<div class="flowline"><div class="k">Store SKU</div><div class="v"><b>'+esc(sku)+'</b></div></div>'
     +'<div class="flowline"><div class="k">Capability</div><div class="v"><b>'+esc(c.capabilityStatus)+'</b></div></div>'
     +'<div class="flowline"><div class="k">Processing / fulfillment recovery</div><div class="v"><b>'+econ+'</b></div></div>'
-    +'<div class="flowline"><div class="k">Authority</div><div class="v">'+esc(auth)+'</div></div>'
+    +'<div class="flowline"><div class="k">Material source</div><div class="v">'+esc(source)+'</div></div>'
     +'<p class="hint">'+why+' The legacy general $35 setup + $100/hour recovery is not selected for Start Your Own. This is a reference basis, not a binding commercial offer.</p></div>';
 }
 function customerDefinition(){
@@ -1184,8 +1216,8 @@ function materialRequestText(){
   var s=S_size(), b=buyList(), issue=materialIssue();
   if(issue)return 'Selected '+s.label+'; final material / operation resolution required.';
   if(!b)return 'Selected '+s.label+'; no offered reference stock size can contain the current parts.';
-  return isSheet()?(b.n+' × '+s.label+' sheet'+(b.n===1?'':'s')+' · '+b.label+' in reference demand')
-                  :(b.n+' × '+s.label+' × '+b.L+' in reference demand');
+  return isSheet()?(b.n+' × '+s.label+' sheet'+(b.n===1?'':'s')+' · '+b.label+' in · '+b.storeSku)
+                  :(b.n+' × '+s.label+' × '+b.L+' in · '+b.storeSku);
 }
 function storeAnswerModel(){
   var issue=materialIssue(), b=buyList(), cap=storeCapabilityModel(), c=referenceCostModel();
@@ -1224,6 +1256,7 @@ function confirmToStore(){
       combinedValue:live.total,
       complete:live.complete,
       unresolvedConditions:live.unresolvedConditions.slice(),
+      materialResolution:live.materialResolution?JSON.parse(JSON.stringify(live.materialResolution)):null,
       authority:live.authority?JSON.parse(JSON.stringify(live.authority)):null
     },
     answer:storeAnswerModel()};
@@ -1334,8 +1367,8 @@ function buyPanel(){
     +'<span class="p">'+money(b.cost)+'</span></div>'
     +'<div class="total"><span>About</span><b>'+money(b.cost)+'</b></div>'
     +'<p class="hint">'+(sh?'Counted piece by piece, no clever nesting.'
-      :'Packed into the cheapest offered length that works — '+fmt(b.waste)+' in of offcut left over.')
-    +' Reference prices, so a guide rather than an order.</p>'
+      :'Packed into the cheapest offered Store length that works — '+fmt(b.waste)+' in of offcut left over.')
+    +' Store Zero SKU '+esc(b.storeSku)+' · catalog '+esc(b.source&&b.source.clock?b.source.clock:'not stated')+'. Reference basis, not an order.</p>'
     +(s.note?'<p class="hint" style="color:var(--accent2)">'+esc(s.note)+'</p>':'')
     +'</div>';
 }
@@ -1365,7 +1398,11 @@ function specText(){
   list.forEach(function(p){L.push('  '+String(p.qty).padStart(2,' ')+' × '+p.name.padEnd(13,' ')+fmt(p.len)+' × '+fmt(p.wid)+' in')});
   L.push('');L.push('MATERIAL');
   if(issue)L.push('  Resolution required before reference stock demand can be established.');
-  else if(b)L.push('  '+materialRequestText()+' · Store Zero material basis '+money(b.cost));
+  else if(b){
+    L.push('  '+materialRequestText()+' · Store Zero material basis '+money(b.cost));
+    L.push('  Store SKU               '+b.storeSku);
+    L.push('  Catalog pin             '+(b.source&&b.source.pin?b.source.pin:'NOT ESTABLISHED'));
+  }
   else L.push('  No offered reference stock contains the current part set.');
   L.push('');L.push('OPERATIONS');
   ops.forEach(function(o){L.push('  '+(o.qty?o.qty+' × ':'')+o.part+' — '+o.op+' — '+o.detail)});
