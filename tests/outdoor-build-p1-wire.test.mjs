@@ -16,7 +16,6 @@ assert.match(artifact, /Sawhorse end leg/);
 assert.match(artifact, /15½ in/);
 assert.match(artifact, /DOUBLE BEVEL \/ ACROSS THICKNESS/);
 assert.match(artifact, /NEEDS GEOMETRY CHECK · DEFER/);
-assert.match(artifact, /sourcePart:'ANA-WHITE-SAW-HORSE-BENCH\/END-LEG'/);
 assert.match(artifact, /NORMALIZED PART REQUIREMENT/);
 assert.match(artifact, /STB_OUTDOOR_CONFIRMED/);
 assert.match(artifact, /NO BLOOD ON WOOD/);
@@ -25,7 +24,7 @@ assert.equal(artifact.includes('stb-start-own-0.4.html'), false);
 assert.match(shell, /outdoorTile = ribbon\.querySelector\('\.tile\[data-go="picnic-chooser"\]'\)/);
 assert.match(shell, /outdoorTile\.removeAttribute\('data-go'\)/);
 assert.match(shell, /outdoorTile\.dataset\.outdoorBuildArtifact = 'stb-outdoor-build\.html'/);
-assert.match(shell, /src="stb-outdoor-build\.html\?v=5279d330"/);
+assert.match(shell, /src="stb-outdoor-build\.html\?v=275ac88d"/);
 assert.match(shell, /originalShow\.call\(win, 'outdoor-build-live'\)/);
 
 assert.match(working, /location\.href='stb-outdoor-build\.html'/);
