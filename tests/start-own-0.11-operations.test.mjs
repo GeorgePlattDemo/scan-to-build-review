@@ -39,7 +39,9 @@ assert.match(candidate, /SIDE \/ THICKNESS VIEW/);
 assert.match(candidate, /The picture is a definition view, not a machine program/);
 assert.match(candidate, /Complete the angled-cut definition before confirming/);
 assert.match(candidate, /STB_START_OWN_CONFIRMED/);
-assert.match(candidate, /STORE-PRICING-BRIDGE-GAP/);
+assert.match(candidate, /MITER_RANGE_NOT_PUBLISHED/);
+assert.match(candidate, /START-OWN-ANGLED-PROCESS-ECONOMICS-NOT-PUBLISHED/);
+assert.match(candidate, /resolveStartOwnMaterial/);
 assert.match(candidate, /NO BLOOD ON WOOD/);
 assert.equal(/\bG0?\d\b|G-code|remote Cycle Start/i.test(candidate), false);
 
