@@ -457,13 +457,13 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         <div class="kv"><span>Recipient</span><span id="alcove-yard-collector">—</span></div>
         <div class="band warn"><b>Authority boundary.</b> Payment does not start a machine. Allocation is not production release. Production release is not machine readiness. Machine readiness is not Cycle Start. Cycle Start remains local to the person / control at the machine. <b>NO BLOOD ON WOOD.</b></div>
         <div class="band"><b>Timing basis.</b> The existing reference path states: staging target ≤2 business hours after the last required cycle, then a 4-business-hour pickup window after READY. Those are reference statements, not a live ETA, and neither clock has started here.</div>
-        <div class="bottom"><button type="button" data-alcove-commercial-action="store">← BACK TO STORE / ORDER</button><button class="primary" type="button" data-alcove-commercial-action="record">COMPLETION →</button></div>
+        <div class="bottom"><button type="button" data-alcove-commercial-action="store">← BACK TO STORE / ORDER</button><button class="primary" type="button" data-alcove-commercial-action="record">HANDOFF / RECORD →</button></div>
       `;
       if (yardRail) yardRail.innerHTML = '<p class="hd">STORE / YARD</p><p class="goal">Customer watches. Store / Yard acts.</p><div class="row"><b>No extra customer errands</b><span>Internal fulfillment events stay separate in state, not as separate customer buttons.</span></div><div class="row"><b>Local authority stays local</b><span>Readiness and Cycle Start cannot be supplied by an upstream screen.</span></div><div class="row"><b>READY is an event</b><span>Staging does not become custody until handoff is recorded.</span></div>';
 
       recordMain.innerHTML = `
-        <p class="tag">ALCOVE · COMPLETION / HANDOFF / OWNER RECORD</p>
-        <h1>Completion · handoff · record</h1>
+        <p class="tag">ALCOVE · HANDOFF / OWNER RECORD</p>
+        <h1>Handoff · record</h1>
         <p class="sub">One final surface shows what Store / Yard would complete, what the user receives and does, and the exact owner-held record. Missing events stay missing.</p>
         <div class="cards">
           <div class="card"><b>What Store / Yard does</b><span>Complete required work; inspect; label; group; package / crate if selected; stage; issue READY; release at pickup / delivery; record custody; reconcile material, remnants and exceptions; close its fulfillment record when those events actually exist.</span></div>
@@ -482,7 +482,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       recordBottom.className = 'bottom';
       recordBottom.innerHTML = '<button type="button" data-alcove-commercial-action="yard">← BACK TO STORE / YARD</button><button class="next" data-go="landing">Start →</button>';
       recordMain.append(recordBottom);
-      if (recordRail) recordRail.innerHTML = '<p class="hd">COMPLETION / RECORD</p><p class="goal">Two sides. One checkable chain.</p><div class="row"><b>Missing stays missing</b><span>No event is filled in because a later event exists.</span></div><div class="row"><b>Custody closes handoff</b><span>Staged and READY are not custody.</span></div><div class="row"><b>Owner keeps the record</b><span>The exact version and history remain reusable without becoming automatic fabrication authority.</span></div>';
+      if (recordRail) recordRail.innerHTML = '<p class="hd">HANDOFF / RECORD</p><p class="goal">Two sides. One checkable chain.</p><div class="row"><b>Missing stays missing</b><span>No event is filled in because a later event exists.</span></div><div class="row"><b>Custody closes handoff</b><span>Staged and READY are not custody.</span></div><div class="row"><b>Owner keeps the record</b><span>The exact version and history remain reusable without becoming automatic fabrication authority.</span></div>';
 
       storeMain.dataset.alcoveCommercialReconciled = 'true';
       syncAlcoveCommercialSurface();
@@ -499,7 +499,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       event.stopImmediatePropagation();
       const note = doc.getElementById('alcove-commercial-decision-note');
       const acceptance = doc.getElementById('alcove-acceptance-state');
-      const continueButton = doc.querySelector('#alcove-commercial-decision [data-alcove-commercial-action="yard"]');
+      const continueButton = doc.querySelector('#request [data-alcove-commercial-action="yard"]');
       if (action === 'change') {
         originalShow.call(win,'alcove-config');
         return;
@@ -1037,16 +1037,18 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
           button.hidden = false;
         });
         if (activeJourneyProject === 'alcove') {
-          ['alcove-review','request','terms','recap'].forEach(target => {
+          ['alcove-review','terms','recap'].forEach(target => {
             const button = nav.querySelector('button[data-go="'+target+'"]');
             if (button) button.hidden = true;
           });
           const storeButton = nav.querySelector('button[data-go="store"]');
+          const requestButton = nav.querySelector('button[data-go="request"]');
           const yardButton = nav.querySelector('button[data-go="yard"]');
           const recordButton = nav.querySelector('button[data-go="record"]');
-          if (storeButton) storeButton.textContent = 'Store / Order';
+          if (storeButton) storeButton.textContent = 'Store Answer';
+          if (requestButton) requestButton.textContent = 'Accept / Pay';
           if (yardButton) yardButton.textContent = 'Store / Yard';
-          if (recordButton) recordButton.textContent = 'Completion / Record';
+          if (recordButton) recordButton.textContent = 'Handoff / Record';
         }
       }
     }
@@ -1125,7 +1127,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
           configure:'configure',
           store:'store',
           review:'store',
-          request:'store',
+          request:'request',
           yard:'yard',
           terms:'yard',
           recap:'record',
@@ -1181,7 +1183,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       const target = go.getAttribute('data-go');
       const map = {
         'alcove-review':'store',
-        'request':'store',
+        'request':'request',
         'terms':'yard',
         'recap':'record'
       };
