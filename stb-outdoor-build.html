@@ -181,6 +181,7 @@ details[open] summary:after{content:"  –"}
 .outdoor-receipt h2{margin:4px 0 8px}.receipt-cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.receipt-cols>div{border:1px solid var(--line);border-radius:9px;padding:10px;background:var(--paper2);font-size:12px}.receipt-cols b{display:block;margin-bottom:4px}
 @media(max-width:900px){.familyhero,.assembly-grid,.partfacts,.receipt-cols{grid-template-columns:1fr}}
 </style>
+<script src="stb-store-handoff-contract.js?v=1f31c0ab"></script>
 </head>
 <body>
 <div class="wrap" id="app"></div>
@@ -240,9 +241,44 @@ function validate(){
   }
   return a;
 }
+function storeContract(){
+  return window.STBStoreHandoffContract || null;
+}
+function resolveOutdoorMaterial(sizeKey, len, wid, qty){
+  var contract=storeContract();
+  if(!contract||typeof contract.resolveStartOwnMaterial!=='function'){
+    return {status:'UNRESOLVED',code:'STORE_RESOLVER_UNAVAILABLE',details:'Shared Store Zero material resolver is unavailable.'};
+  }
+  return contract.resolveStartOwnMaterial({
+    sizeKey:sizeKey,
+    parts:[{name:'part',len:Number(len),wid:Number(wid),qty:Number(qty)}]
+  });
+}
+function outdoorStoreReference(resolution, extraUnresolved){
+  var unresolved=[];
+  if(!resolution||resolution.status!=='MAPPED') unresolved.push((resolution&&resolution.code)||'STORE_MATERIAL_RESOLUTION_UNAVAILABLE');
+  (extraUnresolved||[]).forEach(function(code){ if(unresolved.indexOf(code)<0) unresolved.push(code); });
+  var authority=storeContract()&&storeContract().storeAuthority?storeContract().storeAuthority('outdoor'):null;
+  return {
+    capabilityStatus:resolution&&resolution.status==='MAPPED'?'SUPPORTABLE':'UNRESOLVED',
+    economicsStatus:authority&&authority.economicsStatus||'UNRESOLVED_CLASS_SCOPED_RECOVERY',
+    material:resolution&&resolution.status==='MAPPED'?resolution.materialTotal:null,
+    combinedValue:null,
+    complete:false,
+    unresolvedConditions:unresolved,
+    materialResolution:resolution||null,
+    authority:authority
+  };
+}
 function boardPlan(){
   var kerf=REF.kerf, per=Math.max(1,Math.floor((REF.board+kerf)/(S.length+kerf))), n=Math.ceil(S.qty/per);
-  return {per:per, n:n, cost:n*REF.syoPrice};
+  var resolution=resolveOutdoorMaterial('2x4', S.length, REF.wid, S.qty);
+  return {
+    per:per, n:n,
+    cost:resolution&&resolution.status==='MAPPED'?resolution.materialTotal:null,
+    resolution:resolution,
+    sku:resolution&&resolution.storeSku||null
+  };
 }
 function explicitDecisionList(){
   var out=[];
@@ -594,9 +630,11 @@ function renderBench(){
     var current=versionId(), stale=current!==S.sent.id;
   var stock=plan.n+' 8-foot 2×4'+(plan.n===1?'':'s');
   if(plan.n===1) stock='one 8-foot 2×4';
-  var sentence=stale?'You changed the part after sending it. Send the new version when it looks right.'
-      :(S.spot?'Store Zero can cut this from '+stock+', about '+money(plan.cost)+'. Hole spotting still needs a supported cell answer. Nothing is ordered.'
-               :'Store Zero can cut this from '+stock+', about '+money(plan.cost)+'. Nothing is ordered.');
+  var mapped=plan.resolution&&plan.resolution.status==='MAPPED'&&plan.cost!=null;
+    var sentence=stale?'You changed the part after sending it. Send the new version when it looks right.'
+      :(!mapped?'This part is defined. Store Zero did not return a mapped parent offering for this version. Nothing is ordered.'
+      :(S.spot?'Store Zero maps this version to '+stock+', material '+money(plan.cost)+'. Hole spotting still needs a supported cell answer. Processing recovery is not published for this class. Nothing is ordered.'
+               :'Store Zero maps this version to '+stock+', material '+money(plan.cost)+'. Processing recovery is not published for this class. Nothing is ordered.'));
     h+='<section class="panel" style="margin-top:14px"><h3>Store answer</h3><p class="storesentence">'+sentence+'</p>'
       +'<details class="fold"><summary>What gets carried forward?</summary><div class="foldbody"><span class="version">'+esc(S.sent.id)+'</span><br><br>'
       +'The Store receives this exact definition. It does not redesign it. Finished length and hole locations remain project truth. Local machine datum, tool, compensation, readiness and Cycle Start stay with the commissioned cell.<br><br>'
@@ -624,12 +662,16 @@ function bindBench(){
   if($('send'))$('send').onclick=function(){
     if(validate().length||!S.choices.quantity||!S.choices.spots)return;
     var decisions=explicitDecisionList();
+    var resolution=resolveOutdoorMaterial('2x4', S.length, REF.wid, S.qty);
+    var extra=S.spot?['HOLE_SPOTTING_CELL_ANSWER_UNRESOLVED']:[];
     S.sent={
       id:versionId(),
       definition:JSON.parse(JSON.stringify(definition())),
-      metrics:{explicitProjectDecisions:decisions,explicitProjectDecisionCount:decisions.length,uiActions:METRICS.uiActions}
+      metrics:{explicitProjectDecisions:decisions,explicitProjectDecisionCount:decisions.length,uiActions:METRICS.uiActions},
+      storeReference:outdoorStoreReference(resolution, extra)
     };
-    try{localStorage.setItem('stb-proof-ladder-job2',JSON.stringify({measured:true,metrics:S.sent.metrics,semanticOutput:normalizedCore(S.sent.definition)}))}catch(_){}
+    try{localStorage.setItem('stb-proof-ladder-job2',JSON.stringify({measured:true,metrics:S.sent.metrics,semanticOutput:normalizedCore(S.sent.definition),storeReference:S.sent.storeReference}))}catch(_){}
+    if(window.self!==window.top)window.parent.postMessage({type:'STB_OUTDOOR_CONFIRMED',payload:JSON.parse(JSON.stringify(S.sent))},window.location.origin);
     renderBench()
   };
 }
@@ -810,8 +852,11 @@ function renderProofProject(){
   if($('outdoor-confirm'))$('outdoor-confirm').onclick=function(){
     if(O.heightRequest!=null)return;
     var normalized=outdoorNormalizedPart();
-    O.sent={id:'OB-SAW-'+hash32(JSON.stringify(normalized)),normalizedPart:normalized,sourceAuthority:{family:OUTDOOR_FAMILY.id,table:OUTDOOR_FAMILY.tableSource,bench:OUTDOOR_FAMILY.benchSource,part:'DB-02 / end-leg'},project:OUTDOOR_FAMILY.id,assembly:O.assembly,occurrence:O.occurrence,storeEconomics:{status:'UNRESOLVED_CURRENT_MODEL_MISMATCH',engine:'STB-STORE-ZERO-PRICE-1',version:'0.2.2'}};
-    try{localStorage.setItem('stb-proof-ladder-job2',JSON.stringify({measured:true,semanticOutput:normalized,storeEconomics:O.sent.storeEconomics}))}catch(_){}
+    var resolution=normalized?resolveOutdoorMaterial('2x4', normalized.finishedLength, 3.5, normalized.quantity):{status:'UNRESOLVED',code:'NORMALIZED_PART_UNAVAILABLE'};
+    var storeReference=outdoorStoreReference(resolution, ['STORE-PRICING-BRIDGE-GAP','MITER_RANGE_NOT_PUBLISHED','OUTDOOR-CLASS-SCOPED-RECOVERY-NOT-PUBLISHED']);
+    O.sent={id:'OB-SAW-'+hash32(JSON.stringify(normalized)),normalizedPart:normalized,sourceAuthority:{family:OUTDOOR_FAMILY.id,table:OUTDOOR_FAMILY.tableSource,bench:OUTDOOR_FAMILY.benchSource,part:'DB-02 / end-leg'},project:OUTDOOR_FAMILY.id,assembly:O.assembly,occurrence:O.occurrence,storeReference:storeReference,storeEconomics:{status:storeReference.economicsStatus,engine:null,version:null}};
+    try{localStorage.setItem('stb-proof-ladder-job2',JSON.stringify({measured:true,semanticOutput:normalized,storeReference:storeReference}))}catch(_){}
+    if(window.self!==window.top)window.parent.postMessage({type:'STB_OUTDOOR_CONFIRMED',payload:JSON.parse(JSON.stringify(O.sent))},window.location.origin);
     renderProofProject();
     setTimeout(function(){document.getElementById('comparison-receipt')?.scrollIntoView({behavior:'smooth',block:'start'})},0);
   };
