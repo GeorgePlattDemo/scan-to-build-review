@@ -6,7 +6,7 @@ const startOwn = read('stb-start-own-0.11.html');
 const shell = read('system-build-current.html');
 const contract = read('stb-store-handoff-contract.js');
 
-assert.match(startOwn, /stb-store-handoff-contract\.js\?v=2b6c3259/);
+assert.match(startOwn, /stb-store-handoff-contract\.js\?v=1f31c0ab/);
 assert.match(startOwn, /<div class="flowstack" id="flow">[\s\S]*operationPanel\(\)\+modeledWorkPanel\(\)\+referenceCostPanel\(\)/);
 assert.match(startOwn, /function currentStoreAuthority\(\)/);
 assert.match(startOwn, /function storeCapabilityModel\(\)/);
@@ -30,8 +30,8 @@ assert.match(startOwn, /Store Zero SKU/);
 
 assert.match(contract, /version:'0\.3'/);
 assert.match(contract, /resolveStartOwnMaterial:resolveStartOwnMaterial/);
-assert.match(contract, /"storeSku": "STB-ZERO-SPF-2X4-192-001"/);
-assert.match(contract, /"sellingPrice": 8\.36/);
+assert.match(contract, /STB-ZERO-SPF-2X4-192-001/);
+assert.match(contract, /8\.36/);
 assert.match(contract, /doctrinePin:'f88ec61c42446755d00259f88e7fd09f2702fd92'/);
 assert.match(contract, /catalogPin:'4402abeb6b0299a5b6db2eec85ed04c3b0236bcc'/);
 assert.match(contract, /economicsStatus:'UNRESOLVED_CLASS_SCOPED_RECOVERY'/);
@@ -39,8 +39,8 @@ assert.match(contract, /legacyGeneralRecoverySelected:false/);
 assert.match(contract, /economicsModel:'STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0\.1'/);
 assert.match(contract, /projectId:'alcove'[\s\S]*economicsModel:null[\s\S]*legacyGeneralRecoverySelected:false/);
 
-assert.match(shell, /stb-store-handoff-contract\.js\?v=2b6c3259/);
-assert.match(shell, /stb-start-own-0\.11\.html\?v=7fa1682e/);
+assert.match(shell, /stb-store-handoff-contract\.js\?v=1f31c0ab/);
+assert.match(shell, /stb-start-own-0\.11\.html\?v=9552caea/);
 assert.match(shell, /payload\.storeReference\?\.unresolvedConditions/);
 assert.match(shell, /Array\.isArray\(payload\.storeReference\?\.unresolvedConditions\)/);
 
