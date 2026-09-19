@@ -1197,7 +1197,12 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       const materialSource=doc.getElementById('proof-store-material-source');
       if(materialSku)materialSku.textContent=materialResolution?.storeSku || 'NOT MAPPED ON THIS PROJECT PAYLOAD';
       if(materialValue)materialValue.textContent=materialResolution?.status==='MAPPED' && Number.isFinite(Number(materialResolution.materialTotal))
-        ? '    }
+        ? '$'+Number(materialResolution.materialTotal).toFixed(2)
+        : 'NOT ESTABLISHED';
+      if(materialSource)materialSource.textContent=materialResolution?.source
+        ? 'Store Zero catalog '+materialResolution.source.clock+' · '+String(materialResolution.source.pin).slice(0,12)+'…'
+        : 'Store Zero catalog · exact project material mapping not carried here';
+    }
 
     doc.addEventListener('click', function(event){
       const library=event.target.closest?.('[data-proof-library]');
