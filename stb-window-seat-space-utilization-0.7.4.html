@@ -245,6 +245,11 @@
   body[data-ws-view="guided"][data-ws-stage="accept-pay"] #ws-continuous-journey .ws-actor-group[data-ws-actor-group="accept-pay"],
   body[data-ws-view="guided"][data-ws-stage="store-yard"] #ws-continuous-journey .ws-actor-group[data-ws-actor-group="store-yard"],
   body[data-ws-view="guided"][data-ws-stage="handoff-record"] #ws-continuous-journey .ws-actor-group[data-ws-actor-group="handoff-record"]{display:block!important}
+  body[data-ws-view="guided"][data-ws-stage="scan"] #ws-gate-scan-configure,
+  body[data-ws-view="guided"][data-ws-stage="configure"] #ws-gate-configure-store,
+  body[data-ws-view="guided"][data-ws-stage="store-answer"] #ws-continuous-journey [data-ws-actor-gate="STORE ANSWER"],
+  body[data-ws-view="guided"][data-ws-stage="accept-pay"] #ws-continuous-journey [data-ws-actor-gate="ACCEPT / PAY"],
+  body[data-ws-view="guided"][data-ws-stage="store-yard"] #ws-continuous-journey [data-ws-actor-gate="STORE / YARD"]{display:block!important}
   @media (max-width:1100px){ .cfg{grid-template-columns:240px minmax(0,1fr)} .cfg>div:last-child{grid-column:1/-1} }
   @media (max-width:800px){
     .page{grid-template-columns:1fr}
@@ -2559,12 +2564,68 @@ function actorGateHtml(previous,next,action,consequence){
     '<b>Next</b><span>'+jEsc(next)+'</span><b>Consequence</b><span>'+jEsc(consequence)+'</span></div>'+
     '<p class="gate-safety">Scrolling only reveals the next shared content group. It does not create acceptance, payment, allocation, release, readiness, machine motion, completion, READY, custody, or closeout.</p></div>';
 }
+function mirrorNodesForStage(stage){
+  if(stage==='scan')return [$('pg-capture'),$('ws-gate-scan-configure')].filter(Boolean);
+  if(stage==='configure')return [$('pg-configure'),$('ws-configure-review'),$('ws-gate-configure-store')].filter(Boolean);
+  var group=document.querySelector('[data-ws-actor-group="'+stage+'"]'), gate=null;
+  if(stage==='store-answer')gate=document.querySelector('[data-ws-actor-gate="STORE ANSWER"]');
+  if(stage==='accept-pay')gate=document.querySelector('[data-ws-actor-gate="ACCEPT / PAY"]');
+  if(stage==='store-yard')gate=document.querySelector('[data-ws-actor-gate="STORE / YARD"]');
+  return [group,gate].filter(Boolean);
+}
+function mirrorDataset(el){
+  var out={};
+  Object.keys(el.dataset||{}).sort().forEach(function(k){out[k]=el.dataset[k]});
+  return out;
+}
+function mirrorControl(control){
+  return {
+    tag:control.tagName,
+    id:control.id||'',
+    name:control.name||'',
+    type:control.type||'',
+    value:control.value==null?'':String(control.value),
+    checked:!!control.checked,
+    disabled:!!control.disabled,
+    selectedIndex:typeof control.selectedIndex==='number'?control.selectedIndex:null,
+    text:control.textContent||'',
+    data:mirrorDataset(control)
+  };
+}
+function captureActorMirror(stage,mode){
+  var priorView=document.body.dataset.wsView, priorStage=document.body.dataset.wsStage;
+  document.body.dataset.wsView=mode;
+  if(mode==='guided')document.body.dataset.wsStage=stage; else delete document.body.dataset.wsStage;
+  var nodes=mirrorNodesForStage(stage);
+  var signature={
+    stage:stage,
+    nodes:nodes.map(function(node){
+      return {
+        id:node.id||'',
+        data:mirrorDataset(node),
+        html:node.innerHTML,
+        text:node.textContent||'',
+        controls:[].slice.call(node.querySelectorAll('input,select,textarea,button')).map(mirrorControl)
+      };
+    }),
+    state:currentJourneySnapshot(false)
+  };
+  if(priorView==null)delete document.body.dataset.wsView; else document.body.dataset.wsView=priorView;
+  if(priorStage==null)delete document.body.dataset.wsStage; else document.body.dataset.wsStage=priorStage;
+  return signature;
+}
 function actorMirrorAudit(){
+  refreshJourneyIfNeeded();
   var groups=WINDOW_SEAT_ACTOR_STAGES.map(function(stage){
-    var count=stage==='scan'?($('pg-capture')?1:0)
-      :stage==='configure'?(($('pg-configure')&&$('ws-configure-review'))?1:0)
-      :document.querySelectorAll('[data-ws-actor-group="'+stage+'"]').length;
-    return {stage:stage,result:count===1?'EXACT MIRROR':'DEFECT — NOT EXACT MIRROR',sharedNodeCount:count};
+    var continuous=captureActorMirror(stage,'continuous');
+    var guided=captureActorMirror(stage,'guided');
+    var exact=continuous.nodes.length>0&&JSON.stringify(continuous)===JSON.stringify(guided);
+    return {
+      stage:stage,
+      result:exact?'EXACT MIRROR':'DEFECT — NOT EXACT MIRROR',
+      sharedNodeCount:continuous.nodes.length,
+      sameContentSource:exact
+    };
   });
   var exact=groups.every(function(g){return g.result==='EXACT MIRROR'});
   return cloneJourneyValue({
