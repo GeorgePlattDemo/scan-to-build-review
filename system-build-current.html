@@ -110,8 +110,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         const windowSeatTile = ribbon.querySelector('.tile[data-go="window-intake"]');
         if (windowSeatTile) {
           windowSeatTile.removeAttribute('data-go');
-          windowSeatTile.dataset.windowSeatArtifact = 'stb-window-seat-space-utilization-0.7.3.html';
-          windowSeatTile.title = 'Space utilization · Window seat · live 0.7.3';
+          windowSeatTile.dataset.windowSeatArtifact = 'stb-window-seat-space-utilization-0.7.4.html';
+          windowSeatTile.title = 'Space utilization · Window seat · live 0.7.4';
 
           let windowSeatPage = doc.getElementById('window-seat-live');
           if (!windowSeatPage) {
@@ -123,7 +123,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 <iframe
                   class="window-seat-shell-frame"
                   title="Space utilization · Window seat"
-                  src="stb-window-seat-space-utilization-0.7.3.html?v=825a9bce"
+                  src="stb-window-seat-space-utilization-0.7.4.html?v=f12e0102"
                 ></iframe>
               </div>
             `;
@@ -975,6 +975,17 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     const originalShow = win.show;
 
     const canonicalJourney = window.STB_CANONICAL_JOURNEY || null;
+    const WINDOW_SEAT_STAGE_TO_ACTOR = Object.freeze({
+      scan:'scan',
+      configure:'configure',
+      store:'store-answer',
+      review:'store-answer',
+      request:'accept-pay',
+      yard:'store-yard',
+      terms:'store-yard',
+      recap:'handoff-record',
+      record:'handoff-record'
+    });
     const ALCOVE_STAGE_TARGETS = Object.freeze({
       scan: 'alcove-capture',
       configure: 'alcove-config',
@@ -1049,6 +1060,19 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
           if (requestButton) requestButton.textContent = 'Accept / Pay';
           if (yardButton) yardButton.textContent = 'Store / Yard';
           if (recordButton) recordButton.textContent = 'Handoff / Record';
+        } else if (activeJourneyProject === 'window-seat') {
+          ['alcove-review','terms','recap'].forEach(target => {
+            const button = nav.querySelector('button[data-go="'+target+'"]');
+            if (button) button.hidden = true;
+          });
+          const storeButton = nav.querySelector('button[data-go="store"]');
+          const requestButton = nav.querySelector('button[data-go="request"]');
+          const yardButton = nav.querySelector('button[data-go="yard"]');
+          const recordButton = nav.querySelector('button[data-go="record"]');
+          if (storeButton) storeButton.textContent = 'Store Answer';
+          if (requestButton) requestButton.textContent = 'Accept / Pay';
+          if (yardButton) yardButton.textContent = 'Store / Yard';
+          if (recordButton) recordButton.textContent = 'Handoff / Record';
         }
       }
     }
@@ -1089,7 +1113,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       const bridge = seatFrame()?.contentWindow?.STBWindowSeatJourney;
       if (!bridge) return false;
       try {
-        if (pendingSeatView.mode === 'guided') bridge.showGuided(pendingSeatView.stage || 'scan');
+        if (pendingSeatView.mode === 'guided') bridge.showGuided(WINDOW_SEAT_STAGE_TO_ACTOR[pendingSeatView.stage || 'scan'] || 'scan');
         else bridge.showContinuous();
         refreshSeatSnapshot(false);
         return true;
