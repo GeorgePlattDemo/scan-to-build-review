@@ -145,7 +145,20 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             startOwnPage.id = 'start-own-live';
             startOwnPage.innerHTML = `
               <div class="start-own-shell-main">
+                <div data-proof-job="1" style="margin:0 0 12px;padding:14px 16px;border:1px solid var(--border);border-radius:9px;background:var(--surface)">
+                  <p style="margin:0 0 5px;font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--text3)">TEST 01 · FROM A BOARD</p>
+                  <p style="margin:0 0 8px"><b>TARGET: Replace 8 detached bench legs.</b></p>
+                  <p class="dim" style="margin:0 0 8px">Known by you: <b style="color:var(--text)">2×4 · 16½ in finished · 8 pieces · square ends.</b> Optional hole-center spotting belongs here only if you supply measured locations.</p>
+                  <p class="dim" style="margin:0">Use the generic floor below as it is. Nothing is prefilled for this test by the proof wrapper.</p>
+                  <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:11px;color:var(--text2)">
+                    <span>Explicit project decisions: <b id="proof-job1-decisions">0</b></span>
+                    <span>UI actions: <b id="proof-job1-actions">0</b></span>
+                    <span id="proof-job1-match">Target not yet represented.</span>
+                  </div>
+                  <button type="button" id="proof-job1-back" style="margin-top:10px">← PROJECT LIBRARY</button>
+                </div>
                 <iframe
+                  id="start-own-proof-frame"
                   class="start-own-shell-frame"
                   title="Start Your Own · definition to doing"
                   src="stb-start-own-0.10.html?v=cbdb0299"
@@ -154,6 +167,85 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             `;
             doc.querySelector('.wrap')?.append(startOwnPage);
           }
+
+          const proofFrame = startOwnPage.querySelector('#start-own-proof-frame');
+          const proofDecisions = new Set();
+          let proofActions = 0;
+          const classifyStartOwnDecision = target => {
+            const choice = target?.closest?.('[data-grade],[data-size],[data-maker],[data-step],[data-set],[data-exact]');
+            if (!choice) return;
+            if (choice.dataset.grade) proofDecisions.add('material_family');
+            if (choice.dataset.size) proofDecisions.add('stock_class');
+            if (choice.dataset.maker) proofDecisions.add('part_form');
+            const path = choice.dataset.exact
+              || (choice.dataset.step ? choice.dataset.step.split(':')[0] : '')
+              || (choice.dataset.set ? choice.dataset.set.split(':')[0] : '');
+            if (path === 'cuts.0.len') proofDecisions.add('finished_length');
+            if (path === 'cuts.0.qty') proofDecisions.add('quantity');
+          };
+          const captureStartOwnProof = () => {
+            const state = proofFrame?.contentWindow?.S;
+            if (!state) return;
+            let semanticOutput = null;
+            if (state.maker === 'cuts' && state.cuts?.pieces?.length === 1) {
+              const part = state.cuts.pieces[0];
+              semanticOutput = {
+                stockClass: state.size === '2x4' ? '2x4' : state.size,
+                finishedLength: Number(part.len),
+                quantity: Number(part.qty),
+                endCondition: 'square',
+                holeRequirement: 'NONE',
+                datum: null
+              };
+            }
+            const targetMatch = !!semanticOutput
+              && semanticOutput.stockClass === '2x4'
+              && Math.abs(semanticOutput.finishedLength - 16.5) < 0.00001
+              && semanticOutput.quantity === 8
+              && semanticOutput.endCondition === 'square'
+              && semanticOutput.holeRequirement === 'NONE';
+            const payload = {
+              measured: true,
+              explicitProjectDecisions: [...proofDecisions],
+              explicitProjectDecisionCount: proofDecisions.size,
+              uiActions: proofActions,
+              semanticOutput,
+              targetMatch
+            };
+            try { win.localStorage.setItem('stb-proof-ladder-job1', JSON.stringify(payload)); } catch (_) {}
+            const d = startOwnPage.querySelector('#proof-job1-decisions');
+            const a = startOwnPage.querySelector('#proof-job1-actions');
+            const m = startOwnPage.querySelector('#proof-job1-match');
+            if (d) d.textContent = String(payload.explicitProjectDecisionCount);
+            if (a) a.textContent = String(payload.uiActions);
+            if (m) m.textContent = targetMatch ? 'Core target represented.' : 'Target not yet represented.';
+          };
+          if (proofFrame && !proofFrame.dataset.proofObserved) {
+            proofFrame.dataset.proofObserved = 'true';
+            proofFrame.addEventListener('load', () => {
+              const childDoc = proofFrame.contentDocument;
+              if (!childDoc) return;
+              childDoc.addEventListener('click', event => {
+                const target = event.target?.closest?.('button,a');
+                if (!target) return;
+                proofActions += 1;
+                classifyStartOwnDecision(target);
+                win.setTimeout(captureStartOwnProof, 0);
+              }, true);
+              childDoc.addEventListener('change', event => {
+                const target = event.target?.closest?.('[data-exact]');
+                if (!target) return;
+                proofActions += 1;
+                classifyStartOwnDecision(target);
+                win.setTimeout(captureStartOwnProof, 0);
+              }, true);
+              captureStartOwnProof();
+            });
+          }
+          startOwnPage.querySelector('#proof-job1-back')?.addEventListener('click', () => {
+            selectJourneyProject(null);
+            originalShow.call(win, 'projects');
+          });
 
           startOwnTile.addEventListener('click', event => {
             event.preventDefault();
