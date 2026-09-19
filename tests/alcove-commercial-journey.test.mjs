@@ -82,10 +82,10 @@ assert.equal(storeAnswerBlock.includes("data-alcove-commercial-action=\"accept\"
 assert.match(shell,/Store Answer is not customer acceptance/);
 assert.match(shell,/Offer ≠ acceptance\. Acceptance ≠ settlement\. Settlement ≠ allocation\. Allocation ≠ production release/);
 assert.match(shell,/NOT ESTABLISHED/);
-assert.match(shell,/Reference acceptance selected\. Settlement \/ payment remains NOT ESTABLISHED/);
+assert.match(shell,/Reference Store answer acknowledged\. Commercial acceptance and settlement \/ payment remain NOT ESTABLISHED/);
 assert.match(shell,/data-alcove-commercial-action="accept-page">ACCEPT STORE ANSWER →/);
-assert.match(shell,/data-alcove-commercial-action="accept">ACCEPT REFERENCE OFFER/);
-assert.match(shell,/data-alcove-commercial-action="yard" disabled>CONTINUE WITH THIS ORDER →/);
+assert.match(shell,/data-alcove-commercial-action="accept">ACKNOWLEDGE REFERENCE ANSWER/);
+assert.match(shell,/data-alcove-commercial-action="yard" disabled>CONTINUE REFERENCE DEMONSTRATION →/);
 assert.match(shell,/Payment does not start a machine/);
 assert.match(shell,/Allocation is not production release/);
 assert.match(shell,/Production release is not machine readiness/);
