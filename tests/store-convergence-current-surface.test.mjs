@@ -96,7 +96,7 @@ assert.match(shell,/data-proof-library/);
 assert.match(shell,/\['alcove-capture','alcove-config','store','request','yard','record','window-parts','playhouse-s001'/);
 
 assert.match(shell,/const QUARANTINED_OUTDOOR_TARGETS = new Set\(\['picnic-chooser','picnic-config','picnic-store','picnic-review','picnic-request','picnic-yard','picnic-terms','picnic-recap','picnic-record'\]\)/);
-assert.match(shell,/if \(QUARANTINED_OUTDOOR_TARGETS\.has\(target\)\) \{[\s\S]*originalShow\.call\(win, 'outdoor-build-live'\)/);
+assert.match(shell,/function openCurrentOutdoorBuildFromLegacyRoute\(\) \{[\s\S]*selectJourneyProject\(null\)[\s\S]*originalShow\.call\(win, 'outdoor-build-live'\)/);\nassert.match(shell,/if \(QUARANTINED_OUTDOOR_TARGETS\.has\(target\)\) \{[\s\S]*openCurrentOutdoorBuildFromLegacyRoute\(\)/);
 assert.match(shell,/outdoorTile\.removeAttribute\('data-go'\)/);
 assert.match(shell,/originalShow\.call\(win, 'outdoor-build-live'\)/);
 
