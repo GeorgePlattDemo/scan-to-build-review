@@ -644,7 +644,7 @@ function renderPick(){
     +(mk?'<b>'+esc(mk.name)+'</b> in <b>'+esc(sz.label)+'</b>.'
         :'<b>'+esc(sz.label)+'</b> picked. Now choose what you are making.')
     +'</div><button class="btn" id="go"'+(mk?'':' disabled')+'>Take it to the bench →</button></div>';
-  h+='<p class="foot">Nothing is ordered here. The Store answers the version you send.</p>';
+  h+='<p class="foot">Store Zero evaluates the definition while you configure it. Confirmation sends the exact version to Store Answer. Nothing is ordered here.</p>';
   $('app').innerHTML=h;
   $('projectlibrary').onclick=returnProjectLibrary;
   $('go').onclick=function(){ if(S.maker){ seed(); S.screen='bench'; render(); window.scrollTo(0,0) } };
@@ -714,7 +714,8 @@ function grip(key,x,y,vert,label){
 function drawCuts(){
   var s=S_size(), k=S.grade, sh=isSheet(), P=S.cuts.pieces, g=GRAIN[k];
   var vw=720, ML=34, MR=34, IW=vw-ML-MR;
-  var maxLen=sh?96:Math.max.apply(null,Object.keys(s.lens).map(Number));
+  var storeLengths=currentStoreOfferings(S.size).map(function(o){return sh?Math.max(Number(o.sheetW_in)||0,Number(o.sheetL_in)||0):(Number(o.stockL_in)||0)}).filter(Boolean);
+  var maxLen=storeLengths.length?Math.max.apply(null,storeLengths):(sh?96:192);
   var b=buyList();
   var o=[], y, handled={};
   GEO={vw:vw,vh:0,handles:{}};
@@ -1316,7 +1317,7 @@ function storeSummarySentence(){
 function storeHandoffPanel(){
   var id=currentDefinitionId(), sent=S.handoff, sameVersion=sent&&sent.id===id;
   var h='<div class="handoff"><div class="handoffhead"><div class="copy"><b>Looks right?</b>'
-    +'<span>Send this version to the Store. It answers this geometry; it does not redraw it.</span></div>'
+    +'<span>The Store basis above moves with this definition. Confirming sends this exact identified version to Store Answer; it does not redraw it.</span></div>'
     +'<button class="btn" id="confirmstore">LOOKS RIGHT — SEND TO STORE →</button></div>';
   if(sent&&!sameVersion){
     h+='<div class="storeanswer"><span class="storestatus resolve">YOU CHANGED IT</span>'
