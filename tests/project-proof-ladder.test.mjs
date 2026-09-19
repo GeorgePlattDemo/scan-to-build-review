@@ -27,7 +27,7 @@ for (const label of [
 assert.match(shell, /TARGET: Define the Sawhorse Bench comparison member yourself/);
 assert.match(shell, /2×4 · 15½ in · quantity 8 · 10° source-stated DOUBLE BEVEL/);
 assert.match(shell, /two separate bench assemblies × four published end-leg occurrences per bench/);
-assert.match(shell, /src="stb-start-own-0\.11\.html\?v=0c7557a5"/);
+assert.match(shell, /src="stb-start-own-0\.11\.html\?v=b6c5e4a6"/);
 assert.match(own11, /STRAIGHT CUT/);
 assert.match(own11, /ANGLED CUT/);
 assert.match(own11, /Angle alone is not enough/);
