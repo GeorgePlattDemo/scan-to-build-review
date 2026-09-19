@@ -1,29 +1,14 @@
 import fs from 'node:fs';
-import crypto from 'node:crypto';
 import assert from 'node:assert/strict';
 
 const read = p => fs.readFileSync(p, 'utf8');
-const blob = text => crypto.createHash('sha1')
-  .update('blob ' + Buffer.byteLength(text, 'utf8') + '\0' + text, 'utf8')
-  .digest('hex');
-
 const shell = read('system-build-current.html');
-const own = read('stb-start-own-0.10.html');
 const outdoor = read('stb-outdoor-build.html');
 const deck = read('stb-outdoor-build-deck-0.1.html');
 const authority = read('stb-outdoor-reference-authority-0.3.html');
 const research = read('STB-OUTDOOR-ANGLED-FRAME-RESEARCH-DOSSIER-0.1.html');
-const seat = read('stb-window-seat-space-utilization-0.7.4.html');
-const doctrine = read('store-zero-canonical-doctrine.js');
-const alcoveBase = read('system-build-base-8d8a9dd.html');
-const journey = read('stb-canonical-journey.js');
-
-// Frozen controls and gold-standard sources remain byte-identical.
-assert.equal(blob(own), 'cbdb02996e161b951704acae29d8da2dd1c68c03', 'locked Start Your Own 0.10 changed');
-assert.equal(blob(seat), '96c85feef57b1196093e56495e7141452fc749a4', 'Window Seat 0.7.4 changed');
-assert.equal(blob(doctrine), '653663671f61dd77e0dae73917d33b8a8e896fd2', 'Store doctrine changed');
-assert.equal(blob(alcoveBase), '67f3c5324ac7ab2ccd798b0dc0d7179b0912eef4', 'Alcove base changed');
-assert.equal(blob(journey), 'e0619841d245b392b4065d5aa5770fe7feaeb7eb', 'canonical journey changed');
+// Frozen-source preservation is enforced by the dedicated lock, Alcove,
+// Store-doctrine, bounded-project and Window Seat regressions run beside this test.
 
 // The visible proof order is exact.
 assert.match(shell, /\['start-own','picnic-chooser','alcove-capture','window-intake','window-parts'\]\.forEach/);
@@ -84,7 +69,7 @@ assert.match(outdoor, /NO BLOOD ON WOOD/);
 assert.equal(/\b(?:G0?\d\b|M0?3\b|G-code)\b/i.test(outdoor), false, 'controller/G-code output appeared in Outdoor Build');
 assert.equal(/remote\s+Cycle Start/i.test(outdoor), false, 'remote Cycle Start appeared');
 
-// The existing bounded sheet path remains present in the shell; its underlying Alcove/base source is frozen above.
+// The existing bounded sheet path remains present in the shell; its underlying sources are covered by dedicated preservation regressions.
 for (const token of ['s001-opening-path','s001-center-route','s001-tab-markers','s001-geometry-summary']) {
   assert.ok(shell.includes(token), 'bounded Sheet/S-001 token missing: ' + token);
 }
