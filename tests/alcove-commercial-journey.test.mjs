@@ -20,17 +20,22 @@ assert.match(base,/NEXT → CONFIGURE/);
 assert.match(base,/id="alcove-config"/);
 assert.match(base,/id="confirm-alcove-inline">CONFIRM &amp; SEND TO STORE ZERO →/);
 assert.ok(shell.includes("storeOrder.id = 'alcove-store-order-surface'"));
+assert.ok(shell.includes("returnedOffer.id = 'alcove-store-returned-offer'"));
+assert.match(shell,/ACCEPT STORE ANSWER →/);
+assert.match(shell,/ALCOVE · ACCEPT \/ SETTLE/);
+assert.match(shell,/Store answered\. You decide\./);
 assert.match(shell,/Order status · Store \/ Yard acts/);
-assert.match(shell,/Completion · handoff · record/);
+assert.match(shell,/Handoff · record/);
 
 assert.match(shell,/review:'store'/);
-assert.match(shell,/request:'store'/);
+assert.match(shell,/request:'request'/);
 assert.match(shell,/terms:'yard'/);
 assert.match(shell,/recap:'record'/);
-assert.ok(shell.includes("['alcove-review','request','terms','recap']"));
-assert.match(shell,/Store \/ Order/);
+assert.ok(shell.includes("['alcove-review','terms','recap']"));
+assert.match(shell,/Store Answer/);
+assert.match(shell,/Accept \/ Pay/);
 assert.match(shell,/Store \/ Yard/);
-assert.match(shell,/Completion \/ Record/);
+assert.match(shell,/Handoff \/ Record/);
 
 assert.match(shell,/ALCOVE STORE CONTENT CONSERVATION RULE/);
 for(const id of ['request','yard','terms','recap','record']){
@@ -70,10 +75,17 @@ assert.match(shell,/Reference timing remains reference timing; no live ETA is in
 assert.match(base,/YARD ≤2 business h · PICKUP 4 business h after READY/);
 assert.match(base,/Stage ≤2 business h after last required cycle/);
 assert.match(base,/Pickup 4 business h after READY/);
+assert.ok(shell.indexOf('Commercial sequence and timing basis') < shell.indexOf("requestMain.innerHTML = \`"),'timing / ETA basis no longer appears before Accept / Settle');
+const storeAnswerBlock=shell.slice(shell.indexOf("returnedOffer.id = 'alcove-store-returned-offer'"),shell.indexOf("requestMain.innerHTML = \`"));
+assert.equal(storeAnswerBlock.includes("data-alcove-commercial-action=\"accept\""),false,'Store Answer itself records customer acceptance');
 
-assert.match(shell,/Acceptance ≠ settlement ≠ allocation ≠ production release/);
-assert.match(shell,/NOT ESTABLISHED · NOT LIVE COMMERCE/);
+assert.match(shell,/Store Answer is not customer acceptance/);
+assert.match(shell,/Offer ≠ acceptance\. Acceptance ≠ settlement\. Settlement ≠ allocation\. Allocation ≠ production release/);
+assert.match(shell,/NOT ESTABLISHED/);
 assert.match(shell,/Reference acceptance selected\. Settlement \/ payment remains NOT ESTABLISHED/);
+assert.match(shell,/data-alcove-commercial-action="accept-page">ACCEPT STORE ANSWER →/);
+assert.match(shell,/data-alcove-commercial-action="accept">ACCEPT REFERENCE OFFER/);
+assert.match(shell,/data-alcove-commercial-action="yard" disabled>CONTINUE WITH THIS ORDER →/);
 assert.match(shell,/Payment does not start a machine/);
 assert.match(shell,/Allocation is not production release/);
 assert.match(shell,/Production release is not machine readiness/);
