@@ -810,7 +810,7 @@ function renderProofProject(){
   if($('outdoor-confirm'))$('outdoor-confirm').onclick=function(){
     if(O.heightRequest!=null)return;
     var normalized=outdoorNormalizedPart();
-    O.sent={id:'OB-SAW-'+hash32(JSON.stringify(normalized)),normalizedPart:normalized,sourceAuthority:{family:OUTDOOR_FAMILY.id,table:OUTDOOR_FAMILY.tableSource,bench:OUTDOOR_FAMILY.benchSource,part:'DB-02 / end-leg'},project:OUTDOOR_FAMILY.id,assembly:O.assembly,occurrence:O.occurrence,storeEconomics:{status:'UNRESOLVED_CURRENT_MODEL_MISMATCH',engine:'STB-STORE-ZERO-PRICE-1',version:'0.2.2'}};
+    O.sent={id:'OB-SAW-'+hash32(JSON.stringify(normalized)),normalizedPart:normalized,sourceAuthority:{family:OUTDOOR_FAMILY.id,table:OUTDOOR_FAMILY.tableSource,bench:OUTDOOR_FAMILY.benchSource,part:'DB-02 / end-leg'},project:OUTDOOR_FAMILY.id,assembly:O.assembly,occurrence:O.occurrence,storeEconomics:{status:'UNRESOLVED_CLASS_SCOPED_RECOVERY',economicsModel:null,legacyGeneralRecoverySelected:false,materialCatalogPin:'4402abeb6b0299a5b6db2eec85ed04c3b0236bcc',capabilityPin:'f88ec61c42446755d00259f88e7fd09f2702fd92'}};
     try{localStorage.setItem('stb-proof-ladder-job2',JSON.stringify({measured:true,semanticOutput:normalized,storeEconomics:O.sent.storeEconomics}))}catch(_){}
     renderProofProject();
     setTimeout(function(){document.getElementById('comparison-receipt')?.scrollIntoView({behavior:'smooth',block:'start'})},0);
