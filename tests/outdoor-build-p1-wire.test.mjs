@@ -6,26 +6,33 @@ const artifact = read('stb-outdoor-build.html');
 const shell = read('system-build-current.html');
 const working = read('working-app.html');
 const own = read('stb-start-own-0.10.html');
+const candidate = read('stb-start-own-0.11.html');
 
-assert.match(artifact, /Scan-to-Build · Outdoor Build · Project 1/);
-assert.match(artifact, /Find the part/);
-assert.match(artifact, /16½ in/);
-assert.match(artifact, /These are not “standard” holes/);
-assert.match(artifact, /stb-start-own-0\.10\.html/);
-assert.equal(artifact.includes('stb-start-own-0.4.html'), false);
-assert.match(artifact, /Looks right — send to Store/);
-assert.match(artifact, /Nothing is ordered/);
+assert.match(artifact, /Sawhorse outdoor table \+ matching benches/);
+assert.match(artifact, /TABLE/);
+assert.match(artifact, /LEFT BENCH/);
+assert.match(artifact, /RIGHT BENCH/);
+assert.match(artifact, /Sawhorse end leg/);
+assert.match(artifact, /15½ in/);
+assert.match(artifact, /DOUBLE BEVEL \/ ACROSS THICKNESS/);
+assert.match(artifact, /NEEDS GEOMETRY CHECK · DEFER/);
+assert.match(artifact, /sourcePart:'ANA-WHITE-SAW-HORSE-BENCH\/END-LEG'/);
+assert.match(artifact, /NORMALIZED PART REQUIREMENT/);
+assert.match(artifact, /STB_OUTDOOR_CONFIRMED/);
 assert.match(artifact, /NO BLOOD ON WOOD/);
+assert.equal(artifact.includes('stb-start-own-0.4.html'), false);
 
 assert.match(shell, /outdoorTile = ribbon\.querySelector\('\.tile\[data-go="picnic-chooser"\]'\)/);
 assert.match(shell, /outdoorTile\.removeAttribute\('data-go'\)/);
 assert.match(shell, /outdoorTile\.dataset\.outdoorBuildArtifact = 'stb-outdoor-build\.html'/);
-assert.match(shell, /src="stb-outdoor-build\.html\?v=9b16b8ff"/);
+assert.match(shell, /src="stb-outdoor-build\.html\?v=5279d330"/);
 assert.match(shell, /originalShow\.call\(win, 'outdoor-build-live'\)/);
 
 assert.match(working, /location\.href='stb-outdoor-build\.html'/);
 
-// Locked Start Your Own stays the Path A floor and is not rewritten here.
+// Locked Start Your Own remains provenance; 0.11 is the active generic operation candidate.
 assert.match(own, /Scan-to-Build · Start Your Own · Definition to Doing/);
+assert.match(candidate, /Start Your Own 0\.11 · Definition to Doing/);
+assert.match(shell, /stb-start-own-0\.11\.html\?v=eaebb3bf/);
 
-console.log('PASS · Outdoor Build Project 1 wired behind the Outdoor Build tile');
+console.log('PASS · Outdoor Sawhorse proof wired behind the Outdoor Build tile');
