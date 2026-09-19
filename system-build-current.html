@@ -993,6 +993,121 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       return page;
     }
 
+    const proofStoreDoctrine = (!canonicalDoctrine || canonicalDoctrine.expectedProcessStepCount !== 12)
+      ? '<div class="proof-gap"><b>CANONICAL STORE CONTENT UNAVAILABLE</b>Fail closed. Shared Store doctrine is unavailable.</div>'
+      : '<div class="band" style="font-size:12px;line-height:1.55"><p style="margin:0">'+canonicalDoctrine.definitionHtml+'</p></div>'
+        + canonicalDoctrine.processIntroHtml + canonicalDoctrine.processStepsHtml;
+
+    ensureProjectJourneyPage('proof-store',
+      '<p class="stage-tag">STORE ANSWER</p><h1 id="proof-store-title">STORE ANSWER · PROOF JOB</h1>'
+      +'<p class="sub">The confirmed definition reached the common Store actor boundary unchanged. The Store answer below uses the pinned System/Store source identities; it does not re-price the job inside this Review application.</p>'
+      +'<div class="proof-actor-grid">'
+        +'<div><b>JOB</b><span id="proof-store-job">—</span></div>'
+        +'<div><b>VERSION</b><span id="proof-store-version">—</span></div>'
+        +'<div><b>PRICING ENGINE</b><span>STB-STORE-ZERO-PRICE-1 · 0.2.2</span></div>'
+        +'<div><b>CYCLE MODEL</b><span>STB-D001-CYCLE-MODEL-S2-0.1 · CALCULATED · measured false</span></div>'
+        +'<div><b>D-001 ENVELOPE</b><span>D001-STAGE2-ENVELOPE-0.2 · declared reference · not commissioned</span></div>'
+        +'<div><b>CATALOG CLOCK</b><span>2026-09-10</span></div>'
+      +'</div>'
+      +'<h2>Current economics answer</h2>'
+      +'<div class="proof-actor-grid">'
+        +'<div><b>REFERENCE 2×4 OFFERING</b><span>STB-ZERO-SPF-2X4-72-001 · $3.13 / ea · calculated fixture selling price</span></div>'
+        +'<div><b>MATERIAL FOR THIS EIGHT-PART JOB</b><span>UNRESOLVED · common angled-job takeoff / nesting bridge not published</span></div>'
+        +'<div><b>PROCESSING / RECOVERY</b><span>UNRESOLVED · angled semantic demand is outside the current Board HTTP contract</span></div>'
+        +'<div><b>TOTAL REFERENCE PRICE</b><span>UNRESOLVED · CURRENT MODEL MISMATCH</span></div>'
+      +'</div>'
+      +'<div class="proof-gap"><b>STORE-PRICING-BRIDGE-GAP</b>'
+        +'The current application Board endpoint is <b>BOARD_SQUARE_V1</b> and submits <b>CROSSCUT</b> only. The Store catalog declares <b>MITER_LIMITED</b>, but its numeric angle range remains unresolved; this comparison member is a <b>10° DOUBLE BEVEL</b>, not a published Store operation. Its 15½ in kept length is also below the current D-001 two-roller 24 in control floor. No app-side discount, made-up cycle, or made-up price is substituted.'
+      +'</div>'
+      +'<div class="band warn"><b>Why the familiar $50.81 recovery is not used here.</b> The current square-board control model carries an 8-minute modeled job setup, a $35 setup charge, and $100/hour modeled machine recovery. Its known one-board control returns material $3.13 + modeled cell recovery $50.81 = budgetary Q $53.94 at T_job 9.486 min. That is evidence for a different square-crosscut demand, not authority to price this double-bevel part.</div>'
+      +proofStoreDoctrine
+      +'<div class="proof-nav"><button type="button" data-proof-library>← PROJECT LIBRARY</button><button class="next" type="button" data-proof-go="proof-accept">CONTINUE → ACCEPT / PAY</button></div>',
+      '<p class="goal">Same demand, same Store boundary</p><div class="row"><b>No second Store</b><span>Review presents the pinned Store identities and the real gap.</span></div><div class="row"><b>No fake price</b><span>Unresolved processing remains unresolved.</span></div>'
+    );
+
+    ensureProjectJourneyPage('proof-accept',
+      '<p class="stage-tag">ACCEPT / PAY</p><h1>STORE ANSWER RECEIVED. CUSTOMER EVENT REMAINS SEPARATE.</h1>'
+      +'<p class="sub">This reference build can demonstrate the handoff without pretending that an unresolved budgetary answer is a payable offer.</p>'
+      +'<div class="proof-actor-grid">'
+        +'<div><b>STORE ANSWER</b><span>RETURNED · WITH PRICING BRIDGE GAP</span></div>'
+        +'<div><b>COMMERCIAL OFFER</b><span>NOT ESTABLISHED</span></div>'
+        +'<div><b>ACCEPTANCE</b><span>NOT ESTABLISHED</span></div>'
+        +'<div><b>PAYMENT</b><span>NOT AVAILABLE / NOT RECORDED</span></div>'
+      +'</div>'
+      +'<div class="proof-gap"><b>REFERENCE DEMONSTRATION ONLY</b>Continuing below does not accept an offer, charge money, reserve stock, or authorize fabrication. It demonstrates that the customer can continue through the actor chain while null events remain null.</div>'
+      +'<div class="proof-nav"><button type="button" data-proof-library>← PROJECT LIBRARY</button><button type="button" data-proof-go="proof-store">← STORE ANSWER</button><button class="next" type="button" data-proof-go="proof-yard">CONTINUE REFERENCE DEMONSTRATION →</button></div>',
+      '<p class="goal">Keep events apart</p><div class="row"><b>Offer ≠ acceptance</b><span>No payable offer exists here.</span></div><div class="row"><b>Acceptance ≠ payment</b><span>No simulated payment event is manufactured.</span></div>'
+    );
+
+    ensureProjectJourneyPage('proof-yard',
+      '<p class="stage-tag">STORE / YARD</p><h1>STORE / YARD · REFERENCE HANDOFF</h1>'
+      +'<p class="sub">The definition and unresolved Store answer can move through the demonstration record without being promoted into physical work.</p>'
+      +'<div class="proof-actor-grid">'
+        +'<div><b>ALLOCATION</b><span>NOT ESTABLISHED</span></div>'
+        +'<div><b>PRODUCTION RELEASE</b><span>NOT ESTABLISHED</span></div>'
+        +'<div><b>MACHINE READINESS</b><span>NOT ESTABLISHED</span></div>'
+        +'<div><b>CYCLE START</b><span>NOT AUTHORIZED</span></div>'
+        +'<div><b>INSPECTION / STAGING</b><span>NOT RECORDED</span></div>'
+        +'<div><b>READY</b><span>NOT RECORDED</span></div>'
+      +'</div>'
+      +'<div class="proof-gap"><b>NO BLOOD ON WOOD.</b>Network presence, a project definition, a Store support statement, or a budgetary model does not create local motion authority.</div>'
+      +'<div class="proof-nav"><button type="button" data-proof-library>← PROJECT LIBRARY</button><button type="button" data-proof-go="proof-accept">← ACCEPT / PAY</button><button class="next" type="button" data-proof-go="proof-record">CONTINUE → HANDOFF / RECORD</button></div>',
+      '<p class="goal">Physical events remain null</p><div class="row"><b>No release</b><span>Reference continuity is not fabrication authority.</span></div><div class="row"><b>No remote Cycle Start</b><span>Machine-local authority stays local.</span></div>'
+    );
+
+    ensureProjectJourneyPage('proof-record',
+      '<p class="stage-tag">HANDOFF / RECORD</p><h1>KEEP THE DEFINITION AND THE GAP.</h1>'
+      +'<p class="sub">The demonstration ends with the exact confirmed version, its Store response state, and the events that did not occur.</p>'
+      +'<div class="proof-actor-grid">'
+        +'<div><b>JOB</b><span id="proof-record-job">—</span></div>'
+        +'<div><b>VERSION</b><span id="proof-record-version">—</span></div>'
+        +'<div><b>STORE ECONOMICS</b><span>UNRESOLVED · CURRENT MODEL MISMATCH</span></div>'
+        +'<div><b>PHYSICAL FABRICATION</b><span>NOT RECORDED</span></div>'
+      +'</div>'
+      +'<div class="band"><b>Owner-record consequence.</b> The project definition is retained as the thing that was confirmed. The pricing bridge gap stays attached rather than being erased or replaced with a guessed number.</div>'
+      +'<div class="proof-nav"><button type="button" data-proof-go="proof-yard">← STORE / YARD</button><button class="next" type="button" data-proof-library>← PROJECT LIBRARY</button></div>',
+      '<p class="goal">Record the truth</p><div class="row"><b>Definition survives</b><span>Unresolved economics do not rewrite geometry.</span></div><div class="row"><b>Null events survive</b><span>No physical outcome is invented.</span></div>'
+    );
+
+    function syncProofHandoff(){
+      if(!proofHandoff)return;
+      const payload=proofHandoff.payload||{};
+      const version=payload.id||payload.versionId||payload.normalizedPart?.versionId||'IDENTIFIED VERSION';
+      const job=proofHandoff.job||'PROOF JOB';
+      [['proof-store-job',job],['proof-store-version',version],['proof-record-job',job],['proof-record-version',version]].forEach(([id,value])=>{
+        const el=doc.getElementById(id); if(el)el.textContent=String(value);
+      });
+      const title=doc.getElementById('proof-store-title');
+      if(title)title.textContent='STORE ANSWER · '+job;
+    }
+
+    doc.addEventListener('click', function(event){
+      const library=event.target.closest?.('[data-proof-library]');
+      if(library){
+        event.preventDefault();
+        selectJourneyProject(null);
+        originalShow.call(win,'projects');
+        return;
+      }
+      const go=event.target.closest?.('[data-proof-go]');
+      if(go){
+        event.preventDefault();
+        syncProofHandoff();
+        originalShow.call(win,go.dataset.proofGo);
+      }
+    }, true);
+
+    function addProofLibraryControl(id){
+      const page=doc.getElementById(id);
+      if(!page||page.querySelector('[data-proof-library]'))return;
+      const backbar=page.querySelector('.backbar');
+      if(backbar){
+        const button=doc.createElement('button');
+        button.type='button';button.className='back';button.dataset.proofLibrary='true';button.textContent='← PROJECT LIBRARY';
+        backbar.append(button);
+      }
+    }
+
     ensureProjectJourneyPage('playhouse-request',
       '<p class="stage-tag">5 · REQUEST</p><h1>REQUEST · PLAYHOUSE WINDOW</h1>' +
       '<p class="sub">Carry one identified project definition forward without turning the reference Store answer into an order.</p>' +
@@ -1204,6 +1319,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       if (event.target.closest?.('#picnic-chooser,#picnic-config')) setTimeout(syncPicnicJourney, 0);
     });
     syncPicnicJourney();
+
+    ['alcove-capture','alcove-config','store','request','yard','record','window-parts','playhouse-s001','playhouse-machine','playhouse-store','playhouse-review','playhouse-request','playhouse-yard','playhouse-terms','playhouse-result','playhouse-record'].forEach(addProofLibraryControl);
 
     const originalShow = win.show;
 
