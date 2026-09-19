@@ -27,11 +27,12 @@ assert.match(base,/data-go="request">Next →/);
 assert.match(front,/if \(project\.key === 'alcove'\)/);
 assert.match(front,/preview = null;[\s\S]*canonicalShow\(project\.rootId\)/);
 assert.match(front,/target === 'alcove-capture'/);
-assert.ok(shell.includes("['alcove-review','request','terms','recap']"),'Alcove internal pages are still exposed as customer nav');
+assert.ok(shell.includes("['alcove-review','terms','recap']"),'Alcove internal pages are still exposed as customer nav');
 assert.match(shell,/review:'store'/);
-assert.match(shell,/request:'store'/);
+assert.match(shell,/request:'request'/);
 assert.match(shell,/terms:'yard'/);
 assert.match(shell,/recap:'record'/);
+assert.match(shell,/Accept \/ Pay/);
 assert.match(shell,/sharedBand\.innerHTML\.replace\('Reference journey shown before confirmation\.'\,'Confirmed version sent to Store Zero\.'\)/);
 
 console.log('PASS · Alcove restore-and-correct checks');
