@@ -25,7 +25,7 @@ h1{font-size:clamp(38px,6vw,64px);line-height:.99;letter-spacing:-.043em;margin:
 @media(max-width:900px){.detail,.cards,.scenarios{grid-template-columns:1fr}}@media(max-width:640px){.wrap{padding:18px 14px 60px}.stage-title span:last-child{width:100%;margin-left:37px}}
 </style></head>
 <body><main class="wrap">
-<div class="top"><span class="brand">SCAN-TO-BUILD · OUTDOOR BUILD DECK · 0.1</span><a class="ref" href="stb-outdoor-reference-authority-0.3.html" target="_blank" rel="noopener">REFERENCE & AUTHORITY →</a></div>
+<div class="top"><span class="brand">SCAN-TO-BUILD · OUTDOOR BUILD DECK · 0.1</span><a class="ref" href="stb-outdoor-build.html" onclick="if(window.opener){window.close();return false}">← RETURN TO PROOF LADDER</a><a class="ref" href="stb-outdoor-reference-authority-0.3.html" target="_blank" rel="opener">REFERENCE & AUTHORITY →</a></div>
 <div id="app"></div>
 <footer class="foot"><b>BUILD DECK, NOT CONFIGURATOR.</b> The deck exposes the usable subset of the authority: family, important measurements, selectable parts, real sourced geometry and direct change consequences. Unsupported transformations stop visibly. Store/commercial/machine authority remains downstream. <b>NO BLOOD ON WOOD.</b></footer>
 </main><script>
@@ -108,11 +108,11 @@ function openFamily(k){
 }
 function renderFamily(){
  const f=F[S.family],p=f.parts.find(x=>x.id===S.part);
- $("app").innerHTML=`<div class="top"><button class="crumb" id="back">← Outdoor build deck</button><a class="ref" href="${AUTH}#${f.authority}" target="_blank" rel="noopener">GEOMETRY BASIS ↗</a></div>
+ $("app").innerHTML=`<div class="top"><button class="crumb" id="back">← Outdoor build deck</button><a class="ref" href="${AUTH}#${f.authority}" target="_blank" rel="opener">GEOMETRY BASIS ↗</a></div>
  <h1>${f.name}</h1><p class="lede">${f.copy}</p>
  <div class="detail">
   <div><div class="drawing" id="drawing">${art(f.svg,S.part)}</div>
-   <div class="sourcebar"><b>${f.short}</b><span>deck fact → authority record → original source</span><a href="${AUTH}#${f.authority}" target="_blank" rel="noopener">WHY THESE NUMBERS? ↗</a><a href="${AUTH}#${f.source}" target="_blank" rel="noopener">VIEW SOURCE RECORD ↗</a></div>
+   <div class="sourcebar"><b>${f.short}</b><span>deck fact → authority record → original source</span><a href="${AUTH}#${f.authority}" target="_blank" rel="opener">WHY THESE NUMBERS? ↗</a><a href="${AUTH}#${f.source}" target="_blank" rel="opener">VIEW SOURCE RECORD ↗</a></div>
   </div>
   <aside>
    <section class="panel"><h3>WHAT YOU MEASURE</h3>${f.measures.map(m=>`<div class="measure"><span>${m[0]}</span><em>${m[1]}</em></div>`).join("")}</section>
@@ -135,7 +135,7 @@ function partCard(p,f){
  <dt>STOCK</dt><dd>${p.stock}</dd><dt>FINISHED LENGTH</dt><dd>${p.length}</dd><dt>LENGTH DATUM</dt><dd>${p.datum}</dd>
  <dt>ANGLE</dt><dd>${p.angle}</dd><dt>ANGLE CONVENTION</dt><dd>${p.conv}</dd><dt>CONNECTION / INTERSECTION</dt><dd>${p.connect}</dd>
  <dt>SOURCE STATUS</dt><dd><span class="status ${status}">${p.status}</span></dd><dt>WHAT TO MEASURE</dt><dd>${p.measure}</dd><dt>WHAT DEPENDS ON IT</dt><dd>${p.depends}</dd>
- </dl><p style="margin:10px 0 0;font-size:11.5px"><a href="${AUTH}#${f.authority}" target="_blank" rel="noopener">WHY THESE NUMBERS? →</a></p></div>`;
+ </dl><p style="margin:10px 0 0;font-size:11.5px"><a href="${AUTH}#${f.authority}" target="_blank" rel="opener">WHY THESE NUMBERS? →</a></p></div>`;
 }
 home();
 </script></body></html>

@@ -62,6 +62,19 @@ assert.match(deck, /WHY THESE NUMBERS\?/);
 assert.match(authority, /href="STB-OUTDOOR-ANGLED-FRAME-RESEARCH-DOSSIER-0\.1\.html"/);
 assert.ok(research.length > 90000, 'research dossier appears reduced');
 
+// Navigation-only hardening: evidence leaves the live Outdoor iframe mounted and every
+// evidence page has an explicit return route that does not depend on browser history.
+assert.match(outdoor, /href="stb-outdoor-build-deck-0\.1\.html" target="_blank" rel="opener"/);
+assert.match(outdoor, /href="stb-outdoor-reference-authority-0\.3\.html" target="_blank" rel="opener"/);
+assert.match(outdoor, /href="STB-OUTDOOR-ANGLED-FRAME-RESEARCH-DOSSIER-0\.1\.html" target="_blank" rel="opener"/);
+for (const page of [deck, authority, research]) {
+  assert.match(page, /← RETURN TO PROOF LADDER/);
+  assert.match(page, /onclick="if\(window\.opener\)\{window\.close\(\);return false\}"/);
+}
+assert.match(deck, /href="stb-outdoor-reference-authority-0\.3\.html" target="_blank" rel="opener"/);
+assert.match(authority, /href="STB-OUTDOOR-ANGLED-FRAME-RESEARCH-DOSSIER-0\.1\.html" target="_blank" rel="opener"/);
+assert.equal(/history\.(?:back|go)\(/.test(outdoor+deck+authority+research), false, 'proof return depends on browser history');
+
 // Route return is explicit; no downstream authority was collapsed.
 assert.match(shell, /STB_PROOF_RETURN_LIBRARY/);
 assert.match(shell, /STB_PROOF_OPEN_JOB1/);
