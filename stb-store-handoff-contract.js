@@ -60,9 +60,9 @@
       materialCatalogPin:'4402abeb6b0299a5b6db2eec85ed04c3b0236bcc',
       capabilityBasis:'CURRENT_CANONICAL_STORE_ZERO',
       capabilityPin:'f88ec61c42446755d00259f88e7fd09f2702fd92',
-      economicsModel:null,
-      economicsStatus:'LEGACY_GENERAL_RECOVERY_NOT_CURRENT_AUTHORITY',
-      legacyGeneralRecoverySelected:false
+      economicsModel:'STB-STORE-ZERO-PRICE-1 v0.2.2',
+      economicsStatus:'LEGACY_GENERAL_RECOVERY_STILL_VISIBLE_PENDING_MIGRATION',
+      legacyGeneralRecoverySelected:true
     }),
     windowSeat: Object.freeze({
       projectId:'window-seat',
