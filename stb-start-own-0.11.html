@@ -435,32 +435,32 @@ function makerArt(k){
 var GRADES=[
  {k:'lumber',name:'Construction lumber',line:'Cheap, strong, everywhere. 2×4s and their friends.',
   sizes:[
-   {k:'2x4',  label:'2×4',      w:3.5, t:1.5,  lens:{72:3.13,96:4.18,108:4.70,120:5.69,144:6.80,168:7.31,192:8.36}},
-   {k:'2x6',  label:'2×6',      w:5.5, t:1.5,  lens:{72:5.66,96:7.55,120:9.44,144:11.33,192:15.10}},
-   {k:'2x8',  label:'2×8',      w:7.25,t:1.5,  lens:{96:9.95,120:12.44,144:14.93,192:19.91}},
-   {k:'4x4',  label:'4×4',      w:3.5, t:3.5,  lens:{96:9.20,120:11.50,144:13.79}},
-   {k:'1x4p', label:'1×4 pine', w:3.5, t:0.75, lens:{72:8.65,96:11.54,120:14.43,144:17.30}},
-   {k:'1x6p', label:'1×6 pine', w:5.5, t:0.75, lens:{72:15.74,96:20.99,120:26.24,144:31.48}}
+   {k:'2x4',  label:'2×4',      w:3.5, t:1.5,  lengths:[72,96,108,120,144,168,192]},
+   {k:'2x6',  label:'2×6',      w:5.5, t:1.5,  lengths:[72,96,120,144,192]},
+   {k:'2x8',  label:'2×8',      w:7.25,t:1.5,  lengths:[96,120,144,192]},
+   {k:'4x4',  label:'4×4',      w:3.5, t:3.5,  lengths:[96,120,144]},
+   {k:'1x4p', label:'1×4 pine', w:3.5, t:0.75, lengths:[72,96,120,144]},
+   {k:'1x6p', label:'1×6 pine', w:5.5, t:0.75, lengths:[72,96,120,144]}
   ]},
  {k:'hardwood',name:'Hardwood',line:'Oak, cherry, poplar. The stuff you show people.',
   sizes:[
-   {k:'1x4o', label:'1×4 oak',    w:3.5, t:0.75, lens:{72:18.10,96:24.14,120:30.18}},
-   {k:'1x6o', label:'1×6 oak',    w:5.5, t:0.75, lens:{72:26.24,96:34.99,120:43.73}},
-   {k:'1x8o', label:'1×8 oak',    w:7.25,t:0.75, lens:{72:34.59,96:46.12,120:57.65}},
-   {k:'1x4c', label:'1×4 cherry', w:3.5, t:0.75, lens:{72:28.97,96:38.62},
-    note:'Cherry is a derived reference line — there was no observed cherry 1× list in the basket, so treat the price as a placeholder.'},
-   {k:'1x6c', label:'1×6 cherry', w:5.5, t:0.75, lens:{72:41.98,96:55.98},
-    note:'Cherry is a derived reference line — there was no observed cherry 1× list in the basket, so treat the price as a placeholder.'},
-   {k:'1x6w', label:'1×6 poplar', w:5.5, t:0.75, lens:{72:24.14,96:32.18,120:40.24,144:48.28}}
+   {k:'1x4o', label:'1×4 oak',    w:3.5, t:0.75, lengths:[72,96,120]},
+   {k:'1x6o', label:'1×6 oak',    w:5.5, t:0.75, lengths:[72,96,120]},
+   {k:'1x8o', label:'1×8 oak',    w:7.25,t:0.75, lengths:[72,96,120]},
+   {k:'1x4c', label:'1×4 cherry', w:3.5, t:0.75, lengths:[72,96],
+    note:'Store Zero carries this as a derived reference offering; the pinned Store catalog controls the material value.'},
+   {k:'1x6c', label:'1×6 cherry', w:5.5, t:0.75, lengths:[72,96],
+    note:'Store Zero carries this as a derived reference offering; the pinned Store catalog controls the material value.'},
+   {k:'1x6w', label:'1×6 poplar', w:5.5, t:0.75, lengths:[72,96,120,144]}
   ]},
  {k:'sheet',name:'Sheets',line:'Plywood and OSB. Big flat pieces, cut to any rectangle.',
   sizes:[
-   {k:'p25', label:'¼ plywood',  t:0.25,  sheet:1, panels:{'48x48':8.47,'48x96':14.61}},
-   {k:'p38', label:'⅜ plywood',  t:0.375, sheet:1, panels:{'48x48':11.09,'48x96':19.12}},
-   {k:'p50', label:'½ plywood',  t:0.5,   sheet:1, panels:{'48x96':26.55}},
-   {k:'p63', label:'⅝ plywood',  t:0.625, sheet:1, panels:{'48x96':50.28}},
-   {k:'p75', label:'¾ plywood',  t:0.75,  sheet:1, panels:{'48x48':33.54,'48x96':57.82}},
-   {k:'o75', label:'¾ OSB',      t:0.75,  sheet:1, panels:{'48x96':28.46}}
+   {k:'p25', label:'¼ plywood',  t:0.25,  sheet:1, panelSizes:['48x48','48x96']},
+   {k:'p38', label:'⅜ plywood',  t:0.375, sheet:1, panelSizes:['48x48','48x96']},
+   {k:'p50', label:'½ plywood',  t:0.5,   sheet:1, panelSizes:['48x96']},
+   {k:'p63', label:'⅝ plywood',  t:0.625, sheet:1, panelSizes:['48x96']},
+   {k:'p75', label:'¾ plywood',  t:0.75,  sheet:1, panelSizes:['48x48','48x96']},
+   {k:'o75', label:'¾ OSB',      t:0.75,  sheet:1, panelSizes:['48x96']}
   ]}
 ];
 var MAKERS=[
@@ -681,7 +681,7 @@ function grip(key,x,y,vert,label){
 function drawCuts(){
   var s=S_size(), k=S.grade, sh=isSheet(), P=S.cuts.pieces, g=GRAIN[k];
   var vw=720, ML=34, MR=34, IW=vw-ML-MR;
-  var maxLen=sh?96:Math.max.apply(null,Object.keys(s.lens).map(Number));
+  var maxLen=sh?96:Math.max.apply(null,(s.lengths||[96]));
   var b=buyList();
   var o=[], y, handled={};
   GEO={vw:vw,vh:0,handles:{}};
