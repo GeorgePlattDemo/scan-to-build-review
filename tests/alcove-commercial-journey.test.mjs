@@ -103,7 +103,7 @@ assert.equal(shell.includes('LIBRARY PROJECT · READ ONLY'),false);
 assert.equal(shell.includes('SAVE THIS PROJECT'),false);
 assert.equal(shell.includes('MAKE CHANGES'),false);
 
-assert.match(base,/NO BLOOD ON WOOD/);
+assert.match(shell,/NO BLOOD ON WOOD/);
 assert.equal(/\bG0\b|\bG1\b|\bM03?\b|remote Cycle Start/i.test(shell),false,'controller / remote machine command language introduced');
 
 console.log('PASS · Alcove commercial journey reconciliation');
