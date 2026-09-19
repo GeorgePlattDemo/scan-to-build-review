@@ -27,7 +27,7 @@ for (const label of [
 assert.match(shell, /TARGET: Define the Sawhorse Bench comparison member yourself/);
 assert.match(shell, /2×4 · 15½ in · quantity 8 · 10° source-stated DOUBLE BEVEL/);
 assert.match(shell, /two separate bench assemblies × four published end-leg occurrences per bench/);
-assert.match(shell, /src="stb-start-own-0\.11\.html\?v=0c7557a5"/);
+assert.match(shell, /src="stb-start-own-0\.11\.html\?v=9552caea"/);
 assert.match(own11, /STRAIGHT CUT/);
 assert.match(own11, /ANGLED CUT/);
 assert.match(own11, /Angle alone is not enough/);
@@ -74,16 +74,15 @@ assert.equal(/\b7 clicks\b/i.test(outdoor), false);
 assert.match(shell, /STB_START_OWN_CONFIRMED/);
 assert.match(shell, /STB_OUTDOOR_CONFIRMED/);
 assert.match(shell, /STORE-PRICING-BRIDGE-GAP/);
-assert.match(shell, /STB-STORE-ZERO-PRICE-1 · 0\.2\.2/);
-assert.match(shell, /STB-D001-CYCLE-MODEL-S2-0\.1/);
-assert.match(shell, /D001-STAGE2-ENVELOPE-0\.2/);
-assert.match(shell, /8-minute modeled job setup/);
-assert.match(shell, /\$35 setup charge/);
-assert.match(shell, /\$100\/hour modeled machine recovery/);
-assert.match(shell, /material \$3\.13 \+ modeled cell recovery \$50\.81 = budgetary Q \$53\.94/);
-assert.match(shell, /PROCESSING \/ RECOVERY/);
-assert.match(shell, /TOTAL REFERENCE PRICE/);
+assert.match(shell, /MATERIAL SOURCE/);
+assert.match(shell, /CLASS-SCOPED · no legacy general recovery selected/);
+assert.match(shell, /MAPPED STORE SKU/);
+assert.match(shell, /MATERIAL VALUE/);
+assert.match(shell, /PROCESSING \/ FULFILLMENT RECOVERY/);
+assert.match(shell, /CURRENT COMBINED VALUE/);
+assert.match(shell, /NOT COMPLETE/);
 assert.match(shell, /UNRESOLVED · CURRENT MODEL MISMATCH/);
+assert.equal(/STB-STORE-ZERO-PRICE-1|0\.2\.2|\$35 setup|\$100\/hour|\$50\.81|\$53\.94/.test(shell), false);
 assert.match(outdoor, /No app-only discount/);
 
 // Evidence navigation remains explicit and state-preserving.

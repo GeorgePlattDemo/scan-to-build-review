@@ -14,7 +14,7 @@ vm.runInNewContext(contractSource,sandbox,{filename:'stb-store-handoff-contract.
 const contract = sandbox.window.STBStoreHandoffContract;
 
 assert.ok(contract,'shared Store handoff contract did not load');
-assert.equal(contract.version,'0.2');
+assert.equal(contract.version,'0.3');
 assert.deepEqual(
   Array.from(contract.actorOrder),
   ['project-definition','store-answer','accept-pay','store-yard','handoff-record','project-library']
@@ -30,6 +30,15 @@ assert.equal(contract.storeAuthority('startOwn').capabilityPin,'f88ec61c42446755
 assert.equal(contract.storeAuthority('startOwn').materialCatalogPin,'4402abeb6b0299a5b6db2eec85ed04c3b0236bcc');
 assert.equal(contract.storeAuthority('startOwn').legacyGeneralRecoverySelected,false);
 assert.equal(contract.storeAuthority('windowSeat').economicsModel,'STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0.1');
+assert.equal(contract.storeAuthority('alcove').economicsModel,null);
+assert.equal(contract.storeAuthority('alcove').legacyGeneralRecoverySelected,false);
+const shelfMaterial = contract.resolveStartOwnMaterial({
+  sizeKey:'2x4',
+  parts:[{name:'Side',len:36,wid:3.5,qty:2},{name:'Shelf',len:27,wid:3.5,qty:4}]
+});
+assert.equal(shelfMaterial.status,'MAPPED');
+assert.equal(shelfMaterial.storeSku,'STB-ZERO-SPF-2X4-192-001');
+assert.equal(shelfMaterial.materialTotal,8.36);
 
 assert.match(shell,/stb-store-handoff-contract\.js\?v=/);
 assert.match(shell,/dataset\.startOwnArtifact = 'stb-start-own-0\.11\.html'/);

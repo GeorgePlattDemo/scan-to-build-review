@@ -23,7 +23,7 @@ assert.ok(shell.includes("storeOrder.id = 'alcove-store-order-surface'"));
 assert.ok(shell.includes("returnedOffer.id = 'alcove-store-returned-offer'"));
 assert.match(shell,/ACCEPT STORE ANSWER →/);
 assert.match(shell,/ALCOVE · ACCEPT \/ SETTLE/);
-assert.match(shell,/Store answered\. You decide\./);
+assert.match(shell,/Store answered\. The commercial event remains separate\./);
 assert.match(shell,/Order status · Store \/ Yard acts/);
 assert.match(shell,/Handoff · record/);
 
@@ -82,10 +82,10 @@ assert.equal(storeAnswerBlock.includes("data-alcove-commercial-action=\"accept\"
 assert.match(shell,/Store Answer is not customer acceptance/);
 assert.match(shell,/Offer ≠ acceptance\. Acceptance ≠ settlement\. Settlement ≠ allocation\. Allocation ≠ production release/);
 assert.match(shell,/NOT ESTABLISHED/);
-assert.match(shell,/Reference acceptance selected\. Settlement \/ payment remains NOT ESTABLISHED/);
+assert.match(shell,/Reference Store answer acknowledged\. Commercial acceptance and settlement \/ payment remain NOT ESTABLISHED/);
 assert.match(shell,/data-alcove-commercial-action="accept-page">ACCEPT STORE ANSWER →/);
-assert.match(shell,/data-alcove-commercial-action="accept">ACCEPT REFERENCE OFFER/);
-assert.match(shell,/data-alcove-commercial-action="yard" disabled>CONTINUE WITH THIS ORDER →/);
+assert.match(shell,/data-alcove-commercial-action="accept">ACKNOWLEDGE REFERENCE ANSWER/);
+assert.match(shell,/data-alcove-commercial-action="yard" disabled>CONTINUE REFERENCE DEMONSTRATION →/);
 assert.match(shell,/Payment does not start a machine/);
 assert.match(shell,/Allocation is not production release/);
 assert.match(shell,/Production release is not machine readiness/);
