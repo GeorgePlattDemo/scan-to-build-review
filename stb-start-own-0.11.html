@@ -238,7 +238,7 @@ pre.spec{margin:14px 0 0;padding:15px 16px;border-radius:12px;background:var(--p
 @media (max-width:980px){ .bench{grid-template-columns:1fr} .results{grid-template-columns:1fr} }
 @media (max-width:860px){ .grid3{grid-template-columns:1fr} }
 </style>
-<script src="stb-store-handoff-contract.js?v=0.2"></script>
+<script src="stb-store-handoff-contract.js?v=2fa55141"></script>
 </head>
 <body>
 <div class="wrap" id="app"></div>
@@ -525,10 +525,25 @@ function parts(){
 }
 
 /* what to buy — boards get packed, sheets get counted piece by piece */
+function currentStoreContract(){
+  return window.STBStoreHandoffContract || null;
+}
+function currentStoreCatalogSource(){
+  var contract=currentStoreContract();
+  return contract&&typeof contract.startOwnMaterialCatalog==='function'
+    ?contract.startOwnMaterialCatalog().source:null;
+}
+function currentStoreOfferings(sizeKey){
+  var contract=currentStoreContract();
+  return contract&&typeof contract.startOwnOfferings==='function'
+    ?contract.startOwnOfferings(sizeKey):[];
+}
 function buyBoards(list,s){
-  var best=null;
-  Object.keys(s.lens).map(Number).forEach(function(L){
-    var price=s.lens[L], pieces=[];
+  var best=null, offerings=currentStoreOfferings(s.k).filter(function(o){
+    return o.form==='board'&&Number.isFinite(o.stockL_in)&&Number.isFinite(o.sellingPrice);
+  });
+  offerings.forEach(function(offering){
+    var L=Number(offering.stockL_in), price=Number(offering.sellingPrice), pieces=[];
     list.forEach(function(p){for(var i=0;i<p.qty;i++)pieces.push(p.len)});
     if(!pieces.length||pieces.some(function(x){return x>L}))return;
     pieces.sort(function(a,b){return b-a});
@@ -539,9 +554,15 @@ function buyBoards(list,s){
       if(idx<0){bins.push(L-x); cuts.push([x])} else {bins[idx]-=x; cuts[idx].push(x)}
     });
     var cost=bins.length*price;
-    if(!best||cost<best.cost-0.001)best={L:L,n:bins.length,price:price,cost:cost,
-      cuts:cuts,left:bins.slice(),
-      waste:bins.reduce(function(a,b){return a+b},0)};
+    if(!best||cost<best.cost-0.001)best={
+      L:L,n:bins.length,price:price,cost:cost,cuts:cuts,left:bins.slice(),
+      waste:bins.reduce(function(a,b){return a+b},0),
+      storeSku:offering.storeSku,
+      description:offering.description,
+      supportedOps:(offering.supportedOps||[]).slice(),
+      cellFamily:(offering.cellFamily||[]).slice(),
+      catalogSource:currentStoreCatalogSource()
+    };
   });
   return best;
 }
@@ -550,17 +571,27 @@ function yieldOf(pw,ph,w,h){
   return Math.max(Math.floor(pw/w)*Math.floor(ph/h),Math.floor(ph/w)*Math.floor(pw/h));
 }
 function buySheets(list,s){
-  var best=null;
-  Object.keys(s.panels).forEach(function(key){
-    var d=key.split('x').map(Number), price=s.panels[key], total=0, okAll=true;
+  var best=null, offerings=currentStoreOfferings(s.k).filter(function(o){
+    return o.form==='sheet'&&Number.isFinite(o.sheetW_in)&&Number.isFinite(o.sheetL_in)&&Number.isFinite(o.sellingPrice);
+  });
+  offerings.forEach(function(offering){
+    var pw=Number(offering.sheetL_in), ph=Number(offering.sheetW_in), price=Number(offering.sellingPrice), total=0, okAll=true;
     list.forEach(function(p){
-      var per=yieldOf(d[1],d[0],p.len,p.wid);
+      var per=yieldOf(pw,ph,p.len,p.wid);
       if(!per){okAll=false;return}
       total+=Math.ceil(p.qty/per);
     });
     if(!okAll||!total)return;
     var cost=total*price;
-    if(!best||cost<best.cost-0.001)best={label:d[0]+' × '+d[1],n:total,price:price,cost:cost};
+    if(!best||cost<best.cost-0.001)best={
+      label:offering.sheetW_in+' × '+offering.sheetL_in,
+      n:total,price:price,cost:cost,
+      storeSku:offering.storeSku,
+      description:offering.description,
+      supportedOps:(offering.supportedOps||[]).slice(),
+      cellFamily:(offering.cellFamily||[]).slice(),
+      catalogSource:currentStoreCatalogSource()
+    };
   });
   return best;
 }
@@ -1070,23 +1101,49 @@ function operationPanel(){
   return h;
 }
 function currentStoreAuthority(){
-  var contract=window.STBStoreHandoffContract;
+  var contract=currentStoreContract();
   return contract&&typeof contract.storeAuthority==='function'?contract.storeAuthority('startOwn'):null;
+}
+function requiredStoreOps(){
+  var out=[];
+  function add(op){if(out.indexOf(op)<0)out.push(op)}
+  operationModel().forEach(function(row){
+    if(row.unresolved)return;
+    var op=String(row.op||'').toUpperCase();
+    if(op==='STRAIGHT CUT'||op==='CUT TO LENGTH')add('CROSSCUT');
+    else if(op==='SHEET RECTANGLE CUT'){add('CROSSCUT');add('RIP')}
+    else if(op==='ANGLED CUT')add('MITER_LIMITED');
+    else if(op.indexOf('DRILL')>=0||op.indexOf('PILOT')>=0)add('DRILL');
+    else if(op.indexOf('DADO')>=0)add('DADO');
+    else if(op.indexOf('GROOVE')>=0)add('GROOVE');
+    else if(op.indexOf('RABBET')>=0)add('RABBET');
+    else if(op.indexOf('MILL')>=0)add('MILL_LONGITUDINAL_PROFILE');
+    else if(op.indexOf('ROUTE')>=0)add('ROUTE_PROFILE');
+  });
+  return out;
 }
 function storeCapabilityModel(){
   var issue=materialIssue(), b=buyList(), unresolved=[], status='SUPPORTABLE';
+  var required=requiredStoreOps(), declared=b&&Array.isArray(b.supportedOps)?b.supportedOps:[];
   if(issue){
     status='UNRESOLVED';
     unresolved.push('MATERIAL_FORMATION_UNRESOLVED');
   }else if(!b){
     status='REFUSED';
-    unresolved.push('STOCK_CONTAINMENT_UNRESOLVED');
+    unresolved.push(currentStoreOfferings(S.size).length?'STOCK_CONTAINMENT_UNRESOLVED':'STORE_CATALOG_OFFERING_NOT_MAPPED');
+  }else{
+    required.forEach(function(op){
+      if(declared.indexOf(op)<0){
+        status='REFUSED';
+        unresolved.push('STORE_OPERATION_NOT_DECLARED:'+op);
+      }
+    });
   }
   if(S.maker==='cuts'&&S.cutOps.angled){
     if(operationValidation().length){
       status='UNRESOLVED';
       unresolved.push('ANGLED_CUT_DEFINITION_INCOMPLETE');
-    }else{
+    }else if(status!=='REFUSED'){
       status='UNRESOLVED';
       unresolved.push('STORE-PRICING-BRIDGE-GAP');
       unresolved.push('MITER_RANGE_NOT_PUBLISHED');
@@ -1094,8 +1151,12 @@ function storeCapabilityModel(){
   }
   return {
     status:status,
-    unresolved:unresolved,
-    basis:'CURRENT_CANONICAL_STORE_ZERO',
+    unresolved:Array.from(new Set(unresolved)),
+    requiredOps:required,
+    declaredOps:declared.slice(),
+    storeSku:b?b.storeSku:null,
+    basis:'PINNED_STORE_ZERO_CATALOG_PLUS_CURRENT_CAPABILITY_AUTHORITY',
+    catalogSource:currentStoreCatalogSource(),
     authority:currentStoreAuthority()
   };
 }
@@ -1134,6 +1195,10 @@ function referenceCostModel(){
   }
   return {
     material:material,
+    materialSku:b?b.storeSku:null,
+    materialCatalogSource:b&&b.catalogSource?b.catalogSource:currentStoreCatalogSource(),
+    requiredOps:cap.requiredOps.slice(),
+    declaredOps:cap.declaredOps.slice(),
     operations:null,
     cell:null,
     other:null,
@@ -1157,8 +1222,8 @@ function referenceCostPanel(){
       :'Material is mapped and valued. A complete combined value is withheld until this project class has a current declared processing / fulfillment recovery model.');
   return '<div class="panel flowpanel"><h3>Store Zero · live reference economics</h3>'
     +'<div class="costbig"><span>CURRENT COMBINED BASIS</span><b>NOT COMPLETE</b></div>'
-    +'<div class="flowline"><div class="k">Material</div><div class="v"><b>'+material+'</b></div></div>'
-    +'<div class="flowline"><div class="k">Capability</div><div class="v"><b>'+esc(c.capabilityStatus)+'</b></div></div>'
+    +'<div class="flowline"><div class="k">Material</div><div class="v"><b>'+material+'</b>'+(c.materialSku?' · '+esc(c.materialSku):'')+'</div></div>'
+    +'<div class="flowline"><div class="k">Capability</div><div class="v"><b>'+esc(c.capabilityStatus)+'</b> · requires '+esc((c.requiredOps||[]).join(' + ')||'no operation')+'</div></div>'
     +'<div class="flowline"><div class="k">Processing / fulfillment recovery</div><div class="v"><b>'+econ+'</b></div></div>'
     +'<div class="flowline"><div class="k">Authority</div><div class="v">'+esc(auth)+'</div></div>'
     +'<p class="hint">'+why+' The legacy general $35 setup + $100/hour recovery is not selected for Start Your Own. This is a reference basis, not a binding commercial offer.</p></div>';
@@ -1184,8 +1249,9 @@ function materialRequestText(){
   var s=S_size(), b=buyList(), issue=materialIssue();
   if(issue)return 'Selected '+s.label+'; final material / operation resolution required.';
   if(!b)return 'Selected '+s.label+'; no offered reference stock size can contain the current parts.';
-  return isSheet()?(b.n+' × '+s.label+' sheet'+(b.n===1?'':'s')+' · '+b.label+' in reference demand')
-                  :(b.n+' × '+s.label+' × '+b.L+' in reference demand');
+  var base=isSheet()?(b.n+' × '+s.label+' sheet'+(b.n===1?'':'s')+' · '+b.label+' in reference demand')
+                    :(b.n+' × '+s.label+' × '+b.L+' in reference demand');
+  return base+' · '+b.storeSku;
 }
 function storeAnswerModel(){
   var issue=materialIssue(), b=buyList(), cap=storeCapabilityModel(), c=referenceCostModel();
@@ -1221,6 +1287,10 @@ function confirmToStore(){
       capabilityStatus:live.capabilityStatus,
       economicsStatus:live.economicsStatus,
       material:live.material,
+      materialSku:live.materialSku,
+      materialCatalogSource:live.materialCatalogSource?JSON.parse(JSON.stringify(live.materialCatalogSource)):null,
+      requiredOps:live.requiredOps.slice(),
+      declaredOps:live.declaredOps.slice(),
       combinedValue:live.total,
       complete:live.complete,
       unresolvedConditions:live.unresolvedConditions.slice(),
@@ -1241,7 +1311,7 @@ function storeSummarySentence(){
   var stock=sh?(b.n+' × '+s.label+' sheet'+(b.n===1?'':'s')+', '+b.label+' in')
               :(b.n+' × '+s.label+' × '+b.L+' in');
   var cap=c.capabilityStatus==='SUPPORTABLE'?'capability is supported':'capability remains '+c.capabilityStatus.toLowerCase();
-  return 'Store Zero maps this version to '+stock+', material '+money(b.cost)+'; '+cap+'. Processing / fulfillment recovery is not yet published for this project class, so a complete combined value is not invented. Nothing is ordered.';
+  return 'Store Zero maps this version to '+stock+' · '+b.storeSku+', material '+money(b.cost)+'; '+cap+'. Processing / fulfillment recovery is not yet published for this project class, so a complete combined value is not invented. Nothing is ordered.';
 }
 function storeHandoffPanel(){
   var id=currentDefinitionId(), sent=S.handoff, sameVersion=sent&&sent.id===id;
@@ -1330,12 +1400,12 @@ function buyPanel(){
   var line=sh?(b.n+' × '+esc(s.label)+' sheet'+(b.n>1?'s':'')+', '+b.label+' in')
              :(b.n+' × '+esc(s.label)+' × '+b.L+' in');
   return '<div class="panel"><h3>What to buy</h3>'
-    +'<div class="buy"><span class="w">'+line+'<i>'+money(b.price)+' each</i></span>'
+    +'<div class="buy"><span class="w">'+line+'<i>'+money(b.price)+' each · '+esc(b.storeSku)+'</i></span>'
     +'<span class="p">'+money(b.cost)+'</span></div>'
     +'<div class="total"><span>About</span><b>'+money(b.cost)+'</b></div>'
     +'<p class="hint">'+(sh?'Counted piece by piece, no clever nesting.'
       :'Packed into the cheapest offered length that works — '+fmt(b.waste)+' in of offcut left over.')
-    +' Reference prices, so a guide rather than an order.</p>'
+    +' Store Zero catalog '+esc((b.catalogSource&&b.catalogSource.clock)||'')+' · pinned material answer, not an order.</p>'
     +(s.note?'<p class="hint" style="color:var(--accent2)">'+esc(s.note)+'</p>':'')
     +'</div>';
 }
@@ -1385,6 +1455,7 @@ function specText(){
   L.push('  Processing / recovery    UNRESOLVED · CLASS-SCOPED RECOVERY NOT PUBLISHED');
   L.push('  Current combined basis   NOT COMPLETE');
   L.push('  Legacy $35 + $100/hour   NOT SELECTED');
+  if(c.materialSku)L.push('  Material Store SKU       '+c.materialSku);
   if(c.authority){
     L.push('  Store doctrine pin       '+c.authority.capabilityPin);
     L.push('  Material catalog pin     '+c.authority.materialCatalogPin);
