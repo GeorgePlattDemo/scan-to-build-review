@@ -42,6 +42,13 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       .outdoor-build-shell-page.on{display:block!important}
       .outdoor-build-shell-main{width:100%;min-width:0;background:var(--surface)}
       .outdoor-build-shell-frame{display:block;width:100%;height:calc(100vh - 76px);min-height:680px;border:0;background:var(--bg)}
+      .proof-shell-return{display:block;margin:8px 14px;padding:6px 0;border:0;background:transparent;color:var(--text2);font-size:11px;font-weight:700;cursor:pointer}
+      .proof-actor-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;margin:12px 0}
+      .proof-actor-grid>div{border:1px solid var(--border);border-radius:8px;padding:10px;background:var(--surface)}
+      .proof-actor-grid b,.proof-actor-grid span{display:block}.proof-actor-grid b{font-size:9px;letter-spacing:.06em;color:var(--text2)}.proof-actor-grid span{margin-top:4px;font-size:12px}
+      .proof-gap{margin:12px 0;padding:12px 14px;border-left:4px solid #9b7540;background:var(--tint);font-size:12px;line-height:1.55}
+      .proof-gap b{display:block;margin-bottom:4px}
+      .proof-nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.proof-nav button{font:inherit;font-size:11px;padding:7px 11px;border:1px solid var(--border);border-radius:7px;background:var(--surface);cursor:pointer}.proof-nav .next{margin-left:auto;color:var(--accent);font-weight:700}
       .s001-v2-intent-grid{display:grid;grid-template-columns:minmax(0,.9fr) minmax(300px,1.1fr);gap:16px;align-items:start;margin:14px 0}
       .s001-v2-story{font-size:13px;line-height:1.55;margin:10px 0 0}
       .s001-v2-callout{margin:12px 0;padding:12px 14px;border-left:4px solid var(--accent);background:var(--tint);font-size:13px;line-height:1.5}
@@ -102,6 +109,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
     let activeJourneyProject = null;
     let seatJourneySnapshot = null;
+    let proofHandoff = null;
     let pendingSeatView = {mode:'continuous',stage:null};
 
     const home = doc.getElementById('projects');
@@ -135,8 +143,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         const startOwnTile = ribbon.querySelector('.tile[data-go="start-own"]');
         if (startOwnTile) {
           startOwnTile.removeAttribute('data-go');
-          startOwnTile.dataset.startOwnArtifact = 'stb-start-own-0.10.html';
-          startOwnTile.title = 'Start Your Own · definition to doing · locked 0.10';
+          startOwnTile.dataset.startOwnArtifact = 'stb-start-own-0.11.html';
+          startOwnTile.title = 'Start Your Own · generic operation candidate · 0.11';
 
           let startOwnPage = doc.getElementById('start-own-live');
           if (!startOwnPage) {
@@ -147,9 +155,10 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
               <div class="start-own-shell-main">
                 <div data-proof-job="1" style="margin:0 0 12px;padding:14px 16px;border:1px solid var(--border);border-radius:9px;background:var(--surface)">
                   <p style="margin:0 0 5px;font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--text3)">TEST 01 · FROM A BOARD</p>
-                  <p style="margin:0 0 8px"><b>TARGET: Replace 8 detached bench legs.</b></p>
-                  <p class="dim" style="margin:0 0 8px">Known by you: <b style="color:var(--text)">2×4 · 16½ in finished · 8 pieces · square ends.</b> Optional hole-center spotting belongs here only if you supply measured locations.</p>
-                  <p class="dim" style="margin:0">Use the generic floor below as it is. Nothing is prefilled for this test by the proof wrapper.</p>
+                  <p style="margin:0 0 8px"><b>TARGET: Define the Sawhorse Bench comparison member yourself.</b></p>
+                  <p class="dim" style="margin:0 0 8px">Target requirement: <b style="color:var(--text)">2×4 · 15½ in · quantity 8 · 10° source-stated DOUBLE BEVEL · both ends · parallel · source cut-list length datum.</b></p>
+                  <p class="dim" style="margin:0 0 6px">Quantity 8 is <b style="color:var(--text)">project composition</b>: two separate bench assemblies × four published end-leg occurrences per bench. It is not presented as one published eight-leg bench.</p>
+                  <p class="dim" style="margin:0">Use the generic floor below. Pick the board, define the straight length, add the angled cut, and state what the angle means. Nothing is prefilled for you by the proof wrapper.</p>
                   <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:11px;color:var(--text2)">
                     <span>Explicit project decisions: <b id="proof-job1-decisions">0</b></span>
                     <span>UI actions: <b id="proof-job1-actions">0</b></span>
@@ -161,7 +170,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   id="start-own-proof-frame"
                   class="start-own-shell-frame"
                   title="Start Your Own · definition to doing"
-                  src="stb-start-own-0.10.html?v=cbdb0299"
+                  src="stb-start-own-0.11.html?v=eaebb3bf"
                 ></iframe>
               </div>
             `;
@@ -172,11 +181,18 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
           const proofDecisions = new Set();
           let proofActions = 0;
           const classifyStartOwnDecision = target => {
-            const choice = target?.closest?.('[data-grade],[data-size],[data-maker],[data-step],[data-set],[data-exact]');
+            const choice = target?.closest?.('[data-grade],[data-size],[data-maker],[data-step],[data-set],[data-exact],[data-op-toggle],[data-op-set],[data-op-angle]');
             if (!choice) return;
             if (choice.dataset.grade) proofDecisions.add('material_family');
             if (choice.dataset.size) proofDecisions.add('stock_class');
             if (choice.dataset.maker) proofDecisions.add('part_form');
+            if (choice.dataset.opToggle === 'angled') proofDecisions.add('angled_cut');
+            if (choice.dataset.opAngle != null) proofDecisions.add('angle_degrees');
+            if (choice.dataset.opSet) {
+              const field = choice.dataset.opSet.split(':')[0];
+              const names = {angleReference:'angle_reference',cutPlane:'cut_plane',endIdentity:'end_identity',endRelation:'end_relation',lengthDatum:'length_datum'};
+              if (names[field]) proofDecisions.add(names[field]);
+            }
             const path = choice.dataset.exact
               || (choice.dataset.step ? choice.dataset.step.split(':')[0] : '')
               || (choice.dataset.set ? choice.dataset.set.split(':')[0] : '');
@@ -187,23 +203,34 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             const state = proofFrame?.contentWindow?.S;
             if (!state) return;
             let semanticOutput = null;
-            if (state.maker === 'cuts' && state.cuts?.pieces?.length === 1) {
+            if (state.maker === 'cuts' && state.cuts?.pieces?.length === 1 && state.cutOps?.angled) {
               const part = state.cuts.pieces[0];
               semanticOutput = {
                 stockClass: state.size === '2x4' ? '2x4' : state.size,
                 finishedLength: Number(part.len),
                 quantity: Number(part.qty),
-                endCondition: 'square',
-                holeRequirement: 'NONE',
-                datum: null
+                endCondition: 'angled',
+                straightCut: true,
+                angleDegrees: Number(state.cutOps.angle),
+                angleReference: state.cutOps.angleReference,
+                cutPlane: state.cutOps.cutPlane,
+                endIdentity: state.cutOps.endIdentity,
+                endRelation: state.cutOps.endRelation,
+                lengthDatum: state.cutOps.lengthDatum,
+                sourcePart: 'ANA-WHITE-SAW-HORSE-BENCH/END-LEG'
               };
             }
             const targetMatch = !!semanticOutput
               && semanticOutput.stockClass === '2x4'
-              && Math.abs(semanticOutput.finishedLength - 16.5) < 0.00001
+              && Math.abs(semanticOutput.finishedLength - 15.5) < 0.00001
               && semanticOutput.quantity === 8
-              && semanticOutput.endCondition === 'square'
-              && semanticOutput.holeRequirement === 'NONE';
+              && semanticOutput.endCondition === 'angled'
+              && semanticOutput.angleDegrees === 10
+              && semanticOutput.angleReference === 'source-stated'
+              && semanticOutput.cutPlane === 'bevel-thickness'
+              && semanticOutput.endIdentity === 'both'
+              && semanticOutput.endRelation === 'parallel'
+              && semanticOutput.lengthDatum === 'source-length';
             const payload = {
               measured: true,
               explicitProjectDecisions: [...proofDecisions],
@@ -233,7 +260,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 win.setTimeout(captureStartOwnProof, 0);
               }, true);
               childDoc.addEventListener('change', event => {
-                const target = event.target?.closest?.('[data-exact]');
+                const target = event.target?.closest?.('[data-exact],[data-op-angle]');
                 if (!target) return;
                 proofActions += 1;
                 classifyStartOwnDecision(target);
@@ -299,6 +326,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             windowSeatPage.id = 'window-seat-live';
             windowSeatPage.innerHTML = `
               <div class="window-seat-shell-main">
+                <button type="button" class="proof-shell-return" data-proof-library>← PROJECT LIBRARY</button>
                 <iframe
                   class="window-seat-shell-frame"
                   title="Space utilization · Window seat"
@@ -329,6 +357,17 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
           } else if (type === 'STB_PROOF_OPEN_JOB1') {
             selectJourneyProject(null);
             originalShow.call(win, 'start-own-live');
+          } else if (type === 'STB_START_OWN_CONFIRMED' && event.data?.payload) {
+            captureStartOwnProof();
+            proofHandoff = {job:'JOB 1 · START YOUR OWN',source:'start-own',payload:event.data.payload};
+            try { win.localStorage.setItem('stb-proof-handoff-job1', JSON.stringify(proofHandoff)); } catch (_) {}
+            syncProofHandoff();
+            originalShow.call(win, 'proof-store');
+          } else if (type === 'STB_OUTDOOR_CONFIRMED' && event.data?.payload) {
+            proofHandoff = {job:'JOB 2 · OUTDOOR BUILD',source:'outdoor',payload:event.data.payload};
+            try { win.localStorage.setItem('stb-proof-handoff-job2', JSON.stringify(proofHandoff)); } catch (_) {}
+            syncProofHandoff();
+            originalShow.call(win, 'proof-store');
           }
         });
       }
