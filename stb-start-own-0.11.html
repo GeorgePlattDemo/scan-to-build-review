@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Scan-to-Build · Start Your Own · Definition to Doing</title>
+<title>Scan-to-Build · Start Your Own 0.11 · Definition to Doing</title>
 <style>
 :root{
   --paper:#F5F0E6; --paper2:#FBF7EF; --surface:#FFFDF8; --stage:#EFE7D8;
@@ -205,6 +205,22 @@ h1 em{font-style:normal;color:var(--accent)}
 .spinebody{padding:10px 2px 2px;max-width:850px;line-height:1.6}
 .storesummary{margin:10px 0 0;font-size:15px;line-height:1.55;color:var(--ink2)}
 @media (max-width:700px){.flowline,.oprow{grid-template-columns:1fr;gap:3px}.basisgrid{grid-template-columns:1fr}}
+.opbuilder{display:grid;gap:10px}
+.opchoice{border:1px solid var(--line);border-radius:11px;padding:12px 13px;background:var(--paper2)}
+.opchoice.on{border-color:var(--accent);background:var(--tint)}
+.opchoice .hd{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.opchoice .hd b{font-size:14px}
+.opfields{display:grid;gap:11px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.opfield>span{display:block;font-size:10.5px;font-weight:750;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px}
+.opbuttons{display:flex;gap:6px;flex-wrap:wrap}
+.opbuttons button{border:1px solid var(--line);background:var(--surface);color:var(--ink2);border-radius:8px;padding:7px 9px;font-size:12px;cursor:pointer}
+.opbuttons button.on{border-color:var(--accent);background:var(--tint);color:var(--accent2);font-weight:700}
+.opangleinput{width:96px;padding:7px 8px;border:1px solid var(--line2);border-radius:8px;background:var(--surface);color:var(--ink)}
+.opwarn{border:1px dashed var(--accent);background:var(--tint);border-radius:9px;padding:9px 11px;color:var(--accent2);font-size:12px;line-height:1.5}
+.angle-drawing{margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
+.angle-drawing svg{width:100%;display:block;background:var(--paper2);border:1px solid var(--line);border-radius:10px}
+.angle-key{display:flex;gap:12px;flex-wrap:wrap;margin-top:7px;font-size:11px;color:var(--ink3)}
+.project-return{border:0;background:transparent;color:var(--ink2);font-weight:650;padding:6px 0;cursor:pointer}
 .hint{font-size:12px;line-height:1.5;color:var(--ink3);margin:10px 0 0}
 .done-bar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:22px 0 0;padding:18px 20px;
   border-radius:var(--r);border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow)}
@@ -457,6 +473,7 @@ function sizeOf(gk,sk){return grade(gk).sizes.filter(function(s){return s.k===sk
 /* ═══════════════ 3 · WHAT YOU ARE MAKING ═══════════════ */
 var S={screen:'pick',grade:'lumber',size:'2x4',maker:null,seeded:{cuts:false,shelf:false,box:false},handoff:null,
   cuts :{pieces:[{len:32,wid:3.5,qty:2,status:{len:'checking',wid:'checking'}}]},
+  cutOps:{straight:true,angled:false,angle:null,angleReference:null,cutPlane:null,endIdentity:null,endRelation:null,lengthDatum:null},
   shelf:{w:30,h:36,n:4,depth:3.5,status:{w:'checking',h:'checking',depth:'checking'}},
   box  :{l:18,w:12,h:3.5,status:{l:'checking',w:'checking',h:'checking'}}};
 var GEO=null, grab=null, focusKey=null;
@@ -566,7 +583,8 @@ var TICK='<span class="tick"><svg viewBox="0 0 24 24"><path d="M4 12.5l5.2 5.2L2
 function renderPick(){
   var g=grade(S.grade);
   var h=woodDefs();
-  h+='<p class="eyebrow">Scan-to-Build · start your own</p>';
+  h+='<div class="top"><button class="project-return" id="projectlibrary">← PROJECT LIBRARY</button></div>';
+  h+='<p class="eyebrow">Scan-to-Build · start your own · 0.11 candidate</p>';
   h+='<h1>Make something<br>out of <em>wood</em>.</h1>';
   h+='<p class="lede">Two clicks put it on the bench. A few more make it yours. Change a number and the parts, wood and about-price move with it. When it looks right, send that exact version to the Store.</p>';
 
@@ -596,6 +614,7 @@ function renderPick(){
     +'</div><button class="btn" id="go"'+(mk?'':' disabled')+'>Take it to the bench →</button></div>';
   h+='<p class="foot">Nothing is ordered here. The Store answers the version you send.</p>';
   $('app').innerHTML=h;
+  $('projectlibrary').onclick=returnProjectLibrary;
   $('go').onclick=function(){ if(S.maker){ seed(); S.screen='bench'; render(); window.scrollTo(0,0) } };
 }
 function G_key(g){return g.k}
@@ -875,7 +894,7 @@ function drawBox(){
   return o.join('');
 }
 function drawing(){
-  return S.maker==='cuts'?drawCuts():S.maker==='shelf'?drawShelf():drawBox();
+  return S.maker==='cuts'?(drawCuts()+angleDefinitionDrawing()):S.maker==='shelf'?drawShelf():drawBox();
 }
 
 /* ═══════════════ 6 · THE CONTROLS ═══════════════ */
@@ -927,13 +946,113 @@ function materialIssueMarkup(issue){
     +'<b style="display:inline;font-size:inherit;letter-spacing:0;text-transform:none;color:var(--ink)">This '+esc(s.label)+' is only '+fmt(issue.stockValue)+' in wide.</b> '
     +'Your '+thing+' is '+fmt(issue.projectValue)+' in. Change the depth or pick different wood.</p></div>';
 }
+function angledCutDefinition(){
+  if(!S.cutOps.angled)return null;
+  return {
+    kind:'ANGLED_CUT',
+    angleDegrees:S.cutOps.angle,
+    angleReference:S.cutOps.angleReference,
+    cutPlane:S.cutOps.cutPlane,
+    endIdentity:S.cutOps.endIdentity,
+    endRelation:S.cutOps.endIdentity==='both'?S.cutOps.endRelation:null,
+    lengthDatum:S.cutOps.lengthDatum
+  };
+}
+function operationValidation(){
+  var a=[];
+  if(S.maker!=='cuts'||!S.cutOps.angled)return a;
+  if(!(Number.isFinite(S.cutOps.angle)&&S.cutOps.angle>0&&S.cutOps.angle<90))a.push('Enter an angle between 0° and 90°.');
+  if(!S.cutOps.angleReference)a.push('Choose what the angle is referenced to.');
+  if(!S.cutOps.cutPlane)a.push('Choose miter across the face or bevel across the thickness.');
+  if(!S.cutOps.endIdentity)a.push('Choose which end receives the angled cut.');
+  if(S.cutOps.endIdentity==='both'&&!S.cutOps.endRelation)a.push('Say whether the two end cuts are parallel or opposed.');
+  if(!S.cutOps.lengthDatum)a.push('Choose how finished length is read on the angled part.');
+  return a;
+}
+function operationLabel(v){
+  var map={
+    'off-square':'DEGREES OFF SQUARE',
+    'source-stated':'SOURCE-STATED ANGLE',
+    'miter-face':'MITER / ACROSS FACE',
+    'bevel-thickness':'BEVEL / ACROSS THICKNESS',
+    'first':'FIRST END','second':'SECOND END','both':'BOTH ENDS',
+    'parallel':'PARALLEL / SAME DIRECTION','opposed':'OPPOSED / NON-PARALLEL',
+    'long-long':'LONG POINT → LONG POINT','long-short':'LONG POINT → SHORT POINT',
+    'source-length':'SOURCE CUT-LIST LENGTH / STATED EDGE DATUM'
+  };
+  return map[v]||v||'NOT SET';
+}
+function angleDefinitionDrawing(){
+  if(S.maker!=='cuts'||!S.cutOps.angled)return '';
+  var o=S.cutOps, angle=Number.isFinite(o.angle)?o.angle:'—';
+  var face=o.cutPlane==='miter-face';
+  var first=o.endIdentity==='first'||o.endIdentity==='both';
+  var second=o.endIdentity==='second'||o.endIdentity==='both';
+  var opposed=o.endRelation==='opposed';
+  var x1=90,x2=630,y1=55,y2=155;
+  var l1=face?(first?'M90 55 L116 155':''):(first?'M90 55 L108 155':'');
+  var l2=face?(second?(opposed?'M604 55 L630 155':'M630 55 L604 155'):''):(second?(opposed?'M612 55 L630 155':'M630 55 L612 155'):'');
+  var view=face?'TOP / FACE VIEW':'SIDE / THICKNESS VIEW';
+  var h='<div class="angle-drawing"><svg viewBox="0 0 720 245" role="img" aria-label="angled cut definition">'
+    +'<text x="34" y="26" font-size="11" font-weight="750" letter-spacing=".08em" fill="var(--ink3)">'+view+'</text>'
+    +'<rect x="'+x1+'" y="'+y1+'" width="'+(x2-x1)+'" height="'+(y2-y1)+'" rx="4" fill="rgba(194,154,94,.22)" stroke="rgba(90,55,25,.45)"/>'
+    +(l1?'<path d="'+l1+'" stroke="var(--accent)" stroke-width="5"/>':'')
+    +(l2?'<path d="'+l2+'" stroke="var(--accent)" stroke-width="5"/>':'')
+    +'<line x1="'+x1+'" y1="190" x2="'+x2+'" y2="190" stroke="var(--accent)" opacity=".55"/>'
+    +'<path d="M'+x1+' 184v12M'+x2+' 184v12" stroke="var(--accent)" opacity=".55"/>'
+    +'<text x="360" y="211" text-anchor="middle" font-size="12" font-weight="650" fill="var(--accent2)">LENGTH DATUM · '+esc(operationLabel(o.lengthDatum))+'</text>'
+    +'<text x="360" y="235" text-anchor="middle" font-size="11.5" fill="var(--ink2)">'+esc(String(angle))+'° · '+esc(operationLabel(o.angleReference))+' · '+esc(operationLabel(o.cutPlane))+' · '+esc(operationLabel(o.endIdentity))+(o.endIdentity==='both'?' · '+esc(operationLabel(o.endRelation)):'')+'</text>'
+    +'</svg><div class="angle-key"><span>Accent line = requested angled end cut</span><span>The picture is a definition view, not a machine program.</span></div></div>';
+  return h;
+}
+function operationBuilder(){
+  if(S.maker!=='cuts'||isSheet())return '';
+  var o=S.cutOps, errs=operationValidation();
+  function buttons(key,vals){
+    return '<div class="opbuttons">'+vals.map(function(v){
+      return '<button type="button" data-op-set="'+key+':'+v+'" class="'+(o[key]===v?'on':'')+'">'+esc(operationLabel(v))+'</button>';
+    }).join('')+'</div>';
+  }
+  var h='<div class="panel"><h3>What cut do you want?</h3><div class="opbuilder">'
+    +'<div class="opchoice on"><div class="hd"><b>STRAIGHT CUT</b><span class="hint" style="margin:0">Establish the finished length · square / 90° to the reference face</span></div></div>'
+    +'<div class="opchoice'+(o.angled?' on':'')+'"><div class="hd"><b>ANGLED CUT</b><button type="button" class="pill" data-op-toggle="angled">'+(o.angled?'REMOVE ANGLED CUT':'+ ADD ANGLED CUT')+'</button></div>';
+  if(o.angled){
+    h+='<div class="opfields">'
+      +'<div class="opfield"><span>Angle</span><input class="opangleinput" data-op-angle inputmode="decimal" value="'+(o.angle==null?'':esc(o.angle))+'" aria-label="Angle in degrees"> <span class="hint" style="display:inline">degrees</span></div>'
+      +'<div class="opfield"><span>Angle reference</span>'+buttons('angleReference',['off-square','source-stated'])+'</div>'
+      +'<div class="opfield"><span>Cut plane / orientation</span>'+buttons('cutPlane',['miter-face','bevel-thickness'])+'</div>'
+      +'<div class="opfield"><span>End</span>'+buttons('endIdentity',['first','second','both'])+'</div>'
+      +(o.endIdentity==='both'?'<div class="opfield"><span>If both ends</span>'+buttons('endRelation',['parallel','opposed'])+'</div>':'')
+      +'<div class="opfield"><span>Length datum</span>'+buttons('lengthDatum',['long-long','long-short','source-length'])+'</div>'
+      +(errs.length?'<div class="opwarn"><b>Angle alone is not enough.</b><br>'+errs.map(esc).join('<br>')+'</div>':'')
+      +'</div>';
+  }
+  h+='</div></div>'+angleDefinitionDrawing();
+  return h;
+}
+function returnProjectLibrary(){
+  if(window.self!==window.top){
+    window.parent.postMessage({type:'STB_PROOF_RETURN_LIBRARY'},window.location.origin);
+  }else{
+    window.location.href='working-app.html';
+  }
+}
 function operationModel(){
   var list=parts(), issue=materialIssue(), sh=isSheet(), s=S_size(), ops=[];
   list.forEach(function(p){
-    ops.push({part:p.name,qty:p.qty,
-      op:sh?'SHEET RECTANGLE CUT':'CUT TO LENGTH',
-      detail:sh?(fmt(p.len)+' × '+fmt(p.wid)+' in rectangle')
-               :(fmt(p.len)+' in length · '+fmt(s.w)+' in stock width')});
+    if(sh){
+      ops.push({part:p.name,qty:p.qty,op:'SHEET RECTANGLE CUT',detail:fmt(p.len)+' × '+fmt(p.wid)+' in rectangle'});
+    }else if(S.maker==='cuts'){
+      ops.push({part:p.name,qty:p.qty,op:'STRAIGHT CUT',detail:fmt(p.len)+' in finished length · square / 90° to reference face · '+fmt(s.w)+' in stock width'});
+      if(S.cutOps.angled){
+        var a=angledCutDefinition(), incomplete=operationValidation().length>0;
+        ops.push({part:p.name,qty:p.qty,op:'ANGLED CUT',
+          detail:(Number.isFinite(a.angleDegrees)?a.angleDegrees+'°':'angle not set')+' · '+operationLabel(a.angleReference)+' · '+operationLabel(a.cutPlane)+' · '+operationLabel(a.endIdentity)+(a.endIdentity==='both'?' · '+operationLabel(a.endRelation):'')+' · '+operationLabel(a.lengthDatum),
+          unresolved:incomplete});
+      }
+    }else{
+      ops.push({part:p.name,qty:p.qty,op:'CUT TO LENGTH',detail:fmt(p.len)+' in length · '+fmt(s.w)+' in stock width'});
+    }
   });
   if(issue)ops.push({part:'Material / capability',qty:null,op:'MATERIAL / OPERATION RESOLUTION REQUIRED',
     detail:issue.detail+' Unknown stays unknown; no joining or width-forming method is assumed.',unresolved:true});
@@ -983,8 +1102,12 @@ function referenceCostPanel(){
 }
 function customerDefinition(){
   var d={grade:S.grade,size:S.size,maker:S.maker};
-  if(S.maker==='cuts')d.pieces=S.cuts.pieces.map(function(p){return {len:p.len,wid:isSheet()?p.wid:null,qty:p.qty,status:{len:p.status.len,wid:p.status.wid}}});
-  else if(S.maker==='shelf')d.project={w:S.shelf.w,h:S.shelf.h,depth:S.shelf.depth,n:S.shelf.n,status:{w:S.shelf.status.w,h:S.shelf.status.h,depth:S.shelf.status.depth}};
+  if(S.maker==='cuts'){
+    d.pieces=S.cuts.pieces.map(function(p){return {len:p.len,wid:isSheet()?p.wid:null,qty:p.qty,status:{len:p.status.len,wid:p.status.wid}}});
+    d.operations=isSheet()
+      ?[{kind:'SHEET_RECTANGLE_CUT'}]
+      :[{kind:'STRAIGHT_CUT',endCondition:'square',angleDegrees:0,angleReference:'square-to-reference-face'}].concat(S.cutOps.angled?[angledCutDefinition()]:[]);
+  }else if(S.maker==='shelf')d.project={w:S.shelf.w,h:S.shelf.h,depth:S.shelf.depth,n:S.shelf.n,status:{w:S.shelf.status.w,h:S.shelf.status.h,depth:S.shelf.status.depth}};
   else d.project={l:S.box.l,w:S.box.w,h:S.box.h,status:{l:S.box.status.l,w:S.box.status.w,h:S.box.status.h}};
   return d;
 }
@@ -1002,28 +1125,34 @@ function materialRequestText(){
                   :(b.n+' × '+s.label+' × '+b.L+' in reference demand');
 }
 function storeAnswerModel(){
-  var issue=materialIssue(), b=buyList(), s=S_size(), status=issue?'NEEDS RESOLUTION':(b?'SUPPORTED':'NOT SUPPORTED');
+  var issue=materialIssue(), b=buyList(), s=S_size(), angleGap=S.maker==='cuts'&&S.cutOps.angled;
+  var status=issue?'NEEDS RESOLUTION':(angleGap?'UNRESOLVED / CURRENT MODEL MISMATCH':(b?'SUPPORTED':'NOT SUPPORTED'));
   return {
     status:status,
-    material:materialRequestText()+' SKU identity is not carried by this donor.',
+    material:materialRequestText()+' The common Store actor owns final SKU identity and offering.',
     capability:issue?'Known cut operations are derived; the unresolved material/operation method must be answered before the definition is fully supportable.'
-                    :(b?'The current reference bench can support the listed rectangular / cut-to-length part operations at the definition boundary.'
-                       :'One or more defined parts exceed the offered stock represented in this donor.'),
-    unresolved:issue?issue.detail:(b?'None identified at this bench boundary.':'Stock containment / material resolution required.'),
-    service:'No Store service choice is modeled in this Start Your Own donor.',
-    availability:'Not established by the current reference data.',
-    timing:'Not established by the current reference data.',
+                    :(angleGap?'Angled-cut meaning is preserved in the project definition. Current common Store pricing / capability wiring does not publish a complete angled-board contract, so support is not invented here.'
+                       :(b?'The current reference bench can support the listed rectangular / cut-to-length definition boundary.':'One or more defined parts exceed the offered stock represented in this donor.')),
+    unresolved:issue?issue.detail:(angleGap?'STORE-PRICING-BRIDGE-GAP · current published Board endpoint is square-crosscut only; angled processing price remains Store-owned and unresolved.':(b?'None identified at this bench boundary.':'Stock containment / material resolution required.')),
+    service:'Common Store actor handoff owns service and economics.',
+    availability:'Not established by this candidate.',
+    timing:'Not established by this candidate.',
     ready:'Not established. No allocation, production release or machine readiness has occurred.'
   };
 }
 function confirmToStore(){
+  var errs=operationValidation();
+  if(errs.length){flash('Complete the angled-cut definition before confirming');return}
   var id=currentDefinitionId();
   S.handoff={id:id,definition:JSON.parse(JSON.stringify(customerDefinition())),
     request:{parts:JSON.parse(JSON.stringify(parts())),operations:JSON.parse(JSON.stringify(operationModel())),material:materialRequestText(),referenceCost:referenceCostModel()},
     answer:storeAnswerModel()};
   render();
   var el=$('storeanswer'); if(el&&el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'nearest'});
-  flash('Exact version sent to the modeled Store answer');
+  flash('Exact version confirmed');
+  if(window.self!==window.top){
+    window.parent.postMessage({type:'STB_START_OWN_CONFIRMED',payload:JSON.parse(JSON.stringify(S.handoff))},window.location.origin);
+  }
 }
 function storeSummarySentence(){
   var issue=materialIssue(), b=buyList(), s=S_size(), sh=isSheet();
@@ -1053,7 +1182,9 @@ function storeHandoffPanel(){
   return h;
 }
 function controls(){
-  var s=S_size(), sh=isSheet(), h='<div class="panel"><h3>Size it</h3>';
+  var s=S_size(), sh=isSheet(), h='';
+  if(S.maker==='cuts'&&!sh)h+=operationBuilder();
+  h+='<div class="panel"><h3>Size it</h3>';
   if(S.maker==='cuts'){
     S.cuts.pieces.forEach(function(p,i){
       h+=dimRow('Piece '+(i+1),'length','cuts.'+i+'.len',p.len,'in',1);
@@ -1157,6 +1288,13 @@ function specText(){
   else L.push('  No offered reference stock contains the current part set.');
   L.push('');L.push('OPERATIONS');
   ops.forEach(function(o){L.push('  '+(o.qty?o.qty+' × ':'')+o.part+' — '+o.op+' — '+o.detail)});
+  if(S.maker==='cuts'&&S.cutOps.angled){
+    var ao=angledCutDefinition();
+    L.push('  ANGLE SEMANTICS        '+(ao.angleDegrees==null?'NOT SET':ao.angleDegrees+'°')+' · '+operationLabel(ao.angleReference));
+    L.push('  CUT PLANE              '+operationLabel(ao.cutPlane));
+    L.push('  END IDENTITY           '+operationLabel(ao.endIdentity)+(ao.endIdentity==='both'?' · '+operationLabel(ao.endRelation):''));
+    L.push('  LENGTH DATUM           '+operationLabel(ao.lengthDatum));
+  }
   L.push('');L.push('MODELED WORK / REFERENCE BASIS');
   L.push('  Derived part operations  '+modeledWorkModel().knownPartOperations);
   L.push('  Modeled machine time     NOT ESTABLISHED');
@@ -1176,7 +1314,7 @@ function specText(){
 function renderBench(){
   var s=S_size(), mk=MAKERS.filter(function(m){return m.k===S.maker})[0];
   var h=woodDefs();
-  h+='<div class="top"><button class="crumb" id="back">← wood &amp; what to make</button></div>';
+  h+='<div class="top"><button class="crumb" id="back">← wood &amp; what to make</button><button class="project-return" id="projectlibrary">← PROJECT LIBRARY</button></div>';
   h+='<div class="top" style="margin-bottom:18px"><h1>'+esc(mk.name)+' <span style="color:var(--ink3);font-weight:400">in '
     +esc(s.label)+'</span></h1></div>';
   h+='<div class="bench"><div><div class="stage" id="stage">'+drawing()+'</div>'
@@ -1192,6 +1330,7 @@ function renderBench(){
   $('app').innerHTML=h;
   readout();
   $('back').onclick=function(){S.screen='pick';render();window.scrollTo(0,0)};
+  $('projectlibrary').onclick=returnProjectLibrary;
   $('confirmstore').onclick=confirmToStore;
   $('copy').onclick=function(){
     var t=cutListText();
@@ -1349,14 +1488,38 @@ document.addEventListener('keydown',function(e){
   if(!el||e.key!=='Enter')return;
   e.preventDefault(); commitExact(el);
 });
+document.addEventListener('change',function(e){
+  var angle=e.target&&e.target.closest&&e.target.closest('[data-op-angle]');
+  if(angle){
+    var v=parseDimension(angle.value);
+    S.cutOps.angle=(v!=null&&v>0&&v<90)?v:null;
+    render();
+  }
+});
 document.addEventListener('focusout',function(e){
   var el=e.target&&e.target.closest&&e.target.closest('[data-exact]');
   if(el)commitExact(el);
+  var angle=e.target&&e.target.closest&&e.target.closest('[data-op-angle]');
+  if(angle){
+    var v=parseDimension(angle.value);
+    S.cutOps.angle=(v!=null&&v>0&&v<90)?v:null;
+    render();
+  }
 });
 document.addEventListener('click',function(e){
-  var t=e.target.closest&&e.target.closest('[data-grade],[data-size],[data-maker],[data-step],[data-set],[data-drop],[data-status],[data-add]');
+  var t=e.target.closest&&e.target.closest('[data-grade],[data-size],[data-maker],[data-step],[data-set],[data-drop],[data-status],[data-add],[data-op-toggle],[data-op-set]');
   if(!t)return;
-  if(t.dataset.grade){
+  if(t.dataset.opToggle==='angled'){
+    S.cutOps.angled=!S.cutOps.angled;
+    if(!S.cutOps.angled){S.cutOps.angle=null;S.cutOps.angleReference=null;S.cutOps.cutPlane=null;S.cutOps.endIdentity=null;S.cutOps.endRelation=null;S.cutOps.lengthDatum=null}
+    render();
+  }
+  else if(t.dataset.opSet){
+    var os=t.dataset.opSet.split(':'); S.cutOps[os[0]]=os[1];
+    if(os[0]==='endIdentity'&&os[1]!=='both')S.cutOps.endRelation=null;
+    render();
+  }
+  else if(t.dataset.grade){
     S.grade=t.dataset.grade; S.size=grade(S.grade).sizes[0].k;
     if(S.seeded.cuts&&S.maker==='cuts'&&!isSheet())S.cuts.pieces.forEach(function(p){p.wid=S_size().w});
     render();
