@@ -60,9 +60,10 @@
       materialCatalogPin:'4402abeb6b0299a5b6db2eec85ed04c3b0236bcc',
       capabilityBasis:'CURRENT_CANONICAL_STORE_ZERO',
       capabilityPin:'f88ec61c42446755d00259f88e7fd09f2702fd92',
-      economicsModel:'STB-STORE-ZERO-PRICE-1 v0.2.2',
-      economicsStatus:'LEGACY_GENERAL_RECOVERY_STILL_VISIBLE_PENDING_MIGRATION',
-      legacyGeneralRecoverySelected:true
+      economicsModel:null,
+      economicsStatus:'UNRESOLVED_CLASS_SCOPED_RECOVERY',
+      economicsReason:'No current Alcove class-scoped processing / fulfillment recovery model is published.',
+      legacyGeneralRecoverySelected:false
     }),
     windowSeat: Object.freeze({
       projectId:'window-seat',
