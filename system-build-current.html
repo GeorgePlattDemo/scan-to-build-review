@@ -1140,7 +1140,12 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       if(material){
         const ref=payload.storeReference||null;
         if(ref&&Number.isFinite(ref.material)){
-          material.textContent=(ref.materialSku?ref.materialSku+' · ':'')+'
+          material.textContent=(ref.materialSku?ref.materialSku+' · ':'')+'$'+Number(ref.material).toFixed(2)+' material · carried from Configure';
+        }else{
+          material.textContent='UNRESOLVED · this project handoff did not carry a job material extension';
+        }
+      }
+    }
 
     doc.addEventListener('click', function(event){
       const library=event.target.closest?.('[data-proof-library]');
