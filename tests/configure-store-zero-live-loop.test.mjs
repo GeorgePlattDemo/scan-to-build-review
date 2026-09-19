@@ -30,8 +30,8 @@ assert.match(startOwn, /Store Zero SKU/);
 
 assert.match(contract, /version:'0\.3'/);
 assert.match(contract, /resolveStartOwnMaterial:resolveStartOwnMaterial/);
-assert.match(contract, /storeSku:"STB-ZERO-SPF-2X4-192-001"/);
-assert.match(contract, /sellingPrice:8\.36/);
+assert.match(contract, /"storeSku": "STB-ZERO-SPF-2X4-192-001"/);
+assert.match(contract, /"sellingPrice": 8\.36/);
 assert.match(contract, /doctrinePin:'f88ec61c42446755d00259f88e7fd09f2702fd92'/);
 assert.match(contract, /catalogPin:'4402abeb6b0299a5b6db2eec85ed04c3b0236bcc'/);
 assert.match(contract, /economicsStatus:'UNRESOLVED_CLASS_SCOPED_RECOVERY'/);
