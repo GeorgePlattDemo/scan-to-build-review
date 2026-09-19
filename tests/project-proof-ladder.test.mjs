@@ -75,8 +75,10 @@ assert.match(shell, /8-minute modeled job setup/);
 assert.match(shell, /\$35 setup charge/);
 assert.match(shell, /\$100\/hour modeled machine recovery/);
 assert.match(shell, /material \$3\.13 \+ modeled cell recovery \$50\.81 = budgetary Q \$53\.94/);
-assert.match(shell, /processing \/ total UNRESOLVED/);
-assert.match(shell, /No app-side discount/);
+assert.match(shell, /PROCESSING \/ RECOVERY/);
+assert.match(shell, /TOTAL REFERENCE PRICE/);
+assert.match(shell, /UNRESOLVED · CURRENT MODEL MISMATCH/);
+assert.match(outdoor, /No app-only discount/);
 
 // Evidence navigation remains explicit and state-preserving.
 assert.match(outdoor, /href="stb-outdoor-build-deck-0\.1\.html" target="_blank" rel="opener"/);
