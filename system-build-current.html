@@ -110,9 +110,26 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
       const ribbon = home.querySelector(':scope > .split > .ribbon');
       if (ribbon) {
-        ['start-own','alcove-capture','window-intake','window-parts','picnic-chooser'].forEach(id => {
+        ['start-own','picnic-chooser','alcove-capture','window-intake','window-parts'].forEach(id => {
           const tile = ribbon.querySelector(`.tile[data-go="${id}"]`);
           if (tile) ribbon.append(tile);
+        });
+
+        const proofLabels = Object.freeze({
+          'start-own': 'TEST 01 · FROM A BOARD',
+          'picnic-chooser': 'TEST 02 · FROM A BOUNDED PROJECT',
+          'alcove-capture': 'TEST 03 · FIT THE SPACE',
+          'window-intake': 'TEST 04 · DEFINE THE ASSEMBLY',
+          'window-parts': 'TEST 05 · CHANGE THE MATERIAL STREAM'
+        });
+        Object.entries(proofLabels).forEach(([id,label]) => {
+          const tile = ribbon.querySelector(`.tile[data-go="${id}"]`);
+          if (!tile || tile.querySelector('[data-proof-test]')) return;
+          const marker = doc.createElement('span');
+          marker.dataset.proofTest = id;
+          marker.textContent = label;
+          marker.style.cssText = 'display:block;margin:0 0 4px;font-size:8px;line-height:1.2;font-weight:700;letter-spacing:.04em;color:var(--text3)';
+          tile.prepend(marker);
         });
 
         const startOwnTile = ribbon.querySelector('.tile[data-go="start-own"]');
