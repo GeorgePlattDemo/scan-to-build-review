@@ -23,7 +23,7 @@ assert.ok(shell.includes("storeOrder.id = 'alcove-store-order-surface'"));
 assert.ok(shell.includes("returnedOffer.id = 'alcove-store-returned-offer'"));
 assert.match(shell,/ACCEPT STORE ANSWER →/);
 assert.match(shell,/ALCOVE · ACCEPT \/ SETTLE/);
-assert.match(shell,/Store answered\. You decide\./);
+assert.match(shell,/Store answered\. The commercial event remains separate\./);
 assert.match(shell,/Order status · Store \/ Yard acts/);
 assert.match(shell,/Handoff · record/);
 
