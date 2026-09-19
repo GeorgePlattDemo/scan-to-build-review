@@ -54,7 +54,8 @@ assert.match(outdoor, /No member is stretched/);
 
 // Stable part/occurrence selection and semantic comparison.
 assert.match(outdoor, /function occurrenceIds\(part\)/);
-assert.match(outdoor, /LEFT-BENCH\.END-LEG\.01/);
+assert.match(outdoor, /O\.assembly==='left-bench'\?'LEFT-BENCH':'RIGHT-BENCH'/);
+assert.match(outdoor, /String\(i\+1\)\.padStart\(2,'0'\)/);
 assert.match(outdoor, /function outdoorNormalizedPart\(\)/);
 assert.match(outdoor, /function sameProofPart\(a,b\)/);
 assert.match(outdoor, /NORMALIZED PART REQUIREMENT/);
