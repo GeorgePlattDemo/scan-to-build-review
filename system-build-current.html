@@ -38,6 +38,10 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       .start-own-shell-page.on{display:block!important}
       .start-own-shell-main{width:100%;min-width:0;background:var(--surface)}
       .start-own-shell-frame{display:block;width:100%;height:calc(100vh - 76px);min-height:680px;border:0;background:var(--bg)}
+      .outdoor-build-shell-page{padding:0!important;overflow:hidden;background:var(--surface)}
+      .outdoor-build-shell-page.on{display:block!important}
+      .outdoor-build-shell-main{width:100%;min-width:0;background:var(--surface)}
+      .outdoor-build-shell-frame{display:block;width:100%;height:calc(100vh - 76px);min-height:680px;border:0;background:var(--bg)}
       .s001-v2-intent-grid{display:grid;grid-template-columns:minmax(0,.9fr) minmax(300px,1.1fr);gap:16px;align-items:start;margin:14px 0}
       .s001-v2-story{font-size:13px;line-height:1.55;margin:10px 0 0}
       .s001-v2-callout{margin:12px 0;padding:12px 14px;border-left:4px solid var(--accent);background:var(--tint);font-size:13px;line-height:1.5}
@@ -139,6 +143,37 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             event.stopImmediatePropagation();
             selectJourneyProject(null);
             originalShow.call(win, 'start-own-live');
+          }, true);
+        }
+
+        const outdoorTile = ribbon.querySelector('.tile[data-go="picnic-chooser"]');
+        if (outdoorTile) {
+          outdoorTile.removeAttribute('data-go');
+          outdoorTile.dataset.outdoorBuildArtifact = 'stb-outdoor-build.html';
+          outdoorTile.title = 'Outdoor Build · Project 1 · detached bench leg';
+
+          let outdoorPage = doc.getElementById('outdoor-build-live');
+          if (!outdoorPage) {
+            outdoorPage = doc.createElement('section');
+            outdoorPage.className = 'page outdoor-build-shell-page';
+            outdoorPage.id = 'outdoor-build-live';
+            outdoorPage.innerHTML = `
+              <div class="outdoor-build-shell-main">
+                <iframe
+                  class="outdoor-build-shell-frame"
+                  title="Outdoor Build · Project 1"
+                  src="stb-outdoor-build.html?v=6bb19391"
+                ></iframe>
+              </div>
+            `;
+            doc.querySelector('.wrap')?.append(outdoorPage);
+          }
+
+          outdoorTile.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            selectJourneyProject(null);
+            originalShow.call(win, 'outdoor-build-live');
           }, true);
         }
 
