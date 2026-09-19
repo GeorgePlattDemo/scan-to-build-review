@@ -1193,7 +1193,7 @@ function referenceCostPanel(){
     +'<div class="flowline"><div class="k">Capability</div><div class="v"><b>'+esc(c.capabilityStatus)+'</b></div></div>'
     +'<div class="flowline"><div class="k">Processing / fulfillment recovery</div><div class="v"><b>'+econ+'</b></div></div>'
     +'<div class="flowline"><div class="k">Material source</div><div class="v">'+esc(source)+'</div></div>'
-    +'<p class="hint">'+why+' The legacy general $35 setup + $100/hour recovery is not selected for Start Your Own. This is a reference basis, not a binding commercial offer.</p></div>';
+    +'<p class="hint">'+why+' No retired general recovery formula is selected for Start Your Own. This is a reference basis, not a binding commercial offer.</p></div>';
 }
 function customerDefinition(){
   var d={grade:S.grade,size:S.size,maker:S.maker};
@@ -1421,7 +1421,7 @@ function specText(){
   L.push('  Material                 '+(c.material==null?'NOT ESTABLISHED':money(c.material)));
   L.push('  Processing / recovery    UNRESOLVED · CLASS-SCOPED RECOVERY NOT PUBLISHED');
   L.push('  Current combined basis   NOT COMPLETE');
-  L.push('  Legacy $35 + $100/hour   NOT SELECTED');
+  L.push('  Retired general recovery  NOT SELECTED');
   if(c.authority){
     L.push('  Store doctrine pin       '+c.authority.capabilityPin);
     L.push('  Material catalog pin     '+c.authority.materialCatalogPin);
