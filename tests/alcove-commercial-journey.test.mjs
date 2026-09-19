@@ -13,7 +13,7 @@ const gitBlobSha=text=>crypto.createHash('sha1')
   .digest('hex');
 
 assert.equal(gitBlobSha(seat),'825a9bce833e982b727e0b48a7416a660543a358','Window Seat changed during Alcove-only reconciliation');
-assert.match(shell,/stb-window-seat-space-utilization-0\.7\.4\.html\?v=f12e0102/,'Window Seat reconciled candidate cache pin changed');
+assert.match(shell,/stb-window-seat-space-utilization-0\.7\.4\.html\?v=96c85fee/,'Window Seat reconciled candidate cache pin changed');
 
 assert.match(base,/id="alcove-capture"/);
 assert.match(base,/NEXT → CONFIGURE/);
