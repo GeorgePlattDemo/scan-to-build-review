@@ -826,9 +826,9 @@ function renderProofProject(){
 function render(){renderProofProject()}
 document.addEventListener('click',function(event){
   var open=event.target.closest?.('[data-outdoor-open]');
-  if(open){O.uiActions+=1;O.screen='configure';O.assembly='left-bench';O.part='end-leg';O.occurrence='LEFT-BENCH.END-LEG.01';renderProofProject();return}
+  if(open){O.uiActions+=1;O.screen='configure';O.assembly=null;O.part=null;O.occurrence=null;renderProofProject();return}
   var ass=event.target.closest?.('[data-outdoor-assembly]');
-  if(ass){O.uiActions+=1;O.assembly=ass.dataset.outdoorAssembly;O.part=null;O.occurrence=null;O.sent=null;renderProofProject();return}
+  if(ass){O.uiActions+=1;if(O.screen==='project')O.screen='configure';O.assembly=ass.dataset.outdoorAssembly;O.part=null;O.occurrence=null;O.sent=null;renderProofProject();return}
   var part=event.target.closest?.('[data-outdoor-part]');
   if(part){O.uiActions+=1;O.part=part.dataset.outdoorPart;O.occurrence=null;O.sent=null;renderProofProject();return}
   var occ=event.target.closest?.('[data-outdoor-occ]');
