@@ -36,6 +36,6 @@ assert.match(shell,/PAYMENT<\/b><span>NOT AVAILABLE \/ NOT RECORDED/);
 assert.match(shell,/PRODUCTION RELEASE<\/b><span>NOT ESTABLISHED/);
 assert.match(shell,/CYCLE START<\/b><span>NOT AUTHORIZED/);
 assert.match(shell,/NO BLOOD ON WOOD/);
-assert.equal(/\bG0?\d\b|\bM03?\b|G-code|remote Cycle Start/i.test(shell+own+outdoor),false);
+assert.equal(/\bG0?\d\b|\bM0?3\b|G-code|remote Cycle Start/i.test(shell+own+outdoor),false);
 
 console.log('PASS · common proof Store handoff and pricing-gap contract');
