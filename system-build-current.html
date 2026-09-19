@@ -13,6 +13,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 <body>
 <iframe id="stb-current" title="Scan-to-Build System" src="system-build-front-door-0.5.html?v=5ac9677b"></iframe>
 <script src="stb-canonical-journey.js?v=e0619841"></script>
+<script src="stb-store-handoff-contract.js?v=da6e2beb"></script>
 <script src="store-zero-canonical-doctrine.js?v=65366367"></script>
 <script>
 (() => {
@@ -110,6 +111,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     let activeJourneyProject = null;
     let seatJourneySnapshot = null;
     let proofHandoff = null;
+    const storeHandoffContract = window.STBStoreHandoffContract || null;
     let captureStartOwnProof = () => {};
     let pendingSeatView = {mode:'continuous',stage:null};
 
@@ -346,6 +348,53 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         }
       }
 
+      function createComparisonStoreHandoff(source,payload){
+        if(!storeHandoffContract || !payload) return null;
+        var physicalDemand = null;
+        var projectId = source === 'start-own' ? 'start-own' : 'outdoor-build';
+        var projectClass = source === 'start-own' ? 'USER_DEFINED_BOARD' : 'BOUNDED_SOURCE_BACKED';
+        var sourceAuthority = source === 'start-own'
+          ? {kind:'USER-DEFINED',artifact:'stb-start-own-0.11.html'}
+          : {kind:'BOUNDED SOURCE-BACKED',artifact:'stb-outdoor-build.html',detail:payload.sourceAuthority||null};
+        if(source === 'start-own'){
+          try { physicalDemand = JSON.parse(win.localStorage.getItem('stb-proof-ladder-job1')||'null')?.semanticOutput || null; } catch (_) {}
+        } else {
+          physicalDemand = payload.normalizedPart || null;
+        }
+        if(!physicalDemand) return null;
+        var definitionId = payload.id || (source === 'start-own' ? 'SYO-IDENTIFIED' : 'OB-SAW-IDENTIFIED');
+        try {
+          return storeHandoffContract.createComparisonHandoff({
+            projectId:projectId,
+            projectClass:projectClass,
+            definitionId:definitionId,
+            versionId:definitionId,
+            physicalDemand:physicalDemand,
+            sourceAuthority:sourceAuthority,
+            unresolvedConditions:['STORE-PRICING-BRIDGE-GAP']
+          });
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function retainComparisonStoreHandoff(source,handoff){
+        if(!handoff) return;
+        try {
+          win.localStorage.setItem('stb-common-store-handoff-'+(source==='start-own'?'job1':'job2'),JSON.stringify(handoff));
+          var job1=JSON.parse(win.localStorage.getItem('stb-common-store-handoff-job1')||'null');
+          var job2=JSON.parse(win.localStorage.getItem('stb-common-store-handoff-job2')||'null');
+          if(job1&&job2&&storeHandoffContract){
+            win.localStorage.setItem('stb-proof-store-demand-equality',JSON.stringify({
+              sameStoreDemand:storeHandoffContract.sameStoreDemand(job1,job2),
+              job1ProjectId:job1.projectId,
+              job2ProjectId:job2.projectId,
+              provenanceDifferent:JSON.stringify(job1.sourceAuthority)!==JSON.stringify(job2.sourceAuthority)
+            }));
+          }
+        } catch (_) {}
+      }
+
       if (!win.__stbProofLadderMessageBound) {
         win.__stbProofLadderMessageBound = true;
         win.addEventListener('message', event => {
@@ -359,12 +408,16 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             originalShow.call(win, 'start-own-live');
           } else if (type === 'STB_START_OWN_CONFIRMED' && event.data?.payload) {
             captureStartOwnProof();
-            proofHandoff = {job:'JOB 1 · START YOUR OWN',source:'start-own',payload:event.data.payload};
+            const storeHandoff = createComparisonStoreHandoff('start-own',event.data.payload);
+            proofHandoff = {job:'JOB 1 · START YOUR OWN',source:'start-own',payload:event.data.payload,storeHandoff:storeHandoff};
+            retainComparisonStoreHandoff('start-own',storeHandoff);
             try { win.localStorage.setItem('stb-proof-handoff-job1', JSON.stringify(proofHandoff)); } catch (_) {}
             syncProofHandoff();
             originalShow.call(win, 'proof-store');
           } else if (type === 'STB_OUTDOOR_CONFIRMED' && event.data?.payload) {
-            proofHandoff = {job:'JOB 2 · OUTDOOR BUILD',source:'outdoor',payload:event.data.payload};
+            const storeHandoff = createComparisonStoreHandoff('outdoor',event.data.payload);
+            proofHandoff = {job:'JOB 2 · OUTDOOR BUILD',source:'outdoor',payload:event.data.payload,storeHandoff:storeHandoff};
+            retainComparisonStoreHandoff('outdoor',storeHandoff);
             try { win.localStorage.setItem('stb-proof-handoff-job2', JSON.stringify(proofHandoff)); } catch (_) {}
             syncProofHandoff();
             originalShow.call(win, 'proof-store');
@@ -1072,7 +1125,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     function syncProofHandoff(){
       if(!proofHandoff)return;
       const payload=proofHandoff.payload||{};
-      const version=payload.id||payload.versionId||payload.normalizedPart?.versionId||'IDENTIFIED VERSION';
+      const version=proofHandoff.storeHandoff?.versionId||payload.id||payload.versionId||payload.normalizedPart?.versionId||'IDENTIFIED VERSION';
       const job=proofHandoff.job||'PROOF JOB';
       [['proof-store-job',job],['proof-store-version',version],['proof-record-job',job],['proof-record-version',version]].forEach(([id,value])=>{
         const el=doc.getElementById(id); if(el)el.textContent=String(value);
@@ -1338,6 +1391,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     ['alcove-capture','alcove-config','store','request','yard','record','window-parts','playhouse-s001','playhouse-machine','playhouse-store','playhouse-review','playhouse-request','playhouse-yard','playhouse-terms','playhouse-result','playhouse-record'].forEach(addProofLibraryControl);
 
     const originalShow = win.show;
+    const QUARANTINED_OUTDOOR_TARGETS = new Set(['picnic-chooser','picnic-config','picnic-store','picnic-review','picnic-request','picnic-yard','picnic-terms','picnic-recap','picnic-record']);
 
     const canonicalJourney = window.STB_CANONICAL_JOURNEY || null;
     const WINDOW_SEAT_STAGE_TO_ACTOR = Object.freeze({
@@ -1629,8 +1683,17 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       selectJourneyProject(PROJECT_TILE_TO_JOURNEY[target] || null);
     }, true);
 
+    function openCurrentOutdoorBuildFromLegacyRoute() {
+      selectJourneyProject(null);
+      originalShow.call(win, 'outdoor-build-live');
+    }
+
     win.show = function(id) {
       const target = String(id);
+      if (QUARANTINED_OUTDOOR_TARGETS.has(target)) {
+        openCurrentOutdoorBuildFromLegacyRoute();
+        return;
+      }
       const stage = LEGACY_TARGET_TO_STAGE[target] || null;
       if (activeJourneyProject === 'window-seat') {
         if (stage) { showSeatGuided(stage); return; }
