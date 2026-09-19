@@ -8,6 +8,11 @@ const outdoor = read('stb-outdoor-build.html');
 const deck = read('stb-outdoor-build-deck-0.1.html');
 const authority = read('stb-outdoor-reference-authority-0.3.html');
 const research = read('STB-OUTDOOR-ANGLED-FRAME-RESEARCH-DOSSIER-0.1.html');
+const outdoorNormalizedComparisonSource = source => {
+  const a = source.indexOf('function outdoorNormalizedPart()');
+  const b = source.indexOf('function sameProofPart', a);
+  return source.slice(a, b);
+};
 
 assert.match(shell, /\['start-own','picnic-chooser','alcove-capture','window-intake','window-parts'\]\.forEach/);
 for (const label of [
@@ -29,7 +34,6 @@ assert.match(own11, /Angle alone is not enough/);
 for (const token of ['angleDegrees','angleReference','cutPlane','endIdentity','endRelation','lengthDatum']) {
   assert.ok(own11.includes(token), 'missing Job 1 angle semantic: ' + token);
 }
-assert.match(shell, /sourcePart: 'ANA-WHITE-SAW-HORSE-BENCH\/END-LEG'/);
 assert.match(shell, /semanticOutput\.angleDegrees === 10/);
 assert.match(shell, /semanticOutput\.cutPlane === 'bevel-thickness'/);
 assert.match(shell, /semanticOutput\.endRelation === 'parallel'/);
@@ -58,6 +62,8 @@ assert.match(outdoor, /O\.assembly==='left-bench'\?'LEFT-BENCH':'RIGHT-BENCH'/);
 assert.match(outdoor, /String\(i\+1\)\.padStart\(2,'0'\)/);
 assert.match(outdoor, /function outdoorNormalizedPart\(\)/);
 assert.match(outdoor, /function sameProofPart\(a,b\)/);
+assert.match(outdoor, /sourceAuthority:\{family:OUTDOOR_FAMILY\.id/);
+assert.equal(/sourcePart/.test(outdoorNormalizedComparisonSource(outdoor)), false);
 assert.match(outdoor, /NORMALIZED PART REQUIREMENT/);
 assert.match(outdoor, /job1&&job1\.targetMatch&&sameProofPart\(job1\.semanticOutput,current\)/);
 assert.match(outdoor, /STORE ECONOMICS/);
