@@ -147,6 +147,17 @@ details[open] summary:after{content:"  –"}
 .prooflinks a:hover{text-decoration:underline;text-underline-offset:2px}
 .choicegate{margin:0 0 14px;padding:11px 13px;border:1px dashed var(--line2);border-radius:10px;background:var(--paper2);font-size:12.5px;color:var(--ink2)}
 .choicegate b{color:var(--ink)}
+.receipt{margin:18px 0;padding:18px 19px;border:1px solid var(--line2);border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow)}
+.receipt h2{margin:3px 0 5px;font-size:23px}
+.receipt .lead{margin:0 0 14px;color:var(--ink2)}
+.receiptgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.receiptbox{padding:12px 13px;border:1px solid var(--line);border-radius:10px;background:var(--paper2);font-size:12.5px}
+.receiptbox b{display:block;margin-bottom:4px}
+.receiptbox ul{margin:5px 0 0;padding-left:18px;color:var(--ink2)}
+.receiptbox .metric{font-size:22px;color:var(--accent2);font-weight:700}
+.match{margin-top:12px;padding:10px 12px;border:1px dashed var(--line2);border-radius:9px;color:var(--ink2);font-size:12.5px}
+.match b{color:var(--ink)}
+@media(max-width:720px){.receiptgrid{grid-template-columns:1fr}}
 .foot{margin-top:48px;font-size:12px;color:var(--ink3);max-width:78ch}
 .cutlist{margin:18px 0 0}
 @media(max-width:980px){.bench{grid-template-columns:1fr}.results{grid-template-columns:1fr}}
@@ -188,6 +199,7 @@ var BASE={length:REF.leg, h1:REF.holeEx[0], h2:REF.holeEx[1]};
 var S={screen:'home', family:null, style:null, part:null, mode:null,
   qty:1, assembly:8, length:BASE.length, h1:BASE.h1, h2:BASE.h2, spot:false, sent:null,
   choices:{quantity:false,length:false,spots:false}};
+var METRICS={uiActions:0};
 
 function definition(){
   return {project:'OUTDOOR-BUILD/P1', family:'bench', part:'bench-leg', style:'detached',
@@ -214,6 +226,63 @@ function validate(){
 function boardPlan(){
   var kerf=REF.kerf, per=Math.max(1,Math.floor((REF.board+kerf)/(S.length+kerf))), n=Math.ceil(S.qty/per);
   return {per:per, n:n, cost:n*REF.syoPrice};
+}
+function explicitDecisionList(){
+  var out=[];
+  if(S.choices.quantity)out.push('quantity');
+  if(S.choices.length)out.push('finished_length');
+  if(S.choices.spots)out.push('hole_spot_requirement');
+  return out;
+}
+function normalizedCore(def){
+  if(!def)return null;
+  return {
+    stockClass:def.stockClass||(def.stock&&def.stock.nominal)||null,
+    finishedLength:Number(def.finishedLength),
+    quantity:Number(def.quantity!=null?def.quantity:def.qty),
+    endCondition:def.endCondition||null,
+    holeRequirement:def.holeRequirement||((def.holes&&def.holes.length)?'MEASURED_SPOTS':'NONE'),
+    datum:def.datum||((def.holes&&def.holes.length)?'TOP':null)
+  };
+}
+function sameCore(a,b){
+  if(!a||!b)return false;
+  return a.stockClass===b.stockClass
+    && Math.abs(a.finishedLength-b.finishedLength)<0.00001
+    && a.quantity===b.quantity
+    && a.endCondition===b.endCondition
+    && a.holeRequirement===b.holeRequirement
+    && a.datum===b.datum;
+}
+function readJob1Proof(){
+  try{return JSON.parse(localStorage.getItem('stb-proof-ladder-job1')||'null')}catch(_){return null}
+}
+function comparisonReceipt(){
+  if(!S.sent)return '';
+  var job1=readJob1Proof();
+  var job2Core=normalizedCore(S.sent.definition);
+  var job1Core=job1&&job1.semanticOutput?normalizedCore(job1.semanticOutput):null;
+  var equal=!!(job1&&job1.targetMatch&&sameCore(job1Core,job2Core));
+  var job1Decision=job1&&job1.measured?String(job1.explicitProjectDecisionCount):'not measured in this session';
+  var job1Actions=job1&&job1.measured?String(job1.uiActions):'not measured in this session';
+  var job2Decision=String(S.sent.metrics.explicitProjectDecisionCount);
+  var job2Actions=String(S.sent.metrics.uiActions);
+  var unresolved=S.sent.definition.holeRequirement==='MEASURED_SPOTS'
+    ?'<li>supported-cell answer for hole spotting</li><li>physical release, machine readiness and local Cycle Start</li>'
+    :'<li>physical release, machine readiness and local Cycle Start</li>';
+  var matchCopy=equal
+    ?'<b>NORMALIZED CORE REQUIREMENT: MATCH.</b> Both measured paths currently resolve to 2×4 · 16½ in · quantity 8 · square ends · no hole spots.'
+    :'<b>NORMALIZED CORE REQUIREMENT: NOT CLAIMED AS A MATCH.</b> '+(job1Core?'The recorded Job 1 semantic output differs from this Job 2 output.':'Complete Job 1 through the instrumented generic floor first; no generic-floor semantic receipt is available in this session.');
+  return '<section class="receipt" id="comparison-receipt"><span class="eyebrow">COMPARISON RECEIPT</span>'
+    +'<h2>SAME EIGHT LEGS. LESS RE-DEFINITION.</h2><p class="lead">The count below comes from the interactions actually recorded in this browser session. It is not a marketing click claim.</p>'
+    +'<div class="receiptgrid">'
+    +'<div class="receiptbox"><b>START YOUR OWN</b><span class="metric">'+esc(job1Decision)+'</span><span> explicit project decisions</span><br><span>'+esc(job1Actions)+' UI actions recorded</span></div>'
+    +'<div class="receiptbox"><b>OUTDOOR BUILD</b><span class="metric">'+esc(job2Decision)+'</span><span> explicit project decisions</span><br><span>'+esc(job2Actions)+' UI actions recorded</span></div>'
+    +'<div class="receiptbox"><b>CARRIED BY THE BOUNDED PROJECT</b><ul><li>detached bench replacement-leg family</li><li>2×4 stock class / actual 1½ × 3½ in section</li><li>square-end condition</li><li>16½ in cited reference geometry as the starting choice</li></ul></div>'
+    +'<div class="receiptbox"><b>STILL REQUIRED FROM YOU</b><ul><li>project quantity</li><li>finished-length choice for this replacement</li><li>no spots or measured spot locations</li></ul></div>'
+    +'<div class="receiptbox"><b>STILL UNKNOWN / DOWNSTREAM</b><ul>'+unresolved+'</ul></div>'
+    +'<div class="receiptbox"><b>AUTHORITY CHECK</b><ul><li>quantity 8 remains project/user-specific</li><li>3 in / 7 in are not published standards</li><li>spotting is not through-drilling authority</li></ul></div>'
+    +'</div><div class="match">'+matchCopy+'</div></section>';
 }
 
 function woodDefs(){
@@ -439,7 +508,6 @@ function bindHome(){
     S.choices={quantity:false,length:false,spots:false}; render();
   }});
   if($('takebench'))$('takebench').onclick=function(){S.screen='bench'; render(); window.scrollTo(0,0)};
-  if($('gohome'))$('gohome').onclick=function(){location.href='working-app.html'};
 }
 
 function renderAframe(){
@@ -459,7 +527,7 @@ function renderAframe(){
   h+=researchFold();
   $('app').innerHTML=h;
   $('backhome').onclick=function(){S.screen='home';S.style=null;render();window.scrollTo(0,0)};
-  $('toleg').onclick=function(){S.family='bench';S.style='detached';S.part='leg';S.mode='standard';S.spot=false;S.screen='home';render();window.scrollTo(0,0)};
+  $('toleg').onclick=function(){S.family='bench';S.style='detached';S.part='leg';S.mode='standard';S.spot=false;S.sent=null;S.choices={quantity:false,length:false,spots:false};S.screen='home';render();window.scrollTo(0,0)};
 }
 
 function renderBench(){
@@ -515,6 +583,7 @@ function renderBench(){
       +'<details class="fold"><summary>What gets carried forward?</summary><div class="foldbody"><span class="version">'+esc(S.sent.id)+'</span><br><br>'
       +'The Store receives this exact definition. It does not redesign it. Finished length and hole locations remain project truth. Local machine datum, tool, compensation, readiness and Cycle Start stay with the commissioned cell.<br><br>'
       +'Confirmation is not an order, payment, allocation, production release, machine readiness or Cycle Start.<br><br><b>NO BLOOD ON WOOD.</b></div></details></section>';
+    h+=comparisonReceipt();
   }
   h+=researchFold();
   h+='<p class="foot">Parallel prototype. Start Your Own 0.10 is not modified. Path A remains <a class="link" href="stb-start-own-0.10.html">the generic 2×4 floor</a>.</p>';
@@ -536,10 +605,23 @@ function bindBench(){
   $('spotOff').onclick=function(){S.spot=false;S.choices.spots=true;S.sent=null;renderBench()};
   if($('send'))$('send').onclick=function(){
     if(validate().length||!S.choices.quantity||!S.choices.length||!S.choices.spots)return;
-    S.sent={id:versionId(), definition:JSON.parse(JSON.stringify(definition()))}; renderBench()
+    var decisions=explicitDecisionList();
+    S.sent={
+      id:versionId(),
+      definition:JSON.parse(JSON.stringify(definition())),
+      metrics:{explicitProjectDecisions:decisions,explicitProjectDecisionCount:decisions.length,uiActions:METRICS.uiActions}
+    };
+    try{localStorage.setItem('stb-proof-ladder-job2',JSON.stringify({measured:true,metrics:S.sent.metrics,semanticOutput:normalizedCore(S.sent.definition)}))}catch(_){}
+    renderBench()
   };
 }
 function render(){ if(S.screen==='aframe')renderAframe(); else if(S.screen==='bench')renderBench(); else renderHome(); }
+document.addEventListener('click',function(event){
+  if(event.target&&event.target.closest&&event.target.closest('button,a'))METRICS.uiActions+=1;
+},true);
+document.addEventListener('change',function(event){
+  if(event.target&&event.target.matches&&event.target.matches('input,select,textarea'))METRICS.uiActions+=1;
+},true);
 render();
 </script>
 </body>
