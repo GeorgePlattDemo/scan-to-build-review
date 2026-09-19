@@ -76,7 +76,7 @@ assert.ok(threeQuarterPly.some(o => o.storeSku === 'STB-ZERO-PLY-075-48X48-001' 
 assert.ok(threeQuarterPly.some(o => o.storeSku === 'STB-ZERO-PLY-075-48X96-001' && o.sellingPrice === 57.82));
 
 assert.match(shell, /stb-store-handoff-contract\.js\?v=2fa55141/);
-assert.match(shell, /stb-start-own-0\.11\.html\?v=628d86ba/);
+assert.match(shell, /stb-start-own-0\.11\.html\?v=b6c5e4a6/);
 assert.match(shell, /payload\.storeReference\?\.unresolvedConditions/);
 assert.match(shell, /Array\.isArray\(payload\.storeReference\?\.unresolvedConditions\)/);
 
