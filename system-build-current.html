@@ -218,6 +218,288 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       }
     }
 
+
+    // ALCOVE STORE CONTENT CONSERVATION RULE
+    // One customer-facing Store interaction means coordinated navigation, not reduced Store content.
+    // Existing Request, Yard, Terms, Recap, and Record content is moved intact to its new customer-facing home.
+    function extractAlcoveLegacyMain(pageId, label) {
+      const page = doc.getElementById(pageId);
+      const main = page?.querySelector(':scope > .main');
+      if (!main) return null;
+      const block = doc.createElement('section');
+      block.className = 'alcove-conserved-block';
+      block.dataset.alcoveConservedFrom = pageId;
+      block.setAttribute('aria-label', label);
+      [...main.children].forEach(node => {
+        if (node.classList?.contains('backbar') || node.classList?.contains('bottom')) return;
+        block.append(node);
+      });
+      return block;
+    }
+
+    function textOf(id) {
+      return doc.getElementById(id)?.textContent?.trim() || '—';
+    }
+
+    function selectedDecision(label) {
+      const rows = [...doc.querySelectorAll('#decisionRows .rowline')];
+      const row = rows.find(r => r.querySelector('.rt')?.childNodes?.[0]?.textContent?.trim() === label);
+      return row?.querySelector('.pill.on')?.textContent?.trim() || 'not selected';
+    }
+
+    function syncAlcoveCommercialSurface() {
+      const pairs = {
+        'alcove-order-version':'Version 1 · confirmed',
+        'alcove-order-geometry':textOf('p-h')+' H × '+textOf('p-w')+' W × '+textOf('p-d')+' D',
+        'alcove-order-span':textOf('p-span')+' nominal interior span',
+        'alcove-order-shelves':textOf('p-shelves')+' shelves · '+textOf('p-heights'),
+        'alcove-order-material':textOf('p-material')+' · '+textOf('o-sku'),
+        'alcove-order-demand':doc.getElementById('p-mat')?.innerText?.trim() || '—',
+        'alcove-order-availability':textOf('o-oh')+' · REFERENCE / STATED, not live inventory',
+        'alcove-order-price':textOf('p-price')+' · reference / budgetary',
+        'alcove-order-basis':textOf('p-basis'),
+        'alcove-order-cycle':textOf('o-cyc')+' modeled · measured false',
+        'alcove-order-recovery':textOf('o-rec'),
+        'alcove-order-packaging':selectedDecision('Packaging'),
+        'alcove-order-handoff':selectedDecision('Handoff'),
+        'alcove-order-collector':selectedDecision('Who collects'),
+        'alcove-yard-packaging':selectedDecision('Packaging'),
+        'alcove-yard-handoff':selectedDecision('Handoff'),
+        'alcove-yard-collector':selectedDecision('Who collects')
+      };
+      Object.entries(pairs).forEach(([id,value]) => {
+        const el = doc.getElementById(id);
+        if (el) el.textContent = value;
+      });
+    }
+
+    function reconcileAlcoveCommercialJourney() {
+      const storePage = doc.getElementById('store');
+      const storeMain = storePage?.querySelector(':scope > .main');
+      const storeRail = storePage?.querySelector(':scope > .rail');
+      const yardPage = doc.getElementById('yard');
+      const yardMain = yardPage?.querySelector(':scope > .main');
+      const yardRail = yardPage?.querySelector(':scope > .rail');
+      const recordPage = doc.getElementById('record');
+      const recordMain = recordPage?.querySelector(':scope > .main');
+      const recordRail = recordPage?.querySelector(':scope > .rail');
+      if (!storeMain || !yardMain || !recordMain) return false;
+      if (storeMain.dataset.alcoveCommercialReconciled === 'true') return true;
+
+      const requestBlock = extractAlcoveLegacyMain('request','Full existing Store service and handoff choices');
+      const yardAnswerBlock = extractAlcoveLegacyMain('yard','Full existing Yard response, substitution choices, and timing');
+      const termsBlock = extractAlcoveLegacyMain('terms','Full existing commercial sequence and authority distinctions');
+      const recapBlock = extractAlcoveLegacyMain('recap','Full existing chronology / audit');
+      const recordBlock = extractAlcoveLegacyMain('record','Full existing owner record');
+
+      if (!requestBlock || !yardAnswerBlock || !termsBlock || !recapBlock || !recordBlock) return false;
+
+      const firstStep = storeMain.querySelector(':scope > .s');
+      const storeOrder = doc.createElement('section');
+      storeOrder.id = 'alcove-store-order-surface';
+      storeOrder.dataset.storeContentConserved = 'true';
+      storeOrder.innerHTML = `
+        <div class="hero" style="margin-top:14px">
+          <p class="tag">ALCOVE · STORE ZERO / ORDER</p>
+          <h2 style="margin-top:4px">One Store answer for one confirmed version</h2>
+          <p>The customer does not operate Store departments. Store receives the identified version, resolves every Store-owned question it can resolve, keeps unsupported or unresolved work visible, returns the price and timing basis, and presents one commercial decision.</p>
+          <p class="boundary"><b>Full Store capability and full Store evidence stay.</b> Only the customer navigation is simpler.</p>
+        </div>
+        <h2>What Store received</h2>
+        <div class="hdr">
+          <div><b>VERSION</b><span id="alcove-order-version">Version 1 · confirmed</span></div>
+          <div><b>GEOMETRY</b><span id="alcove-order-geometry">—</span></div>
+          <div><b>MATERIAL</b><span id="alcove-order-material">—</span></div>
+          <div><b>STATUS</b><span>REFERENCE STORE ANSWER</span></div>
+        </div>
+        <div class="cols">
+          <div>
+            <div class="kv"><span>Interior span</span><span id="alcove-order-span">—</span></div>
+            <div class="kv"><span>Shelves</span><span id="alcove-order-shelves">—</span></div>
+            <div class="kv"><span>Material demand</span><span id="alcove-order-demand">—</span></div>
+            <div class="kv"><span>Reference availability</span><span id="alcove-order-availability">—</span></div>
+          </div>
+          <div>
+            <div class="kv"><span>Reference total</span><span id="alcove-order-price">—</span></div>
+            <div class="kv"><span>Price basis</span><span id="alcove-order-basis">—</span></div>
+            <div class="kv"><span>Modeled cell time</span><span id="alcove-order-cycle">—</span></div>
+            <div class="kv"><span>Cell recovery</span><span id="alcove-order-recovery">—</span></div>
+          </div>
+        </div>
+        <div class="band warn"><b>Current capability truth.</b> Material mapping, stated reference availability, declared service choices, and reference economics are shown. Fabrication remains unresolved wherever the current Alcove surface says it is unresolved. Disabled or unavailable work remains visible; it is not silently dropped. No silent substitution is allowed.</div>
+      `;
+      firstStep?.before(storeOrder);
+
+      const requestWrap = doc.createElement('section');
+      requestWrap.id = 'alcove-store-service-choices';
+      requestWrap.innerHTML = '<h2>Store services, handling, packaging and handoff choices</h2><p class="sub">All ten existing Store / Yard questions remain here in full. These choices may affect service, handling, timing or price; they do not rewrite geometry.</p>';
+      requestWrap.append(requestBlock);
+      firstStep?.before(requestWrap);
+
+      const yardWrap = doc.createElement('section');
+      yardWrap.id = 'alcove-store-yard-answer';
+      yardWrap.innerHTML = '<h2>Store / Yard answer, material exceptions and substitution</h2><p class="sub">The full existing Yard response remains attached to the same Store interaction. Unsupported, unavailable or unresolved work stays visible with its reason.</p>';
+      yardWrap.append(yardAnswerBlock);
+      firstStep?.before(yardWrap);
+
+      const termsWrap = doc.createElement('section');
+      termsWrap.id = 'alcove-store-commercial-sequence';
+      termsWrap.innerHTML = '<h2>Commercial sequence and timing basis</h2><p class="sub">The customer sees the timing consequence before any acceptance. Reference timing remains reference timing; no live ETA is invented.</p>';
+      termsWrap.append(termsBlock);
+      firstStep?.before(termsWrap);
+
+      const ledgerTitle = doc.createElement('h2');
+      ledgerTitle.textContent = 'Full twelve-event Store / transaction ledger';
+      firstStep?.before(ledgerTitle);
+      const ledgerNote = doc.createElement('p');
+      ledgerNote.className = 'sub';
+      ledgerNote.textContent = 'These event meanings remain separate even though the customer is not asked to click through them as separate Store errands.';
+      firstStep?.before(ledgerNote);
+
+      const oldBottom = storeMain.querySelector(':scope > .bottom');
+      oldBottom?.remove();
+      const decision = doc.createElement('section');
+      decision.id = 'alcove-commercial-decision';
+      decision.innerHTML = `
+        <h2>The customer decision</h2>
+        <p>Everything Store currently knows is above: what it received, what it can and cannot currently establish, material and availability, service choices, reference price basis, timing basis, unresolved conditions, and the full event model.</p>
+        <div class="cols">
+          <div>
+            <div class="kv"><span>Packaging choice</span><span id="alcove-order-packaging">—</span></div>
+            <div class="kv"><span>Fulfillment choice</span><span id="alcove-order-handoff">—</span></div>
+            <div class="kv"><span>Pickup / handoff recipient</span><span id="alcove-order-collector">—</span></div>
+          </div>
+          <div>
+            <div class="kv"><span>Offer / terms</span><span>REFERENCE ONLY</span></div>
+            <div class="kv"><span>Acceptance</span><span id="alcove-acceptance-state">NOT ESTABLISHED</span></div>
+            <div class="kv"><span>Settlement / payment</span><span id="alcove-settlement-state">NOT ESTABLISHED · NOT LIVE COMMERCE</span></div>
+          </div>
+        </div>
+        <div class="band"><b>Acceptance ≠ settlement ≠ allocation ≠ production release.</b> Selecting reference acceptance below records only a demonstration decision. It does not record payment, reserve material, release production, establish machine readiness, create Cycle Start, or claim a cut.</div>
+        <div class="btns">
+          <button type="button" data-alcove-commercial-action="change">CHANGE DEFINITION</button>
+          <button type="button" data-alcove-commercial-action="decline">DECLINE REFERENCE OFFER</button>
+          <button class="primary" type="button" data-alcove-commercial-action="accept">ACCEPT REFERENCE OFFER</button>
+          <button type="button" data-alcove-commercial-action="yard" disabled>CONTINUE TO STORE / YARD →</button>
+        </div>
+        <p id="alcove-commercial-decision-note" class="fine">No commercial decision recorded.</p>
+      `;
+      storeMain.append(decision);
+
+      yardMain.innerHTML = `
+        <p class="tag">ALCOVE · STORE / YARD FULFILLMENT</p>
+        <h1>Order status · Store / Yard acts</h1>
+        <p class="sub">The customer's ordering decisions are finished on the Store surface. The remaining events belong to Store, Yard, the local cell, quality, and handoff. This reference build shows their status; it does not ask the customer to manually advance them.</p>
+        <div class="hdr">
+          <div><b>PROJECT</b><span>alcove insert · Version 1</span></div>
+          <div><b>COMMERCIAL</b><span>REFERENCE ONLY</span></div>
+          <div><b>FULFILLMENT</b><span>NOT RELEASED</span></div>
+          <div><b>PHYSICAL AUTHORITY</b><span>NONE</span></div>
+        </div>
+        <div class="timeline">
+          <div class="dot open">○</div><div>Settlement established</div><div class="who">commercial</div><div class="when">NOT ESTABLISHED</div>
+          <div class="dot open">○</div><div>Material allocated</div><div class="who">store</div><div class="when">NOT ALLOCATED</div>
+          <div class="dot open">○</div><div>Production released</div><div class="who">release</div><div class="when">NOT RELEASED</div>
+          <div class="dot open">○</div><div>Store / Yard queue</div><div class="who">yard</div><div class="when">NOT QUEUED</div>
+          <div class="dot open">○</div><div>Local cell readiness</div><div class="who">cell</div><div class="when">NOT ESTABLISHED</div>
+          <div class="dot open">○</div><div>Cycle Start</div><div class="who">local operator</div><div class="when">NOT AUTHORIZED HERE</div>
+          <div class="dot open">○</div><div>Cut · mill · drill · label</div><div class="who">local cell</div><div class="when">NOT RECORDED</div>
+          <div class="dot open">○</div><div>Secondary work / inspection</div><div class="who">quality</div><div class="when">NOT RECORDED</div>
+          <div class="dot open">○</div><div>Packaging / staging</div><div class="who">yard</div><div class="when">NOT RECORDED</div>
+          <div class="dot open">○</div><div>READY notice</div><div class="who">fulfillment</div><div class="when">NOT ISSUED</div>
+          <div class="dot open">○</div><div>Pickup / delivery preparation</div><div class="who">yard</div><div class="when">NOT RECORDED</div>
+        </div>
+        <h2>Selected fulfillment preferences</h2>
+        <div class="kv"><span>Packaging</span><span id="alcove-yard-packaging">—</span></div>
+        <div class="kv"><span>Pickup / delivery</span><span id="alcove-yard-handoff">—</span></div>
+        <div class="kv"><span>Recipient</span><span id="alcove-yard-collector">—</span></div>
+        <div class="band warn"><b>Authority boundary.</b> Payment does not start a machine. Allocation is not production release. Production release is not machine readiness. Machine readiness is not Cycle Start. Cycle Start remains local to the person / control at the machine.</div>
+        <div class="band"><b>Timing basis.</b> The existing reference path states: staging target ≤2 business hours after the last required cycle, then a 4-business-hour pickup window after READY. Those are reference statements, not a live ETA, and neither clock has started here.</div>
+        <div class="bottom"><button type="button" data-alcove-commercial-action="store">← BACK TO STORE / ORDER</button><button class="primary" type="button" data-alcove-commercial-action="record">COMPLETION →</button></div>
+      `;
+      if (yardRail) yardRail.innerHTML = '<p class="hd">STORE / YARD</p><p class="goal">Customer watches. Store / Yard acts.</p><div class="row"><b>No extra customer errands</b><span>Internal fulfillment events stay separate in state, not as separate customer buttons.</span></div><div class="row"><b>Local authority stays local</b><span>Readiness and Cycle Start cannot be supplied by an upstream screen.</span></div><div class="row"><b>READY is an event</b><span>Staging does not become custody until handoff is recorded.</span></div>';
+
+      recordMain.innerHTML = `
+        <p class="tag">ALCOVE · COMPLETION / HANDOFF / OWNER RECORD</p>
+        <h1>Completion · handoff · record</h1>
+        <p class="sub">One final surface shows what Store / Yard would complete, what the user receives and does, and the exact owner-held record. Missing events stay missing.</p>
+        <div class="cards">
+          <div class="card"><b>What Store / Yard does</b><span>Complete required work; inspect; label; group; package / crate if selected; stage; issue READY; release at pickup / delivery; record custody; reconcile material, remnants and exceptions; close its fulfillment record when those events actually exist.</span></div>
+          <div class="card"><b>What the user does</b><span>Receive READY; pick up or receive delivery; verify handoff; take custody; retain the project / part record; later assemble, install or finish work that always remained owner work.</span></div>
+          <div class="card"><b>What Store gets</b><span>A completed fulfillment record, material / operation reconciliation, custody / closeout evidence and an auditable history — only when those events are actually recorded.</span></div>
+          <div class="card"><b>What the user gets</b><span>The parts; labels / assembly information where included; selected remnants; the exact identified version; Store / production / handoff history; the owner-held record; and a basis for later replacement or reorder.</span></div>
+        </div>
+      `;
+      recordMain.append(recapBlock);
+      recordMain.append(recordBlock);
+      const finalBoundary = doc.createElement('div');
+      finalBoundary.className = 'band warn';
+      finalBoundary.innerHTML = '<b>Current demonstration truth.</b> Commercial completion, physical outcome, READY, custody and closeout remain absent unless separately evidenced. A later event never backfills a missing earlier event.';
+      recordMain.append(finalBoundary);
+      const recordBottom = doc.createElement('div');
+      recordBottom.className = 'bottom';
+      recordBottom.innerHTML = '<button type="button" data-alcove-commercial-action="yard">← BACK TO STORE / YARD</button><button class="next" data-go="landing">Start →</button>';
+      recordMain.append(recordBottom);
+      if (recordRail) recordRail.innerHTML = '<p class="hd">COMPLETION / RECORD</p><p class="goal">Two sides. One checkable chain.</p><div class="row"><b>Missing stays missing</b><span>No event is filled in because a later event exists.</span></div><div class="row"><b>Custody closes handoff</b><span>Staged and READY are not custody.</span></div><div class="row"><b>Owner keeps the record</b><span>The exact version and history remain reusable without becoming automatic fabrication authority.</span></div>';
+
+      storeMain.dataset.alcoveCommercialReconciled = 'true';
+      syncAlcoveCommercialSurface();
+      return true;
+    }
+
+    reconcileAlcoveCommercialJourney();
+
+    win.addEventListener('click', function(event) {
+      if (activeJourneyProject !== 'alcove') return;
+      const action = event.target.closest?.('[data-alcove-commercial-action]')?.getAttribute('data-alcove-commercial-action');
+      if (!action) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const note = doc.getElementById('alcove-commercial-decision-note');
+      const acceptance = doc.getElementById('alcove-acceptance-state');
+      const continueButton = doc.querySelector('[data-alcove-commercial-action="yard"]');
+      if (action === 'change') {
+        originalShow.call(win,'alcove-config');
+        return;
+      }
+      if (action === 'decline') {
+        doc.documentElement.dataset.alcoveReferenceDecision = 'declined';
+        if (acceptance) acceptance.textContent = 'DECLINED · REFERENCE';
+        if (note) note.textContent = 'Reference offer declined. Definition remains intact; no settlement or downstream authority was created.';
+        if (continueButton) continueButton.disabled = true;
+        return;
+      }
+      if (action === 'accept') {
+        doc.documentElement.dataset.alcoveReferenceDecision = 'accepted';
+        if (acceptance) acceptance.textContent = 'ACCEPTED · REFERENCE DEMONSTRATION';
+        if (note) note.textContent = 'Reference acceptance selected. Settlement / payment remains NOT ESTABLISHED because this is not live commerce.';
+        if (continueButton) continueButton.disabled = false;
+        return;
+      }
+      if (action === 'store') {
+        originalShow.call(win,'store');
+        setTimeout(syncAlcoveCommercialSurface,0);
+        return;
+      }
+      if (action === 'yard') {
+        if (doc.documentElement.dataset.alcoveReferenceDecision !== 'accepted') return;
+        originalShow.call(win,'yard');
+        setTimeout(syncAlcoveCommercialSurface,0);
+        return;
+      }
+      if (action === 'record') {
+        originalShow.call(win,'record');
+        return;
+      }
+    }, true);
+
+    win.addEventListener('click', function(event) {
+      if (activeJourneyProject !== 'alcove') return;
+      if (event.target.closest?.('#decisionRows .pill, #alcove-store-yard-answer .pick')) {
+        setTimeout(syncAlcoveCommercialSurface,0);
+      }
+    });
+
     const intent = doc.getElementById('playhouse-s001');
     const intentMain = intent?.querySelector('.main');
     const intentRail = intent?.querySelector('.rail');
