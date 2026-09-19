@@ -12,7 +12,7 @@ assert.match(startOwn, /function currentStoreAuthority\(\)/);
 assert.match(startOwn, /function storeCapabilityModel\(\)/);
 assert.match(startOwn, /CURRENT_CANONICAL_STORE_ZERO/);
 assert.match(startOwn, /START-OWN-CLASS-SCOPED-RECOVERY-NOT-PUBLISHED/);
-assert.match(startOwn, /Legacy general \$35 setup \+ \$100\/hour recovery is not selected for Start Your Own/);
+assert.match(startOwn, /legacy general \$35 setup \+ \$100\/hour recovery is not selected for Start Your Own/i);
 assert.match(startOwn, /CURRENT COMBINED BASIS<\/span><b>NOT COMPLETE<\/b>/);
 assert.match(startOwn, /Processing \/ fulfillment recovery/);
 assert.match(startOwn, /storeReference:\{/);
