@@ -138,6 +138,15 @@ details summary:after{content:"  +";color:var(--accent)}
 details[open] summary:after{content:"  –"}
 .foldbody{padding-top:9px;line-height:1.65;max-width:860px}
 .version{font:11px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--paper2);border:1px solid var(--line);border-radius:7px;padding:4px 6px}
+.proofbox{margin:18px 0;padding:16px 18px;border:1px solid var(--line2);border-radius:var(--r);background:var(--tint)}
+.proofbox .k{font-size:10px;font-weight:750;letter-spacing:.1em;text-transform:uppercase;color:var(--accent2)}
+.proofbox h2{margin:5px 0 6px;font-size:21px}
+.proofbox p{margin:0;color:var(--ink2);font-size:13.5px}
+.prooflinks{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.prooflinks a{display:inline-block;padding:8px 11px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--accent2);font-size:12px;font-weight:650;text-decoration:none}
+.prooflinks a:hover{text-decoration:underline;text-underline-offset:2px}
+.choicegate{margin:0 0 14px;padding:11px 13px;border:1px dashed var(--line2);border-radius:10px;background:var(--paper2);font-size:12.5px;color:var(--ink2)}
+.choicegate b{color:var(--ink)}
 .foot{margin-top:48px;font-size:12px;color:var(--ink3);max-width:78ch}
 .cutlist{margin:18px 0 0}
 @media(max-width:980px){.bench{grid-template-columns:1fr}.results{grid-template-columns:1fr}}
@@ -177,13 +186,17 @@ var REF={
 };
 var BASE={length:REF.leg, h1:REF.holeEx[0], h2:REF.holeEx[1]};
 var S={screen:'home', family:null, style:null, part:null, mode:null,
-  qty:1, assembly:8, length:BASE.length, h1:BASE.h1, h2:BASE.h2, spot:false, sent:null};
+  qty:1, assembly:8, length:BASE.length, h1:BASE.h1, h2:BASE.h2, spot:false, sent:null,
+  choices:{quantity:false,length:false,spots:false}};
 
 function definition(){
   return {project:'OUTDOOR-BUILD/P1', family:'bench', part:'bench-leg', style:'detached',
     mode:S.mode, qty:S.qty, assembly:S.assembly,
     finishedLength:+S.length.toFixed(5),
     stock:{nominal:'2x4', actualWidth:REF.wid, actualThickness:REF.thick},
+    endCondition:'square',
+    holeRequirement:S.spot?'MEASURED_SPOTS':'NONE',
+    datum:S.spot?'TOP':null,
     holes:S.spot?[{datum:'TOP',down:+S.h1.toFixed(5),cross:'CENTERLINE'},{datum:'TOP',down:+S.h2.toFixed(5),cross:'CENTERLINE'}]:[],
     operation:S.spot?'SPOT_HOLE_LOCATIONS':'CUT_ONLY', raiseAt:'BOTTOM'};
 }
@@ -339,6 +352,7 @@ function boardSvg(){
 
 function researchFold(){
   return '<details class="fold"><summary>Why these reference shapes?</summary><div class="foldbody">'
+    +'<p style="margin:0 0 10px"><a class="link" href="stb-outdoor-reference-authority-0.3.html" target="_blank" rel="noopener">WHY THESE NUMBERS? →</a> &nbsp; <a class="link" href="STB-OUTDOOR-ANGLED-FRAME-RESEARCH-DOSSIER-0.1.html" target="_blank" rel="noopener">VIEW FULL RESEARCH →</a></p>'
     +'<b>There is no universal picnic-table standard.</b> Numbers on this floor are named references.<br><br>'
     +'<b>Detached 2×4 benches</b> — MyOutdoorPlans 6-ft all-2×4: legs <b>16½ in</b> square, supports 11½ in, seat three 2×4s at 72 in. That plan uses <b>4 legs for two benches</b> (2 each) and 5 in carriage bolts. It does <b>not</b> publish hole distances from TOP.<br><br>'
     +'Seat height here is derived: 16½ + 1½ (actual 2×4) = <b>18 in</b>, inside the 17–18 in comfort band. 15 in is too low (Flowyline).<br><br>'
@@ -349,16 +363,18 @@ function researchFold(){
 }
 
 function pathA(){
-  return '<div class="pathA"><div><b>Path A — the long way</b><span>Pick a 2×4 in Start Your Own. Type 16½ in. Optional: two spots from TOP (example 3 in and 7 in — not a published standard). Send that version to the Store. Outdoor Build does not change that floor.</span></div>'
-    +'<a class="btn ghost sm" href="stb-start-own-0.10.html">Open Start Your Own →</a></div>';
+  return '<div class="pathA"><div><b>Path A — the generic floor</b><span>Use Start Your Own as-is. Define the 2×4 part, 16½ in finished length and quantity 8 yourself. Optional hole spots remain measured project evidence; the cited plan does not publish reusable TOP offsets.</span></div>'
+    +'<button class="btn ghost sm" type="button" id="openjob1">Open Start Your Own →</button><a class="link" style="font-size:11px" href="stb-start-own-0.10.html">locked artifact</a></div>';
 }
 
 function renderHome(){
   var h=woodDefs();
-  h+='<div class="topline">'+(window.self===window.top?'<button class="crumb" type="button" id="gohome">← Home</button>':'')+'<span class="eyebrow" style="margin:0">Scan-to-Build · Outdoor Build</span></div>';
+  h+='<div class="topline"><button class="crumb" type="button" id="gohome">← Project library</button><span class="eyebrow" style="margin:0">Scan-to-Build · Outdoor Build</span></div>';
   h+='<h1>Find the part. <em>Put it on the bench.</em></h1>';
-  h+='<p class="lede"><strong>Three clicks and the broken leg is on the bench.</strong> Or skip the family and do it the long way — same 2×4, all the numbers typed by hand.</p>';
+  h+='<p class="lede"><strong>Same replacement job, two definitions.</strong> Start Your Own makes you define the part from the generic floor. Outdoor Build can carry only the facts the bounded project legitimately knows.</p>';
+  h+='<div class="proofbox"><span class="k">TEST 02 · FROM A BOUNDED PROJECT</span><h2>SAME JOB · BOUNDED PROJECT</h2><p>Detached bench replacement leg. The project carries the part family, 2×4 stock class, square ends and the cited 16½ in reference geometry. You still decide what is different this time: quantity, finished length choice, and whether measured hole spots are required.</p><div class="prooflinks"><button class="btn sm" type="button" id="samejob">Make the same eight-leg job →</button></div></div>';
   h+=pathA();
+  h+='<div class="proofbox"><span class="k">MORE BOUNDED OUTDOOR FAMILIES</span><h2>Research-backed geometry deck</h2><p>Attached A-frame · Detached X / splayed table · Detached X-frame bench · Multi-angle / sawhorse bench. This deck exposes sourced geometry and stops where the authority stops; it does not replace the simple same-job comparison.</p><div class="prooflinks"><a href="stb-outdoor-build-deck-0.1.html">OPEN BOUNDED FAMILY DECK →</a><a href="stb-outdoor-reference-authority-0.3.html">WHY THESE NUMBERS? →</a><a href="STB-OUTDOOR-ANGLED-FRAME-RESEARCH-DOSSIER-0.1.html">VIEW FULL RESEARCH →</a></div></div>';
   h+='<div class="step"><span class="n">1</span><h2>What are you working on?</h2><span class="sub">Path B · pick the family</span></div><div class="grid3">';
   [['picnic','Picnic tables','A-frame, or a table with detached benches.',picPicnic()],
    ['bench','Benches','A whole bench, or go straight to a replacement part.',picBench()],
@@ -397,6 +413,20 @@ function renderHome(){
 }
 
 function bindHome(){
+  if($('gohome'))$('gohome').onclick=function(){
+    if(window.self!==window.top)window.parent.postMessage({type:'STB_PROOF_RETURN_LIBRARY'},location.origin);
+    else location.href='working-app.html';
+  };
+  if($('openjob1'))$('openjob1').onclick=function(){
+    if(window.self!==window.top)window.parent.postMessage({type:'STB_PROOF_OPEN_JOB1'},location.origin);
+    else location.href='stb-start-own-0.10.html';
+  };
+  if($('samejob'))$('samejob').onclick=function(){
+    S.family='bench';S.style='detached';S.part='leg';S.mode='standard';
+    S.qty=1;S.length=BASE.length;S.h1=BASE.h1;S.h2=BASE.h2;S.spot=false;S.sent=null;
+    S.choices={quantity:false,length:false,spots:false};
+    S.screen='bench';render();window.scrollTo(0,0);
+  };
   document.querySelectorAll('[data-family]').forEach(function(b){b.onclick=function(){S.family=b.dataset.family;S.style=null;S.part=null;S.mode=null;render()}});
   document.querySelectorAll('[data-style]').forEach(function(b){b.onclick=function(){
     S.style=b.dataset.style;
@@ -405,7 +435,8 @@ function bindHome(){
   }});
   document.querySelectorAll('[data-part]').forEach(function(b){b.onclick=function(){S.part=b.dataset.part; if(S.part!=='leg')S.mode=null; render()}});
   document.querySelectorAll('[data-mode]').forEach(function(b){b.onclick=function(){
-    S.mode=b.dataset.mode; S.length=BASE.length; S.h1=BASE.h1; S.h2=BASE.h2; S.qty=1; S.spot=false; S.sent=null; render();
+    S.mode=b.dataset.mode; S.length=BASE.length; S.h1=BASE.h1; S.h2=BASE.h2; S.qty=1; S.spot=false; S.sent=null;
+    S.choices={quantity:false,length:false,spots:false}; render();
   }});
   if($('takebench'))$('takebench').onclick=function(){S.screen='bench'; render(); window.scrollTo(0,0)};
   if($('gohome'))$('gohome').onclick=function(){location.href='working-app.html'};
@@ -435,7 +466,8 @@ function renderBench(){
   var errs=validate(), plan=boardPlan(), seat=S.length+REF.thick, custom=S.mode==='custom';
   var h=woodDefs();
   h+='<div class="top"><button class="crumb" id="backhome">← Outdoor Build</button><h1>Bench leg</h1><span class="tag">DETACHED · PROJECT 1</span></div>';
-  h+='<p class="lede">The old leg broke. Start with one. Replace the set if you want. <strong>Raise the bench without moving the old hole pattern.</strong></p>';
+  h+='<p class="lede">The old leg broke. The bounded project already knows what kind of part this is. <strong>You define what is different this time.</strong></p>';
+  h+='<div class="choicegate"><b>Still yours:</b> choose the quantity, confirm the finished-length choice, and say whether this job needs measured hole spots. Quantity 8 is project-specific / user-declared for this demonstration; the cited published plan does not establish eight legs.</div>';
   h+='<div class="bench '+(custom?'custom':'')+'"><div><div class="stage">'+benchSvg()+'</div>'
     +'<div class="readout"><span>Finished leg <b>'+fmt(S.length)+' in</b></span><span>Quantity <b>'+S.qty+'</b></span><span>Reference seat <b>~'+fmt(seat)+' in</b></span><span>Hole datum <b>TOP</b></span>'
     +(S.spot?'<span>Spots <b>'+fmt(S.h1)+' / '+fmt(S.h2)+'</b></span>':'<span>Spots <b>off</b></span>')+'</div></div><div>';
@@ -456,6 +488,11 @@ function renderBench(){
   }
   h+='</section>';
   if(errs.length)h+='<div class="error">'+errs.map(esc).join('<br>')+'</div>';
+  var unanswered=[];
+  if(!S.choices.quantity)unanswered.push('quantity');
+  if(!S.choices.length)unanswered.push('finished length');
+  if(!S.choices.spots)unanswered.push('hole-spot requirement');
+  if(unanswered.length)h+='<div class="choicegate"><b>Before this definition can be sent:</b> answer '+unanswered.join(', ')+'.</div>';
   h+='</div></div>';
   h+='<div class="results"><section class="panel"><h3>Cut list</h3><table class="cut"><thead><tr><th>Part</th><th>Definition</th><th>Qty</th></tr></thead><tbody>'
     +'<tr><td><b>Bench leg</b><span class="sub">2×4 · square ends</span></td><td>'+fmt(S.length)+' in finished<span class="sub">extra length at bottom</span></td><td>'+S.qty+'</td></tr>'
@@ -466,7 +503,7 @@ function renderBench(){
     +'<div class="total"><span>About</span><b>'+money(plan.cost)+'</b></div>'
     +'<p class="help">Uses the Start Your Own 8-ft 2×4 donor pin ('+money(REF.syoPrice)+'). It is not an order or an outdoor-material approval.</p></section></div>';
   h+='<div class="donebar"><div class="copy"><b>That is a project.</b><span>'+S.qty+' replacement leg'+(S.qty===1?'':'s')+', '+fmt(S.length)+' in finished'+(S.spot?', with '+(S.qty*2)+' hole centers spotted from TOP':'')+'.</span></div>'
-    +'<button class="btn" id="send" '+(errs.length?'disabled':'')+'>Looks right — send to Store</button></div>';
+    +'<button class="btn" id="send" '+((errs.length||unanswered.length)?'disabled':'')+'>Looks right — send to Store</button></div>';
   if(S.sent){
     var current=versionId(), stale=current!==S.sent.id;
   var stock=plan.n+' 8-foot 2×4'+(plan.n===1?'':'s');
@@ -486,18 +523,21 @@ function renderBench(){
 function bindBench(){
   $('backhome').onclick=function(){S.screen='home';render();window.scrollTo(0,0)};
   document.querySelectorAll('[data-modepick]').forEach(function(b){b.onclick=function(){S.mode=b.dataset.modepick;S.sent=null;renderBench()}});
-  document.querySelectorAll('[data-qtyquick]').forEach(function(b){b.onclick=function(){S.qty=+b.dataset.qtyquick;S.sent=null;renderBench()}});
-  $('qminus').onclick=function(){S.qty=clamp(S.qty-1,1,8);S.sent=null;renderBench()};
-  $('qplus').onclick=function(){S.qty=clamp(S.qty+1,1,8);S.sent=null;renderBench()};
-  document.querySelectorAll('[data-lift]').forEach(function(b){b.onclick=function(){S.length=BASE.length+(+b.dataset.lift);S.sent=null;renderBench()}});
-  function bindInput(id,key){var el=$(id); if(!el)return; el.onchange=el.onblur=function(){var v=parseInch(el.value); if(isFinite(v)){S[key]=v;S.sent=null;renderBench()}else el.value=fmt(S[key])}; el.onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();el.blur()}}}
+  document.querySelectorAll('[data-qtyquick]').forEach(function(b){b.onclick=function(){S.qty=+b.dataset.qtyquick;S.choices.quantity=true;S.sent=null;renderBench()}});
+  $('qminus').onclick=function(){S.qty=clamp(S.qty-1,1,8);S.choices.quantity=true;S.sent=null;renderBench()};
+  $('qplus').onclick=function(){S.qty=clamp(S.qty+1,1,8);S.choices.quantity=true;S.sent=null;renderBench()};
+  document.querySelectorAll('[data-lift]').forEach(function(b){b.onclick=function(){S.length=BASE.length+(+b.dataset.lift);S.choices.length=true;S.sent=null;renderBench()}});
+  function bindInput(id,key){var el=$(id); if(!el)return; el.onchange=el.onblur=function(){var v=parseInch(el.value); if(isFinite(v)){S[key]=v;if(key==='length')S.choices.length=true;S.sent=null;renderBench()}else el.value=fmt(S[key])}; el.onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();el.blur()}}}
   bindInput('length','length'); bindInput('h1','h1'); bindInput('h2','h2');
-  if($('lengthSlider'))$('lengthSlider').oninput=function(){S.length=+this.value;S.sent=null;renderBench()};
+  if($('lengthSlider'))$('lengthSlider').oninput=function(){S.length=+this.value;S.choices.length=true;S.sent=null;renderBench()};
   if($('h1Slider'))$('h1Slider').oninput=function(){S.h1=+this.value;S.sent=null;renderBench()};
   if($('h2Slider'))$('h2Slider').oninput=function(){S.h2=+this.value;S.sent=null;renderBench()};
-  $('spotOn').onclick=function(){S.spot=true; if(S.h1==null)S.h1=BASE.h1; if(S.h2==null)S.h2=BASE.h2; S.sent=null; renderBench()};
-  $('spotOff').onclick=function(){S.spot=false;S.sent=null;renderBench()};
-  if($('send'))$('send').onclick=function(){if(validate().length)return; S.sent={id:versionId(), definition:JSON.parse(JSON.stringify(definition()))}; renderBench()};
+  $('spotOn').onclick=function(){S.spot=true;S.choices.spots=true; if(S.h1==null)S.h1=BASE.h1; if(S.h2==null)S.h2=BASE.h2; S.sent=null; renderBench()};
+  $('spotOff').onclick=function(){S.spot=false;S.choices.spots=true;S.sent=null;renderBench()};
+  if($('send'))$('send').onclick=function(){
+    if(validate().length||!S.choices.quantity||!S.choices.length||!S.choices.spots)return;
+    S.sent={id:versionId(), definition:JSON.parse(JSON.stringify(definition()))}; renderBench()
+  };
 }
 function render(){ if(S.screen==='aframe')renderAframe(); else if(S.screen==='bench')renderBench(); else renderHome(); }
 render();
