@@ -457,7 +457,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       event.stopImmediatePropagation();
       const note = doc.getElementById('alcove-commercial-decision-note');
       const acceptance = doc.getElementById('alcove-acceptance-state');
-      const continueButton = doc.querySelector('[data-alcove-commercial-action="yard"]');
+      const continueButton = doc.querySelector('#alcove-commercial-decision [data-alcove-commercial-action="yard"]');
       if (action === 'change') {
         originalShow.call(win,'alcove-config');
         return;
@@ -981,8 +981,27 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       seatJourneySnapshot = null;
       if (activeJourneyProject) doc.documentElement.dataset.activeJourneyProject = activeJourneyProject;
       else delete doc.documentElement.dataset.activeJourneyProject;
-      const alcoveReviewNav = doc.querySelector('.recovery-nav button[data-go="alcove-review"]');
-      if (alcoveReviewNav) alcoveReviewNav.hidden = activeJourneyProject === 'alcove';
+
+      const nav = doc.querySelector('.recovery-nav');
+      if (nav) {
+        [...nav.querySelectorAll('button')].forEach(button => {
+          if (!button.dataset.defaultLabel) button.dataset.defaultLabel = button.textContent;
+          button.textContent = button.dataset.defaultLabel;
+          button.hidden = false;
+        });
+        if (activeJourneyProject === 'alcove') {
+          ['alcove-review','request','terms','recap'].forEach(target => {
+            const button = nav.querySelector('button[data-go="'+target+'"]');
+            if (button) button.hidden = true;
+          });
+          const storeButton = nav.querySelector('button[data-go="store"]');
+          const yardButton = nav.querySelector('button[data-go="yard"]');
+          const recordButton = nav.querySelector('button[data-go="record"]');
+          if (storeButton) storeButton.textContent = 'Store / Order';
+          if (yardButton) yardButton.textContent = 'Store / Yard';
+          if (recordButton) recordButton.textContent = 'Completion / Record';
+        }
+      }
     }
 
     function seatFrame() {
@@ -1053,6 +1072,24 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     }
 
     function showMappedProjectStage(projectId, stage) {
+      if (projectId === 'alcove') {
+        const customerStage = {
+          scan:'scan',
+          configure:'configure',
+          store:'store',
+          review:'store',
+          request:'store',
+          yard:'yard',
+          terms:'yard',
+          recap:'record',
+          record:'record'
+        }[stage] || null;
+        const target = customerStage ? PROJECT_STAGE_TARGETS.alcove[customerStage] : null;
+        if (!target || !doc.getElementById(target)) return false;
+        originalShow.call(win, target);
+        setTimeout(syncAlcoveCommercialSurface,0);
+        return true;
+      }
       if (projectId === 'picnic' && ['yard','terms','recap','record'].includes(stage)) {
         originalShow.call(win, 'picnic-request');
         if (typeof syncPicnicJourney === 'function') setTimeout(syncPicnicJourney, 0);
@@ -1089,6 +1126,25 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       'window-parts': 'playhouse',
       'picnic-chooser': 'picnic'
     });
+
+    win.addEventListener('click', function(event) {
+      if (activeJourneyProject !== 'alcove') return;
+      const go = event.target.closest?.('[data-go]');
+      if (!go) return;
+      const target = go.getAttribute('data-go');
+      const map = {
+        'alcove-review':'store',
+        'request':'store',
+        'terms':'yard',
+        'recap':'record'
+      };
+      const destination = map[target] || null;
+      if (!destination) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      originalShow.call(win,destination);
+      setTimeout(syncAlcoveCommercialSurface,0);
+    }, true);
 
     win.addEventListener('click', function(event) {
       const navButton = event.target.closest?.('.recovery-nav button[data-journey-stage]');
