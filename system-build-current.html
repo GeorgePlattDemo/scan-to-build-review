@@ -1108,11 +1108,19 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     function addProofLibraryControl(id){
       const page=doc.getElementById(id);
       if(!page||page.querySelector('[data-proof-library]'))return;
+      const button=doc.createElement('button');
+      button.type='button';button.className='back';button.dataset.proofLibrary='true';button.textContent='← PROJECT LIBRARY';
       const backbar=page.querySelector('.backbar');
       if(backbar){
-        const button=doc.createElement('button');
-        button.type='button';button.className='back';button.dataset.proofLibrary='true';button.textContent='← PROJECT LIBRARY';
         backbar.append(button);
+        return;
+      }
+      const main=page.querySelector(':scope > .main,:scope > .body,:scope > div');
+      if(main){
+        const bar=doc.createElement('div');
+        bar.className='backbar';
+        bar.append(button);
+        main.prepend(bar);
       }
     }
 
