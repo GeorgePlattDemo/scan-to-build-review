@@ -187,6 +187,11 @@
       originalShow.call(win,id);
     }
 
+    function clear(){
+      state = null;
+      return true;
+    }
+
     function matchesProject(projectId){
       return !!state && state.projectId === projectId;
     }
@@ -244,6 +249,7 @@
     return Object.freeze({
       open:open,
       render:render,
+      clear:clear,
       matchesProject:matchesProject,
       showStage:showStage,
       getState:function(){return state;}
