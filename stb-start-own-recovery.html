@@ -1297,7 +1297,18 @@ function refreshBenchViews(){
   if($('flow'))$('flow').innerHTML=operationPanel()+modeledWorkPanel()+referenceCostPanel();
   if($('spec')&&$('spec').style.display!=='none')$('spec').textContent=specText();
 }
-function render(){ if(S.screen==='pick')renderPick(); else renderBench(); }
+function notifyParentDefinition(){
+  if(S.screen!=='bench'||window.self===window.top)return;
+  window.parent.postMessage({
+    type:'STB_RECOVERY_DEFINITION_CURRENT',
+    source:'start-own',
+    definitionId:currentDefinitionId()
+  },location.origin);
+}
+function render(){
+  if(S.screen==='pick')renderPick(); else renderBench();
+  notifyParentDefinition();
+}
 
 /* ═══════════════ 9 · POKING IT ═══════════════ */
 function boundsFor(path){
