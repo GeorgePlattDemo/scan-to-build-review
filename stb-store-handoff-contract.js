@@ -38,10 +38,11 @@
       projectId:'start-own',
       projectClass:'USER_DEFINED_BOARD',
       materialCatalogPin:'4402abeb6b0299a5b6db2eec85ed04c3b0236bcc',
-      capabilityBasis:'CURRENT_CANONICAL_STORE_ZERO',
+      capabilityBasis:'D001-BOARD-EDGE-MILL-REF-0.3',
       capabilityPin:'f88ec61c42446755d00259f88e7fd09f2702fd92',
-      economicsModel:null,
-      economicsStatus:'UNRESOLVED_CLASS_SCOPED_RECOVERY',
+      economicsModel:'STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0.1',
+      economicsStatus:'DECLARED_REFERENCE',
+      economicsPin:'f88ec61c42446755d00259f88e7fd09f2702fd92',
       legacyGeneralRecoverySelected:false
     }),
     outdoor: Object.freeze({

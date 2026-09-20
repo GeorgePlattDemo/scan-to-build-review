@@ -238,7 +238,7 @@ pre.spec{margin:14px 0 0;padding:15px 16px;border-radius:12px;background:var(--p
 @media (max-width:980px){ .bench{grid-template-columns:1fr} .results{grid-template-columns:1fr} }
 @media (max-width:860px){ .grid3{grid-template-columns:1fr} }
 </style>
-<script src="stb-store-handoff-contract.js?v=e810ce44"></script>
+<script src="stb-store-handoff-contract.js?v=6c3a3494"></script>
 </head>
 <body>
 <div class="wrap" id="app"></div>
@@ -472,7 +472,7 @@ function grade(k){return GRADES.filter(function(g){return g.k===k})[0]}
 function sizeOf(gk,sk){return grade(gk).sizes.filter(function(s){return s.k===sk})[0]}
 
 /* ═══════════════ 3 · WHAT YOU ARE MAKING ═══════════════ */
-var S={screen:'pick',grade:'lumber',size:'2x4',maker:null,seeded:{cuts:false,shelf:false,box:false},handoff:null,
+var S={screen:'pick',grade:'lumber',size:'2x4',maker:'cuts',seeded:{cuts:false,shelf:false,box:false},handoff:null,
   cuts :{pieces:[{len:32,wid:3.5,qty:2,status:{len:'checking',wid:'checking'}}]},
   cutOps:{straight:true,angled:false,angle:null,angleReference:null,cutPlane:null,endIdentity:null,endRelation:null,lengthDatum:null},
   shelf:{w:30,h:36,n:4,depth:3.5,status:{w:'checking',h:'checking',depth:'checking'}},
@@ -585,7 +585,7 @@ function renderPick(){
   h+='<div class="top"><button class="project-return" id="projectlibrary">← PROJECT LIBRARY</button></div>';
   h+='<p class="eyebrow">Scan-to-Build · start your own · 0.11 candidate</p>';
   h+='<h1>Make something<br>out of <em>wood</em>.</h1>';
-  h+='<p class="lede">Pick the board. Put it on the bench. Then say what you want done to it. Finished length, quantity and any angled end cut stay visible in the definition you confirm.</p>';
+  h+='<p class="lede">Pick a board. Take it to the bench. Drag the length. The Store prices the wood and the modeled machine time as you go.</p>';
 
   h+='<div class="step"><span class="n'+(S.grade?' done':'')+'">1</span><h2>Pick your wood</h2>'
     +'<span class="sub">three grades</span></div>';
@@ -609,8 +609,8 @@ function renderPick(){
   var sz=S_size(), mk=S.maker?MAKERS.filter(function(m){return m.k===S.maker})[0]:null;
   h+='<div class="gobar"><div class="sum">'
     +(mk?'<b>'+esc(mk.name)+'</b> in <b>'+esc(sz.label)+'</b>.'
-        :'<b>'+esc(sz.label)+'</b> picked. Now choose what you are making.')
-    +'</div><button class="btn" id="go"'+(mk?'':' disabled')+'>Take it to the bench →</button></div>';
+        :'<b>'+esc(sz.label)+'</b> picked.')
+    +'</div><button class="btn" id="go"'+((S.size)?'':' disabled')+'>Take it to the bench →</button></div>';
   h+='<p class="foot">Nothing is ordered here. Store Zero resolves the material basis as this definition changes; confirmation later identifies the version you send.</p>';
   $('app').innerHTML=h;
   $('projectlibrary').onclick=returnProjectLibrary;
@@ -1137,18 +1137,37 @@ function modeledWorkModel(){
   };
 }
 function modeledWorkPanel(){
-  var m=modeledWorkModel(), a=m.authority;
-  return '<div class="panel flowpanel"><h3>Store Zero · live work basis</h3>'
+  var m=modeledWorkModel(), a=m.authority, w=workQuote();
+  return '<div class="panel flowpanel"><h3>What the machine time costs</h3>'
     +'<div class="basisgrid">'
-    +'<div class="basisbox"><span class="k">Derived part operations</span><b>'+m.knownPartOperations+'</b></div>'
-    +'<div class="basisbox"><span class="k">Store capability</span><b>'+esc(m.capabilityStatus)+'</b></div>'
-    +'<div class="basisbox"><span class="k">Modeled machine time</span><b>Not established for this project class</b></div>'
+    +'<div class="basisbox"><span class="k">Cuts on this version</span><b>'+m.knownPartOperations+'</b></div>'
+    +'<div class="basisbox"><span class="k">Modeled machine time</span><b>'+(w?w.minutes+' min':'—')+'</b></div>'
+    +'<div class="basisbox"><span class="k">Work recovery</span><b>'+(w?money(w.recovery):'—')+'</b></div>'
     +'<div class="basisbox"><span class="k">Store SKU</span><b>'+(m.storeSku?esc(m.storeSku):'Not mapped')+'</b></div>'
-    +'<div class="basisbox"><span class="k">Store authority</span><b>'+(a?'Current canonical Store Zero':'Unavailable')+'</b></div>'
-    +'</div><p class="hint">Every change above recomputes the material and operation demand against the pinned Store Zero offering. Capability and economics stay separate; no controller command or physical authority is created here.</p></div>';
+    +'<div class="basisbox"><span class="k">Capability</span><b>'+esc(m.capabilityStatus)+'</b></div>'
+    +'</div><p class="hint">Every change above recomputes the material and operation demand against the pinned Store Zero offering. Same $425 / 56.16 min package as Window Seat, scaled by modeled cycle. Nothing is ordered.</p></div>';
+}
+function workSpecies(){
+  if(S.grade==='hardwood'){
+    var k=String(S.size||'');
+    if(k.indexOf('c')>=0) return 'cherry';
+    return 'oak';
+  }
+  return 'pine';
+}
+function workQuote(){
+  var b=buyList(), contract=window.STBStoreHandoffContract;
+  if(!b||!contract||typeof contract.quoteModeledRecovery!=='function') return null;
+  return contract.quoteModeledRecovery({
+    species:workSpecies(),
+    sticks:b.n,
+    millMinutes:0,
+    material:b.cost,
+    hardware:0
+  });
 }
 function referenceCostModel(){
-  var issue=materialIssue(), resolution=storeMaterialResolution(), b=buyList(), authority=currentStoreAuthority(), cap=storeCapabilityModel();
+  var issue=materialIssue(), resolution=storeMaterialResolution(), b=buyList(), authority=currentStoreAuthority(), cap=storeCapabilityModel(), work=workQuote();
   var material=(issue||!b)?null:b.cost;
   var unresolved=cap.unresolved.slice();
   var economicsStatus=authority?authority.economicsStatus:'STORE_AUTHORITY_UNAVAILABLE';
@@ -1163,14 +1182,15 @@ function referenceCostModel(){
   }
   return {
     material:material,
-    operations:null,
-    cell:null,
-    other:null,
-    total:null,
+    operations:work?work.recovery:null,
+    cell:work?work.cellConsumption:null,
+    other:work?work.otherMinutes:null,
+    total:work&&material!=null?work.total:null,
     materialOnlyTotal:material,
+    work:work,
     materialResolution:resolution,
     issue:issue,
-    complete:false,
+    complete:!!(work&&work.complete&&material!=null),
     capabilityStatus:cap.status,
     economicsStatus:economicsStatus,
     unresolvedConditions:Array.from(new Set(unresolved)),
@@ -1178,20 +1198,22 @@ function referenceCostModel(){
   };
 }
 function referenceCostPanel(){
-  var c=referenceCostModel(), a=c.authority, r=c.materialResolution;
+  var c=referenceCostModel(), a=c.authority, r=c.materialResolution, w=c.work;
   var material=c.material==null?'Not established':money(c.material);
-  var econ=a&&a.economicsModel?esc(a.economicsModel):'UNRESOLVED · class-scoped recovery not published';
+  var work=w?money(w.recovery):'Not established';
+  var total=c.total==null?'NOT COMPLETE':money(c.total);
   var sku=r&&r.status==='MAPPED'?r.storeSku:'Not mapped';
   var source=r&&r.source?('catalog '+String(r.source.clock||'')+' · '+String(r.source.pin||'').slice(0,12)+'…'):'Store catalog unavailable';
   var why=c.issue?'Material / operation resolution is required before the Store can establish a complete basis.'
     :(c.material==null?'The pinned Store Zero catalog has no offered stock that can contain the defined parts.'
-      :'Store Zero has mapped and valued the parent stock. A complete combined value is withheld until this project class has a current declared processing / fulfillment recovery model.');
-  return '<div class="panel flowpanel"><h3>Store Zero · live reference economics</h3>'
-    +'<div class="costbig"><span>CURRENT COMBINED BASIS</span><b>NOT COMPLETE</b></div>'
+      :(w?'Store Zero mapped the parent stock and priced the modeled cycle on this version.'
+        :'Store Zero has mapped the parent stock. Work recovery still needs the shared D-001 quote.'));
+  return '<div class="panel flowpanel"><h3>Store Zero · price for this version</h3>'
+    +'<div class="costbig"><span>CURRENT COMBINED BASIS</span><b>'+total+'</b></div>'
     +'<div class="flowline"><div class="k">Material</div><div class="v"><b>'+material+'</b></div></div>'
+    +'<div class="flowline"><div class="k">Processing / fulfillment recovery</div><div class="v"><b>'+work+(w?' · '+w.minutes+' min':'')+'</b></div></div>'
     +'<div class="flowline"><div class="k">Store SKU</div><div class="v"><b>'+esc(sku)+'</b></div></div>'
     +'<div class="flowline"><div class="k">Capability</div><div class="v"><b>'+esc(c.capabilityStatus)+'</b></div></div>'
-    +'<div class="flowline"><div class="k">Processing / fulfillment recovery</div><div class="v"><b>'+econ+'</b></div></div>'
     +'<div class="flowline"><div class="k">Material source</div><div class="v">'+esc(source)+'</div></div>'
     +'<p class="hint">'+why+' No retired general recovery formula is selected for Start Your Own. This is a reference basis, not a binding commercial offer.</p></div>';
 }
@@ -1234,7 +1256,7 @@ function storeAnswerModel(){
       material:c.material,
       processRecovery:null,
       total:null,
-      complete:false,
+      complete:!!(work&&work.complete&&material!=null),
       status:c.economicsStatus
     },
     service:'Store Zero owns material, capability, service and economics answers for this definition.',
@@ -1274,7 +1296,9 @@ function storeSummarySentence(){
   var stock=sh?(b.n+' × '+s.label+' sheet'+(b.n===1?'':'s')+', '+b.label+' in')
               :(b.n+' × '+s.label+' × '+b.L+' in');
   var cap=c.capabilityStatus==='SUPPORTABLE'?'capability is supported':'capability remains '+c.capabilityStatus.toLowerCase();
-  return 'Store Zero maps this version to '+stock+', material '+money(b.cost)+'; '+cap+'. Processing / fulfillment recovery is not yet published for this project class, so a complete combined value is not invented. Nothing is ordered.';
+  var w=workQuote();
+  var work=w?(' work '+money(w.recovery)+' for '+w.minutes+' min modeled'):' work not priced';
+  return 'Store Zero maps this version to '+stock+', material '+money(b.cost)+','+work+'. '+cap+'. Nothing is ordered.';
 }
 function storeHandoffPanel(){
   var id=currentDefinitionId(), sent=S.handoff, sameVersion=sent&&sent.id===id;
@@ -1420,7 +1444,7 @@ function specText(){
   L.push('');L.push('STORE ZERO · LIVE REFERENCE ECONOMICS');
   L.push('  Material                 '+(c.material==null?'NOT ESTABLISHED':money(c.material)));
   L.push('  Processing / recovery    UNRESOLVED · CLASS-SCOPED RECOVERY NOT PUBLISHED');
-  L.push('  Current combined basis   NOT COMPLETE');
+  L.push('  Current combined basis   '+(referenceCostModel().total!=null?money(referenceCostModel().total):'NOT COMPLETE'));
   L.push('  Retired general recovery  NOT SELECTED');
   if(c.authority){
     L.push('  Store doctrine pin       '+c.authority.capabilityPin);
