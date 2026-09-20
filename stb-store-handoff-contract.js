@@ -14,7 +14,7 @@
   ]);
 
   var CURRENT_ARTIFACTS = Object.freeze({
-    startOwn: Object.freeze({projectId:'start-own', artifact:'stb-start-own-0.10.html', projectClass:'USER_DEFINED_BOARD'}),
+    startOwn: Object.freeze({projectId:'start-own', artifact:'stb-start-own-recovery.html', projectClass:'USER_DEFINED_BOARD'}),
     outdoor: Object.freeze({projectId:'outdoor-build', artifact:'stb-outdoor-build.html', projectClass:'BOUNDED_REPLACEMENT_PART'})
   });
 
