@@ -25,7 +25,7 @@ for (const label of [
 assert.match(shell, /TARGET: Replace 8 detached bench legs/);
 assert.match(shell, /2×4 · 16½ in finished · 8 pieces · square ends/);
 assert.match(shell, /Nothing is prefilled for this test by the proof wrapper/);
-assert.match(shell, /src="stb-start-own-recovery\.html\?v=d4196885"/);
+assert.match(shell, /src="stb-start-own-recovery\.html\?v=b9ed1715"/);
 assert.match(shell, /startOwnTile\.dataset\.startOwnArtifact = 'stb-start-own-recovery\.html'/);
 assert.match(shell, /stb-proof-ladder-job1/);
 assert.match(shell, /explicitProjectDecisionCount: proofDecisions\.size/);
@@ -82,7 +82,7 @@ assert.equal(/history\.(?:back|go)\(/.test(outdoor+deck+authority+research), fal
 assert.match(shell, /STB_PROOF_RETURN_LIBRARY/);
 assert.match(shell, /STB_PROOF_OPEN_JOB1/);
 assert.match(shell, /STB_RECOVERY_STORE_HANDOFF/);
-assert.match(shell, /stb-recovery-store-spine\.js\?v=d2723d8d/);
+assert.match(shell, /stb-recovery-store-spine\.js\?v=50d74cf9/);
 for (const id of ['recovery-store-answer','recovery-accept-pay','recovery-store-yard','recovery-handoff-record']) {
   assert.ok(recoverySpine.includes(id), 'missing recovered common Store stage: ' + id);
 }
