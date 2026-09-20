@@ -40,7 +40,7 @@ assert.match(contract, /economicsModel:'STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0\.1
 assert.match(contract, /projectId:'alcove'[\s\S]*economicsModel:'STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0\.1'[\s\S]*legacyGeneralRecoverySelected:false/);
 
 assert.match(shell, /stb-store-handoff-contract\.js\?v=8453e493/);
-assert.match(shell, /stb-start-own-bench-leg-0\.1\.html\?v=3ca37b4b/);
+assert.match(shell, /stb-start-own-bench-leg-0\.1\.html\?v=b428c100/);
 assert.match(shell, /payload\.storeReference\?\.unresolvedConditions/);
 assert.match(shell, /Array\.isArray\(payload\.storeReference\?\.unresolvedConditions\)/);
 

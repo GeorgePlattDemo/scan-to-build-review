@@ -139,7 +139,7 @@ assert.match(shell,/'start-own': Object\.freeze\(\{[\s\S]*store:'proof-store'[\s
 assert.match(shell,/outdoor: Object\.freeze\(\{[\s\S]*store:'proof-store'[\s\S]*record:'proof-record'/);
 assert.match(shell,/if \(activeJourneyProject !== nextJourneyProject\) proofHandoff = null/,'project switch does not clear current handoff authority');
 assert.match(shell,/const navButton = event\.target\.closest\?\.\('\.recovery-nav button\[data-journey-stage\]'\)[\s\S]*event\.preventDefault\(\);[\s\S]*event\.stopImmediatePropagation\(\);[\s\S]*showMappedProjectStage\(activeJourneyProject, stage\);/,'project nav can still fall through to another project');
-assert.match(shell,/src="stb-start-own-bench-leg-0\.1\.html\?v=3ca37b4b"/);
+assert.match(shell,/src="stb-start-own-bench-leg-0\.1\.html\?v=b428c100"/);
 assert.match(shell,/src="stb-outdoor-bench-leg-0\.1\.html\?v=dcefd0aa"/);
 
 console.log('PASS · current five-project Store convergence and legacy Outdoor quarantine');
