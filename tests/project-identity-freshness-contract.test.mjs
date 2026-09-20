@@ -44,8 +44,11 @@ assert.match(spine,/if\(source === 'outdoor'\) return 'outdoor'/);
 assert.match(spine,/function expectedHandoffProjectId\(projectId\)/);
 assert.match(spine,/if\(String\(payload\.handoff\.projectId \|\| ''\) !== expectedHandoffProjectId\(projectId\)\) return false/);
 assert.match(spine,/function matchesProject\(projectId\)/);
+assert.match(spine,/function invalidateIfDefinitionChanged\(projectId,definitionId\)[\s\S]*state = null/);
 assert.match(spine,/function showStage\(projectId,stage\)[\s\S]*if\(!matchesProject\(projectId\)\) return false/);
 assert.match(shell,/recoveryStoreSpine\?\.showStage\(projectId, stage\)/);
+assert.match(shell,/STB_RECOVERY_DEFINITION_CURRENT/);
+assert.match(shell,/invalidateIfDefinitionChanged\(sourceProject,event\.data\?\.definitionId\)/);
 
 // Freshness / authority: the recovery shell may carry Alcove values, but it may not
 // install a second Alcove economics engine or generalized Window Seat recovery formula.
