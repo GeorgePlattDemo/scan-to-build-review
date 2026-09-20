@@ -13,6 +13,7 @@ const startOwn = read('stb-start-own-recovery.html');
 const outdoor = read('stb-outdoor-build.html');
 const contractSource = read('stb-store-handoff-contract.js');
 const shell = read('system-build-current.html');
+const recoverySpine = read('stb-recovery-store-spine.js');
 
 assert.equal(blob(locked),'cbdb02996e161b951704acae29d8da2dd1c68c03','locked Start Your Own 0.10 moved');
 
@@ -52,12 +53,14 @@ assert.equal(outdoor.includes('REF.syoPrice'),false,'Outdoor local price authori
 assert.match(shell,/src="stb-start-own-recovery\.html\?v=d4196885"/);
 assert.match(shell,/src="stb-outdoor-build\.html\?v=01088535"/);
 assert.match(shell,/STB_RECOVERY_STORE_HANDOFF/);
+assert.match(shell,/stb-recovery-store-spine\.js\?v=78863a42/);
+assert.match(shell,/STBRecoveryStoreSpine\?\.install/);
 for (const id of ['recovery-store-answer','recovery-accept-pay','recovery-store-yard','recovery-handoff-record'])
-  assert.ok(shell.includes(id),'missing common recovery Store stage '+id);
+  assert.ok(recoverySpine.includes(id),'missing common recovery Store stage '+id);
 
-assert.match(shell,/Acknowledging a reference answer is not commercial acceptance/);
-assert.match(shell,/CYCLE START<\/b><span>LOCAL · NOT AUTHORIZED HERE/);
-assert.match(shell,/READY remains separate from custody/);
-assert.match(shell,/NO BLOOD ON WOOD/);
+assert.match(recoverySpine,/Acknowledging a reference answer is not commercial acceptance/);
+assert.match(recoverySpine,/CYCLE START<\/b><span>LOCAL · NOT AUTHORIZED HERE/);
+assert.match(recoverySpine,/READY remains separate from custody/);
+assert.match(recoverySpine,/NO BLOOD ON WOOD/);
 
 console.log('PASS · recovery common Store spine');
