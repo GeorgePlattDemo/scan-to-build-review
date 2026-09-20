@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 const read = p => fs.readFileSync(p, 'utf8');
 const shell = read('system-build-current.html');
+const recoverySpine = read('stb-recovery-store-spine.js');
 const outdoor = read('stb-outdoor-build.html');
 const deck = read('stb-outdoor-build-deck-0.1.html');
 const authority = read('stb-outdoor-reference-authority-0.3.html');
@@ -81,11 +82,12 @@ assert.equal(/history\.(?:back|go)\(/.test(outdoor+deck+authority+research), fal
 assert.match(shell, /STB_PROOF_RETURN_LIBRARY/);
 assert.match(shell, /STB_PROOF_OPEN_JOB1/);
 assert.match(shell, /STB_RECOVERY_STORE_HANDOFF/);
+assert.match(shell, /stb-recovery-store-spine\.js\?v=78863a42/);
 for (const id of ['recovery-store-answer','recovery-accept-pay','recovery-store-yard','recovery-handoff-record']) {
-  assert.ok(shell.includes(id), 'missing recovered common Store stage: ' + id);
+  assert.ok(recoverySpine.includes(id), 'missing recovered common Store stage: ' + id);
 }
-assert.match(shell, /Processing \/ fulfillment recovery<\/b><span>NOT ESTABLISHED/);
-assert.match(shell, /COMBINED VALUE<\/b><span>NOT COMPLETE/);
+assert.match(recoverySpine, /PROCESSING \/ FULFILLMENT RECOVERY<\/b><span>NOT ESTABLISHED/);
+assert.match(recoverySpine, /COMBINED VALUE<\/b><span>NOT COMPLETE/);
 assert.match(outdoor, /Confirmation is not an order, payment, allocation, production release, machine readiness or Cycle Start/);
 assert.match(outdoor, /NO BLOOD ON WOOD/);
 assert.equal(/\b(?:G0?\d\b|M0?3\b|G-code)\b/i.test(outdoor), false, 'controller/G-code output appeared in Outdoor Build');
