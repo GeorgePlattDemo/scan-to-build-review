@@ -40,7 +40,7 @@ assert.match(candidate,/STB_RECOVERY_STORE_HANDOFF/);
 assert.match(candidate,/Current Store-derived value/);
 assert.match(candidate,/Combined value[\s\S]*NOT COMPLETE/);
 assert.match(shell,/originalShow\.call\(win, 'start-own-live'\)/);
-assert.match(shell,/selectJourneyProject\(null\)/);
+assert.match(shell,/selectJourneyProject\('start-own'\)/);
 
 // The lock must not disturb the existing gold-standard and shared boundaries.
 assert.equal(gitBlobSha(seat),'96c85feef57b1196093e56495e7141452fc749a4','Window Seat 0.7.4 changed');
