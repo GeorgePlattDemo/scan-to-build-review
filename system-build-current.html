@@ -14,7 +14,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 <iframe id="stb-current" title="Scan-to-Build System" src="system-build-front-door-0.5.html?v=5ac9677b"></iframe>
 <script src="stb-canonical-journey.js?v=e0619841"></script>
 <script src="store-zero-canonical-doctrine.js?v=65366367"></script>
-<script src="stb-recovery-store-spine.js?v=d2723d8d"></script>
+<script src="stb-recovery-store-spine.js?v=50d74cf9"></script>
 <script>
 (() => {
   const shell = document.getElementById('stb-current');
@@ -163,7 +163,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   id="start-own-proof-frame"
                   class="start-own-shell-frame"
                   title="Start Your Own · definition to doing"
-                  src="stb-start-own-recovery.html?v=d4196885"
+                  src="stb-start-own-recovery.html?v=b9ed1715"
                 ></iframe>
               </div>
             `;
@@ -273,7 +273,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 <iframe
                   class="outdoor-build-shell-frame"
                   title="Outdoor Build · Project 1"
-                  src="stb-outdoor-build.html?v=01088535"
+                  src="stb-outdoor-build.html?v=91ba33da"
                 ></iframe>
               </div>
             `;
@@ -331,14 +331,18 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
           } else if (type === 'STB_PROOF_OPEN_JOB1') {
             selectJourneyProject('start-own');
             originalShow.call(win, 'start-own-live');
-          } else if (type === 'STB_RECOVERY_STORE_HANDOFF') {
+          } else if (type === 'STB_RECOVERY_STORE_HANDOFF' || type === 'STB_RECOVERY_DEFINITION_CURRENT') {
             const startFrame = doc.querySelector('#start-own-proof-frame');
             const outdoorFrame = doc.querySelector('#outdoor-build-live .outdoor-build-shell-frame');
             const sourceProject = event.source === startFrame?.contentWindow
               ? 'start-own'
               : (event.source === outdoorFrame?.contentWindow ? 'outdoor' : null);
             if (!sourceProject || activeJourneyProject !== sourceProject) return;
-            recoveryStoreSpine?.open(event.data || {});
+            if (type === 'STB_RECOVERY_STORE_HANDOFF') {
+              recoveryStoreSpine?.open(event.data || {});
+            } else {
+              recoveryStoreSpine?.invalidateIfDefinitionChanged(sourceProject,event.data?.definitionId);
+            }
           }
         });
       }
