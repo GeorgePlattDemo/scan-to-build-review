@@ -48,3 +48,5 @@ assert.equal(gitBlobSha(doctrine),'653663671f61dd77e0dae73917d33b8a8e896fd2','St
 assert.equal(gitBlobSha(base),'67f3c5324ac7ab2ccd798b0dc0d7179b0912eef4','Alcove base changed');
 
 console.log('PASS · Start Your Own 0.10 locked behind project tile');
+
+assert.equal(/startOwnTile\.addEventListener[\s\S]{0,500}selectJourneyProject\(null\)/.test(shell),false,'Start Your Own enters without project identity');
