@@ -154,10 +154,27 @@
       return true;
     }
 
+    function projectIdForSource(source){
+      if(source === 'start-own') return 'start-own';
+      if(source === 'outdoor') return 'outdoor';
+      return null;
+    }
+
+    function expectedHandoffProjectId(projectId){
+      if(projectId === 'start-own') return 'start-own';
+      if(projectId === 'outdoor') return 'outdoor-build';
+      return null;
+    }
+
     function open(payload){
       if(!payload || !payload.handoff) return false;
+      var source = String(payload.source || '');
+      var projectId = projectIdForSource(source);
+      if(!projectId) return false;
+      if(String(payload.handoff.projectId || '') !== expectedHandoffProjectId(projectId)) return false;
       state = {
-        source:String(payload.source || ''),
+        source:source,
+        projectId:projectId,
         handoff:payload.handoff,
         answer:payload.answer || null
       };
@@ -168,6 +185,26 @@
 
     function show(id){
       originalShow.call(win,id);
+    }
+
+    function matchesProject(projectId){
+      return !!state && state.projectId === projectId;
+    }
+
+    function showStage(projectId,stage){
+      if(!matchesProject(projectId)) return false;
+      var target = {
+        store:'recovery-store-answer',
+        review:'recovery-store-answer',
+        request:'recovery-accept-pay',
+        yard:'recovery-store-yard',
+        terms:'recovery-store-yard',
+        recap:'recovery-handoff-record',
+        record:'recovery-handoff-record'
+      }[stage] || null;
+      if(!target) return false;
+      show(target);
+      return true;
     }
 
     if(!win.__stbRecoveryStoreSpineBound){
@@ -207,6 +244,8 @@
     return Object.freeze({
       open:open,
       render:render,
+      matchesProject:matchesProject,
+      showStage:showStage,
       getState:function(){return state;}
     });
   }
