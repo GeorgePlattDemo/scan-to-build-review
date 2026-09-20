@@ -196,6 +196,15 @@
       return !!state && state.projectId === projectId;
     }
 
+    function invalidateIfDefinitionChanged(projectId,definitionId){
+      if(!matchesProject(projectId)) return false;
+      var currentId = String(state.handoff && (state.handoff.versionId || state.handoff.definitionId) || '');
+      var nextId = String(definitionId || '');
+      if(!nextId || nextId === currentId) return false;
+      state = null;
+      return true;
+    }
+
     function showStage(projectId,stage){
       if(!matchesProject(projectId)) return false;
       var target = {
@@ -251,6 +260,7 @@
       render:render,
       clear:clear,
       matchesProject:matchesProject,
+      invalidateIfDefinitionChanged:invalidateIfDefinitionChanged,
       showStage:showStage,
       getState:function(){return state;}
     });
