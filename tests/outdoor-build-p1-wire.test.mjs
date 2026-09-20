@@ -29,6 +29,8 @@ assert.match(shell, /outdoorTile\.removeAttribute\('data-go'\)/);
 assert.match(shell, /outdoorTile\.dataset\.outdoorBuildArtifact = 'stb-outdoor-build\.html'/);
 assert.match(shell, /src="stb-outdoor-build\.html\?v=01088535"/);
 assert.match(shell, /originalShow\.call\(win, 'outdoor-build-live'\)/);
+assert.match(shell, /selectJourneyProject\('outdoor'\)/);
+assert.equal(/outdoorTile\.addEventListener[\s\S]{0,500}selectJourneyProject\(null\)/.test(shell),false,'Outdoor enters without project identity');
 
 assert.match(working, /location\.href='stb-outdoor-build\.html'/);
 
