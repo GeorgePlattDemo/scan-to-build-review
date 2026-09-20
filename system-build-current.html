@@ -158,15 +158,14 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             startOwnPage.innerHTML = `
               <div class="start-own-shell-main">
                 <div data-proof-job="1" style="margin:0 0 12px;padding:14px 16px;border:1px solid var(--border);border-radius:9px;background:var(--surface)">
-                  <p style="margin:0 0 5px;font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--text3)">TEST 01 · FROM A BOARD</p>
-                  <p style="margin:0 0 8px"><b>TARGET: Define the Sawhorse Bench comparison member yourself.</b></p>
-                  <p class="dim" style="margin:0 0 8px">Target requirement: <b style="color:var(--text)">2×4 · 15½ in · quantity 8 · 10° source-stated DOUBLE BEVEL · both ends · parallel · source cut-list length datum.</b></p>
-                  <p class="dim" style="margin:0 0 6px">Quantity 8 is <b style="color:var(--text)">project composition</b>: two separate bench assemblies × four published end-leg occurrences per bench. It is not presented as one published eight-leg bench.</p>
-                  <p class="dim" style="margin:0">Use the generic floor below. Pick the board, define the straight length, add the angled cut, and state what the angle means. Nothing is prefilled for you by the proof wrapper.</p>
+                  <p style="margin:0 0 5px;font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--text3)">START YOUR OWN · BENCH LEG</p>
+                  <p style="margin:0 0 8px"><b>Grab a 2×4 and define the replacement leg on the bench below.</b></p>
+                  <p class="dim" style="margin:0 0 8px">Store will map when the contract is: <b style="color:var(--text)">2×4 · 16½ in · qty 8 · 10° · both ends · parallel · through the thickness · long-to-long outer edge.</b></p>
+                  <p class="dim" style="margin:0">Long-short datum will not nest. The Store sentence appears here and on the bench. Not a quote.</p>
                   <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:11px;color:var(--text2)">
-                    <span>Explicit project decisions: <b id="proof-job1-decisions">0</b></span>
-                    <span>UI actions: <b id="proof-job1-actions">0</b></span>
-                    <span id="proof-job1-match">Target not yet represented.</span>
+                    <span>Facts set: <b id="proof-job1-decisions">0</b></span>
+                    <span id="proof-job1-match">No complete contract yet.</span>
+                    <span id="proof-job1-store">Store: waiting on a complete definition.</span>
                   </div>
                   <button type="button" id="proof-job1-back" style="margin-top:10px">← PROJECT LIBRARY</button>
                 </div>
@@ -181,12 +180,22 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             doc.querySelector('.wrap')?.append(startOwnPage);
           }
 
+          const liveFrame = startOwnPage.querySelector('#start-own-proof-frame');
+          if (liveFrame && !String(liveFrame.getAttribute('src')||'').includes('stb-start-own-bench-leg-0.1.html')) {
+            liveFrame.src = 'stb-start-own-bench-leg-0.1.html?v=b428c100';
+          }
+          const banner = startOwnPage.querySelector('[data-proof-job="1"]');
+          if (banner && /generic floor/.test(banner.textContent||'')) {
+            const storeLine = banner.querySelector('#proof-job1-store');
+            if (!storeLine) banner.insertAdjacentHTML('beforeend', '<p id="proof-job1-store" class="dim">Store: waiting on a complete definition.</p>');
+          }
           const proofFrame = startOwnPage.querySelector('#start-own-proof-frame');
           const proofDecisions = new Set();
           let proofActions = 0;
           const classifyStartOwnDecision = target => {
-            const choice = target?.closest?.('[data-grade],[data-size],[data-maker],[data-step],[data-set],[data-exact],[data-op-toggle],[data-op-set],[data-op-angle]');
+            const choice = target?.closest?.('[data-act],[data-grade],[data-size],[data-maker],[data-step],[data-set],[data-exact],[data-op-toggle],[data-op-set],[data-op-angle]');
             if (!choice) return;
+            if (choice.dataset.act) proofDecisions.add(choice.dataset.act);
             if (choice.dataset.grade) proofDecisions.add('material_family');
             if (choice.dataset.size) proofDecisions.add('stock_class');
             if (choice.dataset.maker) proofDecisions.add('part_form');
@@ -213,6 +222,23 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 : (win.STBUserDefinedBoardStore ? win.STBUserDefinedBoardStore.previewFromDemand(demand) : null);
               const boardStore = window.STBUserDefinedBoardStore || win.STBUserDefinedBoardStore || null;
               const built = boardStore ? boardStore.previewFromDemand(demand) : preview;
+              const ev = built && built.answer && built.answer.rawEvaluation;
+              const match = startOwnPage.querySelector('#proof-job1-match');
+              const storeLine = startOwnPage.querySelector('#proof-job1-store');
+              const dec = startOwnPage.querySelector('#proof-job1-decisions');
+              if (dec) dec.textContent = String((snap.openPoints && snap.openPoints.length) ? (8 - snap.openPoints.length) : (snap.complete ? 8 : 0));
+              if (match) match.textContent = snap.complete ? 'Contract complete.' : ('Still open: ' + ((snap.openPoints||[]).join(', ') || 'facts'));
+              if (storeLine) {
+                if (ev && ev.status === 'SUPPORTABLE' && ev.materialResolution) {
+                  const mat = ev.materialResolution;
+                  const rec = ev.estimate && ev.estimate.totals && ev.estimate.totals.cell_recovery;
+                  storeLine.textContent = 'Store: ' + mat.storeSku + ' × ' + mat.quantity + ' · material $' + Number(mat.materialTotal||0).toFixed(2) + (rec!=null ? ' + recovery $'+Number(rec).toFixed(2) : ' · recovery unpublished');
+                } else if (ev && ev.materialResolution && ev.materialResolution.code) {
+                  storeLine.textContent = 'Store: ' + ev.materialResolution.code;
+                } else {
+                  storeLine.textContent = 'Store: waiting on a complete / nestable definition.';
+                }
+              }
               try {
                 win.localStorage.setItem('stb-proof-ladder-job1', JSON.stringify({
                   semanticOutput:{
@@ -472,6 +498,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
               };
               if (typeof win.__stbPostStartOwnPreview === 'function') win.__stbPostStartOwnPreview(preview);
               else frame.contentWindow.postMessage(preview, win.location.origin);
+              captureStartOwnProof();
             }
           } else if (type === 'STB_PROOF_OPEN_JOB1') {
             selectJourneyProject('start-own');
