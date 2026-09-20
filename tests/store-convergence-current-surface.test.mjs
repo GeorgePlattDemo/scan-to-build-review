@@ -8,15 +8,15 @@ const startOwn = read('stb-start-own-0.11.html');
 const outdoor = read('stb-outdoor-build.html');
 const windowSeat = read('stb-window-seat-space-utilization-0.7.4.html');
 const contractSource = read('stb-store-handoff-contract.js');
+const alcoveBase = read('system-build-base-8d8a9dd.html');
 
 const sandbox = {window:{}};
 vm.runInNewContext(contractSource,sandbox,{filename:'stb-store-handoff-contract.js'});
 const contract = sandbox.window.STBStoreHandoffContract;
 
 assert.ok(contract,'shared Store handoff contract did not load');
-assert.equal(contract.version,'0.4');
-assert.equal(typeof contract.quoteAlcoveInsert,'function');
-assert.equal(contract.quoteAlcoveInsert({species:'pine',shelves:5,depthIn:14}).material,272.86);
+assert.equal(contract.version,'0.5');
+assert.equal(typeof contract.quoteAlcoveInsert,'undefined','shared Store contract must not reprice Alcove');
 assert.deepEqual(
   Array.from(contract.actorOrder),
   ['project-definition','store-answer','accept-pay','store-yard','handoff-record','project-library']
@@ -32,7 +32,9 @@ assert.equal(contract.storeAuthority('startOwn').capabilityPin,'f88ec61c42446755
 assert.equal(contract.storeAuthority('startOwn').materialCatalogPin,'4402abeb6b0299a5b6db2eec85ed04c3b0236bcc');
 assert.equal(contract.storeAuthority('startOwn').legacyGeneralRecoverySelected,false);
 assert.equal(contract.storeAuthority('windowSeat').economicsModel,'STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0.1');
-assert.equal(contract.storeAuthority('alcove').economicsModel,'STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0.1');
+assert.equal(contract.storeAuthority('alcove').economicsModel,null);
+assert.equal(contract.storeAuthority('alcove').economicsStatus,'PROJECT_NATIVE_REFERENCE');
+assert.match(contract.storeAuthority('alcove').economicsReason,/owned by the Alcove implementation/);
 assert.equal(contract.storeAuthority('alcove').legacyGeneralRecoverySelected,false);
 const shelfMaterial = contract.resolveStartOwnMaterial({
   sizeKey:'2x4',
@@ -42,7 +44,7 @@ assert.equal(shelfMaterial.status,'MAPPED');
 assert.equal(shelfMaterial.storeSku,'STB-ZERO-SPF-2X4-192-001');
 assert.equal(shelfMaterial.materialTotal,8.36);
 
-assert.match(shell,/stb-store-handoff-contract\.js\?v=/);
+assert.match(shell,/stb-store-handoff-contract\.js\?v=6be0f8b6/);
 assert.match(shell,/dataset\.startOwnArtifact = 'stb-start-own-0\.11\.html'/);
 assert.match(shell,/dataset\.outdoorBuildArtifact = 'stb-outdoor-build\.html'/);
 assert.match(shell,/dataset\.windowSeatArtifact = 'stb-window-seat-space-utilization-0\.7\.4\.html'/);
@@ -113,7 +115,7 @@ assert.match(shell,/data-proof-library/);
 assert.match(shell,/\['alcove-capture','alcove-config','store','request','yard','record','window-parts','playhouse-s001'/);
 
 assert.match(shell,/const QUARANTINED_OUTDOOR_TARGETS = new Set\(\['picnic-chooser','picnic-config','picnic-store','picnic-review','picnic-request','picnic-yard','picnic-terms','picnic-recap','picnic-record'\]\)/);
-assert.match(shell,/function openCurrentOutdoorBuildFromLegacyRoute\(\) \{[\s\S]*selectJourneyProject\(null\)[\s\S]*originalShow\.call\(win, 'outdoor-build-live'\)/);
+assert.match(shell,/function openCurrentOutdoorBuildFromLegacyRoute\(\) \{[\s\S]*selectJourneyProject\('outdoor'\)[\s\S]*originalShow\.call\(win, 'outdoor-build-live'\)/);
 assert.match(shell,/if \(QUARANTINED_OUTDOOR_TARGETS\.has\(target\)\) \{[\s\S]*openCurrentOutdoorBuildFromLegacyRoute\(\)/);
 assert.match(shell,/outdoorTile\.removeAttribute\('data-go'\)/);
 assert.match(shell,/originalShow\.call\(win, 'outdoor-build-live'\)/);
@@ -123,5 +125,21 @@ assert.match(shell,/PAYMENT<\/b><span>NOT AVAILABLE \/ NOT RECORDED/);
 assert.match(shell,/PRODUCTION RELEASE<\/b><span>NOT ESTABLISHED/);
 assert.match(shell,/CYCLE START<\/b><span>NOT AUTHORIZED/);
 assert.match(shell,/PHYSICAL FABRICATION<\/b><span>NOT RECORDED/);
+
+
+assert.equal(shell.includes('applyAlcoveEconomicsBoundary'),false,'outer shell reintroduced a second Alcove economics authority');
+assert.equal(shell.includes('quoteAlcoveInsert'),false,'live shell reintroduced Alcove repricing');
+assert.equal(contractSource.includes('quoteAlcoveInsert'),false,'shared Store contract reintroduced Alcove repricing');
+assert.match(alcoveBase,/const RECOVERY=\{2:\{2:63\.60[\s\S]*3:\{2:68\.59,3:73\.58,4:78\.57,5:83\.56/);
+assert.match(alcoveBase,/addChrome\(\);renderHeights\(\);syncAlcove\(\);syncPicnic\(\)/,'Alcove native calculation is not executed on first load');
+assert.match(alcoveBase,/id="review-price">\$374\.42/,'native Pine review price drifted');
+assert.match(shell,/selectJourneyProject\('start-own'\)/);
+assert.match(shell,/selectJourneyProject\('outdoor'\)/);
+assert.match(shell,/'start-own': Object\.freeze\(\{[\s\S]*store:'proof-store'[\s\S]*record:'proof-record'/);
+assert.match(shell,/outdoor: Object\.freeze\(\{[\s\S]*store:'proof-store'[\s\S]*record:'proof-record'/);
+assert.match(shell,/if \(activeJourneyProject !== nextJourneyProject\) proofHandoff = null/,'project switch does not clear current handoff authority');
+assert.match(shell,/const navButton = event\.target\.closest\?\.\('\.recovery-nav button\[data-journey-stage\]'\)[\s\S]*event\.preventDefault\(\);[\s\S]*event\.stopImmediatePropagation\(\);[\s\S]*showMappedProjectStage\(activeJourneyProject, stage\);/,'project nav can still fall through to another project');
+assert.match(shell,/src="stb-start-own-0\.11\.html\?v=45132afe"/);
+assert.match(shell,/src="stb-outdoor-build\.html\?v=77726203"/);
 
 console.log('PASS · current five-project Store convergence and legacy Outdoor quarantine');
