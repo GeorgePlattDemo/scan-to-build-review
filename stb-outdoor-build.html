@@ -657,7 +657,18 @@ function bindBench(){
     renderBench();
   };
 }
-function render(){ if(S.screen==='aframe')renderAframe(); else if(S.screen==='bench')renderBench(); else renderHome(); }
+function notifyParentDefinition(){
+  if(S.screen!=='bench'||window.self===window.top)return;
+  window.parent.postMessage({
+    type:'STB_RECOVERY_DEFINITION_CURRENT',
+    source:'outdoor',
+    definitionId:versionId()
+  },location.origin);
+}
+function render(){
+  if(S.screen==='aframe')renderAframe(); else if(S.screen==='bench')renderBench(); else renderHome();
+  notifyParentDefinition();
+}
 document.addEventListener('click',function(event){
   if(event.target&&event.target.closest&&event.target.closest('button,a'))METRICS.uiActions+=1;
 },true);
