@@ -31,8 +31,8 @@ assert.match(artifact,/NO BLOOD ON WOOD/);
 
 assert.match(shell,/startOwnTile = ribbon\.querySelector\('\.tile\[data-go="start-own"\]'\)/);
 assert.match(shell,/startOwnTile\.removeAttribute\('data-go'\)/);
-assert.match(shell,/startOwnTile\.dataset\.startOwnArtifact = 'stb-start-own-0\.11\.html'/);
-assert.match(shell,/src="stb-start-own-0\.11\.html\?v=45132afe"/);
+assert.match(shell,/startOwnTile\.dataset\.startOwnArtifact = 'stb-start-own-bench-leg-0\.1\.html'/);
+assert.match(shell,/src="stb-start-own-bench-leg-0\.1\.html\?v=3ca37b4b"/);
 assert.equal(gitBlobSha(candidate),'c93868c39845d08958d9f330222b2382df0bf7d0','Start Your Own 0.11 repaired candidate changed unexpectedly');
 assert.match(candidate,/ANGLED_CUT/);
 assert.match(candidate,/STB_START_OWN_CONFIRMED/);

@@ -22,8 +22,8 @@ assert.deepEqual(
   ['project-definition','store-answer','accept-pay','store-yard','handoff-record','project-library']
 );
 
-assert.equal(contract.currentArtifacts.startOwn.artifact,'stb-start-own-0.11.html');
-assert.equal(contract.currentArtifacts.outdoor.artifact,'stb-outdoor-build.html');
+assert.equal(contract.currentArtifacts.startOwn.artifact,'stb-start-own-bench-leg-0.1.html');
+assert.equal(contract.currentArtifacts.outdoor.artifact,'stb-outdoor-bench-leg-0.1.html');
 assert.equal(contract.currentArtifacts.alcove.artifact,'system-build-current.html#alcove-capture');
 assert.equal(contract.currentArtifacts.windowSeat.artifact,'stb-window-seat-space-utilization-0.7.4.html');
 assert.equal(contract.currentArtifacts.sheetS001.artifact,'system-build-current.html#playhouse-s001');
@@ -45,8 +45,8 @@ assert.equal(shelfMaterial.storeSku,'STB-ZERO-SPF-2X4-192-001');
 assert.equal(shelfMaterial.materialTotal,8.36);
 
 assert.match(shell,/stb-store-handoff-contract\.js\?v=8453e493/);
-assert.match(shell,/dataset\.startOwnArtifact = 'stb-start-own-0\.11\.html'/);
-assert.match(shell,/dataset\.outdoorBuildArtifact = 'stb-outdoor-build\.html'/);
+assert.match(shell,/dataset\.startOwnArtifact = 'stb-start-own-bench-leg-0\.1\.html'/);
+assert.match(shell,/dataset\.outdoorBuildArtifact = 'stb-outdoor-bench-leg-0\.1\.html'/);
 assert.match(shell,/dataset\.windowSeatArtifact = 'stb-window-seat-space-utilization-0\.7\.4\.html'/);
 
 const comparisonPart = {
@@ -139,7 +139,7 @@ assert.match(shell,/'start-own': Object\.freeze\(\{[\s\S]*store:'proof-store'[\s
 assert.match(shell,/outdoor: Object\.freeze\(\{[\s\S]*store:'proof-store'[\s\S]*record:'proof-record'/);
 assert.match(shell,/if \(activeJourneyProject !== nextJourneyProject\) proofHandoff = null/,'project switch does not clear current handoff authority');
 assert.match(shell,/const navButton = event\.target\.closest\?\.\('\.recovery-nav button\[data-journey-stage\]'\)[\s\S]*event\.preventDefault\(\);[\s\S]*event\.stopImmediatePropagation\(\);[\s\S]*showMappedProjectStage\(activeJourneyProject, stage\);/,'project nav can still fall through to another project');
-assert.match(shell,/src="stb-start-own-0\.11\.html\?v=45132afe"/);
-assert.match(shell,/src="stb-outdoor-build\.html\?v=77726203"/);
+assert.match(shell,/src="stb-start-own-bench-leg-0\.1\.html\?v=3ca37b4b"/);
+assert.match(shell,/src="stb-outdoor-bench-leg-0\.1\.html\?v=dcefd0aa"/);
 
 console.log('PASS · current five-project Store convergence and legacy Outdoor quarantine');

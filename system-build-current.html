@@ -14,6 +14,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 <iframe id="stb-current" title="Scan-to-Build System" src="system-build-front-door-0.5.html?v=5ac9677b"></iframe>
 <script src="stb-canonical-journey.js?v=e0619841"></script>
 <script src="stb-store-handoff-contract.js?v=8453e493"></script>
+<script src="stb-user-defined-board-store.js?v=94876c9f"></script>
 <script src="store-zero-canonical-doctrine.js?v=65366367"></script>
 <script>
 (() => {
@@ -146,8 +147,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         const startOwnTile = ribbon.querySelector('.tile[data-go="start-own"]');
         if (startOwnTile) {
           startOwnTile.removeAttribute('data-go');
-          startOwnTile.dataset.startOwnArtifact = 'stb-start-own-0.11.html';
-          startOwnTile.title = 'Start Your Own · generic operation candidate · 0.11';
+          startOwnTile.dataset.startOwnArtifact = 'stb-start-own-bench-leg-0.1.html';
+          startOwnTile.title = 'Start Your Own · grab a board · bench leg 0.1';
 
           let startOwnPage = doc.getElementById('start-own-live');
           if (!startOwnPage) {
@@ -173,7 +174,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   id="start-own-proof-frame"
                   class="start-own-shell-frame"
                   title="Start Your Own · definition to doing"
-                  src="stb-start-own-0.11.html?v=45132afe"
+                  src="stb-start-own-bench-leg-0.1.html?v=3ca37b4b"
                 ></iframe>
               </div>
             `;
@@ -203,6 +204,34 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             if (path === 'cuts.0.qty') proofDecisions.add('quantity');
           };
           captureStartOwnProof = () => {
+            const bridge = proofFrame?.contentWindow?.STBProjectBridge;
+            const snap = bridge && typeof bridge.getSnapshot === 'function' ? bridge.getSnapshot() : null;
+            if (snap && snap.physicalDemand) {
+              const demand = snap.physicalDemand;
+              const preview = window.parent.STBUserDefinedBoardStore
+                ? window.parent.STBUserDefinedBoardStore.previewFromDemand(demand)
+                : (win.STBUserDefinedBoardStore ? win.STBUserDefinedBoardStore.previewFromDemand(demand) : null);
+              const boardStore = window.STBUserDefinedBoardStore || win.STBUserDefinedBoardStore || null;
+              const built = boardStore ? boardStore.previewFromDemand(demand) : preview;
+              try {
+                win.localStorage.setItem('stb-proof-ladder-job1', JSON.stringify({
+                  semanticOutput:{
+                    stockClass:demand.sizeKey,
+                    finishedLength:demand.finishedLengthIn,
+                    quantity:demand.partQty,
+                    endCondition:demand.angleDeg ? 'angled' : 'square',
+                    straightCut:true,
+                    angleDegrees:demand.angleDeg,
+                    cutPlane:demand.cutPlane,
+                    endIdentity:demand.endIdentity,
+                    endRelation:demand.endRelation,
+                    lengthDatum:demand.lengthDatum
+                  },
+                  storePreview:built && built.answer
+                }));
+              } catch (_) {}
+              return;
+            }
             const state = proofFrame?.contentWindow?.S;
             if (!state) return;
             let semanticOutput = null;
@@ -287,8 +316,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         const outdoorTile = ribbon.querySelector('.tile[data-go="picnic-chooser"]');
         if (outdoorTile) {
           outdoorTile.removeAttribute('data-go');
-          outdoorTile.dataset.outdoorBuildArtifact = 'stb-outdoor-build.html';
-          outdoorTile.title = 'Outdoor Build · matching Sawhorse table + two benches';
+          outdoorTile.dataset.outdoorBuildArtifact = 'stb-outdoor-bench-leg-0.1.html';
+          outdoorTile.title = 'Outdoor Build · bench leg 0.1';
 
           let outdoorPage = doc.getElementById('outdoor-build-live');
           if (!outdoorPage) {
@@ -298,9 +327,10 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             outdoorPage.innerHTML = `
               <div class="outdoor-build-shell-main">
                 <iframe
+                  id="outdoor-bench-leg-frame"
                   class="outdoor-build-shell-frame"
-                  title="Outdoor Build · Sawhorse table + matching benches"
-                  src="stb-outdoor-build.html?v=77726203"
+                  title="Outdoor Build · bench leg"
+                  src="stb-outdoor-bench-leg-0.1.html?v=dcefd0aa"
                 ></iframe>
               </div>
             `;
@@ -354,9 +384,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         var projectId = source === 'start-own' ? 'start-own' : 'outdoor-build';
         var projectClass = source === 'start-own' ? 'USER_DEFINED_BOARD' : 'BOUNDED_SOURCE_BACKED';
         var sourceAuthority = source === 'start-own'
-          ? {kind:'USER-DEFINED',artifact:'stb-start-own-0.11.html'}
-          : {kind:'BOUNDED SOURCE-BACKED',artifact:'stb-outdoor-build.html',detail:payload.sourceAuthority||null};
-        if(source === 'start-own'){
+          ? {kind:'USER-DEFINED',artifact:'stb-start-own-bench-leg-0.1.html'}
+          : {kind:'BOUNDED SOURCE-BACKED',artifact:'stb-outdoor-bench-leg-0.1.html',detail:payload.sourceAuthority||null};
+        if(payload.physicalDemand){
+          physicalDemand = payload.physicalDemand;
+        } else if(source === 'start-own'){
           try { physicalDemand = JSON.parse(win.localStorage.getItem('stb-proof-ladder-job1')||'null')?.semanticOutput || null; } catch (_) {}
         } else {
           physicalDemand = payload.normalizedPart || null;
@@ -416,25 +448,46 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         win.addEventListener('message', event => {
           if (event.origin !== win.location.origin) return;
           const type = event.data?.type;
-          if (type === 'STB_PROOF_RETURN_LIBRARY') {
+          if (type === 'STB_PROOF_RETURN_LIBRARY' || type === 'STB_CHILD_RETURN_LIBRARY') {
             selectJourneyProject(null);
             originalShow.call(win, 'projects');
+          } else if (type === 'STB_PROJECT_DEFINITION_CHANGED' && event.data?.projectId === 'start-own') {
+            const frame = doc.getElementById('start-own-proof-frame');
+            const demand = event.data.definition && event.data.definition.physicalDemand;
+            const boardStore = window.STBUserDefinedBoardStore;
+            if (frame && frame.contentWindow && demand && boardStore) {
+              const built = boardStore.previewFromDemand(demand);
+              frame.contentWindow.postMessage({
+                type:'STB_START_OWN_STORE_PREVIEW',
+                childDefinitionKey:event.data.definition && frame.contentWindow.currentDefinitionKey
+                  ? frame.contentWindow.currentDefinitionKey()
+                  : null,
+                answer:built.answer,
+                diagnostic:built.diagnostic
+              }, win.location.origin);
+            }
           } else if (type === 'STB_PROOF_OPEN_JOB1') {
             selectJourneyProject('start-own');
             originalShow.call(win, 'start-own-live');
           } else if (type === 'STB_START_OWN_CONFIRMED' && event.data?.payload) {
             if (activeJourneyProject !== 'start-own') return;
             captureStartOwnProof();
+            const boardEval = window.STBUserDefinedBoardStore && event.data.payload.physicalDemand
+              ? window.STBUserDefinedBoardStore.evaluateUserDefinedBoardJob(event.data.payload.physicalDemand)
+              : null;
             const storeHandoff = createComparisonStoreHandoff('start-own',event.data.payload);
-            proofHandoff = {job:'JOB 1 · START YOUR OWN',source:'start-own',payload:event.data.payload,storeHandoff:storeHandoff};
+            proofHandoff = {job:'JOB 1 · START YOUR OWN',source:'start-own',payload:event.data.payload,storeHandoff:storeHandoff,boardEvaluation:boardEval};
             retainComparisonStoreHandoff('start-own',storeHandoff);
             try { win.localStorage.setItem('stb-proof-handoff-job1', JSON.stringify(proofHandoff)); } catch (_) {}
             syncProofHandoff();
             originalShow.call(win, 'proof-store');
           } else if (type === 'STB_OUTDOOR_CONFIRMED' && event.data?.payload) {
             if (activeJourneyProject !== 'outdoor') return;
+            const boardEval = window.STBUserDefinedBoardStore && event.data.payload.physicalDemand
+              ? window.STBUserDefinedBoardStore.evaluateUserDefinedBoardJob(event.data.payload.physicalDemand)
+              : null;
             const storeHandoff = createComparisonStoreHandoff('outdoor',event.data.payload);
-            proofHandoff = {job:'JOB 2 · OUTDOOR BUILD',source:'outdoor',payload:event.data.payload,storeHandoff:storeHandoff};
+            proofHandoff = {job:'JOB 2 · OUTDOOR BUILD',source:'outdoor',payload:event.data.payload,storeHandoff:storeHandoff,boardEvaluation:boardEval};
             retainComparisonStoreHandoff('outdoor',storeHandoff);
             try { win.localStorage.setItem('stb-proof-handoff-job2', JSON.stringify(proofHandoff)); } catch (_) {}
             syncProofHandoff();
