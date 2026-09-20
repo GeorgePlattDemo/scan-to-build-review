@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 
 const read=p=>fs.readFileSync(p,'utf8');
 const artifact=read('stb-start-own-0.10.html');
+const candidate=read('stb-start-own-recovery.html');
 const shell=read('system-build-current.html');
 const seat=read('stb-window-seat-space-utilization-0.7.4.html');
 const doctrine=read('store-zero-canonical-doctrine.js');
@@ -30,8 +31,14 @@ assert.match(artifact,/NO BLOOD ON WOOD/);
 
 assert.match(shell,/startOwnTile = ribbon\.querySelector\('\.tile\[data-go="start-own"\]'\)/);
 assert.match(shell,/startOwnTile\.removeAttribute\('data-go'\)/);
-assert.match(shell,/startOwnTile\.dataset\.startOwnArtifact = 'stb-start-own-0\.10\.html'/);
-assert.match(shell,/src="stb-start-own-0\.10\.html\?v=cbdb0299"/);
+assert.match(shell,/startOwnTile\.dataset\.startOwnArtifact = 'stb-start-own-recovery\.html'/);
+assert.match(shell,/src="stb-start-own-recovery\.html\?v=d4196885"/);
+assert.equal(gitBlobSha(candidate),'d419688541df3b8a8ce56fd963f3630f894aceb8','Start Your Own recovery candidate drifted');
+assert.match(candidate,/stb-store-handoff-contract\.js\?v=f740518e/);
+assert.match(candidate,/createProjectHandoff/);
+assert.match(candidate,/STB_RECOVERY_STORE_HANDOFF/);
+assert.match(candidate,/Current Store-derived value/);
+assert.match(candidate,/Combined value[\s\S]*NOT COMPLETE/);
 assert.match(shell,/originalShow\.call\(win, 'start-own-live'\)/);
 assert.match(shell,/selectJourneyProject\(null\)/);
 
