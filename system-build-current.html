@@ -14,7 +14,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 <iframe id="stb-current" title="Scan-to-Build System" src="system-build-front-door-0.5.html?v=5ac9677b"></iframe>
 <script src="stb-canonical-journey.js?v=e0619841"></script>
 <script src="stb-store-handoff-contract.js?v=8453e493"></script>
-<script src="stb-user-defined-board-store.js?v=94876c9f"></script>
+<script src="stb-user-defined-board-store.js?v=979e547f"></script>
 <script src="store-zero-canonical-doctrine.js?v=65366367"></script>
 <script>
 (() => {
@@ -174,7 +174,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   id="start-own-proof-frame"
                   class="start-own-shell-frame"
                   title="Start Your Own · definition to doing"
-                  src="stb-start-own-bench-leg-0.1.html?v=3ca37b4b"
+                  src="stb-start-own-bench-leg-0.1.html?v=b428c100"
                 ></iframe>
               </div>
             `;
@@ -443,6 +443,12 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         } catch (_) {}
       }
 
+      if (!win.__stbPostStartOwnPreview) {
+        win.__stbPostStartOwnPreview = function(payload){
+          const frame = doc.getElementById('start-own-proof-frame');
+          if (frame && frame.contentWindow) frame.contentWindow.postMessage(payload, win.location.origin);
+        };
+      }
       if (!win.__stbProofLadderMessageBound) {
         win.__stbProofLadderMessageBound = true;
         win.addEventListener('message', event => {
@@ -457,14 +463,15 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             const boardStore = window.STBUserDefinedBoardStore;
             if (frame && frame.contentWindow && demand && boardStore) {
               const built = boardStore.previewFromDemand(demand);
-              frame.contentWindow.postMessage({
+              const key = frame.contentWindow.currentDefinitionKey ? frame.contentWindow.currentDefinitionKey() : null;
+              const preview = {
                 type:'STB_START_OWN_STORE_PREVIEW',
-                childDefinitionKey:event.data.definition && frame.contentWindow.currentDefinitionKey
-                  ? frame.contentWindow.currentDefinitionKey()
-                  : null,
+                childDefinitionKey:key,
                 answer:built.answer,
                 diagnostic:built.diagnostic
-              }, win.location.origin);
+              };
+              if (typeof win.__stbPostStartOwnPreview === 'function') win.__stbPostStartOwnPreview(preview);
+              else frame.contentWindow.postMessage(preview, win.location.origin);
             }
           } else if (type === 'STB_PROOF_OPEN_JOB1') {
             selectJourneyProject('start-own');

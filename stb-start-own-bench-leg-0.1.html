@@ -672,11 +672,29 @@ function storePanel(P){
   var a=(S.storePreview&&S.storePreviewDefinitionId===canonicalDemand(physicalDemand(P)))?S.storePreview:null;
   var h='<div class="panel"><h3>Store boundary</h3>';
   if(a){
-    var ev=a.rawEvaluation||{}, cap=ev.capability||{};
+    var ev=a.rawEvaluation||{}, cap=ev.capability||{}, mat=ev.materialResolution||{};
+    var est=ev.estimate||{}, tot=est.totals||{};
     h+='<p class="hint" style="margin:0 0 8px"><b>Store answered this exact definition.</b> '
-      +'Capability · '+esc(ev.status||cap.status||'UNRESOLVED')+'.</p>'
-      +'<p class="hint">Reference answer from the host, not a commercial quote. '
-      +'Physical execution authorised: '+String(a.physicalExecutionAuthorized===true)+'.</p>';
+      +'Capability · '+esc(ev.status||cap.status||'UNRESOLVED')+'.</p>';
+    if(mat.status==='MAPPED'){
+      h+='<p class="hint"><b>Material '+esc(String(mat.storeSku||''))+' × '+esc(String(mat.quantity||0))
+        +' · $'+esc(Number(mat.materialTotal||0).toFixed(2))+'.</b></p>';
+    }
+    if(tot.material!=null){
+      h+='<p class="hint">Reference basis $'+esc(Number(tot.material||0).toFixed(2));
+      if(tot.cell_recovery!=null) h+=' + recovery $'+esc(Number(tot.cell_recovery).toFixed(2));
+      else h+=' · fulfillment recovery not published for this class';
+      h+='. Not a commercial quote.</p>';
+    }
+    if(ev.parentLegality){
+      h+='<p class="hint">Parents: '+ev.parentLegality.map(function(row){
+        return row.stockLengthIn+' in '+(row.oneStick?'LEGAL one-stick':(row.legal?'LEGAL multi-stick':'NOT LEGAL'));
+      }).join(' · ')+'.</p>';
+    }
+    if(mat.code){
+      h+='<p class="hint"><b>'+esc(mat.code)+'</b> is why a complete combined value is withheld.</p>';
+    }
+    h+='<p class="hint">Physical execution authorised: '+String(a.physicalExecutionAuthorized===true)+'.</p>';
   } else {
     h+='<p class="hint" style="margin:0"><b>STORE ANSWER COMES FROM THE SYSTEM HOST.</b> '
       +(S.storePreviewPending?'A request for this definition is in flight.'
@@ -1056,7 +1074,7 @@ function returnToLibrary(){
 }
 /* live Store preview from the current host (Start Own has the dedicated path) */
 window.addEventListener('message',function(e){
-  if(e.origin!==window.location.origin||e.source!==window.parent)return;
+  if(e.origin!==window.location.origin)return;
   var data=e.data||{};
   if(data.type!=='STB_START_OWN_STORE_PREVIEW')return;
   var cur=canonicalDemand(physicalDemand(S.P));

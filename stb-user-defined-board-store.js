@@ -138,6 +138,11 @@
       parts:Array.from({length:partQty}, function(){return finishedLengthIn}),
       establishAngledEnd:angleDeg !== 0
     });
+    var materialTotal=Math.round(sequence.sticks * item.sellingPrice * 100) / 100;
+    var quoted = root.STBStoreHandoffContract && typeof root.STBStoreHandoffContract.quoteModeledRecovery==='function'
+      ? root.STBStoreHandoffContract.quoteModeledRecovery({species:'pine', sticks:sequence.sticks, millMinutes:0, material:materialTotal, hardware:0})
+      : null;
+    var recovery = quoted && Number.isFinite(quoted.recovery) ? Math.round(quoted.recovery*100)/100 : null;
     return {
       status:"SUPPORTABLE",
       stage:2,
@@ -151,11 +156,15 @@
         stockLengthIn:item.stockL_in,
         quantity:sequence.sticks,
         unitPrice:item.sellingPrice,
-        materialTotal:Math.round(sequence.sticks * item.sellingPrice * 100) / 100,
+        materialTotal:materialTotal,
         sequence:sequence
       },
       capability:{status:"SUPPORTABLE", basis:"DECLARED_STAGE2_CAPABILITY"},
-      estimate:{status:"BUDGETARY_PARTIAL", totals:{material:Math.round(sequence.sticks * item.sellingPrice * 100) / 100, cell_recovery:null, Q:null}, economics:{status:"UNRESOLVED_CLASS_SCOPED_RECOVERY"}},
+      estimate:{
+        status: recovery==null ? "BUDGETARY_PARTIAL" : "REFERENCE",
+        totals:{material:materialTotal, cell_recovery:recovery, Q: recovery==null?null:Math.round((materialTotal+recovery)*100)/100},
+        economics:{status: recovery==null ? "UNRESOLVED_CLASS_SCOPED_RECOVERY" : "STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0.1"}
+      },
       physicalExecutionAuthorized:false,
       storePin:"582afd22aef6a1909f2160957c58f6694351cac1"
     };
