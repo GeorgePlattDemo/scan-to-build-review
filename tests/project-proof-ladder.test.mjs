@@ -24,7 +24,8 @@ for (const label of [
 assert.match(shell, /TARGET: Replace 8 detached bench legs/);
 assert.match(shell, /2×4 · 16½ in finished · 8 pieces · square ends/);
 assert.match(shell, /Nothing is prefilled for this test by the proof wrapper/);
-assert.match(shell, /src="stb-start-own-0\.10\.html\?v=cbdb0299"/);
+assert.match(shell, /src="stb-start-own-recovery\.html\?v=d4196885"/);
+assert.match(shell, /startOwnTile\.dataset\.startOwnArtifact = 'stb-start-own-recovery\.html'/);
 assert.match(shell, /stb-proof-ladder-job1/);
 assert.match(shell, /explicitProjectDecisionCount: proofDecisions\.size/);
 assert.match(shell, /uiActions: proofActions/);
@@ -32,10 +33,10 @@ assert.match(shell, /endCondition: 'square'/);
 assert.match(shell, /holeRequirement: 'NONE'/);
 
 // Job 2 carries bounded facts and requires the three project-specific answers.
-assert.match(outdoor, /SAME JOB · BOUNDED PROJECT/);
-assert.match(outdoor, /2×4 stock class, square ends and the cited 16½ in reference geometry/);
-assert.match(outdoor, /still supply the quantity and whether measured hole spots are required/);
-assert.match(outdoor, /16½ in finished length is carried by the bounded reference unless you change it/);
+assert.match(outdoor, /DETACHED BENCH REPLACEMENT LEG/);
+assert.match(outdoor, /2×4 stock class · 16½ in cited starting geometry · square ends/);
+assert.match(outdoor, /You choose quantity[\s\S]*measured hole-center spotting/);
+assert.match(outdoor, /cited 16½ in finished length is carried by the bounded reference unless you change it/);
 assert.match(outdoor, /Quantity 8 is project-specific \/ user-declared/);
 assert.match(outdoor, /published plan as drawn uses 4 legs for two benches/);
 assert.match(outdoor, /These are not “standard” holes/);
@@ -61,6 +62,7 @@ assert.match(deck, /const AUTH="stb-outdoor-reference-authority-0\.3\.html"/);
 assert.match(deck, /WHY THESE NUMBERS\?/);
 assert.match(authority, /href="STB-OUTDOOR-ANGLED-FRAME-RESEARCH-DOSSIER-0\.1\.html"/);
 assert.ok(research.length > 90000, 'research dossier appears reduced');
+assert.match(outdoor, /OPEN OUTDOOR AUTHORITY/);
 
 // Navigation-only hardening: evidence leaves the live Outdoor iframe mounted and every
 // evidence page has an explicit return route that does not depend on browser history.
@@ -78,6 +80,12 @@ assert.equal(/history\.(?:back|go)\(/.test(outdoor+deck+authority+research), fal
 // Route return is explicit; no downstream authority was collapsed.
 assert.match(shell, /STB_PROOF_RETURN_LIBRARY/);
 assert.match(shell, /STB_PROOF_OPEN_JOB1/);
+assert.match(shell, /STB_RECOVERY_STORE_HANDOFF/);
+for (const id of ['recovery-store-answer','recovery-accept-pay','recovery-store-yard','recovery-handoff-record']) {
+  assert.ok(shell.includes(id), 'missing recovered common Store stage: ' + id);
+}
+assert.match(shell, /Processing \/ fulfillment recovery<\/b><span>NOT ESTABLISHED/);
+assert.match(shell, /COMBINED VALUE<\/b><span>NOT COMPLETE/);
 assert.match(outdoor, /Confirmation is not an order, payment, allocation, production release, machine readiness or Cycle Start/);
 assert.match(outdoor, /NO BLOOD ON WOOD/);
 assert.equal(/\b(?:G0?\d\b|M0?3\b|G-code)\b/i.test(outdoor), false, 'controller/G-code output appeared in Outdoor Build');
