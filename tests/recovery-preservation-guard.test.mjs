@@ -13,7 +13,10 @@ const immutable = new Map([
   ['stb-window-seat-space-utilization-0.7.4.html','96c85feef57b1196093e56495e7141452fc749a4'],
   ['system-build-front-door-0.5.html','5ac9677bdd7b508a633c357d46a217062708cdb2'],
   ['stb-canonical-journey.js','e0619841d245b392b4065d5aa5770fe7feaeb7eb'],
-  ['store-zero-canonical-doctrine.js','653663671f61dd77e0dae73917d33b8a8e896fd2']
+  ['store-zero-canonical-doctrine.js','653663671f61dd77e0dae73917d33b8a8e896fd2'],
+  ['stb-outdoor-reference-authority-0.3.html','289e178b1c7a526c802e908155d4405e593cc706'],
+  ['STB-OUTDOOR-ANGLED-FRAME-RESEARCH-DOSSIER-0.1.html','5c7d1acb78f65ab421423f531c87d2b4eb41059a'],
+  ['stb-outdoor-build-deck-0.1.html','8d619fbec7954c13d82a3b187c7d4fc5b84f46e7']
 ]);
 
 for (const [file,expected] of immutable) {
