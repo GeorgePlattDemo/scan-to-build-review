@@ -50,10 +50,10 @@ assert.match(outdoor,/DETACHED BENCH REPLACEMENT LEG/);
 assert.match(outdoor,/16½ in cited starting geometry · square ends/);
 assert.equal(outdoor.includes('REF.syoPrice'),false,'Outdoor local price authority returned');
 
-assert.match(shell,/src="stb-start-own-recovery\.html\?v=d4196885"/);
-assert.match(shell,/src="stb-outdoor-build\.html\?v=01088535"/);
+assert.match(shell,/src="stb-start-own-recovery\.html\?v=b9ed1715"/);
+assert.match(shell,/src="stb-outdoor-build\.html\?v=91ba33da"/);
 assert.match(shell,/STB_RECOVERY_STORE_HANDOFF/);
-assert.match(shell,/stb-recovery-store-spine\.js\?v=d2723d8d/);
+assert.match(shell,/stb-recovery-store-spine\.js\?v=50d74cf9/);
 assert.match(shell,/STBRecoveryStoreSpine\?\.install/);
 for (const id of ['recovery-store-answer','recovery-accept-pay','recovery-store-yard','recovery-handoff-record'])
   assert.ok(recoverySpine.includes(id),'missing common recovery Store stage '+id);
