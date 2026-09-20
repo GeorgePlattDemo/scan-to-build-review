@@ -164,7 +164,7 @@ details[open] summary:after{content:"  –"}
 @media(max-width:820px){.grid3,.grid4,.grid2{grid-template-columns:1fr}.step .sub{width:100%;margin-left:39px}}
 @media(max-width:560px){.wrap{padding:20px 14px 60px}.row{align-items:flex-start;flex-wrap:wrap}.row .lab{flex-basis:100%}}
 </style>
-</head>
+<script src="stb-store-handoff-contract.js?v=d58a01b2"></script>\n</head>
 <body>
 <div class="wrap" id="app"></div>
 <script>
@@ -189,7 +189,7 @@ function hash32(str){var h=2166136261;for(var i=0;i<str.length;i++){h^=str.charC
 
 /* ── cited pins. Do not “improve”. ── */
 var REF={
-  syoPrice:4.18, kerf:.125, board:96,
+  kerf:.125, board:96,
   leg:16.5, thick:1.5, wid:3.5, seat:18,
   holeEx:[3,7],
   aframe:{L:72, tableH:30.25, tableW:30.5, seatH:17, legLen:32.75, legAng:30, top:'2×8 × 72 in × 4', bench:'2×6 × 68 in × 4', bolts:'½ × 3½ in carriage'},
@@ -223,9 +223,66 @@ function validate(){
   }
   return a;
 }
+function storeContract(){
+  return window.STBStoreHandoffContract || null;
+}
+function outdoorMaterialResolution(){
+  var contract=storeContract();
+  if(!contract||typeof contract.resolveStartOwnMaterial!=='function')
+    return {status:'UNRESOLVED',code:'STORE_RESOLVER_UNAVAILABLE',details:'Shared Store Zero material resolver is unavailable.'};
+  return contract.resolveStartOwnMaterial({
+    sizeKey:'2x4',
+    parts:[{name:'bench leg',len:S.length,wid:REF.wid,qty:S.qty}]
+  });
+}
+function outdoorStoreAnswer(){
+  var r=outdoorMaterialResolution(), supported=(r&&r.supportedOps)||[], unresolved=[];
+  if(!r||r.status!=='MAPPED')unresolved.push((r&&r.code)||'STORE_MATERIAL_UNRESOLVED');
+  if(supported.indexOf('CROSSCUT')<0)unresolved.push('CROSSCUT_CAPABILITY_UNRESOLVED');
+  if(S.spot)unresolved.push('HOLE_SPOTTING_CAPABILITY_UNRESOLVED');
+  unresolved.push('UNRESOLVED_CLASS_SCOPED_RECOVERY');
+  return {
+    status:unresolved.length===1?'SUPPORTED_WITH_UNPRICED_RECOVERY':'NEEDS RESOLUTION',
+    material:r&&r.status==='MAPPED'?r.materialTotal:null,
+    sku:r&&r.status==='MAPPED'?r.storeSku:null,
+    processing:null,
+    combined:null,
+    complete:false,
+    unresolved:unresolved
+  };
+}
+function buildOutdoorHandoff(){
+  var contract=storeContract();
+  if(!contract||typeof contract.createProjectHandoff!=='function')return null;
+  var def=definition(), r=outdoorMaterialResolution(), answer=outdoorStoreAnswer();
+  var ops=[{kind:'CROSSCUT',part:'bench-leg',quantity:S.qty,detail:fmt(S.length)+' in finished · square ends'}];
+  if(S.spot)ops.push({kind:'SPOT_HOLE_LOCATIONS',part:'bench-leg',quantity:S.qty*2,detail:fmt(S.h1)+' / '+fmt(S.h2)+' in from TOP · centerline',unresolved:true});
+  return contract.createProjectHandoff({
+    projectId:'outdoor-build',
+    projectClass:'BOUNDED_REPLACEMENT_PART',
+    authorityKey:'outdoor',
+    definitionId:versionId(),
+    projectDefinition:def,
+    materialDemand:{sizeKey:'2x4',label:'2×4',parts:[{name:'bench leg',len:S.length,wid:REF.wid,qty:S.qty}]},
+    operationDemand:ops,
+    quantity:S.qty,
+    requiredGeometryDatumFacts:{finishedLength:S.length,endCondition:'square',holeRequirement:def.holeRequirement,datum:def.datum},
+    materialResolution:r,
+    unresolvedConditions:answer.unresolved
+  });
+}
 function boardPlan(){
-  var kerf=REF.kerf, per=Math.max(1,Math.floor((REF.board+kerf)/(S.length+kerf))), n=Math.ceil(S.qty/per);
-  return {per:per, n:n, cost:n*REF.syoPrice};
+  var r=outdoorMaterialResolution();
+  var stock=r&&r.status==='MAPPED'&&r.stockLengthIn?r.stockLengthIn:REF.board;
+  var per=Math.max(1,Math.floor((stock+REF.kerf)/(S.length+REF.kerf)));
+  return {
+    per:per,
+    n:r&&r.status==='MAPPED'?r.quantity:Math.ceil(S.qty/per),
+    materialTotal:r&&r.status==='MAPPED'?r.materialTotal:null,
+    storeSku:r&&r.status==='MAPPED'?r.storeSku:null,
+    stockLength:stock,
+    resolution:r
+  };
 }
 function explicitDecisionList(){
   var out=[];
@@ -429,7 +486,7 @@ function researchFold(){
     +'Seat height here is derived: 16½ + 1½ (actual 2×4) = <b>18 in</b>, inside the 17–18 in comfort band. 15 in is too low (Flowyline).<br><br>'
     +'<b>A-frame</b> — Home Depot 6-ft DIY: table <b>30¼ in</b> high × ~30½ in wide × 72 in long; legs <b>2×8 × 32¾ in, 30° both ends parallel</b>; benches 2×6 × 68 in; ½ × 3½ in carriage bolts. This Old House uses 28° / 32¼ in / ~17 in seat. Pilot Rock commercial AFT: 30¼ / 17¾ nominal. Angled 2×8s are not 16½ in 2×4s.<br><br>'
     +'<b>Holes 3 in and 7 in from TOP</b> are example starting values for a replacement. Measure the old leg. Spot only — not through-drilled.<br><br>'
-    +'ADA 902.3 dining surface 28–34 in is cited, not claimed for this backyard prototype. $'+REF.syoPrice.toFixed(2)+' per 8-ft 2×4 is the Start Your Own donor pin, not an outdoor-material approval.'
+    +'ADA 902.3 dining surface 28–34 in is cited, not claimed for this backyard prototype. Material value is resolved by Store Zero, not by this Outdoor page.'
     +'</div></details>';
 }
 
@@ -441,46 +498,20 @@ function pathA(){
 function renderHome(){
   var h=woodDefs();
   h+='<div class="topline"><button class="crumb" type="button" id="gohome">← Project library</button><span class="eyebrow" style="margin:0">Scan-to-Build · Outdoor Build</span></div>';
-  h+='<h1>Find the part. <em>Put it on the bench.</em></h1>';
-  h+='<p class="lede"><strong>Same replacement job, two definitions.</strong> Start Your Own makes you define the part from the generic floor. Outdoor Build can carry only the facts the bounded project legitimately knows.</p>';
-  h+='<div class="proofbox"><span class="k">TEST 02 · FROM A BOUNDED PROJECT</span><h2>SAME JOB · BOUNDED PROJECT</h2><p>Detached bench replacement leg. The project carries the part family, 2×4 stock class, square ends and the cited 16½ in reference geometry. For the same job, you still supply the quantity and whether measured hole spots are required. Change the finished length only if this replacement is different.</p><div class="prooflinks"><button class="btn sm" type="button" id="samejob">Make the same eight-leg job →</button></div></div>';
+  h+='<h1>Replace the part. <em>Keep the definition honest.</em></h1>';
+  h+='<p class="lede"><strong>Project 1 is deliberately small:</strong> one detached-bench replacement leg. The bounded project carries only the facts it legitimately knows; you supply the facts that belong to your job.</p>';
+  h+='<div class="proofbox"><span class="k">TEST 02 · FROM A BOUNDED PROJECT</span><h2>DETACHED BENCH REPLACEMENT LEG</h2>'
+    +'<p>2×4 stock class · 16½ in cited starting geometry · square ends. You choose quantity, confirm whether the replacement length is different, and decide whether measured hole-center spotting is part of this job.</p>'
+    +'<div class="prooflinks"><button class="btn sm" type="button" id="samejob">PUT THE REPLACEMENT LEG ON THE BENCH →</button></div></div>';
   h+=pathA();
-  h+='<div class="proofbox"><span class="k">MORE BOUNDED OUTDOOR FAMILIES</span><h2>Research-backed geometry deck</h2><p>Attached A-frame · Detached X / splayed table · Detached X-frame bench · Multi-angle / sawhorse bench. This deck exposes sourced geometry and stops where the authority stops; it does not replace the simple same-job comparison.</p><div class="prooflinks"><a href="stb-outdoor-build-deck-0.1.html" target="_blank" rel="opener">OPEN BOUNDED FAMILY DECK →</a><a href="stb-outdoor-reference-authority-0.3.html" target="_blank" rel="opener">WHY THESE NUMBERS? →</a><a href="STB-OUTDOOR-ANGLED-FRAME-RESEARCH-DOSSIER-0.1.html" target="_blank" rel="opener">VIEW FULL RESEARCH →</a></div></div>';
-  h+='<div class="step"><span class="n">1</span><h2>What are you working on?</h2><span class="sub">Path B · pick the family</span></div><div class="grid3">';
-  [['picnic','Picnic tables','A-frame, or a table with detached benches.',picPicnic()],
-   ['bench','Benches','A whole bench, or go straight to a replacement part.',picBench()],
-   ['parts','Parts','You already know what broke. Start there.',picParts()]].forEach(function(x){
-    h+='<button class="card '+(S.family===x[0]?'on ':'')+'" data-family="'+x[0]+'">'+TICK()+'<span class="pic">'+x[3]+'</span><span class="body"><b>'+x[1]+'</b><span>'+x[2]+'</span></span></button>';
-  });
-  h+='</div>';
-  if(S.family==='picnic'){
-    h+='<div class="step"><span class="n">2</span><h2>Which style?</h2><span class="sub">Named references, not a universal standard</span></div><div class="grid2">';
-    h+='<button class="card '+(S.style==='aframe'?'on ':'')+'" data-style="aframe">'+TICK()+picAframe()+'<span class="body"><b>Simple A-frame</b><span>Home Depot 6-ft DIY · 30¼ in table · 17 in seat · 2×8 legs at 30°. Not Project 1’s first cut.</span></span></button>';
-    h+='<button class="card '+(S.style==='detached'?'on ':'')+'" data-style="detached">'+TICK()+picDetached()+'<span class="body"><b>Table + detached benches</b><span>MyOutdoorPlans 6-ft all-2×4 · 16½ in square 2×4 legs. This is Project 1.</span></span></button></div>';
-  }
-  if(S.family==='bench'||S.family==='parts'||S.style==='detached'){
-    h+='<div class="step"><span class="n">'+(S.family==='picnic'?'3':'2')+'</span><h2>What do you need?</h2><span class="sub">Project 1 is the leg</span></div><div class="grid4">';
-    [['leg','Bench leg','The playable Project 1 path.',false],
-     ['whole','Whole bench','Drawing only in this build.',true],
-     ['seat','Seat board','Planned — a 2×4 slat, not this order.',true],
-     ['support','Support','Planned — 11½ in in the cited plan.',true]].forEach(function(x){
-      h+='<button class="card '+(S.part===x[0]?'on ':'')+'" data-part="'+x[0]+'">'+TICK()+picParts()+'<span class="body"><b>'+x[1]+'</b><span>'+x[2]+'</span></span></button>';
-    });
-    h+='</div>';
-  }
-  if(S.part==='leg'){
-    h+='<div class="step"><span class="n">3</span><h2>How do you want to start?</h2><span class="sub">Same part. Different amount of typing.</span></div><div class="grid2">';
-    h+='<button class="card '+(S.mode==='standard'?'on ':'')+'" data-mode="standard">'+TICK()+picParts()+'<span class="body"><b>Standard geometry</b><span>16½ in square 2×4. Keep it, raise it 1 in, or type a new length. Holes stay off until you ask.</span></span></button>';
-    h+='<button class="card '+(S.mode==='custom'?'on ':'')+'" data-mode="custom">'+TICK()+picParts()+'<span class="body"><b>Custom geometry</b><span>Sliders and exact type-in. Same bounded leg. Spots from TOP if you need them.</span></span></button></div>';
-    if(S.mode)h+='<div class="go"><div class="copy"><b>'+(S.mode==='standard'?'Reference leg loaded.':'Custom bench ready.')+'</b> Hole locations are not a published standard — they belong to the leg you are replacing.</div><button class="btn" id="takebench">Put the leg on the bench →</button></div>';
-  }
-  if(S.part&&S.part!=='leg'){
-    h+='<div class="note"><b>Planned — Project 2.</b> '+(S.part==='whole'?'A whole detached bench is the family drawing, not a second order in this prototype. Start with a leg.':S.part==='seat'?'The cited plan uses three 2×4s at 72 in with ½ in gaps. Not ordered here.':'The cited plan’s bench support is 11½ in. Not ordered here.')
-      +' <button class="btn sm" style="margin-top:10px" data-part="leg">Go to the bench leg instead</button></div>';
-  }
-  h+=researchFold();
-  h+='<p class="foot">Start Your Own stays the generic path and is not modified by this prototype. Path A opens it as-is. Nothing here is ordered, reserved, or released.</p>';
-  $('app').innerHTML=h; bindHome();
+  h+='<div class="proofbox"><span class="k">WHY THE PROJECT KNOWS WHAT IT KNOWS</span><h2>Authority stays separate from Configure</h2>'
+    +'<p>The authority and research pages preserve the sourced geometry, alternatives, and limits. They inform the bounded project; they are not another customer configurator.</p>'
+    +'<div class="prooflinks"><a href="stb-outdoor-reference-authority-0.3.html" target="_blank" rel="opener">OPEN OUTDOOR AUTHORITY →</a>'
+    +'<a href="STB-OUTDOOR-ANGLED-FRAME-RESEARCH-DOSSIER-0.1.html" target="_blank" rel="opener">VIEW RESEARCH DOSSIER →</a>'
+    +'<a href="stb-outdoor-build-deck-0.1.html" target="_blank" rel="opener">VIEW BOUNDED FAMILY DECK →</a></div></div>';
+  h+='<p class="foot">This active Outdoor route does not expose the broader family research as customer controls. Nothing here is ordered, reserved, released, or authorized for physical execution.</p>';
+  $('app').innerHTML=h;
+  bindHome();
 }
 
 function bindHome(){
@@ -567,22 +598,25 @@ function renderBench(){
     +'<tr><td><b>Bench leg</b><span class="sub">2×4 · square ends</span></td><td>'+fmt(S.length)+' in finished<span class="sub">extra length at bottom</span></td><td>'+S.qty+'</td></tr>'
     +(S.spot?'<tr><td><b>Hole spots</b><span class="sub">center marks only · TOP datum</span></td><td>'+fmt(S.h1)+' / '+fmt(S.h2)+' in from TOP<span class="sub">on board centerline</span></td><td>'+(S.qty*2)+'</td></tr>':'')
     +'</tbody></table><p class="help">Change the definition and this list changes with it. Saw kerf '+fmt(REF.kerf)+' in.</p></section>';
-  h+='<section class="panel"><h3>What to buy</h3><div class="buyline"><div class="w"><b>'+plan.n+' × 8 ft 2×4</b><span>Reference stock planning · Store confirms outdoor material</span></div><div class="p">'+money(plan.cost)+'</div></div>'
+  var storePlanText=plan.resolution&&plan.resolution.status==='MAPPED'
+    ? plan.n+' × 2×4 × '+plan.stockLength+' in · '+plan.storeSku
+    : 'Store material resolution unresolved';
+  h+='<section class="panel"><h3>What Store Zero maps</h3><div class="buyline"><div class="w"><b>'+storePlanText+'</b><span>Material answer from the pinned Store Zero catalog</span></div><div class="p">'+(plan.materialTotal==null?'—':money(plan.materialTotal))+'</div></div>'
     +'<div class="boardmap">'+boardSvg()+'</div>'
-    +'<div class="total"><span>About</span><b>'+money(plan.cost)+'</b></div>'
-    +'<p class="help">Uses the Start Your Own 8-ft 2×4 donor pin ('+money(REF.syoPrice)+'). It is not an order or an outdoor-material approval.</p></section></div>';
+    +'<div class="total"><span>Material</span><b>'+(plan.materialTotal==null?'Not established':money(plan.materialTotal))+'</b></div>'
+    +'<p class="help">Processing / fulfillment recovery is not established for this project class. No complete price is invented here.</p></section></div>';
   h+='<div class="donebar"><div class="copy"><b>That is a project.</b><span>'+S.qty+' replacement leg'+(S.qty===1?'':'s')+', '+fmt(S.length)+' in finished'+(S.spot?', with '+(S.qty*2)+' hole centers spotted from TOP':'')+'.</span></div>'
     +'<button class="btn" id="send" '+((errs.length||unanswered.length)?'disabled':'')+'>Looks right — send to Store</button></div>';
   if(S.sent){
-    var current=versionId(), stale=current!==S.sent.id;
-  var stock=plan.n+' 8-foot 2×4'+(plan.n===1?'':'s');
-  if(plan.n===1) stock='one 8-foot 2×4';
-  var sentence=stale?'You changed the part after sending it. Send the new version when it looks right.'
-      :(S.spot?'Store Zero can cut this from '+stock+', about '+money(plan.cost)+'. Hole spotting still needs a supported cell answer. Nothing is ordered.'
-               :'Store Zero can cut this from '+stock+', about '+money(plan.cost)+'. Nothing is ordered.');
+    var current=versionId(), stale=current!==S.sent.id, answer=S.sent.storeAnswer||outdoorStoreAnswer(), resolution=S.sent.materialResolution||outdoorMaterialResolution();
+    var sentence=stale
+      ?'You changed the part after sending it. Send the new version when it looks right.'
+      :(resolution&&resolution.status==='MAPPED'
+        ?resolution.storeSku+' · material '+money(resolution.materialTotal)+'. '+(S.spot?'Hole spotting capability remains unresolved. ':'Square crosscut demand is represented. ')+'Processing / fulfillment recovery is not established, so no complete price is shown. Nothing is ordered.'
+        :'Store Zero material resolution remains '+((resolution&&resolution.code)||'UNRESOLVED')+'. Nothing is ordered.');
     h+='<section class="panel" style="margin-top:14px"><h3>Store answer</h3><p class="storesentence">'+sentence+'</p>'
       +'<details class="fold"><summary>What gets carried forward?</summary><div class="foldbody"><span class="version">'+esc(S.sent.id)+'</span><br><br>'
-      +'The Store receives this exact definition. It does not redesign it. Finished length and hole locations remain project truth. Local machine datum, tool, compensation, readiness and Cycle Start stay with the commissioned cell.<br><br>'
+      +'The Store receives this exact identified definition. It does not redesign it. Finished length and measured hole locations remain project truth. Local machine datum, tool, compensation, readiness and Cycle Start stay with the commissioned cell.<br><br>'
       +'Confirmation is not an order, payment, allocation, production release, machine readiness or Cycle Start.<br><br><b>NO BLOOD ON WOOD.</b></div></details></section>';
     h+=comparisonReceipt();
   }
@@ -606,14 +640,21 @@ function bindBench(){
   $('spotOff').onclick=function(){S.spot=false;S.choices.spots=true;S.sent=null;renderBench()};
   if($('send'))$('send').onclick=function(){
     if(validate().length||!S.choices.quantity||!S.choices.spots)return;
-    var decisions=explicitDecisionList();
+    var decisions=explicitDecisionList(), handoff=buildOutdoorHandoff(), materialResolution=outdoorMaterialResolution(), storeAnswer=outdoorStoreAnswer();
     S.sent={
       id:versionId(),
       definition:JSON.parse(JSON.stringify(definition())),
-      metrics:{explicitProjectDecisions:decisions,explicitProjectDecisionCount:decisions.length,uiActions:METRICS.uiActions}
+      metrics:{explicitProjectDecisions:decisions,explicitProjectDecisionCount:decisions.length,uiActions:METRICS.uiActions},
+      storeHandoff:handoff,
+      materialResolution:materialResolution,
+      storeAnswer:storeAnswer
     };
     try{localStorage.setItem('stb-proof-ladder-job2',JSON.stringify({measured:true,metrics:S.sent.metrics,semanticOutput:normalizedCore(S.sent.definition)}))}catch(_){}
-    renderBench()
+    if(handoff && window.self!==window.top){
+      window.parent.postMessage({type:'STB_RECOVERY_STORE_HANDOFF',source:'outdoor',handoff:handoff,answer:storeAnswer},location.origin);
+    }
+    renderBench();
+  };
   };
 }
 function render(){ if(S.screen==='aframe')renderAframe(); else if(S.screen==='bench')renderBench(); else renderHome(); }
