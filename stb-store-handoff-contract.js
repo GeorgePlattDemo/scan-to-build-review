@@ -290,6 +290,41 @@
     });
   }
 
+  function createProjectHandoff(input){
+    input = input || {};
+    if(!input.projectId) throw new Error('projectId is required');
+    if(!input.definitionId) throw new Error('definitionId is required');
+    if(!input.materialDemand) throw new Error('materialDemand is required');
+    if(!Array.isArray(input.operationDemand)) throw new Error('operationDemand array is required');
+    var authorityKey = String(input.authorityKey || '');
+    return Object.freeze({
+      protocol:'stb.store-handoff/0.2',
+      actorOrder:ACTOR_ORDER,
+      projectId:String(input.projectId),
+      projectClass:String(input.projectClass || ''),
+      definitionId:String(input.definitionId),
+      versionId:String(input.versionId || input.definitionId),
+      projectDefinition:freezeCopy(input.projectDefinition || null),
+      materialDemand:freezeCopy(input.materialDemand),
+      operationDemand:Object.freeze(input.operationDemand.map(function(op){return freezeCopy(op)})),
+      quantity:Number(input.quantity || 0),
+      requiredGeometryDatumFacts:freezeCopy(input.requiredGeometryDatumFacts || null),
+      materialResolution:freezeCopy(input.materialResolution || null),
+      storeAuthority:freezeCopy(storeAuthority(authorityKey) || null),
+      unresolvedConditions:Object.freeze((input.unresolvedConditions || []).map(String)),
+      requestedServices:Object.freeze((input.requestedServices || [
+        'material-answer','capability-answer','economics','availability-timing','services'
+      ]).map(String)),
+      authority:Object.freeze({
+        commercial:false,
+        productionRelease:false,
+        machineReadiness:false,
+        cycleStart:false,
+        physicalFabrication:false
+      })
+    });
+  }
+
   function createComparisonHandoff(input){
     input = input || {};
     var demand = comparisonDemand(input.physicalDemand);
@@ -362,6 +397,7 @@
     startOwnOfferings:startOwnOfferings,
     resolveStartOwnMaterial:resolveStartOwnMaterial,
     comparisonDemand:comparisonDemand,
+    createProjectHandoff:createProjectHandoff,
     createComparisonHandoff:createComparisonHandoff,
     storeDemandIdentity:storeDemandIdentity,
     sameStoreDemand:sameStoreDemand
