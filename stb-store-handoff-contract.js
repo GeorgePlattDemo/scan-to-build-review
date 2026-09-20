@@ -223,6 +223,21 @@
           for(var i=0;i<part.qty;i++) pieces.push(part.len);
         });
         if(pieces.some(function(len){return len>offering.stockL_in+0.0001})) return;
+        var useHold=input.sequence==='CROSSCUT_HOLD' || input.holdPolicy===D001_HOLD.id;
+        if(useHold){
+          var sequenced=sequenceCrosscuts({parentLengthIn:offering.stockL_in, parts:pieces});
+          if(sequenced.status!=='SEQUENCED') return;
+          candidates.push({
+            form:'board',storeSku:offering.storeSku,stockLengthIn:offering.stockL_in,
+            quantity:sequenced.sticks,unitPrice:offering.sellingPrice,
+            materialTotal:Math.round(sequenced.sticks*offering.sellingPrice*100)/100,
+            cuts:sequenced.cuts,left:sequenced.remain,waste:sequenced.waste,
+            holdIn:sequenced.holdIn,kerfIn:sequenced.kerfIn,
+            sequenceStatus:sequenced.status,
+            supportedOps:clone(offering.supportedOps || []),cellFamily:clone(offering.cellFamily || [])
+          });
+          return;
+        }
         pieces.sort(function(a,b){return b-a});
         var left=[], cuts=[];
         pieces.forEach(function(len){
@@ -299,6 +314,79 @@
     spindleRpm:18000,
     feedFormula:'feed_rate_ipm = chip_load_in_per_tooth × cutting_edges × spindle_rpm'
   });
+
+  var D001_HOLD = Object.freeze({
+    id:'D-HOLD-OPEN-0.1',
+    basis:'DECLARED REFERENCE / UNMEASURED',
+    holdIn:24,
+    kerfIn:0.125,
+    rule:'LAST_REMAIN_GE_HOLD',
+    details:'Nearest manipulating-rotor center to blade plane. Last remain on a driven stick is at least holdIn. Not a cull/substitution rule.',
+    cutoffParents:Object.freeze({
+      twelveFoot:Object.freeze({sku:'STB-ZERO-SPF-2X4-144-001', stockL_in:144, sellingPrice:6.80}),
+      sixteenFoot:Object.freeze({sku:'STB-ZERO-SPF-2X4-192-001', stockL_in:192, sellingPrice:8.36})
+    })
+  });
+
+  function sequenceCrosscuts(input){
+    input = input || {};
+    var parent = Number(input.parentLengthIn);
+    var hold = Number(input.holdIn == null ? D001_HOLD.holdIn : input.holdIn);
+    var kerf = Number(input.kerfIn == null ? D001_HOLD.kerfIn : input.kerfIn);
+    var parts = Array.isArray(input.parts) ? input.parts.map(Number).filter(function(len){return len>0}) : [];
+    if(!Number.isFinite(parent) || parent<=0){
+      return Object.freeze({status:'UNRESOLVED', code:'PARENT_LENGTH_INVALID', sticks:0, cuts:[], remain:[]});
+    }
+    if(!Number.isFinite(hold) || hold<=0){
+      return Object.freeze({status:'UNRESOLVED', code:'HOLD_LENGTH_UNPUBLISHED', sticks:0, cuts:[], remain:[]});
+    }
+    if(parts.some(function(len){return len>parent+0.0001})){
+      return Object.freeze({status:'UNRESOLVED', code:'PART_LONGER_THAN_PARENT', sticks:0, cuts:[], remain:[]});
+    }
+    var pieces=parts.slice().sort(function(a,b){return b-a});
+    var usable=[], cuts=[], remain=[];
+    pieces.forEach(function(len){
+      var whole=len>=parent-0.0001;
+      var need=whole?len:len+kerf;
+      var index=-1;
+      for(var i=0;i<usable.length;i++){
+        if(!whole && usable[i]>=need-0.0001){index=i;break;}
+      }
+      if(index<0){
+        var first=whole?parent:parent-hold;
+        if(first<need-0.0001){
+          usable.push(NaN);
+          cuts.push(null);
+          return;
+        }
+        usable.push(first-need);
+        cuts.push([len]);
+      }else{
+        usable[index]-=need;
+        cuts[index].push(len);
+      }
+    });
+    if(cuts.some(function(row){return !row})){
+      return Object.freeze({status:'UNRESOLVED', code:'LAST_REMAIN_BELOW_ROTOR_SAW_CENTER', sticks:0, cuts:[], remain:[], holdIn:hold, kerfIn:kerf});
+    }
+    remain=cuts.map(function(row){
+      var used=row.reduce(function(sum,len){return sum+len;},0);
+      var cutKerf=row.some(function(len){return len<parent-0.0001})?row.length*kerf:0;
+      return Math.round((parent-used-cutKerf)*1000)/1000;
+    });
+    return Object.freeze({
+      status:'SEQUENCED',
+      code:null,
+      holdIn:hold,
+      kerfIn:kerf,
+      parentLengthIn:parent,
+      sticks:cuts.length,
+      cuts:cuts,
+      usableLeft:usable,
+      remain:remain,
+      waste:remain.reduce(function(sum,value){return sum+value},0)
+    });
+  }
 
   var WINDOW_SEAT_RECOVERY = Object.freeze({
     id:'STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0.1',
@@ -499,6 +587,8 @@
     resolveStartOwnMaterial:resolveStartOwnMaterial,
     d001Cycle:D001_CYCLE,
     d001Envelope:D001_ENVELOPE,
+    d001Hold:D001_HOLD,
+    sequenceCrosscuts:sequenceCrosscuts,
     windowSeatRecovery:WINDOW_SEAT_RECOVERY,
     quoteModeledRecovery:quoteModeledRecovery,
     comparisonDemand:comparisonDemand,

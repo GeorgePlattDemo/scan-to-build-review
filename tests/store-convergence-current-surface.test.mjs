@@ -44,7 +44,7 @@ assert.equal(shelfMaterial.status,'MAPPED');
 assert.equal(shelfMaterial.storeSku,'STB-ZERO-SPF-2X4-192-001');
 assert.equal(shelfMaterial.materialTotal,8.36);
 
-assert.match(shell,/stb-store-handoff-contract\.js\?v=6be0f8b6/);
+assert.match(shell,/stb-store-handoff-contract\.js\?v=8453e493/);
 assert.match(shell,/dataset\.startOwnArtifact = 'stb-start-own-0\.11\.html'/);
 assert.match(shell,/dataset\.outdoorBuildArtifact = 'stb-outdoor-build\.html'/);
 assert.match(shell,/dataset\.windowSeatArtifact = 'stb-window-seat-space-utilization-0\.7\.4\.html'/);
