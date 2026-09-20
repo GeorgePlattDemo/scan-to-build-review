@@ -14,7 +14,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 <iframe id="stb-current" title="Scan-to-Build System" src="system-build-front-door-0.5.html?v=5ac9677b"></iframe>
 <script src="stb-canonical-journey.js?v=e0619841"></script>
 <script src="stb-store-handoff-contract.js?v=8453e493"></script>
-<script src="stb-user-defined-board-store.js?v=979e547f"></script>
+<script src="stb-user-defined-board-store.js?v=1c99c380"></script>
 <script src="store-zero-canonical-doctrine.js?v=65366367"></script>
 <script>
 (() => {
@@ -173,7 +173,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   id="start-own-proof-frame"
                   class="start-own-shell-frame"
                   title="Start Your Own · definition to doing"
-                  src="stb-start-own-bench-leg-0.1.html?v=b428c100"
+                  src="stb-start-own-bench-leg-0.1.html?v=b2b2cae1"
                 ></iframe>
               </div>
             `;
@@ -182,7 +182,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
           const liveFrame = startOwnPage.querySelector('#start-own-proof-frame');
           if (liveFrame && !String(liveFrame.getAttribute('src')||'').includes('stb-start-own-bench-leg-0.1.html')) {
-            liveFrame.src = 'stb-start-own-bench-leg-0.1.html?v=b428c100';
+            liveFrame.src = 'stb-start-own-bench-leg-0.1.html?v=b2b2cae1';
           }
           const banner = startOwnPage.querySelector('[data-proof-job="1"]');
           if (banner && /generic floor/.test(banner.textContent||'')) {
@@ -487,7 +487,10 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             const frame = doc.getElementById('start-own-proof-frame');
             const demand = event.data.definition && event.data.definition.physicalDemand;
             const boardStore = window.STBUserDefinedBoardStore;
-            if (frame && frame.contentWindow && demand && boardStore) {
+            const nestable = demand && demand.sizeKey && demand.finishedLengthIn && demand.partQty
+              && demand.endIdentity==='both' && demand.endRelation==='parallel'
+              && demand.lengthDatum==='long-long-outer-edge' && demand.cutPlane;
+            if (frame && frame.contentWindow && nestable && boardStore) {
               const built = boardStore.previewFromDemand(demand);
               const key = frame.contentWindow.currentDefinitionKey ? frame.contentWindow.currentDefinitionKey() : null;
               const preview = {

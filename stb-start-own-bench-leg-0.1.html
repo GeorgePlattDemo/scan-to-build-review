@@ -324,14 +324,14 @@ function blankPart(){
 }
 var S={
   screen:'intent',
-  intent:{oldLen:15.5,oldAngle:10,delta:1,qty:8,note:'Replace a broken outdoor bench leg'},
+  intent:{oldLen:null,oldAngle:null,delta:0,qty:1,note:''},
   P:blankPart(), prov:{}, ops:[],
   confirmed:null,
   storePreview:null, storePreviewDefinitionId:null,
   storePreviewPending:false, storePreviewDiagnostic:null,
   lastId:null
 };
-function targetLen(){return q4(S.intent.oldLen+S.intent.delta)}
+function targetLen(){var a=Number(S.intent.oldLen),d=Number(S.intent.delta||0);return Number.isFinite(a)?q4(a+d):null}
 
 /* ═══════════ 4 · PHYSICAL IDENTITY ═══════════
    Exactly the eight fields validateStartOwnPayload() admits, in fixed order.
@@ -863,6 +863,17 @@ function lengthPanel(){
     +stepper('qty2',P.partQty,'',1,'not set')+'</div>'
     +'<div class="pills">'+[2,4,6,8].map(function(v){
       return '<button class="pill'+(P.partQty===v?' on':'')+'" data-set="qty2:'+v+'">'+v+'</button>'}).join('')+'</div>'
+    +'<div style="margin-top:16px"><b style="font-size:13px">Holes</b>'
+    +'<div class="tools" style="margin-top:9px">'
+    +'<button class="tool'+(S.holes.on?'':' on')+'" data-act="holes" data-val="off"><b>No holes</b><i>leave the face unmarked</i></button>'
+    +'<button class="tool'+(S.holes.on?' on':'')+'" data-act="holes" data-val="on"><b>Spot drill</b><i>mark stations, do not invent bolts</i></button>'
+    +'</div>'
+    +(S.holes.on
+      ? '<div class="dim" style="margin-top:10px"><span class="lab">First mark<i>down from the TOP long-point</i></span>'+stepper('h1',S.holes.h1,'in',0.25)+'</div>'
+        +'<div class="dim"><span class="lab">Second mark<i>optional</i></span>'+stepper('h2',S.holes.h2,'in',0.25,'none')+'</div>'
+        +'<p class="hint">These are locations you are asking to be spotted. Bolt size and pattern stay UNKNOWN unless you state them.</p>'
+      : '<p class="hint">Crossing-leg bolt stations are not in the source. Do not invent them.</p>')
+    +'</div>'
     +'</div>';
   return h;
 }
@@ -1018,7 +1029,7 @@ function bridgeDefinition(){
     straightCut:true,
     cutPlane:P.cutPlane, endIdentity:P.endIdentity, endRelation:P.endRelation,
     lengthDatum:P.lengthDatum,
-    holeRequirement:'NONE', datum:null, holes:[],
+    holeRequirement:S.holes.on?'SPOT':'NONE', datum:S.holes.on?'TOP':null, holes:S.holes.on?[{down:S.holes.h1,cross:'CENTERLINE'}].concat(S.holes.h2!=null?[{down:S.holes.h2,cross:'CENTERLINE'}]:[]):[],
     physicalDemand:d,
     provenance:JSON.parse(JSON.stringify(S.prov))
   };
@@ -1101,6 +1112,8 @@ function setKey(k,v){
     dropOps('Set the finished length');
     setFact('finishedLengthIn',L,'user','Set the finished length · '+fmt(L)+' in');
   }
+  else if(k==='h1'){ S.holes.h1=clamp(q4(v),0.5,LEN_MAX); }
+  else if(k==='h2'){ S.holes.h2=clamp(q4(v),0.5,LEN_MAX); }
   else if(k==='qty2'){
     var q=clamp(Math.round(v),QTY_MIN,QTY_MAX);
     dropOps('Declare quantity'); setFact('partQty',q,'declared','Declare quantity '+q);
@@ -1109,12 +1122,14 @@ function setKey(k,v){
 function currentOf(k){
   return k==='oldLen'?S.intent.oldLen : k==='oldAngle'?S.intent.oldAngle
        : k==='delta'?S.intent.delta   : k==='qty'?S.intent.qty
+       : k==='h1'?S.holes.h1 : k==='h2'?(S.holes.h2==null?3.5:S.holes.h2)
        : k==='angle'?(S.P.angleDeg==null?0:S.P.angleDeg)
        : k==='len'?(S.P.finishedLengthIn==null?targetLen()-0.25:S.P.finishedLengthIn)
        : (S.P.partQty==null?S.intent.qty-1:S.P.partQty);
 }
 function act(name,val){
   var P=S.P;
+  if(name==='holes'){ S.holes.on=(val==='on'); return; }
   if(name==='size'){
     var s=stk(val); if(!s)return;
     setFact('sizeKey',val,'user');

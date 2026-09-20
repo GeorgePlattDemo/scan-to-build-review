@@ -139,10 +139,7 @@
       establishAngledEnd:angleDeg !== 0
     });
     var materialTotal=Math.round(sequence.sticks * item.sellingPrice * 100) / 100;
-    var quoted = root.STBStoreHandoffContract && typeof root.STBStoreHandoffContract.quoteModeledRecovery==='function'
-      ? root.STBStoreHandoffContract.quoteModeledRecovery({species:'pine', sticks:sequence.sticks, millMinutes:0, material:materialTotal, hardware:0})
-      : null;
-    var recovery = quoted && Number.isFinite(quoted.recovery) ? Math.round(quoted.recovery*100)/100 : null;
+    var recovery = null;
     return {
       status:"SUPPORTABLE",
       stage:2,
