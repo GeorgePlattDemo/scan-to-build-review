@@ -222,7 +222,7 @@ pre.spec{margin:14px 0 0;padding:15px 16px;border-radius:12px;background:var(--p
 @media (max-width:980px){ .bench{grid-template-columns:1fr} .results{grid-template-columns:1fr} }
 @media (max-width:860px){ .grid3{grid-template-columns:1fr} }
 </style>
-<script src="stb-store-handoff-contract.js?v=d58a01b2"></script>\n</head>
+</head>
 <body>
 <div class="wrap" id="app"></div>
 <div class="flash" id="flash"></div>
@@ -568,7 +568,7 @@ function renderPick(){
   var h=woodDefs();
   h+='<p class="eyebrow">Scan-to-Build · start your own</p>';
   h+='<h1>Make something<br>out of <em>wood</em>.</h1>';
-  h+='<p class="lede">Two clicks put it on the bench. A few more make it yours. Change a number and the parts, wood and Store-derived material answer move with it. When it looks right, send that exact version to the Store.</p>';
+  h+='<p class="lede">Two clicks put it on the bench. A few more make it yours. Change a number and the parts, wood and about-price move with it. When it looks right, send that exact version to the Store.</p>';
 
   h+='<div class="step"><span class="n'+(S.grade?' done':'')+'">1</span><h2>Pick your wood</h2>'
     +'<span class="sub">three grades</span></div>';
@@ -964,53 +964,22 @@ function modeledWorkPanel(){
     +'<div class="basisbox"><span class="k">Unresolved operation</span><b>'+(m.issue?'Yes':'None at this bench boundary')+'</b></div>'
     +'</div><p class="hint">The donor has enough information to count the defined part operations. It does not contain trustworthy machine-time or cycle-time data, so none is invented.</p></div>';
 }
-function storeContract(){
-  return window.STBStoreHandoffContract || null;
-}
-function storeMaterialResolution(){
-  var issue=materialIssue();
-  if(issue)return {status:'UNRESOLVED',code:'MATERIAL_FORMATION_UNRESOLVED',details:issue.detail};
-  var contract=storeContract();
-  if(!contract||typeof contract.resolveStartOwnMaterial!=='function')
-    return {status:'UNRESOLVED',code:'STORE_RESOLVER_UNAVAILABLE',details:'Shared Store Zero material resolver is unavailable.'};
-  return contract.resolveStartOwnMaterial({
-    sizeKey:S.size,
-    parts:parts().map(function(p){return {name:p.name,len:p.len,wid:p.wid,qty:p.qty}})
-  });
-}
-function storeOperationAnswer(resolution){
-  var known=operationModel().filter(function(o){return !o.unresolved});
-  var supported=(resolution&&resolution.supportedOps)||[];
-  var missing=[];
-  known.forEach(function(o){
-    var required=o.op==='CUT TO LENGTH'?'CROSSCUT':(o.op==='SHEET RECTANGLE CUT'?'SHEET_RECTANGLE_CUT':o.op);
-    if(supported.indexOf(required)<0 && missing.indexOf(required)<0)missing.push(required);
-  });
-  if(!resolution||resolution.status!=='MAPPED')return {status:'UNRESOLVED',missing:missing};
-  return missing.length?{status:'UNRESOLVED',missing:missing}:{status:'SUPPORTED',missing:[]};
-}
 function referenceCostModel(){
-  var resolution=storeMaterialResolution();
-  return {
-    material:resolution&&resolution.status==='MAPPED'?resolution.materialTotal:null,
-    operations:null,cell:null,other:null,total:null,
-    materialResolution:resolution,
-    complete:false
-  };
+  var issue=materialIssue(), b=buyList();
+  return {material:(issue||!b)?null:b.cost,operations:null,cell:null,other:null,total:(issue||!b)?null:b.cost,
+    issue:issue,complete:false};
 }
 function referenceCostPanel(){
-  var c=referenceCostModel(), resolution=c.materialResolution;
-  var material=c.material==null?'Not established':money(c.material);
-  var sku=resolution&&resolution.status==='MAPPED'?resolution.storeSku:'Not established';
-  var reason=resolution&&resolution.status==='MAPPED'
-    ?'Store Zero mapped the current part demand to '+sku+'. Processing / fulfillment recovery is not published for this project class, so a complete price is not invented.'
-    :'Store Zero material resolution remains unresolved: '+esc((resolution&&resolution.code)||'UNKNOWN')+'.';
-  return '<div class="panel flowpanel"><h3>Current Store-derived value</h3>'
-    +'<div class="costbig"><span>MATERIAL BASIS</span><b>'+material+'</b></div>'
-    +'<div class="flowline"><div class="k">Store SKU</div><div class="v"><b>'+esc(sku)+'</b></div></div>'
-    +'<div class="flowline"><div class="k">Processing / fulfillment recovery</div><div class="v"><b>Not established</b></div></div>'
-    +'<div class="flowline"><div class="k">Combined value</div><div class="v"><b>NOT COMPLETE</b></div></div>'
-    +'<p class="hint">'+reason+' This is a reference basis, not a binding commercial offer.</p></div>';
+  var c=referenceCostModel(), val=c.total==null?'Not established':money(c.total);
+  var why=c.issue?'Material / operation resolution is required before a material price basis can be established.'
+    :(c.total==null?'The current reference catalog has no offered stock that can contain the defined parts.'
+      :'The priced component currently available in this donor is material. Operations and modeled cell work remain visible but unpriced.');
+  return '<div class="panel flowpanel"><h3>Current reference cost</h3>'
+    +'<div class="costbig"><span>CURRENT PRICED BASIS</span><b>'+val+'</b></div>'
+    +'<div class="flowline"><div class="k">Material</div><div class="v"><b>'+(c.material==null?'Not established':money(c.material))+'</b></div></div>'
+    +'<div class="flowline"><div class="k">Operations / modeled cell work</div><div class="v">Visible above; <b>not priced by this donor</b></div></div>'
+    +'<div class="flowline"><div class="k">Other declared reference items</div><div class="v">None declared here</div></div>'
+    +'<p class="hint">'+why+' This is a reference basis, not a binding commercial offer.</p></div>';
 }
 function customerDefinition(){
   var d={grade:S.grade,size:S.size,maker:S.maker};
@@ -1026,76 +995,43 @@ function fnv1a(str){
 }
 function currentDefinitionId(){return 'SYO-'+fnv1a(JSON.stringify(customerDefinition()))}
 function materialRequestText(){
-  var resolution=storeMaterialResolution(), s=S_size();
-  if(!resolution||resolution.status!=='MAPPED')
-    return 'Selected '+s.label+'; Store Zero material resolution '+((resolution&&resolution.code)||'UNRESOLVED')+'.';
-  var parent=resolution.form==='sheet'
-    ? resolution.quantity+' × '+s.label+' · '+resolution.parentLabel+' in'
-    : resolution.quantity+' × '+s.label+' × '+resolution.stockLengthIn+' in';
-  return parent+' · '+resolution.storeSku+' · Store Zero material '+money(resolution.materialTotal);
+  var s=S_size(), b=buyList(), issue=materialIssue();
+  if(issue)return 'Selected '+s.label+'; final material / operation resolution required.';
+  if(!b)return 'Selected '+s.label+'; no offered reference stock size can contain the current parts.';
+  return isSheet()?(b.n+' × '+s.label+' sheet'+(b.n===1?'':'s')+' · '+b.label+' in reference demand')
+                  :(b.n+' × '+s.label+' × '+b.L+' in reference demand');
 }
 function storeAnswerModel(){
-  var resolution=storeMaterialResolution(), op=storeOperationAnswer(resolution);
-  var mapped=resolution&&resolution.status==='MAPPED';
+  var issue=materialIssue(), b=buyList(), s=S_size(), status=issue?'NEEDS RESOLUTION':(b?'SUPPORTED':'NOT SUPPORTED');
   return {
-    status:mapped&&op.status==='SUPPORTED'?'SUPPORTED':'NEEDS RESOLUTION',
-    material:mapped?materialRequestText():'Material unresolved · '+((resolution&&resolution.code)||'UNKNOWN'),
-    capability:op.status==='SUPPORTED'
-      ?'The mapped Store offering publishes the required operation class for the current definition.'
-      :'Operation capability remains unresolved'+(op.missing.length?' for '+op.missing.join(', '):'')+'.',
-    unresolved:[
-      mapped?null:((resolution&&resolution.code)||'STORE_MATERIAL_UNRESOLVED'),
-      op.status==='SUPPORTED'?null:'STORE_OPERATION_CAPABILITY_UNRESOLVED',
-      'UNRESOLVED_CLASS_SCOPED_RECOVERY'
-    ].filter(Boolean),
-    economics:{material:mapped?resolution.materialTotal:null,processing:null,combined:null,complete:false},
-    availability:'Not established by this reference surface.',
-    timing:'Not established by this reference surface.',
+    status:status,
+    material:materialRequestText()+' SKU identity is not carried by this donor.',
+    capability:issue?'Known cut operations are derived; the unresolved material/operation method must be answered before the definition is fully supportable.'
+                    :(b?'The current reference bench can support the listed rectangular / cut-to-length part operations at the definition boundary.'
+                       :'One or more defined parts exceed the offered stock represented in this donor.'),
+    unresolved:issue?issue.detail:(b?'None identified at this bench boundary.':'Stock containment / material resolution required.'),
+    service:'No Store service choice is modeled in this Start Your Own donor.',
+    availability:'Not established by the current reference data.',
+    timing:'Not established by the current reference data.',
     ready:'Not established. No allocation, production release or machine readiness has occurred.'
   };
 }
-function buildStoreHandoff(){
-  var contract=storeContract();
-  if(!contract||typeof contract.createProjectHandoff!=='function')return null;
-  var resolution=storeMaterialResolution(), answer=storeAnswerModel(), list=parts(), ops=operationModel();
-  return contract.createProjectHandoff({
-    projectId:'start-own',
-    projectClass:'USER_DEFINED_BOARD',
-    authorityKey:'startOwn',
-    definitionId:currentDefinitionId(),
-    projectDefinition:customerDefinition(),
-    materialDemand:{
-      sizeKey:S.size,
-      label:S_size().label,
-      parts:list.map(function(p){return {name:p.name,len:p.len,wid:p.wid,qty:p.qty}})
-    },
-    operationDemand:ops.map(function(o){return {kind:o.op,part:o.part,quantity:o.qty||null,detail:o.detail,unresolved:!!o.unresolved}}),
-    quantity:list.reduce(function(sum,p){return sum+(p.qty||0)},0),
-    materialResolution:resolution,
-    unresolvedConditions:answer.unresolved
-  });
-}
 function confirmToStore(){
-  var id=currentDefinitionId(), handoff=buildStoreHandoff();
-  S.handoff={
-    id:id,
-    definition:JSON.parse(JSON.stringify(customerDefinition())),
+  var id=currentDefinitionId();
+  S.handoff={id:id,definition:JSON.parse(JSON.stringify(customerDefinition())),
     request:{parts:JSON.parse(JSON.stringify(parts())),operations:JSON.parse(JSON.stringify(operationModel())),material:materialRequestText(),referenceCost:referenceCostModel()},
-    answer:storeAnswerModel(),
-    storeHandoff:handoff
-  };
-  if(handoff && window.self!==window.top){
-    window.parent.postMessage({type:'STB_RECOVERY_STORE_HANDOFF',source:'start-own',handoff:handoff,answer:S.handoff.answer},location.origin);
-  }
+    answer:storeAnswerModel()};
   render();
   var el=$('storeanswer'); if(el&&el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'nearest'});
-  flash('Exact identified version sent to Store Zero');
+  flash('Exact version sent to the modeled Store answer');
 }
 function storeSummarySentence(){
-  var a=storeAnswerModel(), r=storeMaterialResolution();
-  if(!r||r.status!=='MAPPED')return 'Store Zero cannot map this material demand yet: '+((r&&r.code)||'UNRESOLVED')+'. Nothing is ordered.';
-  var capability=a.status==='SUPPORTED'?'Required operation class is supported. ':'Operation capability still needs resolution. ';
-  return r.storeSku+' · material '+money(r.materialTotal)+'. '+capability+'Processing / fulfillment recovery is not established, so no complete price is shown. Nothing is ordered.';
+  var issue=materialIssue(), b=buyList(), s=S_size(), sh=isSheet();
+  if(issue)return 'Store Zero needs one answer first: '+issue.detail+' Nothing is ordered.';
+  if(!b)return 'Store Zero cannot fit this version into the reference stock shown here. Change the size or wood and try again. Nothing is ordered.';
+  var stock=sh?(b.n+' × '+s.label+' sheet'+(b.n===1?'':'s')+', '+b.label+' in')
+              :(b.n+' × '+s.label+' × '+b.L+' in');
+  return 'Store Zero can cut this from '+stock+', about '+money(b.cost)+'. Nothing is ordered.';
 }
 function storeHandoffPanel(){
   var id=currentDefinitionId(), sent=S.handoff, sameVersion=sent&&sent.id===id;
@@ -1174,17 +1110,22 @@ function cutTable(){
     +fmt(thick())+' in thick. Saw kerf is not counted.</p></div>';
 }
 function buyPanel(){
-  var issue=materialIssue(), r=storeMaterialResolution(), size=S_size();
-  if(issue)return '<div class="panel"><h3>What Store Zero maps</h3><p class="hint" style="margin:0"><b style="color:var(--ink2)">Not yet.</b> '+esc(issue.detail)+'</p></div>';
-  if(!r||r.status!=='MAPPED')return '<div class="panel"><h3>What Store Zero maps</h3><p class="hint" style="margin:0">Unresolved · '+esc((r&&r.code)||'STORE_RESOLUTION_UNAVAILABLE')+'.</p></div>';
-  var parent=r.form==='sheet'
-    ? r.quantity+' × '+esc(size.label)+' · '+esc(r.parentLabel)+' in'
-    : r.quantity+' × '+esc(size.label)+' × '+r.stockLengthIn+' in';
-  return '<div class="panel"><h3>What Store Zero maps</h3>'
-    +'<div class="buy"><span class="w">'+parent+'<i>'+esc(r.storeSku)+' · '+money(r.unitPrice)+' each</i></span>'
-    +'<span class="p">'+money(r.materialTotal)+'</span></div>'
-    +'<div class="total"><span>Material</span><b>'+money(r.materialTotal)+'</b></div>'
-    +'<p class="hint">Material comes from Store Zero catalog pin 4402abeb… . Processing / fulfillment recovery remains unresolved; this is not a complete price or an order.</p></div>';
+  var issue=materialIssue(), b=buyList(), s=S_size(), sh=isSheet();
+  if(issue)return '<div class="panel"><h3>What to buy</h3>'
+    +'<p class="hint" style="margin:0"><b style="color:var(--ink2)">Not yet.</b> The selected stock is '+fmt(issue.stockValue)+' in wide and this project asks for '+fmt(issue.projectValue)+' in. Resolve how that depth is formed above first.</p></div>';
+  if(!b)return '<div class="panel"><h3>What to buy</h3>'
+    +'<p class="hint" style="margin:0">Nothing in the reference stock shown here can contain a piece that big. Shorten it, or pick different stock above.</p></div>';
+  var line=sh?(b.n+' × '+esc(s.label)+' sheet'+(b.n>1?'s':'')+', '+b.label+' in')
+             :(b.n+' × '+esc(s.label)+' × '+b.L+' in');
+  return '<div class="panel"><h3>What to buy</h3>'
+    +'<div class="buy"><span class="w">'+line+'<i>'+money(b.price)+' each</i></span>'
+    +'<span class="p">'+money(b.cost)+'</span></div>'
+    +'<div class="total"><span>About</span><b>'+money(b.cost)+'</b></div>'
+    +'<p class="hint">'+(sh?'Counted piece by piece, no clever nesting.'
+      :'Packed into the cheapest offered length that works — '+fmt(b.waste)+' in of offcut left over.')
+    +' Reference prices, so a guide rather than an order.</p>'
+    +(s.note?'<p class="hint" style="color:var(--accent2)">'+esc(s.note)+'</p>':'')
+    +'</div>';
 }
 function cutListText(){
   var list=parts();
