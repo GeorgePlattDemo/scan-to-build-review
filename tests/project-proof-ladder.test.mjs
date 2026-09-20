@@ -82,7 +82,7 @@ assert.equal(/history\.(?:back|go)\(/.test(outdoor+deck+authority+research), fal
 assert.match(shell, /STB_PROOF_RETURN_LIBRARY/);
 assert.match(shell, /STB_PROOF_OPEN_JOB1/);
 assert.match(shell, /STB_RECOVERY_STORE_HANDOFF/);
-assert.match(shell, /stb-recovery-store-spine\.js\?v=88547e04/);
+assert.match(shell, /stb-recovery-store-spine\.js\?v=d2723d8d/);
 for (const id of ['recovery-store-answer','recovery-accept-pay','recovery-store-yard','recovery-handoff-record']) {
   assert.ok(recoverySpine.includes(id), 'missing recovered common Store stage: ' + id);
 }
