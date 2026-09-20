@@ -53,7 +53,7 @@ assert.equal(outdoor.includes('REF.syoPrice'),false,'Outdoor local price authori
 assert.match(shell,/src="stb-start-own-recovery\.html\?v=d4196885"/);
 assert.match(shell,/src="stb-outdoor-build\.html\?v=01088535"/);
 assert.match(shell,/STB_RECOVERY_STORE_HANDOFF/);
-assert.match(shell,/stb-recovery-store-spine\.js\?v=78863a42/);
+assert.match(shell,/stb-recovery-store-spine\.js\?v=88547e04/);
 assert.match(shell,/STBRecoveryStoreSpine\?\.install/);
 for (const id of ['recovery-store-answer','recovery-accept-pay','recovery-store-yard','recovery-handoff-record'])
   assert.ok(recoverySpine.includes(id),'missing common recovery Store stage '+id);
