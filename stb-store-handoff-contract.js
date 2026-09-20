@@ -61,10 +61,9 @@
       materialCatalogPin:'4402abeb6b0299a5b6db2eec85ed04c3b0236bcc',
       capabilityBasis:'D001-BOARD-EDGE-MILL-REF-0.3',
       capabilityPin:'f88ec61c42446755d00259f88e7fd09f2702fd92',
-      economicsModel:'STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0.1',
-      economicsStatus:'DECLARED_REFERENCE',
-      economicsPin:'f88ec61c42446755d00259f88e7fd09f2702fd92',
-      economicsReason:'Alcove uses the published D-001 cycle model and Window Seat recovery formula on modeled crosscut time. Edge-mill travel is zero unless the definition demands it.',
+      economicsModel:null,
+      economicsStatus:'PROJECT_NATIVE_REFERENCE',
+      economicsReason:'Alcove economics are owned by the Alcove implementation. The shared Store handoff contract may carry the identified Alcove answer forward but must not recalculate or replace it.',
       legacyGeneralRecoverySelected:false
     }),
     windowSeat: Object.freeze({
@@ -380,41 +379,6 @@
     });
   }
 
-  function quoteAlcoveInsert(input){
-    input = input || {};
-    var speciesKey = String(input.species || 'pine');
-    var prof = WINDOW_SEAT_RECOVERY.species[speciesKey] || WINDOW_SEAT_RECOVERY.species.pine;
-    var shelves = Math.max(2, Number(input.shelves) || 5);
-    var depthIn = Number(input.depthIn) || 14;
-    var across = Math.ceil(depthIn / 5.5);
-    var boards96 = Math.ceil(across / 2) * shelves;
-    var boards72 = 4;
-    var offerings = startOwnOfferings(prof.sizeKey);
-    var row96 = offerings.filter(function(o){return o.stockL_in===96})[0];
-    var row72 = offerings.filter(function(o){return o.stockL_in===72})[0];
-    if(!row96 || !row72){
-      return Object.freeze({status:'UNRESOLVED',code:'STORE_OFFERING_NOT_MAPPED',species:speciesKey});
-    }
-    var material = money2(boards96 * row96.sellingPrice + boards72 * row72.sellingPrice);
-    var hardware = money2(input.hardware == null ? WINDOW_SEAT_RECOVERY.hardwareDefault : input.hardware);
-    var quote = quoteModeledRecovery({
-      species:speciesKey,
-      sticks:boards96 + boards72,
-      millMinutes:0,
-      material:material,
-      hardware:hardware
-    });
-    return Object.freeze(Object.assign({}, quote, {
-      projectClass:'ALCOVE_INSERT',
-      shelves:shelves,
-      depthIn:depthIn,
-      across:across,
-      lines:Object.freeze([
-        Object.freeze({sku:row96.storeSku,qty:boards96,stockL_in:96,unitPrice:row96.sellingPrice,extension:money2(boards96*row96.sellingPrice)}),
-        Object.freeze({sku:row72.storeSku,qty:boards72,stockL_in:72,unitPrice:row72.sellingPrice,extension:money2(boards72*row72.sellingPrice)})
-      ])
-    }));
-  }
 
 
   function storeAuthority(key){
@@ -525,7 +489,7 @@
   }
 
   root.STBStoreHandoffContract = Object.freeze({
-    version:'0.4',
+    version:'0.5',
     actorOrder:ACTOR_ORDER,
     currentArtifacts:CURRENT_ARTIFACTS,
     storeAuthorities:STORE_AUTHORITIES,
@@ -537,7 +501,6 @@
     d001Envelope:D001_ENVELOPE,
     windowSeatRecovery:WINDOW_SEAT_RECOVERY,
     quoteModeledRecovery:quoteModeledRecovery,
-    quoteAlcoveInsert:quoteAlcoveInsert,
     comparisonDemand:comparisonDemand,
     createComparisonHandoff:createComparisonHandoff,
     storeDemandIdentity:storeDemandIdentity,
