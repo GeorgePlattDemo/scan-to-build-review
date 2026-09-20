@@ -14,7 +14,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 <iframe id="stb-current" title="Scan-to-Build System" src="system-build-front-door-0.5.html?v=5ac9677b"></iframe>
 <script src="stb-canonical-journey.js?v=e0619841"></script>
 <script src="store-zero-canonical-doctrine.js?v=65366367"></script>
-<script src="stb-recovery-store-spine.js?v=78863a42"></script>
+<script src="stb-recovery-store-spine.js?v=88547e04"></script>
 <script>
 (() => {
   const shell = document.getElementById('stb-current');
@@ -252,7 +252,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
           startOwnTile.addEventListener('click', event => {
             event.preventDefault();
             event.stopImmediatePropagation();
-            selectJourneyProject(null);
+            selectJourneyProject('start-own');
             originalShow.call(win, 'start-own-live');
           }, true);
         }
@@ -283,7 +283,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
           outdoorTile.addEventListener('click', event => {
             event.preventDefault();
             event.stopImmediatePropagation();
-            selectJourneyProject(null);
+            selectJourneyProject('outdoor');
             originalShow.call(win, 'outdoor-build-live');
           }, true);
         }
@@ -329,12 +329,15 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             selectJourneyProject(null);
             originalShow.call(win, 'projects');
           } else if (type === 'STB_PROOF_OPEN_JOB1') {
-            selectJourneyProject(null);
+            selectJourneyProject('start-own');
             originalShow.call(win, 'start-own-live');
           } else if (type === 'STB_RECOVERY_STORE_HANDOFF') {
             const startFrame = doc.querySelector('#start-own-proof-frame');
             const outdoorFrame = doc.querySelector('#outdoor-build-live .outdoor-build-shell-frame');
-            if (event.source !== startFrame?.contentWindow && event.source !== outdoorFrame?.contentWindow) return;
+            const sourceProject = event.source === startFrame?.contentWindow
+              ? 'start-own'
+              : (event.source === outdoorFrame?.contentWindow ? 'outdoor' : null);
+            if (!sourceProject || activeJourneyProject !== sourceProject) return;
             recoveryStoreSpine?.open(event.data || {});
           }
         });
@@ -1211,6 +1214,14 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     ));
     const PROJECT_STAGE_TARGETS = Object.freeze({
       alcove: ALCOVE_STAGE_TARGETS,
+      'start-own': Object.freeze({
+        scan:'start-own-live',
+        configure:'start-own-live'
+      }),
+      outdoor: Object.freeze({
+        scan:'outdoor-build-live',
+        configure:'outdoor-build-live'
+      }),
       playhouse: Object.freeze({
         scan: 'playhouse-s001',
         configure: 'playhouse-machine',
@@ -1256,20 +1267,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
           button.textContent = button.dataset.defaultLabel;
           button.hidden = false;
         });
-        if (activeJourneyProject === 'alcove') {
-          ['alcove-review','terms','recap'].forEach(target => {
-            const button = nav.querySelector('button[data-go="'+target+'"]');
-            if (button) button.hidden = true;
-          });
-          const storeButton = nav.querySelector('button[data-go="store"]');
-          const requestButton = nav.querySelector('button[data-go="request"]');
-          const yardButton = nav.querySelector('button[data-go="yard"]');
-          const recordButton = nav.querySelector('button[data-go="record"]');
-          if (storeButton) storeButton.textContent = 'Store Answer';
-          if (requestButton) requestButton.textContent = 'Accept / Pay';
-          if (yardButton) yardButton.textContent = 'Store / Yard';
-          if (recordButton) recordButton.textContent = 'Handoff / Record';
-        } else if (activeJourneyProject === 'window-seat') {
+        if (['alcove','window-seat','start-own','outdoor'].includes(activeJourneyProject)) {
           ['alcove-review','terms','recap'].forEach(target => {
             const button = nav.querySelector('button[data-go="'+target+'"]');
             if (button) button.hidden = true;
@@ -1372,6 +1370,14 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         setTimeout(syncAlcoveCommercialSurface,0);
         return true;
       }
+      if (projectId === 'start-own' || projectId === 'outdoor') {
+        const configureTarget = PROJECT_STAGE_TARGETS[projectId]?.[stage] || null;
+        if (configureTarget && doc.getElementById(configureTarget)) {
+          originalShow.call(win, configureTarget);
+          return true;
+        }
+        return !!recoveryStoreSpine?.showStage(projectId, stage);
+      }
       if (projectId === 'picnic' && ['yard','terms','recap','record'].includes(stage)) {
         originalShow.call(win, 'picnic-request');
         if (typeof syncPicnicJourney === 'function') setTimeout(syncPicnicJourney, 0);
@@ -1433,16 +1439,13 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       if (!navButton || !activeJourneyProject) return;
       const stage = navButton.dataset.journeyStage;
       if (!stage) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
       if (activeJourneyProject === 'window-seat') {
-        event.preventDefault();
-        event.stopImmediatePropagation();
         showSeatGuided(stage);
         return;
       }
-      if (showMappedProjectStage(activeJourneyProject, stage)) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-      }
+      showMappedProjectStage(activeJourneyProject, stage);
     }, true);
 
     win.addEventListener('click', function(event) {
@@ -1481,7 +1484,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         if (target === 'projects' || target === 'landing' || target === 'my-projects' || target === 'archive') {
           pendingSeatView = {mode:'continuous',stage:null};
         }
-      } else if (stage && activeJourneyProject && showMappedProjectStage(activeJourneyProject, stage)) {
+      } else if (stage && activeJourneyProject) {
+        showMappedProjectStage(activeJourneyProject, stage);
         return;
       }
       const result = originalShow.apply(this, arguments);
