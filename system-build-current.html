@@ -279,7 +279,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
           startOwnTile.addEventListener('click', event => {
             event.preventDefault();
             event.stopImmediatePropagation();
-            selectJourneyProject(null);
+            selectJourneyProject('start-own');
             originalShow.call(win, 'start-own-live');
           }, true);
         }
@@ -310,7 +310,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
           outdoorTile.addEventListener('click', event => {
             event.preventDefault();
             event.stopImmediatePropagation();
-            selectJourneyProject(null);
+            selectJourneyProject('outdoor');
             originalShow.call(win, 'outdoor-build-live');
           }, true);
         }
@@ -420,9 +420,10 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             selectJourneyProject(null);
             originalShow.call(win, 'projects');
           } else if (type === 'STB_PROOF_OPEN_JOB1') {
-            selectJourneyProject(null);
+            selectJourneyProject('start-own');
             originalShow.call(win, 'start-own-live');
           } else if (type === 'STB_START_OWN_CONFIRMED' && event.data?.payload) {
+            if (activeJourneyProject !== 'start-own') return;
             captureStartOwnProof();
             const storeHandoff = createComparisonStoreHandoff('start-own',event.data.payload);
             proofHandoff = {job:'JOB 1 · START YOUR OWN',source:'start-own',payload:event.data.payload,storeHandoff:storeHandoff};
@@ -431,6 +432,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             syncProofHandoff();
             originalShow.call(win, 'proof-store');
           } else if (type === 'STB_OUTDOOR_CONFIRMED' && event.data?.payload) {
+            if (activeJourneyProject !== 'outdoor') return;
             const storeHandoff = createComparisonStoreHandoff('outdoor',event.data.payload);
             proofHandoff = {job:'JOB 2 · OUTDOOR BUILD',source:'outdoor',payload:event.data.payload,storeHandoff:storeHandoff};
             retainComparisonStoreHandoff('outdoor',storeHandoff);
@@ -549,82 +551,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       return row?.querySelector('.pill.on')?.textContent?.trim() || 'not selected';
     }
 
-    function applyAlcoveEconomicsBoundary() {
-      const cfg = doc.getElementById('alcove-config');
-      if (!cfg) return;
-      const setText = (id,value) => {
-        const el = doc.getElementById(id);
-        if (el) el.textContent = value;
-      };
-      const setKv = (scope,label,value) => {
-        [...scope.querySelectorAll('.kv')].forEach(row => {
-          const spans = row.querySelectorAll(':scope > span');
-          if (spans.length >= 2 && spans[0].textContent.trim() === label) spans[1].textContent = value;
-        });
-      };
-      const money = (v) => '$' + Number(v).toFixed(2);
-      const species = cfg.querySelector('[data-material].on')?.getAttribute('data-material') || 'pine';
-      const shelves = Number(doc.getElementById('c-n')?.value || 5);
-      const depthIn = Number(doc.getElementById('c-d')?.value || 14);
-      const quote = storeHandoffContract && typeof storeHandoffContract.quoteAlcoveInsert === 'function'
-        ? storeHandoffContract.quoteAlcoveInsert({species,shelves,depthIn})
-        : null;
-
-      const priceHead = [...cfg.querySelectorAll('.calchd')].find(el => el.textContent.trim() === 'REFERENCE CALCULATED PRICE' || el.textContent.trim() === 'CURRENT STORE BASIS');
-      if (priceHead) priceHead.textContent = 'CURRENT STORE BASIS';
-
-      if (!quote || quote.status !== 'DECLARED_REFERENCE') {
-        setText('p-price','NOT COMPLETE');
-        setText('p-basis','Store recovery function unavailable on this surface.');
-        return;
-      }
-
-      const line0 = quote.lines && quote.lines[0];
-      const line1 = quote.lines && quote.lines[1];
-      setText('p-price', money(quote.total));
-      setText('p-basis', 'Material '+money(quote.material)+' + fabrication / fulfillment recovery '+money(quote.recovery)+' + hardware '+money(quote.hardware));
-      const matEl=doc.getElementById('p-mat'); if(matEl) matEl.innerHTML=(line0?line0.qty+' × 1×6×96':'')+' &nbsp;·&nbsp; '+(line1?line1.qty+' × 1×6×72':'')+'<br><span class="dim">+ hardware pack</span>';
-      if (line0) {
-        setText('o-sku', line0.sku.replace('STB-ZERO-',''));
-        setText('o-unit', money(line0.unitPrice));
-        setText('o-b96', String(line0.qty));
-      }
-      setText('o-across', String(quote.across));
-      setText('o-mat', money(quote.material));
-      setText('o-hw', money(quote.hardware));
-      setText('o-cyc', quote.minutes+' min modeled · '+quote.otherMinutes+' min other · mill '+quote.millMinutes+' min');
-      setText('o-rec', money(quote.recovery)+' · cell '+money(quote.cellConsumption)+' · handle '+money(quote.recoveryBreakdown.materialHandlingFabrication)+' · inspect '+money(quote.recoveryBreakdown.inspectLabelBundleStage)+' · facility '+money(quote.recoveryBreakdown.facilityAdminRework)+' · service '+money(quote.recoveryBreakdown.serviceCommercialReserve));
-
-      const how = cfg.querySelector('.how');
-      if (how) {
-        const headings = [...how.querySelectorAll('p')];
-        const cellHead = headings.find(el => el.textContent.trim() === 'Cell D-001 reference economics' || el.textContent.trim() === 'Processing / fulfillment economics');
-        if (cellHead) cellHead.textContent = 'Processing / fulfillment economics';
-        const pricingHead = headings.find(el => el.textContent.trim() === 'Pricing engine' || el.textContent.trim() === 'Economics authority');
-        if (pricingHead) pricingHead.textContent = 'Economics authority';
-        const economicsNote = headings.find(el => el.textContent.trim().startsWith('REFERENCE ECONOMICS:') || el.textContent.trim().startsWith('CURRENT ECONOMICS:'));
-        if (economicsNote) economicsNote.innerHTML = '<b>CURRENT ECONOMICS:</b> '+quote.formula+'. Modeled cycle '+quote.minutes+' min from D-001 setup / load / crosscut / release. Chip-load class '+quote.profile.chipClass+' · '+quote.profile.chipLoadIpt+' IPT × '+quote.profile.cuttingEdges+' flute × '+quote.profile.spindleRpm.toLocaleString()+' RPM → '+quote.profile.feedInPerMin+' IPM. Declared reference / unmeasured. Not a commercial quote.';
-        setKv(how,'Cycle model', quote.cycle.model);
-        setKv(how,'Basis', 'DECLARED REFERENCE · '+quote.recoveryModel.id);
-        setKv(how,'Measured', 'false');
-        setKv(how,'Job time', quote.minutes+' min modeled');
-        setKv(how,'Cell recovery', money(quote.recovery));
-        setKv(how,'Engine', quote.recoveryModel.id);
-        setKv(how,'Version', '0.1');
-        setKv(how,'Mark-on', 'material only · catalog pin');
-      }
-
-      const review = doc.getElementById('alcove-review');
-      if (review) {
-        setText('r-q', money(quote.total));
-        setText('review-price', money(quote.total));
-        setKv(review,'Calculated price', money(quote.total));
-        setKv(review,'Basis', 'Material '+money(quote.material)+' + recovery '+money(quote.recovery)+' + hardware '+money(quote.hardware));
-      }
-    }
 
     function syncAlcoveCommercialSurface() {
-      applyAlcoveEconomicsBoundary();
       const pairs = {
         'alcove-order-version':'Version 1 · confirmed',
         'alcove-order-geometry':textOf('p-h')+' H × '+textOf('p-w')+' W × '+textOf('p-d')+' D',
@@ -867,9 +795,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     }
 
     reconcileAlcoveCommercialJourney();
-    applyAlcoveEconomicsBoundary();
-    doc.addEventListener('input', event => { if (event.target.closest?.('#alcove-config')) setTimeout(applyAlcoveEconomicsBoundary,0); }, true);
-    doc.addEventListener('change', event => { if (event.target.closest?.('#alcove-config')) setTimeout(applyAlcoveEconomicsBoundary,0); }, true);
 
     win.addEventListener('click', function(event) {
       if (activeJourneyProject !== 'alcove') return;
@@ -1247,13 +1172,20 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       const source=event.target.closest?.('[data-proof-return-source]');
       if(source){
         event.preventDefault();
-        if(proofHandoff?.source==='start-own')originalShow.call(win,'start-own-live');
-        else if(proofHandoff?.source==='outdoor')originalShow.call(win,'outdoor-build-live');
+        if(proofHandoff?.source==='start-own'){
+          selectJourneyProject('start-own');
+          originalShow.call(win,'start-own-live');
+        } else if(proofHandoff?.source==='outdoor'){
+          selectJourneyProject('outdoor');
+          originalShow.call(win,'outdoor-build-live');
+        }
         return;
       }
       const go=event.target.closest?.('[data-proof-go]');
       if(go){
         event.preventDefault();
+        const expectedSource = activeJourneyProject === 'start-own' ? 'start-own' : (activeJourneyProject === 'outdoor' ? 'outdoor' : null);
+        if(!expectedSource || proofHandoff?.source !== expectedSource) return;
         syncProofHandoff();
         originalShow.call(win,go.dataset.proofGo);
       }
@@ -1523,6 +1455,28 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     ));
     const PROJECT_STAGE_TARGETS = Object.freeze({
       alcove: ALCOVE_STAGE_TARGETS,
+      'start-own': Object.freeze({
+        scan:'start-own-live',
+        configure:'start-own-live',
+        store:'proof-store',
+        review:'proof-store',
+        request:'proof-accept',
+        yard:'proof-yard',
+        terms:'proof-yard',
+        recap:'proof-record',
+        record:'proof-record'
+      }),
+      outdoor: Object.freeze({
+        scan:'outdoor-build-live',
+        configure:'outdoor-build-live',
+        store:'proof-store',
+        review:'proof-store',
+        request:'proof-accept',
+        yard:'proof-yard',
+        terms:'proof-yard',
+        recap:'proof-record',
+        record:'proof-record'
+      }),
       playhouse: Object.freeze({
         scan: 'playhouse-s001',
         configure: 'playhouse-machine',
@@ -1556,7 +1510,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     }
 
     function selectJourneyProject(projectId) {
-      activeJourneyProject = projectId || null;
+      const nextJourneyProject = projectId || null;
+      if (activeJourneyProject !== nextJourneyProject) proofHandoff = null;
+      activeJourneyProject = nextJourneyProject;
       seatJourneySnapshot = null;
       if (activeJourneyProject) doc.documentElement.dataset.activeJourneyProject = activeJourneyProject;
       else delete doc.documentElement.dataset.activeJourneyProject;
@@ -1568,7 +1524,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
           button.textContent = button.dataset.defaultLabel;
           button.hidden = false;
         });
-        if (activeJourneyProject === 'alcove') {
+        if (['alcove','start-own','outdoor'].includes(activeJourneyProject)) {
           ['alcove-review','terms','recap'].forEach(target => {
             const button = nav.querySelector('button[data-go="'+target+'"]');
             if (button) button.hidden = true;
@@ -1745,16 +1701,13 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       if (!navButton || !activeJourneyProject) return;
       const stage = navButton.dataset.journeyStage;
       if (!stage) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
       if (activeJourneyProject === 'window-seat') {
-        event.preventDefault();
-        event.stopImmediatePropagation();
         showSeatGuided(stage);
         return;
       }
-      if (showMappedProjectStage(activeJourneyProject, stage)) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-      }
+      showMappedProjectStage(activeJourneyProject, stage);
     }, true);
 
     win.addEventListener('click', function(event) {
@@ -1779,14 +1732,18 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       if (!tile) return;
       const target = tile.getAttribute('data-go');
       if (target === 'start-own') {
-        selectJourneyProject(null);
+        selectJourneyProject('start-own');
+        return;
+      }
+      if (target === 'picnic-chooser') {
+        selectJourneyProject('outdoor');
         return;
       }
       selectJourneyProject(PROJECT_TILE_TO_JOURNEY[target] || null);
     }, true);
 
     function openCurrentOutdoorBuildFromLegacyRoute() {
-      selectJourneyProject(null);
+      selectJourneyProject('outdoor');
       originalShow.call(win, 'outdoor-build-live');
     }
 
@@ -1802,12 +1759,13 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         if (target === 'projects' || target === 'landing' || target === 'my-projects' || target === 'archive') {
           pendingSeatView = {mode:'continuous',stage:null};
         }
-      } else if (stage && activeJourneyProject && showMappedProjectStage(activeJourneyProject, stage)) {
+      } else if (stage && activeJourneyProject) {
+        showMappedProjectStage(activeJourneyProject, stage);
         return;
       }
       const result = originalShow.apply(this, arguments);
       if (target.startsWith('playhouse')) setTimeout(sync, 0);
-      if (target.startsWith('alcove') || (activeJourneyProject === 'alcove' && ['store','request','yard','record','terms','recap'].includes(target))) setTimeout(() => { applyAlcoveEconomicsBoundary(); syncAlcoveCommercialSurface(); }, 0);
+      if (target.startsWith('alcove') || (activeJourneyProject === 'alcove' && ['store','request','yard','record','terms','recap'].includes(target))) setTimeout(syncAlcoveCommercialSurface, 0);
       return result;
     };
     annotateJourneyNav();
