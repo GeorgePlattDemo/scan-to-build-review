@@ -13,7 +13,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 <body>
 <iframe id="stb-current" title="Scan-to-Build System" src="system-build-front-door-0.5.html?v=5ac9677b"></iframe>
 <script src="stb-canonical-journey.js?v=e0619841"></script>
-<script src="stb-store-handoff-contract.js?v=d5dae9f0"></script>
+<script src="stb-store-handoff-contract.js?v=c3d1a79e"></script>
 <script src="stb-user-defined-board-store.js?v=1c99c380"></script>
 <script src="store-zero-canonical-doctrine.js?v=65366367"></script>
 <script>
@@ -207,45 +207,55 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             const snap = bridge && typeof bridge.getSnapshot === 'function' ? bridge.getSnapshot() : null;
             if (snap && snap.physicalDemand) {
               const demand = snap.physicalDemand;
-              const preview = window.parent.STBUserDefinedBoardStore
-                ? window.parent.STBUserDefinedBoardStore.previewFromDemand(demand)
-                : (win.STBUserDefinedBoardStore ? win.STBUserDefinedBoardStore.previewFromDemand(demand) : null);
-              const boardStore = window.STBUserDefinedBoardStore || win.STBUserDefinedBoardStore || null;
-              const built = boardStore ? boardStore.previewFromDemand(demand) : preview;
-              const ev = built && built.answer && built.answer.rawEvaluation;
+              let retainedDefinition = null;
+              try {
+                retainedDefinition = JSON.parse(win.localStorage.getItem('stb-start-own-user1-definition') || 'null');
+              } catch (_) {}
+              const ref = retainedDefinition?.storeReference || null;
               const match = startOwnPage.querySelector('#proof-job1-match');
               const storeLine = startOwnPage.querySelector('#proof-job1-store');
               const dec = startOwnPage.querySelector('#proof-job1-decisions');
-              if (dec) dec.textContent = String((snap.openPoints && snap.openPoints.length) ? (8 - snap.openPoints.length) : (snap.complete ? 8 : 0));
-              if (match) match.textContent = snap.complete ? 'Contract complete.' : ('Still open: ' + ((snap.openPoints||[]).join(', ') || 'facts'));
+              if (dec) {
+                dec.textContent = String((snap.openPoints && snap.openPoints.length)
+                  ? (8 - snap.openPoints.length)
+                  : (snap.complete ? 8 : 0));
+              }
+              if (match) {
+                match.textContent = snap.complete
+                  ? 'Contract complete.'
+                  : ('Still open: ' + ((snap.openPoints||[]).join(', ') || 'facts'));
+              }
               if (storeLine) {
-                if (ev && ev.status === 'SUPPORTABLE' && ev.materialResolution) {
-                  storeLine.textContent = 'Store: comparison preview available · current 60-in definition and Store Zero budgetary Q are shown on the Start Your Own bench.';
-                } else if (ev && ev.materialResolution && ev.materialResolution.code) {
-                  storeLine.textContent = 'Store: ' + ev.materialResolution.code;
+                if (ref?.materialResolution?.status === 'MAPPED' && ref?.estimate) {
+                  storeLine.textContent =
+                    'Store: current c51f5f27 Stage-2 answer retained · 60-in project workpiece · '
+                    +(ref.priceCompleteness === 'PARTIAL'
+                      ? 'modeled value is partial while named conditions remain.'
+                      : 'budgetary estimate available.');
                 } else {
-                  storeLine.textContent = 'Store: waiting on a complete / nestable definition.';
+                  storeLine.textContent = 'Store: waiting on the current identified definition.';
                 }
               }
               try {
                 win.localStorage.setItem('stb-proof-ladder-job1', JSON.stringify({
                   semanticOutput:{
-                    stockClass:demand.sizeKey,
-                    finishedLength:demand.finishedLengthIn,
-                    quantity:demand.partQty,
-                    endCondition:demand.angleDeg ? 'angled' : 'square',
-                    straightCut:true,
-                    angleDegrees:demand.angleDeg,
+                    stockClass:demand.sizeKey || demand.stockClass,
+                    finishedLength:demand.finishedLengthIn || demand.finishedLength,
+                    quantity:demand.partQty || demand.quantity,
+                    endCondition:(demand.angleDeg || demand.angleDegrees) ? 'angled' : 'square',
+                    straightCut:(demand.angleDeg || demand.angleDegrees) ? false : true,
+                    angleDegrees:demand.angleDeg ?? demand.angleDegrees,
                     cutPlane:demand.cutPlane,
                     endIdentity:demand.endIdentity,
                     endRelation:demand.endRelation,
                     lengthDatum:demand.lengthDatum
                   },
-                  storePreview:built && built.answer
+                  storePreview:ref
                 }));
               } catch (_) {}
               return;
             }
+
             const state = proofFrame?.contentWindow?.S;
             if (!state) return;
             let semanticOutput = null;
@@ -308,7 +318,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
               const confirmButton = childDoc.getElementById('stb-confirm-store');
               const glossaryStatus = childDoc.getElementById('stb-store-glossary-status');
               const glossaryChoices = Array.from(childDoc.querySelectorAll('[data-store-size-key]'));
-              const boardStore = window.STBUserDefinedBoardStore || win.STBUserDefinedBoardStore || null;
+              const startOwnAuthority = storeHandoffContract?.storeAuthorities?.startOwn || null;
               const catalogSource = storeHandoffContract?.startOwnStoreCatalog || null;
               let definitionRevision = 1;
               let partQty = 2;
@@ -382,22 +392,36 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
               const syncDefinition = reason => {
                 const finishedLengthIn = Number(lengthInput?.value);
                 const angleDeg = Number(angleInput?.value);
-                const parentLengthIn = 60;
-                if (!storeHandoffContract || !boardStore || !Number.isFinite(finishedLengthIn) || finishedLengthIn <= 0 || !Number.isFinite(angleDeg) || angleDeg < 0) {
+                const definedWorkpieceLengthIn = 60;
+                if (
+                  !storeHandoffContract ||
+                  typeof storeHandoffContract.sequenceDefinedWorkpiece !== 'function' ||
+                  !Number.isFinite(finishedLengthIn) ||
+                  finishedLengthIn <= 0 ||
+                  !Number.isFinite(angleDeg) ||
+                  angleDeg < 0
+                ) {
                   currentUser1Definition = null;
                   return null;
                 }
+
                 const offerings = storeHandoffContract.startOwnOfferings('2x4');
                 if (!Array.isArray(offerings) || !offerings.length) {
                   currentUser1Definition = null;
                   return null;
                 }
+
                 const centerSpotIn = Number((finishedLengthIn / 2).toFixed(6));
                 const storeMaterialResolution = storeHandoffContract.resolveStartOwnMaterial({
                   sizeKey:'2x4',
                   sequence:'CROSSCUT_HOLD',
                   parts:[{name:'x-brace',len:finishedLengthIn,wid:3.5,qty:partQty}]
                 });
+                const rawStockLengthIn =
+                  storeMaterialResolution?.status === 'MAPPED'
+                    ? Number(storeMaterialResolution.stockLengthIn)
+                    : null;
+
                 const spotDemand = spotMode === 'centered' ? {
                   required:true,
                   mode:'SPOT_ON_LOCATION',
@@ -413,9 +437,12 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   },
                   toolingStatus:'UNRESOLVED'
                 } : null;
+
                 const physicalDemand = {
                   stockClass:'2x4',
-                  parentLengthIn:parentLengthIn,
+                  materialSource:'STORE_ZERO',
+                  parentLengthIn:definedWorkpieceLengthIn,
+                  definedWorkpieceLengthIn:definedWorkpieceLengthIn,
                   finishedLength:finishedLengthIn,
                   quantity:partQty,
                   endCondition:angleDeg ? 'angled' : 'square',
@@ -428,42 +455,65 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   lengthDatum:'long-long-outer-edge'
                 };
                 if (spotDemand) physicalDemand.spotDemand = spotDemand;
-                const workpieceSequence = boardStore.sequenceCrosscuts({
-                  parentLengthIn:parentLengthIn,
-                  parts:Array.from({length:partQty}, () => finishedLengthIn),
-                  establishAngledEnd:angleDeg !== 0
-                });
-                const capability = boardStore.evaluateUserDefinedBoardJob({
-                  sizeKey:'2x4',
-                  finishedLengthIn:finishedLengthIn,
-                  partQty:partQty,
-                  angleDeg:angleDeg,
-                  cutPlane:'miter-face',
-                  endIdentity:'both',
-                  endRelation:'parallel',
-                  lengthDatum:'long-long-outer-edge'
-                });
-                const sawCuts = angleDeg !== 0 ? partQty + 1 : partQty;
-                const drillCycles = spotDemand ? partQty : 0;
+
+                const workpieceSequence =
+                  Number.isFinite(rawStockLengthIn)
+                    ? storeHandoffContract.sequenceDefinedWorkpiece({
+                        rawStockLengthIn:rawStockLengthIn,
+                        definedWorkpieceLengthIn:definedWorkpieceLengthIn,
+                        parts:Array.from({length:partQty}, () => finishedLengthIn),
+                        establishAngledEnd:angleDeg !== 0
+                      })
+                    : {status:'UNRESOLVED',code:'STORE_RAW_STOCK_UNRESOLVED'};
+
+                const unresolved = [];
+                if (angleDeg !== 0) {
+                  unresolved.push('MITER_LIMITED_NUMERIC_ANGLE_RANGE_STAGE2_UNRESOLVED');
+                }
+                if (spotDemand) {
+                  unresolved.push('CENTER_SPOT_TOOLING_ENVELOPE_UNRESOLVED');
+                }
+                if (workpieceSequence.status !== 'SEQUENCED') {
+                  unresolved.push(workpieceSequence.code || 'DEFINED_60_IN_WORKPIECE_SEQUENCE_UNRESOLVED');
+                }
+
+                const productionSawCuts = angleDeg !== 0 ? partQty + 1 : partQty;
+                const preparationSawCuts =
+                  workpieceSequence?.preparation?.required === true ? 1 : 0;
+
+                // A requested center spot is not a drilled hole until depth/tooling geometry exists.
+                const drillCycles = 0;
+                const requiredOps = [];
+                if (productionSawCuts > 0 && angleDeg === 0) requiredOps.push('CROSSCUT');
+                if (angleDeg !== 0) requiredOps.push('MITER_LIMITED');
+
                 const storeEstimate =
                   storeMaterialResolution?.status === 'MAPPED' &&
                   typeof storeHandoffContract.quoteStartOwnBoardSequence === 'function'
                     ? storeHandoffContract.quoteStartOwnBoardSequence({
                         material:storeMaterialResolution.materialTotal,
-                        definedWorkpieceLengthIn:parentLengthIn,
-                        sawCuts:sawCuts,
+                        definedWorkpieceLengthIn:definedWorkpieceLengthIn,
+                        sawCuts:productionSawCuts,
+                        preparationSawCuts:preparationSawCuts,
                         sawAngleDeg:angleDeg,
                         drillCycles:drillCycles,
+                        unresolvedConditions:unresolved,
                         widthIn:3.5
                       })
                     : null;
-                const unresolved = [];
-                if (angleDeg !== 0) unresolved.push('MITER_LIMITED_NUMERIC_ANGLE_RANGE_STAGE2_UNRESOLVED');
-                if (spotDemand) unresolved.push('CENTER_SPOT_TOOLING_ENVELOPE_UNRESOLVED');
-                if (workpieceSequence.status !== 'SEQUENCED' || workpieceSequence.rows?.length !== 1) {
-                  unresolved.push('DEFINED_60_IN_WORKPIECE_SEQUENCE_UNRESOLVED');
+
+                if (!storeEstimate) {
+                  unresolved.push('STORE_ZERO_BUDGETARY_ESTIMATE_UNAVAILABLE');
                 }
-                if (!storeEstimate?.complete) unresolved.push('STORE_ZERO_BUDGETARY_ESTIMATE_UNAVAILABLE');
+
+                const capability = {
+                  status:unresolved.length ? 'UNRESOLVED' : 'SUPPORTABLE',
+                  basis:startOwnAuthority?.capabilityBasis || 'D001-STAGE2-ENVELOPE-0.2',
+                  storePin:startOwnAuthority?.capabilityPin || catalogSource?.pin || null,
+                  requiredOps:requiredOps,
+                  unresolvedConditions:Array.from(new Set(unresolved))
+                };
+
                 currentUser1Definition = {
                   definitionId:'SYO-USER1-XBRACE-0.1',
                   versionId:'SYO-USER1-XBRACE-0.1-v'+definitionRevision,
@@ -476,7 +526,15 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                       pin:catalogSource?.pin || null,
                       clock:catalogSource?.clock || null
                     },
-                    definedWorkpieceLengthIn:{value:parentLengthIn,basis:'EXISTING_PROJECT_FACT'},
+                    procurement:storeMaterialResolution?.status === 'MAPPED' ? {
+                      storeSku:storeMaterialResolution.storeSku,
+                      stockLengthIn:storeMaterialResolution.stockLengthIn,
+                      quantity:storeMaterialResolution.quantity,
+                      unitPrice:storeMaterialResolution.unitPrice,
+                      materialTotal:storeMaterialResolution.materialTotal
+                    } : null,
+                    definedWorkpieceLengthIn:{value:definedWorkpieceLengthIn,basis:'EXISTING_PROJECT_FACT'},
+                    stockToWorkpiece:workpieceSequence?.preparation || null,
                     mappedStoreSkus:offerings.map(row => row.storeSku)
                   },
                   intent:{
@@ -498,8 +556,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   workpieceSequence:workpieceSequence,
                   capability:capability,
                   storeReference:{
-                    capabilityStatus:capability?.capability?.status || capability?.status || 'UNRESOLVED',
+                    capabilityStatus:capability.status,
                     economicsStatus:storeEstimate?.status || 'UNRESOLVED',
+                    priceCompleteness:storeEstimate?.completeness || 'UNAVAILABLE',
                     material:storeEstimate?.material ?? (storeMaterialResolution?.status==='MAPPED' ? storeMaterialResolution.materialTotal : null),
                     cellRecovery:storeEstimate?.cellRecovery ?? null,
                     combinedValue:storeEstimate?.total ?? null,
@@ -507,12 +566,19 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                     estimate:storeEstimate,
                     unresolvedConditions:Array.from(new Set(unresolved)),
                     materialResolution:storeMaterialResolution,
-                    authority:storeHandoffContract.storeAuthority?.('startOwn') || null
+                    authority:startOwnAuthority
                   },
-                  lineage:{reason:String(reason||'SYNC'),storeCatalogPin:catalogSource?.pin||null},
+                  lineage:{
+                    reason:String(reason||'SYNC'),
+                    storeCatalogPin:catalogSource?.pin||null,
+                    rawStockLengthIn:rawStockLengthIn,
+                    definedWorkpieceLengthIn:definedWorkpieceLengthIn
+                  },
                   physicalExecutionAuthorized:false
                 };
-                try { win.localStorage.setItem('stb-start-own-user1-definition',JSON.stringify(currentUser1Definition)); } catch (_) {}
+                try {
+                  win.localStorage.setItem('stb-start-own-user1-definition',JSON.stringify(currentUser1Definition));
+                } catch (_) {}
                 return currentUser1Definition;
               };
 
@@ -570,18 +636,20 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 if (!definition) return;
                 const demand = definition.physicalDemand;
                 const sequence = definition.workpieceSequence;
-                const oneWorkpiece = sequence?.status === 'SEQUENCED' && sequence?.rows?.length === 1;
-                const retained = oneWorkpiece ? sequence.rows[0].remainingIn : null;
-                const holdIn = Number(sequence?.holdIn || boardStore?.holdIn || 24);
+                const retained = sequence?.status === 'SEQUENCED'
+                  ? Number(sequence.finalRemainderIn)
+                  : null;
+                const holdIn = Number(sequence?.holdIn || 24);
                 const spare = Number.isFinite(retained) ? Number((retained-holdIn).toFixed(6)) : null;
-                const cuts = demand.angleDegrees !== 0 ? demand.quantity + 1 : demand.quantity;
+                const productionCuts = demand.angleDegrees !== 0 ? demand.quantity + 1 : demand.quantity;
+                const prepCuts = sequence?.preparation?.required === true ? 1 : 0;
+                const totalModeledCuts = productionCuts + prepCuts;
                 const spots = demand.spotDemand ? demand.quantity : 0;
                 const material = definition.storeReference.materialResolution;
                 const materialMapped = material?.status === 'MAPPED';
-                const materialValue = materialMapped && Number.isFinite(Number(material.materialTotal)) ? Number(material.materialTotal) : null;
                 const estimate = definition.storeReference.estimate || null;
                 const economics = definition.storeReference.economicsStatus;
-                const capabilityBasis = definition.capability?.capability?.basis || definition.capability?.capability?.status || definition.capability?.status || 'UNRESOLVED';
+                const capabilityBasis = definition.capability?.basis || definition.capability?.status || 'UNRESOLVED';
 
                 renderBoardGeometry(definition);
                 setText('stb-config-parts-value',demand.quantity+' part'+(demand.quantity===1?'':'s'));
@@ -596,7 +664,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 setText('stb-def-angle',demand.angleDegrees+'° · both · parallel');
                 setText('stb-def-spot',demand.spotDemand?'1 centered spot / part':'none');
                 setText('stb-def-spot-location',demand.spotDemand
-                  ? definition.derived.centerSpotAlongLengthIn.value+' in · derived from '+demand.finishedLength+' ÷ 2'
+                  ? definition.derived.centerSpotAlongLengthIn.value+' in · derived from '+demand.finishedLength+' ÷ 2 · tooling unresolved'
                   : 'not requested');
                 setText('stb-def-retained',Number.isFinite(retained)?formatInches(retained):'UNRESOLVED on one 60-in workpiece');
                 setText('stb-bench-spare-label',Number.isFinite(spare)?formatInches(spare)+' spare':'capacity unresolved');
@@ -606,49 +674,67 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 setText('stb-bench-control-copy',Number.isFinite(retained)
                   ? 'The 60-in workpiece leaves '+formatInches(retained)+' after the current cut sequence; '+formatInches(holdIn)+' is the current retained-control minimum.'
                   : 'This changed version no longer fits the single 60-in workpiece under the current retained-control rule.');
-                setText('stb-bench-cut-copy','cut — '+demand.angleDegrees+'° ends · '+cuts+' cut'+(cuts===1?'':'s')+' form '+demand.quantity+' part'+(demand.quantity===1?'':'s'));
-                setText('stb-bench-cut-step','Cut it. '+cuts+' cut'+(cuts===1?'':'s')+' on the same defined workpiece form '+demand.quantity+' part'+(demand.quantity===1?'':'s')+' at '+demand.angleDegrees+'°.');
+                setText('stb-bench-cut-copy','cut — '+demand.angleDegrees+'° ends · '+productionCuts+' production cut'+(productionCuts===1?'':'s')+' form '+demand.quantity+' part'+(demand.quantity===1?'':'s'));
+                setText('stb-bench-cut-step','Cut it. '+productionCuts+' production cut'+(productionCuts===1?'':'s')+' on the same defined workpiece form '+demand.quantity+' part'+(demand.quantity===1?'':'s')+' at '+demand.angleDegrees+'°. Store preparation from raw stock is accounted separately.');
                 setText('stb-bench-drill-step',demand.spotDemand
-                  ? 'Drill it. One spot, on location, centered in each part.'
-                  : 'Drill it. No spot is requested on this version.');
+                  ? 'Spot it. One centered spot per part is located, but tooling geometry is still unresolved; it is not priced as a drilled hole.'
+                  : 'Spot it. No spot is requested on this version.');
                 setText('stb-bench-stub-step','Keep the stub. The defined parts and the remaining material stay accounted for in the same version.');
-                setText('stb-bench-workline','THAT’S THE WHOLE JOB · '+cuts+' CUT'+(cuts===1?'':'S')+' · '+spots+' SPOT'+(spots===1?'':'S')+' ON LOCATION · '+(Number.isFinite(retained)?'WITHIN CURRENT RETAINED-CONTROL LIMIT':'CURRENT 60-IN WORKPIECE UNRESOLVED'));
+                setText('stb-bench-workline','THAT’S THE WHOLE DEFINED JOB · '+productionCuts+' PRODUCTION CUT'+(productionCuts===1?'':'S')+' · '+spots+' SPOT'+(spots===1?'':'S')+' ON LOCATION · '+(Number.isFinite(retained)?'WITHIN CURRENT RETAINED-CONTROL LIMIT':'CURRENT 60-IN WORKPIECE UNRESOLVED'));
+
                 const svg = childDoc.getElementById('stb-user1-bench-svg');
-                if (svg) svg.setAttribute('aria-label','One five-foot two-by-four. This version calls for '+demand.quantity+' part'+(demand.quantity===1?'':'s')+' at '+demand.finishedLength+' inches with '+demand.angleDegrees+' degree ends. '+(demand.spotDemand?'One centered spot per part is derived at '+definition.derived.centerSpotAlongLengthIn.value+' inches. ':'No spot is requested. ')+(Number.isFinite(retained)?formatInches(retained)+' remains.':'The one-workpiece retained-control sequence is unresolved.'));
+                if (svg) {
+                  svg.setAttribute(
+                    'aria-label',
+                    'One five-foot two-by-four defined workpiece. This version calls for '+demand.quantity+' part'+(demand.quantity===1?'':'s')+' at '+demand.finishedLength+' inches with '+demand.angleDegrees+' degree ends. '
+                    +(demand.spotDemand?'One centered spot per part is derived at '+definition.derived.centerSpotAlongLengthIn.value+' inches; tooling remains unresolved. ':'No spot is requested. ')
+                    +(Number.isFinite(retained)?formatInches(retained)+' remains.':'The one-workpiece retained-control sequence is unresolved.')
+                  );
+                }
 
                 setText('stb-material-required',
-                  '1 × 2×4 × 60 in defined workpiece · '+demand.quantity+' finished part'+(demand.quantity===1?'':'s')+' · Store procurement is shown separately below');
+                  '1 × 2×4 × 60 in defined workpiece · '+demand.quantity+' finished part'+(demand.quantity===1?'':'s')+' · Store procurement and preparation are shown separately below');
                 setText('stb-price-material',estimate?.material==null?'NOT ESTABLISHED':'$'+Number(estimate.material).toFixed(2));
                 setText('stb-price-processing',estimate?.cellRecovery==null?'NOT ESTABLISHED':'$'+Number(estimate.cellRecovery).toFixed(2));
-                setText('stb-price-total',estimate?.total==null?'NOT COMPLETE':'$'+Number(estimate.total).toFixed(2));
-                setText('stb-price-basis',estimate?.complete
-                  ? 'Store Zero BudgetaryEstimate · material + modeled D-001 cell recovery · not a commercial quote.'
-                  : 'Store Zero could not form a complete budgetary estimate for this version.');
+                setText('stb-price-total',estimate?.total==null
+                  ? 'NOT COMPLETE'
+                  : '$'+Number(estimate.total).toFixed(2)+(estimate.complete?'':' · PARTIAL'));
+                setText('stb-price-basis',estimate
+                  ? (estimate.complete
+                    ? 'Store Zero BudgetaryEstimate · material + modeled D-001 cell recovery · not a commercial quote.'
+                    : 'Store Zero BudgetaryEstimate for the resolved encoded operations only. Named unresolved work is not included as if complete; not a commercial quote.')
+                  : 'Store Zero could not form a budgetary estimate for this version.');
                 setText('stb-basis-sku',materialMapped?material.storeSku:'NOT MAPPED');
-                setText('stb-basis-source-stock',materialMapped?material.quantity+' × '+material.stockLengthIn+' in 2×4 · procurement only':'UNRESOLVED');
+                setText('stb-basis-source-stock',materialMapped
+                  ? material.quantity+' × '+material.stockLengthIn+' in 2×4 · '+prepCuts+' preparation cut'+(prepCuts===1?'':'s')+' to the 60-in workpiece'
+                  : 'UNRESOLVED');
                 setText('stb-basis-unit-price',materialMapped && Number.isFinite(Number(material.unitPrice)) ? '$'+Number(material.unitPrice).toFixed(2)+' / ea' : 'UNRESOLVED');
                 setText('stb-basis-cell-family',materialMapped && Array.isArray(material.cellFamily) ? material.cellFamily.join(' · ') : 'UNRESOLVED');
                 setText('stb-basis-supported-ops',materialMapped && Array.isArray(material.supportedOps) ? material.supportedOps.join(' · ') : 'UNRESOLVED');
                 setText('stb-basis-clock',String(material?.source?.clock || catalogSource?.clock || '—'));
                 setText('stb-basis-catalog-pin',String(material?.source?.pin || catalogSource?.pin || '—'));
-                setText('stb-basis-capability',String(capabilityBasis));
+                setText('stb-basis-capability',String(capabilityBasis)+' · '+String(definition.capability.status));
                 setText('stb-basis-store-pin',String(estimate?.source?.pin || definition.storeReference.authority?.economicsPin || '—'));
-                setText('stb-basis-economics',estimate?.status ? estimate.status+' · BUDGETARY ONLY' : String(economics));
+                setText('stb-basis-economics',estimate?.status
+                  ? estimate.status+' · '+String(estimate.completeness || 'UNRESOLVED')+' · BUDGETARY ONLY'
+                  : String(economics));
                 setText('stb-basis-pricing-engine',estimate?.engine ? estimate.engine.id+' · v'+estimate.engine.version : 'UNRESOLVED');
                 setText('stb-basis-cycle-model',estimate?.cycle?.model || 'UNRESOLVED');
-                setText('stb-basis-job-time',Number.isFinite(Number(estimate?.cycle?.T_job_min)) ? Number(estimate.cycle.T_job_min).toFixed(3)+' min · modeled' : 'UNRESOLVED');
+                setText('stb-basis-job-time',Number.isFinite(Number(estimate?.cycle?.T_job_min)) ? Number(estimate.cycle.T_job_min).toFixed(3)+' min · modeled · '+totalModeledCuts+' saw cycles' : 'UNRESOLVED');
                 setText('stb-before-send',definition.storeReference.unresolvedConditions.length
-                  ? definition.storeReference.unresolvedConditions.join(' · ')+'. These conditions remain attached to this version; the budgetary estimate does not resolve physical capability or authorize fabrication.'
+                  ? definition.storeReference.unresolvedConditions.join(' · ')+'. These conditions remain attached to this version. The displayed Store value covers resolved encoded operations only and does not authorize fabrication.'
                   : 'No additional unresolved conditions are attached to this reference estimate. Budgetary pricing still does not authorize fabrication.');
 
                 const answerLine = childDoc.getElementById('stb-system-answer');
                 if (answerLine) {
                   answerLine.innerHTML = '<b>STORE</b> · '
                     +(Number.isFinite(retained)
-                      ? 'the same 60-in defined workpiece passes the current retained-control sequence'
+                      ? '72-in raw procurement is reconciled to the same 60-in defined workpiece, which passes the current retained-control sequence'
                       : 'the same 60-in defined workpiece is unresolved for this changed part demand')
-                    +(estimate?.complete?' · Store Zero budgetary Q $'+Number(estimate.total).toFixed(2):' · budgetary estimate unresolved')
-                    +' · raw Store procurement detail remains separate below.';
+                    +(estimate
+                      ? ' · Store Zero modeled value $'+Number(estimate.total).toFixed(2)+(estimate.complete?'':' for resolved operations; partial')
+                      : ' · budgetary estimate unavailable')
+                    +' · raw Store procurement remains separate from project definition.';
                 }
                 activate('#stb-config-parts [data-parts]','data-parts',partQty);
                 activate('[data-length]','data-length',demand.finishedLength);
@@ -718,52 +804,63 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 });
               });
 
-              confirmButton?.addEventListener('click', () => {
-                const definition = syncAndRender('CONFIRM');
-                if (!definition) return;
-                const handoff = createComparisonStoreHandoff('start-own',{
-                  id:definition.definitionId,
-                  versionId:definition.versionId,
-                  physicalDemand:definition.physicalDemand,
-                  sourceAuthority:{
-                    kind:'STORE-ORIGIN USER-DEFINED WORK',
-                    artifact:'three-frames.html',
-                    storeCatalog:definition.material.stockClassAuthority,
-                    definedWorkpieceLengthIn:definition.material.definedWorkpieceLengthIn
-                  },
-                  storeReference:definition.storeReference
-                });
-                proofHandoff = {
-                  job:'JOB 1 · START YOUR OWN',
-                  source:'start-own',
-                  payload:{
+              if (confirmButton && confirmButton.dataset.stbHostConfirmBound !== 'true') {
+                confirmButton.dataset.stbHostConfirmBound = 'true';
+                confirmButton.addEventListener('click', () => {
+                  const definition = syncAndRender('CONFIRM');
+                  if (!definition) return;
+                  const confirmationKey = definition.definitionId+'@'+definition.versionId;
+                  if (confirmButton.dataset.stbLastConfirmed === confirmationKey) return;
+
+                  const handoff = createComparisonStoreHandoff('start-own',{
                     id:definition.definitionId,
                     versionId:definition.versionId,
-                    definition:definition,
                     physicalDemand:definition.physicalDemand,
                     sourceAuthority:{
                       kind:'STORE-ORIGIN USER-DEFINED WORK',
                       artifact:'three-frames.html',
                       storeCatalog:definition.material.stockClassAuthority,
+                      procurement:definition.material.procurement,
+                      stockToWorkpiece:definition.material.stockToWorkpiece,
                       definedWorkpieceLengthIn:definition.material.definedWorkpieceLengthIn
                     },
                     storeReference:definition.storeReference
-                  },
-                  storeHandoff:handoff,
-                  boardEvaluation:definition.capability
-                };
-                retainComparisonStoreHandoff('start-own',handoff);
-                try {
-                  win.localStorage.setItem('stb-start-own-user1-bench',JSON.stringify({
-                    definition:definition,
-                    handoff:handoff,
-                    physicalExecutionAuthorized:false
-                  }));
-                  win.localStorage.setItem('stb-proof-handoff-job1',JSON.stringify(proofHandoff));
-                } catch (_) {}
-                syncProofHandoff();
-                originalShow.call(win,'proof-store');
-              });
+                  });
+                  proofHandoff = {
+                    job:'JOB 1 · START YOUR OWN',
+                    source:'start-own',
+                    payload:{
+                      id:definition.definitionId,
+                      versionId:definition.versionId,
+                      definition:definition,
+                      physicalDemand:definition.physicalDemand,
+                      sourceAuthority:{
+                        kind:'STORE-ORIGIN USER-DEFINED WORK',
+                        artifact:'three-frames.html',
+                        storeCatalog:definition.material.stockClassAuthority,
+                        procurement:definition.material.procurement,
+                        stockToWorkpiece:definition.material.stockToWorkpiece,
+                        definedWorkpieceLengthIn:definition.material.definedWorkpieceLengthIn
+                      },
+                      storeReference:definition.storeReference
+                    },
+                    storeHandoff:handoff,
+                    boardEvaluation:definition.capability
+                  };
+                  retainComparisonStoreHandoff('start-own',handoff);
+                  try {
+                    win.localStorage.setItem('stb-start-own-user1-bench',JSON.stringify({
+                      definition:definition,
+                      handoff:handoff,
+                      physicalExecutionAuthorized:false
+                    }));
+                    win.localStorage.setItem('stb-proof-handoff-job1',JSON.stringify(proofHandoff));
+                  } catch (_) {}
+                  confirmButton.dataset.stbLastConfirmed = confirmationKey;
+                  syncProofHandoff();
+                  originalShow.call(win,'proof-store');
+                });
+              }
 
               childDoc.addEventListener('click', event => {
                 const target = event.target?.closest?.('button,a');
@@ -934,36 +1031,32 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             selectJourneyProject(null);
             originalShow.call(win, 'projects');
           } else if (type === 'STB_PROJECT_DEFINITION_CHANGED' && event.data?.projectId === 'start-own') {
-            const frame = doc.getElementById('start-own-proof-frame');
-            const demand = event.data.definition && event.data.definition.physicalDemand;
-            const boardStore = window.STBUserDefinedBoardStore;
-            const nestable = demand && demand.sizeKey && demand.finishedLengthIn && demand.partQty
-              && demand.endIdentity==='both' && demand.endRelation==='parallel'
-              && demand.lengthDatum==='long-long-outer-edge' && demand.cutPlane;
-            if (frame && frame.contentWindow && nestable && boardStore) {
-              const built = boardStore.previewFromDemand(demand);
-              const key = frame.contentWindow.currentDefinitionKey ? frame.contentWindow.currentDefinitionKey() : null;
-              const preview = {
-                type:'STB_START_OWN_STORE_PREVIEW',
-                childDefinitionKey:key,
-                answer:built.answer,
-                diagnostic:built.diagnostic
-              };
-              if (typeof win.__stbPostStartOwnPreview === 'function') win.__stbPostStartOwnPreview(preview);
-              else frame.contentWindow.postMessage(preview, win.location.origin);
-              captureStartOwnProof();
-            }
+            // Current hosted Start Own is evaluated by the c51f5f27 handoff contract.
+            // Legacy child messages may trigger proof refresh, but may not supply a competing Store answer.
+            captureStartOwnProof();
           } else if (type === 'STB_PROOF_OPEN_JOB1') {
             selectJourneyProject('start-own');
             originalShow.call(win, 'start-own-live');
           } else if (type === 'STB_START_OWN_CONFIRMED' && event.data?.payload) {
             if (activeJourneyProject !== 'start-own') return;
             captureStartOwnProof();
-            const boardEval = window.STBUserDefinedBoardStore && event.data.payload.physicalDemand
-              ? window.STBUserDefinedBoardStore.evaluateUserDefinedBoardJob(event.data.payload.physicalDemand)
-              : null;
+            const carriedDefinition = event.data.payload.definition || null;
+            const boardEval = carriedDefinition?.capability || (
+              event.data.payload.storeReference
+                ? {
+                    status:event.data.payload.storeReference.capabilityStatus || 'UNRESOLVED',
+                    storeReference:event.data.payload.storeReference
+                  }
+                : null
+            );
             const storeHandoff = createComparisonStoreHandoff('start-own',event.data.payload);
-            proofHandoff = {job:'JOB 1 · START YOUR OWN',source:'start-own',payload:event.data.payload,storeHandoff:storeHandoff,boardEvaluation:boardEval};
+            proofHandoff = {
+              job:'JOB 1 · START YOUR OWN',
+              source:'start-own',
+              payload:event.data.payload,
+              storeHandoff:storeHandoff,
+              boardEvaluation:boardEval
+            };
             retainComparisonStoreHandoff('start-own',storeHandoff);
             try { win.localStorage.setItem('stb-proof-handoff-job1', JSON.stringify(proofHandoff)); } catch (_) {}
             syncProofHandoff();
