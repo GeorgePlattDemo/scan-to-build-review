@@ -581,6 +581,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 const material = definition.storeReference.materialResolution;
                 const materialMapped = material?.status === 'MAPPED';
                 const materialValue = materialMapped && Number.isFinite(Number(material.materialTotal)) ? Number(material.materialTotal) : null;
+                const estimate = definition.storeReference.estimate || null;
                 const economics = definition.storeReference.economicsStatus;
                 const capabilityBasis = definition.capability?.capability?.basis || definition.capability?.capability?.status || definition.capability?.status || 'UNRESOLVED';
 
@@ -617,26 +618,30 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 const svg = childDoc.getElementById('stb-user1-bench-svg');
                 if (svg) svg.setAttribute('aria-label','One five-foot two-by-four. This version calls for '+demand.quantity+' part'+(demand.quantity===1?'':'s')+' at '+demand.finishedLength+' inches with '+demand.angleDegrees+' degree ends. '+(demand.spotDemand?'One centered spot per part is derived at '+definition.derived.centerSpotAlongLengthIn.value+' inches. ':'No spot is requested. ')+(Number.isFinite(retained)?formatInches(retained)+' remains.':'The one-workpiece retained-control sequence is unresolved.'));
 
-                setText('stb-material-required',materialMapped
-                  ? material.quantity+' × 2×4 × '+material.stockLengthIn+' in · '+material.storeSku+' · source stock for the defined 60-in workpiece and current part demand'
-                  : 'UNRESOLVED · '+String(material?.code || 'Store material mapping unavailable'));
-                setText('stb-price-material',materialValue==null?'NOT ESTABLISHED':'$'+materialValue.toFixed(2));
-                setText('stb-price-processing','UNRESOLVED · class-scoped recovery not published');
-                setText('stb-price-total',materialValue==null?'NOT COMPLETE':'$'+materialValue.toFixed(2)+' material');
-                setText('stb-price-basis',materialValue==null
-                  ? 'No complete Store material basis is established for this version.'
-                  : 'Current material value is established. Combined commercial price is not complete because Start Your Own processing / fulfillment recovery is not yet published.');
+                setText('stb-material-required',
+                  '1 × 2×4 × 60 in defined workpiece · '+demand.quantity+' finished part'+(demand.quantity===1?'':'s')+' · Store procurement is shown separately below');
+                setText('stb-price-material',estimate?.material==null?'NOT ESTABLISHED':'$'+Number(estimate.material).toFixed(2));
+                setText('stb-price-processing',estimate?.cellRecovery==null?'NOT ESTABLISHED':'$'+Number(estimate.cellRecovery).toFixed(2));
+                setText('stb-price-total',estimate?.total==null?'NOT COMPLETE':'$'+Number(estimate.total).toFixed(2));
+                setText('stb-price-basis',estimate?.complete
+                  ? 'Store Zero BudgetaryEstimate · material + modeled D-001 cell recovery · not a commercial quote.'
+                  : 'Store Zero could not form a complete budgetary estimate for this version.');
                 setText('stb-basis-sku',materialMapped?material.storeSku:'NOT MAPPED');
-                setText('stb-basis-source-stock',materialMapped?material.quantity+' × '+material.stockLengthIn+' in 2×4':'UNRESOLVED');
+                setText('stb-basis-source-stock',materialMapped?material.quantity+' × '+material.stockLengthIn+' in 2×4 · procurement only':'UNRESOLVED');
                 setText('stb-basis-unit-price',materialMapped && Number.isFinite(Number(material.unitPrice)) ? '$'+Number(material.unitPrice).toFixed(2)+' / ea' : 'UNRESOLVED');
                 setText('stb-basis-cell-family',materialMapped && Array.isArray(material.cellFamily) ? material.cellFamily.join(' · ') : 'UNRESOLVED');
                 setText('stb-basis-supported-ops',materialMapped && Array.isArray(material.supportedOps) ? material.supportedOps.join(' · ') : 'UNRESOLVED');
                 setText('stb-basis-clock',String(material?.source?.clock || catalogSource?.clock || '—'));
                 setText('stb-basis-catalog-pin',String(material?.source?.pin || catalogSource?.pin || '—'));
                 setText('stb-basis-capability',String(capabilityBasis));
-                setText('stb-basis-store-pin',String(definition.capability?.storePin || boardStore?.storePin || '—'));
-                setText('stb-basis-economics',String(economics));
-                setText('stb-before-send',definition.storeReference.unresolvedConditions.join(' · ')+'. These conditions remain attached to this version; confirmation does not resolve them.');
+                setText('stb-basis-store-pin',String(estimate?.source?.pin || definition.storeReference.authority?.economicsPin || '—'));
+                setText('stb-basis-economics',estimate?.status ? estimate.status+' · BUDGETARY ONLY' : String(economics));
+                setText('stb-basis-pricing-engine',estimate?.engine ? estimate.engine.id+' · v'+estimate.engine.version : 'UNRESOLVED');
+                setText('stb-basis-cycle-model',estimate?.cycle?.model || 'UNRESOLVED');
+                setText('stb-basis-job-time',Number.isFinite(Number(estimate?.cycle?.T_job_min)) ? Number(estimate.cycle.T_job_min).toFixed(3)+' min · modeled' : 'UNRESOLVED');
+                setText('stb-before-send',definition.storeReference.unresolvedConditions.length
+                  ? definition.storeReference.unresolvedConditions.join(' · ')+'. These conditions remain attached to this version; the budgetary estimate does not resolve physical capability or authorize fabrication.'
+                  : 'No additional unresolved conditions are attached to this reference estimate. Budgetary pricing still does not authorize fabrication.');
 
                 const answerLine = childDoc.getElementById('stb-system-answer');
                 if (answerLine) {
@@ -644,8 +649,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                     +(Number.isFinite(retained)
                       ? 'the same 60-in defined workpiece passes the current retained-control sequence'
                       : 'the same 60-in defined workpiece is unresolved for this changed part demand')
-                    +(materialMapped?' · source stock '+material.stockLengthIn+' in · material $'+materialValue.toFixed(2):' · source stock unresolved')
-                    +' · combined processing / fulfillment price remains unresolved.';
+                    +(estimate?.complete?' · Store Zero budgetary Q $'+Number(estimate.total).toFixed(2):' · budgetary estimate unresolved')
+                    +' · raw Store procurement detail remains separate below.';
                 }
                 activate('#stb-config-parts [data-parts]','data-parts',partQty);
                 activate('[data-length]','data-length',demand.finishedLength);
