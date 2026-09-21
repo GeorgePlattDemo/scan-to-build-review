@@ -13,7 +13,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 <body>
 <iframe id="stb-current" title="Scan-to-Build System" src="system-build-front-door-0.5.html?v=5ac9677b"></iframe>
 <script src="stb-canonical-journey.js?v=e0619841"></script>
-<script src="stb-store-handoff-contract.js?v=6be08595"></script>
+<script src="stb-store-handoff-contract.js?v=d5dae9f0"></script>
 <script src="stb-user-defined-board-store.js?v=1c99c380"></script>
 <script src="store-zero-canonical-doctrine.js?v=65366367"></script>
 <script>
@@ -161,7 +161,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   id="start-own-proof-frame"
                   class="start-own-shell-frame"
                   title="Start Your Own · User 1 · definition to doing"
-                  src="three-frames.html?v=8fe09454"
+                  src="three-frames.html?v=305b7484"
                 ></iframe>
               </div>
             `;
@@ -170,7 +170,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
           const liveFrame = startOwnPage.querySelector('#start-own-proof-frame');
           if (liveFrame && !String(liveFrame.getAttribute('src')||'').includes('three-frames.html')) {
-            liveFrame.src = 'three-frames.html?v=8fe09454';
+            liveFrame.src = 'three-frames.html?v=305b7484';
           }
           const banner = startOwnPage.querySelector('[data-proof-job="1"]');
           if (banner && /generic floor/.test(banner.textContent||'')) {
@@ -220,9 +220,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
               if (match) match.textContent = snap.complete ? 'Contract complete.' : ('Still open: ' + ((snap.openPoints||[]).join(', ') || 'facts'));
               if (storeLine) {
                 if (ev && ev.status === 'SUPPORTABLE' && ev.materialResolution) {
-                  const mat = ev.materialResolution;
-                  const rec = ev.estimate && ev.estimate.totals && ev.estimate.totals.cell_recovery;
-                  storeLine.textContent = 'Store: ' + mat.storeSku + ' × ' + mat.quantity + ' · material $' + Number(mat.materialTotal||0).toFixed(2) + (rec!=null ? ' + recovery $'+Number(rec).toFixed(2) : ' · recovery unpublished');
+                  storeLine.textContent = 'Store: comparison preview available · current 60-in definition and Store Zero budgetary Q are shown on the Start Your Own bench.';
                 } else if (ev && ev.materialResolution && ev.materialResolution.code) {
                   storeLine.textContent = 'Store: ' + ev.materialResolution.code;
                 } else {
@@ -445,12 +443,27 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   endRelation:'parallel',
                   lengthDatum:'long-long-outer-edge'
                 });
-                const unresolved = ['START-OWN-CLASS-SCOPED-RECOVERY-NOT-PUBLISHED'];
-                if (angleDeg !== 0) unresolved.push('DIMENSIONAL_MITER_SERVICE_RECOVERY_UNRESOLVED');
+                const sawCuts = angleDeg !== 0 ? partQty + 1 : partQty;
+                const drillCycles = spotDemand ? partQty : 0;
+                const storeEstimate =
+                  storeMaterialResolution?.status === 'MAPPED' &&
+                  typeof storeHandoffContract.quoteStartOwnBoardSequence === 'function'
+                    ? storeHandoffContract.quoteStartOwnBoardSequence({
+                        material:storeMaterialResolution.materialTotal,
+                        definedWorkpieceLengthIn:parentLengthIn,
+                        sawCuts:sawCuts,
+                        sawAngleDeg:angleDeg,
+                        drillCycles:drillCycles,
+                        widthIn:3.5
+                      })
+                    : null;
+                const unresolved = [];
+                if (angleDeg !== 0) unresolved.push('MITER_LIMITED_NUMERIC_ANGLE_RANGE_STAGE2_UNRESOLVED');
                 if (spotDemand) unresolved.push('CENTER_SPOT_TOOLING_ENVELOPE_UNRESOLVED');
                 if (workpieceSequence.status !== 'SEQUENCED' || workpieceSequence.rows?.length !== 1) {
                   unresolved.push('DEFINED_60_IN_WORKPIECE_SEQUENCE_UNRESOLVED');
                 }
+                if (!storeEstimate?.complete) unresolved.push('STORE_ZERO_BUDGETARY_ESTIMATE_UNAVAILABLE');
                 currentUser1Definition = {
                   definitionId:'SYO-USER1-XBRACE-0.1',
                   versionId:'SYO-USER1-XBRACE-0.1-v'+definitionRevision,
@@ -486,10 +499,12 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   capability:capability,
                   storeReference:{
                     capabilityStatus:capability?.capability?.status || capability?.status || 'UNRESOLVED',
-                    economicsStatus:capability?.estimate?.economics?.status || 'UNRESOLVED_CLASS_SCOPED_RECOVERY',
-                    material:storeMaterialResolution?.status==='MAPPED' ? storeMaterialResolution.materialTotal : null,
-                    combinedValue:null,
-                    complete:false,
+                    economicsStatus:storeEstimate?.status || 'UNRESOLVED',
+                    material:storeEstimate?.material ?? (storeMaterialResolution?.status==='MAPPED' ? storeMaterialResolution.materialTotal : null),
+                    cellRecovery:storeEstimate?.cellRecovery ?? null,
+                    combinedValue:storeEstimate?.total ?? null,
+                    complete:storeEstimate?.complete === true,
+                    estimate:storeEstimate,
                     unresolvedConditions:Array.from(new Set(unresolved)),
                     materialResolution:storeMaterialResolution,
                     authority:storeHandoffContract.storeAuthority?.('startOwn') || null
@@ -564,6 +579,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 const material = definition.storeReference.materialResolution;
                 const materialMapped = material?.status === 'MAPPED';
                 const materialValue = materialMapped && Number.isFinite(Number(material.materialTotal)) ? Number(material.materialTotal) : null;
+                const estimate = definition.storeReference.estimate || null;
                 const economics = definition.storeReference.economicsStatus;
                 const capabilityBasis = definition.capability?.capability?.basis || definition.capability?.capability?.status || definition.capability?.status || 'UNRESOLVED';
 
@@ -600,26 +616,30 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 const svg = childDoc.getElementById('stb-user1-bench-svg');
                 if (svg) svg.setAttribute('aria-label','One five-foot two-by-four. This version calls for '+demand.quantity+' part'+(demand.quantity===1?'':'s')+' at '+demand.finishedLength+' inches with '+demand.angleDegrees+' degree ends. '+(demand.spotDemand?'One centered spot per part is derived at '+definition.derived.centerSpotAlongLengthIn.value+' inches. ':'No spot is requested. ')+(Number.isFinite(retained)?formatInches(retained)+' remains.':'The one-workpiece retained-control sequence is unresolved.'));
 
-                setText('stb-material-required',materialMapped
-                  ? material.quantity+' × 2×4 × '+material.stockLengthIn+' in · '+material.storeSku+' · source stock for the defined 60-in workpiece and current part demand'
-                  : 'UNRESOLVED · '+String(material?.code || 'Store material mapping unavailable'));
-                setText('stb-price-material',materialValue==null?'NOT ESTABLISHED':'$'+materialValue.toFixed(2));
-                setText('stb-price-processing','UNRESOLVED · class-scoped recovery not published');
-                setText('stb-price-total',materialValue==null?'NOT COMPLETE':'$'+materialValue.toFixed(2)+' material');
-                setText('stb-price-basis',materialValue==null
-                  ? 'No complete Store material basis is established for this version.'
-                  : 'Current material value is established. Combined commercial price is not complete because Start Your Own processing / fulfillment recovery is not yet published.');
+                setText('stb-material-required',
+                  '1 × 2×4 × 60 in defined workpiece · '+demand.quantity+' finished part'+(demand.quantity===1?'':'s')+' · Store procurement is shown separately below');
+                setText('stb-price-material',estimate?.material==null?'NOT ESTABLISHED':'$'+Number(estimate.material).toFixed(2));
+                setText('stb-price-processing',estimate?.cellRecovery==null?'NOT ESTABLISHED':'$'+Number(estimate.cellRecovery).toFixed(2));
+                setText('stb-price-total',estimate?.total==null?'NOT COMPLETE':'$'+Number(estimate.total).toFixed(2));
+                setText('stb-price-basis',estimate?.complete
+                  ? 'Store Zero BudgetaryEstimate · material + modeled D-001 cell recovery · not a commercial quote.'
+                  : 'Store Zero could not form a complete budgetary estimate for this version.');
                 setText('stb-basis-sku',materialMapped?material.storeSku:'NOT MAPPED');
-                setText('stb-basis-source-stock',materialMapped?material.quantity+' × '+material.stockLengthIn+' in 2×4':'UNRESOLVED');
+                setText('stb-basis-source-stock',materialMapped?material.quantity+' × '+material.stockLengthIn+' in 2×4 · procurement only':'UNRESOLVED');
                 setText('stb-basis-unit-price',materialMapped && Number.isFinite(Number(material.unitPrice)) ? '$'+Number(material.unitPrice).toFixed(2)+' / ea' : 'UNRESOLVED');
                 setText('stb-basis-cell-family',materialMapped && Array.isArray(material.cellFamily) ? material.cellFamily.join(' · ') : 'UNRESOLVED');
                 setText('stb-basis-supported-ops',materialMapped && Array.isArray(material.supportedOps) ? material.supportedOps.join(' · ') : 'UNRESOLVED');
                 setText('stb-basis-clock',String(material?.source?.clock || catalogSource?.clock || '—'));
                 setText('stb-basis-catalog-pin',String(material?.source?.pin || catalogSource?.pin || '—'));
                 setText('stb-basis-capability',String(capabilityBasis));
-                setText('stb-basis-store-pin',String(definition.capability?.storePin || boardStore?.storePin || '—'));
-                setText('stb-basis-economics',String(economics));
-                setText('stb-before-send',definition.storeReference.unresolvedConditions.join(' · ')+'. These conditions remain attached to this version; confirmation does not resolve them.');
+                setText('stb-basis-store-pin',String(estimate?.source?.pin || definition.storeReference.authority?.economicsPin || '—'));
+                setText('stb-basis-economics',estimate?.status ? estimate.status+' · BUDGETARY ONLY' : String(economics));
+                setText('stb-basis-pricing-engine',estimate?.engine ? estimate.engine.id+' · v'+estimate.engine.version : 'UNRESOLVED');
+                setText('stb-basis-cycle-model',estimate?.cycle?.model || 'UNRESOLVED');
+                setText('stb-basis-job-time',Number.isFinite(Number(estimate?.cycle?.T_job_min)) ? Number(estimate.cycle.T_job_min).toFixed(3)+' min · modeled' : 'UNRESOLVED');
+                setText('stb-before-send',definition.storeReference.unresolvedConditions.length
+                  ? definition.storeReference.unresolvedConditions.join(' · ')+'. These conditions remain attached to this version; the budgetary estimate does not resolve physical capability or authorize fabrication.'
+                  : 'No additional unresolved conditions are attached to this reference estimate. Budgetary pricing still does not authorize fabrication.');
 
                 const answerLine = childDoc.getElementById('stb-system-answer');
                 if (answerLine) {
@@ -627,8 +647,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                     +(Number.isFinite(retained)
                       ? 'the same 60-in defined workpiece passes the current retained-control sequence'
                       : 'the same 60-in defined workpiece is unresolved for this changed part demand')
-                    +(materialMapped?' · source stock '+material.stockLengthIn+' in · material $'+materialValue.toFixed(2):' · source stock unresolved')
-                    +' · combined processing / fulfillment price remains unresolved.';
+                    +(estimate?.complete?' · Store Zero budgetary Q $'+Number(estimate.total).toFixed(2):' · budgetary estimate unresolved')
+                    +' · raw Store procurement detail remains separate below.';
                 }
                 activate('#stb-config-parts [data-parts]','data-parts',partQty);
                 activate('[data-length]','data-length',demand.finishedLength);
@@ -1592,34 +1612,33 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
     ensureProjectJourneyPage('proof-store',
       '<p class="stage-tag">STORE ANSWER</p><h1 id="proof-store-title">STORE ANSWER · PROOF JOB</h1>'
-      +'<p class="sub">The confirmed definition reached the common Store actor boundary unchanged. Material is taken from the pinned Store Zero catalog when the project has a mapped offering. Processing / fulfillment economics remain class-scoped and unresolved unless a current model is actually published.</p>'
+      +'<p class="sub" id="proof-store-summary">The confirmed definition reached the common Store actor boundary unchanged. Store material, capability and economics are shown only to the extent carried by the identified project answer.</p>'
       +'<div class="proof-actor-grid">'
         +'<div><b>JOB</b><span id="proof-store-job">—</span></div>'
         +'<div><b>VERSION</b><span id="proof-store-version">—</span></div>'
         +'<div><b>DEFINED WORKPIECE</b><span id="proof-store-workpiece">—</span></div>'
-        +'<div><b>MATERIAL SOURCE</b><span id="proof-store-material-source">Store Zero catalog · 4402abeb6b02…</span></div>'
-        +'<div><b>ECONOMICS AUTHORITY</b><span>CLASS-SCOPED · no legacy general recovery selected</span></div>'
+        +'<div><b>MATERIAL SOURCE</b><span id="proof-store-material-source">Store Zero catalog</span></div>'
+        +'<div><b>ECONOMICS AUTHORITY</b><span id="proof-store-economics-authority">—</span></div>'
       +'</div>'
       +'<h2>Current economics answer</h2>'
       +'<div class="proof-actor-grid">'
-        +'<div><b>MAPPED STORE SKU</b><span id="proof-store-material-sku">—</span></div>'
+        +'<div><b>STORE PROCUREMENT SKU</b><span id="proof-store-material-sku">—</span></div>'
         +'<div><b>MATERIAL VALUE</b><span id="proof-store-material-value">—</span></div>'
-        +'<div><b>PROCESSING / FULFILLMENT RECOVERY</b><span>UNRESOLVED · no current class-scoped recovery model for this proof demand</span></div>'
-        +'<div><b>CURRENT COMBINED VALUE</b><span>NOT COMPLETE</span></div>'
+        +'<div><b>MODELED CELL RECOVERY</b><span id="proof-store-cell-recovery">UNRESOLVED</span></div>'
+        +'<div><b>STORE BUDGETARY Q</b><span id="proof-store-q">NOT COMPLETE</span></div>'
+        +'<div><b>MODELED JOB TIME</b><span id="proof-store-cycle">—</span></div>'
       +'</div>'
-      +'<div class="proof-gap"><b>STORE-PRICING-BRIDGE-GAP</b>'
-        +'The physical demand remains preserved exactly. The Store catalog may identify material and declared capability, but no retired square-crosscut recovery formula is reused to price angled or otherwise unresolved work. No app-side discount, made-up cycle, or made-up combined value is substituted.'
-      +'</div>'
+      +'<div class="proof-gap" id="proof-store-economics-note"><b>STORE ECONOMICS</b>The project answer will state whether a current Store budgetary estimate is present. A budgetary estimate is not a commercial quote, payment, allocation, release, or fabrication authorization.</div>'
       +proofStoreDoctrine
       +'<div class="proof-nav"><button type="button" data-proof-library>← PROJECT LIBRARY</button><button type="button" data-proof-return-source>← PROJECT DEFINITION</button><button class="next" type="button" data-proof-go="proof-accept">CONTINUE → ACCEPT / PAY</button></div>',
-      '<p class="goal">Same demand, same Store boundary</p><div class="row"><b>Material from Store</b><span>The mapped SKU and material value come from the pinned Store catalog.</span></div><div class="row"><b>No fake combined price</b><span>Unresolved processing remains unresolved.</span></div>'
+      '<p class="goal">Same definition, Store answers</p><div class="row"><b>Project truth stays fixed</b><span>The confirmed workpiece is not replaced by the procurement SKU.</span></div><div class="row"><b>Budgetary economics stay labeled</b><span>Q is modeled Store economics, not a payable offer.</span></div>'
     );
 
     ensureProjectJourneyPage('proof-accept',
       '<p class="stage-tag">ACCEPT / PAY</p><h1>STORE ANSWER RECEIVED. CUSTOMER EVENT REMAINS SEPARATE.</h1>'
-      +'<p class="sub">This reference build can demonstrate the handoff without pretending that an unresolved budgetary answer is a payable offer.</p>'
+      +'<p class="sub">A Store budgetary answer can be complete as an estimate without becoming a payable commercial offer. Those events remain separate.</p>'
       +'<div class="proof-actor-grid">'
-        +'<div><b>STORE ANSWER</b><span>RETURNED · WITH PRICING BRIDGE GAP</span></div>'
+        +'<div><b>STORE ANSWER</b><span id="proof-accept-store-status">RETURNED</span></div>'
         +'<div><b>COMMERCIAL OFFER</b><span>NOT ESTABLISHED</span></div>'
         +'<div><b>ACCEPTANCE</b><span>NOT ESTABLISHED</span></div>'
         +'<div><b>PAYMENT</b><span>NOT AVAILABLE / NOT RECORDED</span></div>'
@@ -1631,7 +1650,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
     ensureProjectJourneyPage('proof-yard',
       '<p class="stage-tag">STORE / YARD</p><h1>STORE / YARD · REFERENCE HANDOFF</h1>'
-      +'<p class="sub">The definition and unresolved Store answer can move through the demonstration record without being promoted into physical work.</p>'
+      +'<p class="sub">The identified definition and Store answer can move through the demonstration record without being promoted into physical work.</p>'
       +'<div class="proof-actor-grid">'
         +'<div><b>ALLOCATION</b><span>NOT ESTABLISHED</span></div>'
         +'<div><b>PRODUCTION RELEASE</b><span>NOT ESTABLISHED</span></div>'
@@ -1647,33 +1666,34 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
     ensureProjectJourneyPage('proof-terms',
       '<p class="stage-tag">TERMS</p><h1>TERMS · COMMERCIAL PATH</h1>'
-      +'<p class="sub">The confirmed definition and Store answer remain identified. Commercial events stay separate, and incomplete pricing stays incomplete.</p>'
+      +'<p class="sub">The confirmed definition and Store budgetary answer remain identified. A modeled Q can exist while offer, acceptance, payment and physical authority remain separate.</p>'
       +'<div class="proof-actor-grid">'
         +'<div><b>JOB</b><span id="proof-terms-job">—</span></div>'
         +'<div><b>VERSION</b><span id="proof-terms-version">—</span></div>'
         +'<div><b>REFERENCE MATERIAL VALUE</b><span id="proof-terms-material">—</span></div>'
-        +'<div><b>COMBINED COMMERCIAL PRICE</b><span>NOT COMPLETE</span></div>'
+        +'<div><b>STORE BUDGETARY Q</b><span id="proof-terms-q">—</span></div>'
+        +'<div><b>COMMERCIAL OFFER</b><span>NOT ESTABLISHED</span></div>'
         +'<div><b>OFFER VALIDITY</b><span>NOT ESTABLISHED</span></div>'
         +'<div><b>PAYMENT</b><span>NOT AVAILABLE / NOT RECORDED</span></div>'
       +'</div>'
-      +'<div class="proof-gap"><b>TERMS REMAIN REFERENCE-ONLY.</b>The current Start Your Own class does not publish the processing / fulfillment recovery required to form a complete commercial price. No acceptance, payment, allocation, release, or fabrication event is invented to make the path look complete.</div>'
+      +'<div class="proof-gap" id="proof-terms-note"><b>TERMS REMAIN REFERENCE-ONLY.</b>A Store Zero BudgetaryEstimate is not a commercial quote or seller-of-record offer. No acceptance, payment, allocation, release, or fabrication event is invented from Q.</div>'
       +'<div class="band"><b>One version, one answer.</b> A later project change makes a new version and requires a new Store answer. Terms never rewrite the confirmed definition.</div>'
       +'<div class="proof-nav"><button type="button" data-proof-library>← PROJECT LIBRARY</button><button type="button" data-proof-go="proof-yard">← STORE / YARD</button><button class="next" type="button" data-proof-go="proof-record">CONTINUE → HANDOFF / RECORD</button></div>',
-      '<p class="goal">Commercial truth stays separate</p><div class="row"><b>Price gap stays visible</b><span>No invented recovery or offer.</span></div><div class="row"><b>Version stays fixed</b><span>Terms may answer the version; they may not rewrite it.</span></div>'
+      '<p class="goal">Commercial truth stays separate</p><div class="row"><b>Budgetary Q ≠ offer</b><span>Modeled economics can be shown without inventing payment authority.</span></div><div class="row"><b>Version stays fixed</b><span>Terms may answer the version; they may not rewrite it.</span></div>'
     );
 
     ensureProjectJourneyPage('proof-record',
-      '<p class="stage-tag">HANDOFF / RECORD</p><h1>KEEP THE DEFINITION AND THE GAP.</h1>'
+      '<p class="stage-tag">HANDOFF / RECORD</p><h1>KEEP THE DEFINITION AND THE STORE ANSWER.</h1>'
       +'<p class="sub">The demonstration ends with the exact confirmed version, its Store response state, and the events that did not occur.</p>'
       +'<div class="proof-actor-grid">'
         +'<div><b>JOB</b><span id="proof-record-job">—</span></div>'
         +'<div><b>VERSION</b><span id="proof-record-version">—</span></div>'
-        +'<div><b>STORE ECONOMICS</b><span>UNRESOLVED · CURRENT MODEL MISMATCH</span></div>'
+        +'<div><b>STORE ECONOMICS</b><span id="proof-record-economics">—</span></div>'
         +'<div><b>PHYSICAL FABRICATION</b><span>NOT RECORDED</span></div>'
       +'</div>'
-      +'<div class="band"><b>Owner-record consequence.</b> The project definition is retained as the thing that was confirmed. The pricing bridge gap stays attached rather than being erased or replaced with a guessed number.</div>'
+      +'<div class="band"><b>Owner-record consequence.</b> The project definition is retained as the thing that was confirmed. The Store budgetary answer and every still-unresolved condition remain attached to that identified version.</div>'
       +'<div class="proof-nav"><button type="button" data-proof-go="proof-yard">← STORE / YARD</button><button class="next" type="button" data-proof-library>← PROJECT LIBRARY</button></div>',
-      '<p class="goal">Record the truth</p><div class="row"><b>Definition survives</b><span>Unresolved economics do not rewrite geometry.</span></div><div class="row"><b>Null events survive</b><span>No physical outcome is invented.</span></div>'
+      '<p class="goal">Record the truth</p><div class="row"><b>Definition survives</b><span>Store economics do not rewrite geometry.</span></div><div class="row"><b>Null events survive</b><span>No physical outcome is invented.</span></div>'
     );
 
     function syncProofHandoff(){
@@ -1700,12 +1720,44 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       if(materialValue)materialValue.textContent=materialResolution?.status==='MAPPED' && Number.isFinite(Number(materialResolution.materialTotal))
         ? '$'+Number(materialResolution.materialTotal).toFixed(2)
         : 'NOT ESTABLISHED';
+      const estimate=payload.storeReference?.estimate || null;
       const termsMaterial=doc.getElementById('proof-terms-material');
-      if(termsMaterial)termsMaterial.textContent=materialResolution?.status==='MAPPED' && Number.isFinite(Number(materialResolution.materialTotal))
-        ? '$'+Number(materialResolution.materialTotal).toFixed(2)+' material'
+      if(termsMaterial)termsMaterial.textContent=estimate?.material!=null
+        ? '$'+Number(estimate.material).toFixed(2)+' material'
+        : (materialResolution?.status==='MAPPED' && Number.isFinite(Number(materialResolution.materialTotal))
+          ? '$'+Number(materialResolution.materialTotal).toFixed(2)+' material'
+          : 'NOT ESTABLISHED');
+      const recoveryEl=doc.getElementById('proof-store-cell-recovery');
+      const qEl=doc.getElementById('proof-store-q');
+      const cycleEl=doc.getElementById('proof-store-cycle');
+      const authorityEl=doc.getElementById('proof-store-economics-authority');
+      const economicsNote=doc.getElementById('proof-store-economics-note');
+      const acceptStatus=doc.getElementById('proof-accept-store-status');
+      const termsQ=doc.getElementById('proof-terms-q');
+      const termsNote=doc.getElementById('proof-terms-note');
+      const recordEconomics=doc.getElementById('proof-record-economics');
+      const isStartOwn=proofHandoff?.source==='start-own';
+      if(recoveryEl)recoveryEl.textContent=estimate?.cellRecovery!=null?'$'+Number(estimate.cellRecovery).toFixed(2):'UNRESOLVED';
+      if(qEl)qEl.textContent=estimate?.total!=null?'$'+Number(estimate.total).toFixed(2)+' · BudgetaryEstimate':'NOT COMPLETE';
+      if(cycleEl)cycleEl.textContent=Number.isFinite(Number(estimate?.cycle?.T_job_min))
+        ? Number(estimate.cycle.T_job_min).toFixed(3)+' min · '+String(estimate.cycle.model || 'modeled')
         : 'NOT ESTABLISHED';
+      if(authorityEl)authorityEl.textContent=estimate?.engine
+        ? estimate.engine.id+' · v'+estimate.engine.version+' · budgetary only'
+        : 'NO CURRENT COMPLETE ECONOMICS MODEL ON THIS PROJECT ANSWER';
+      if(economicsNote)economicsNote.innerHTML=estimate?.complete
+        ? '<b>STORE ZERO BUDGETARY ESTIMATE RETURNED</b>Q is material plus modeled Store cell recovery for this exact identified definition. It is not a commercial quote, payment, allocation, production release, machine readiness, or physical fabrication authority.'
+        : '<b>STORE ECONOMICS UNRESOLVED</b>The physical demand remains preserved exactly. No app-side discount, made-up cycle, or guessed combined value is substituted.';
+      if(acceptStatus)acceptStatus.textContent=estimate?.complete?'RETURNED · BUDGETARY ESTIMATE':'RETURNED · ECONOMICS INCOMPLETE';
+      if(termsQ)termsQ.textContent=estimate?.total!=null?'$'+Number(estimate.total).toFixed(2)+' · budgetary only':'NOT COMPLETE';
+      if(termsNote)termsNote.innerHTML=estimate?.complete
+        ? '<b>TERMS REMAIN REFERENCE-ONLY.</b>The Store Zero Q is a BudgetaryEstimate, not a commercial quote or seller-of-record offer. No acceptance, payment, allocation, release, or fabrication event is created from it.'
+        : '<b>TERMS REMAIN REFERENCE-ONLY.</b>Economics remain incomplete on this project answer. No acceptance, payment, allocation, release, or fabrication event is invented.';
+      if(recordEconomics)recordEconomics.textContent=estimate?.total!=null
+        ? 'BUDGETARY ESTIMATE · Q $'+Number(estimate.total).toFixed(2)+' · '+String(estimate.engine?.id || 'Store Zero')
+        : 'UNRESOLVED';
       const yardNext=doc.getElementById('proof-yard-next');
-      if(yardNext)yardNext.textContent=proofHandoff?.source==='start-own'?'CONTINUE → TERMS':'CONTINUE → HANDOFF / RECORD';
+      if(yardNext)yardNext.textContent=isStartOwn?'CONTINUE → TERMS':'CONTINUE → HANDOFF / RECORD';
       if(materialSource)materialSource.textContent=materialResolution?.source
         ? 'Store Zero catalog '+materialResolution.source.clock+' · '+String(materialResolution.source.pin).slice(0,12)+'…'
         : 'Store Zero catalog · exact project material mapping not carried here';

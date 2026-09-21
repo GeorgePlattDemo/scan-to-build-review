@@ -37,12 +37,13 @@
     startOwn: Object.freeze({
       projectId:'start-own',
       projectClass:'USER_DEFINED_BOARD',
-      materialCatalogPin:'4402abeb6b0299a5b6db2eec85ed04c3b0236bcc',
-      capabilityBasis:'D001-BOARD-EDGE-MILL-REF-0.3',
-      capabilityPin:'f88ec61c42446755d00259f88e7fd09f2702fd92',
-      economicsModel:'STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0.1',
-      economicsStatus:'DECLARED_REFERENCE',
-      economicsPin:'f88ec61c42446755d00259f88e7fd09f2702fd92',
+      materialCatalogPin:'c51f5f27af9a77bc7581c5d42c56f0a1ed0b650a',
+      capabilityBasis:'D001-STAGE2-ENVELOPE-0.2',
+      capabilityPin:'c51f5f27af9a77bc7581c5d42c56f0a1ed0b650a',
+      economicsModel:'STB-STORE-ZERO-PRICE-1',
+      economicsVersion:'0.2.2',
+      economicsStatus:'BUDGETARY_ESTIMATE',
+      economicsPin:'c51f5f27af9a77bc7581c5d42c56f0a1ed0b650a',
       legacyGeneralRecoverySelected:false
     }),
     outdoor: Object.freeze({
@@ -154,7 +155,7 @@
   var START_OWN_STORE_CATALOG = Object.freeze({
     repository:'GeorgePlattDemo/scan-to-build-store',
     file:'store-zero-catalog.json',
-    pin:'4402abeb6b0299a5b6db2eec85ed04c3b0236bcc',
+    pin:'c51f5f27af9a77bc7581c5d42c56f0a1ed0b650a',
     clock:"2026-09-10"
   });
 
@@ -295,6 +296,103 @@
     return Object.freeze(selected);
   }
 
+
+  var START_OWN_STORE_PRICING = Object.freeze({
+    source:Object.freeze({
+      repository:'GeorgePlattDemo/scan-to-build-store',
+      pricingFile:'store-zero-pricing-engine.mjs',
+      envelopeFile:'d001-stage2-envelope.mjs',
+      pin:'c51f5f27af9a77bc7581c5d42c56f0a1ed0b650a'
+    }),
+    engine:Object.freeze({
+      id:'STB-STORE-ZERO-PRICE-1',
+      version:'0.2.2',
+      clock:'2026-09-10',
+      documentKind:'BudgetaryEstimate'
+    }),
+    cycleModel:Object.freeze({
+      id:'STB-D001-CYCLE-MODEL-S2-0.1',
+      basis:'CALCULATED',
+      measured:false,
+      commissioned:false
+    }),
+    recovery:Object.freeze({setupCharge:35,machineHourRate:100}),
+    saw:Object.freeze({
+      diameterIn:10,
+      rpm:3450,
+      teeth:60,
+      chipLoadCrossSoft:0.003,
+      finishFactor:0.5,
+      deployMin:0.08,
+      retractMin:0.08
+    }),
+    rapidInPerMin:480,
+    accelMin:0.05,
+    loadSeatMin:0.6,
+    releaseLabelMin:0.4,
+    drill:Object.freeze({rpm:3000,ipr:0.008,referenceDepthIn:0.75})
+  });
+
+  function roundN(value, places){
+    var p=Math.pow(10, places == null ? 2 : places);
+    return Math.round(Number(value)*p)/p;
+  }
+
+  function quoteStartOwnBoardSequence(input){
+    input=input || {};
+    var P=START_OWN_STORE_PRICING;
+    var material=roundN(input.material || 0,2);
+    var workpiece=Math.abs(Number(input.definedWorkpieceLengthIn) || 0);
+    var sawCuts=Math.max(0, Number(input.sawCuts) || 0);
+    var angle=Math.max(0, Math.min(89, Number(input.sawAngleDeg) || 0));
+    var drillCycles=Math.max(0, Number(input.drillCycles) || 0);
+    var width=Number(input.widthIn) || 3.5;
+    var radians=angle*Math.PI/180;
+    var sawTraverse=angle>0 ? width/Math.cos(radians) : width;
+    var feedFpm=((P.saw.chipLoadCrossSoft*P.saw.teeth*P.saw.rpm)/12)*P.saw.finishFactor;
+    var sawCycle=P.saw.deployMin + sawTraverse/(feedFpm*12) + P.saw.retractMin;
+    var indexCycle=P.accelMin + workpiece/P.rapidInPerMin;
+    var drillDepth=Number(input.drillReferenceDepthIn);
+    if(!Number.isFinite(drillDepth) || drillDepth<=0) drillDepth=P.drill.referenceDepthIn;
+    var drillCycle=P.saw.deployMin + drillDepth/(P.drill.ipr*P.drill.rpm) + P.saw.retractMin;
+    var cycle=P.loadSeatMin + sawCuts*sawCycle + indexCycle + drillCycles*drillCycle + P.releaseLabelMin + 8;
+    var hours=cycle/60;
+    var cell=roundN(P.recovery.setupCharge + P.recovery.machineHourRate*hours,2);
+    return Object.freeze({
+      status:'BUDGETARY_ESTIMATE',
+      complete:sawCuts>0 && workpiece>0,
+      material:material,
+      cellRecovery:cell,
+      total:roundN(material+cell,2),
+      cycle:Object.freeze({
+        model:P.cycleModel.id,
+        basis:P.cycleModel.basis,
+        measured:false,
+        commissioned:false,
+        T_job_min:roundN(cycle,3),
+        T_job_hr:roundN(hours,4),
+        SFM:roundN((Math.PI*P.saw.diameterIn*P.saw.rpm)/12,0),
+        feed_fpm:roundN(feedFpm,2)
+      }),
+      operationBasis:Object.freeze({
+        definedWorkpieceLengthIn:workpiece,
+        sawCuts:sawCuts,
+        sawAngleDeg:angle,
+        sawTraverseIn:roundN(sawTraverse,6),
+        drillCycles:drillCycles,
+        drillReferenceDepthIn:drillDepth
+      }),
+      engine:P.engine,
+      source:P.source,
+      notClaimed:Object.freeze([
+        'commercial quote',
+        'seller-of-record',
+        'physical fabrication',
+        'live motion',
+        'physical stock count'
+      ])
+    });
+  }
 
   var D001_CYCLE = Object.freeze({
     model:'STB-D001-CYCLE-MODEL-S2-0.1',
@@ -597,7 +695,7 @@
   }
 
   root.STBStoreHandoffContract = Object.freeze({
-    version:'0.5',
+    version:'0.6',
     actorOrder:ACTOR_ORDER,
     currentArtifacts:CURRENT_ARTIFACTS,
     storeAuthorities:STORE_AUTHORITIES,
@@ -605,6 +703,8 @@
     startOwnStoreCatalog:START_OWN_STORE_CATALOG,
     startOwnOfferings:startOwnOfferings,
     resolveStartOwnMaterial:resolveStartOwnMaterial,
+    startOwnStorePricing:START_OWN_STORE_PRICING,
+    quoteStartOwnBoardSequence:quoteStartOwnBoardSequence,
     d001Cycle:D001_CYCLE,
     d001Envelope:D001_ENVELOPE,
     d001Hold:D001_HOLD,
