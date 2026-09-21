@@ -15,7 +15,7 @@ vm.runInNewContext(contractSource,sandbox,{filename:'stb-store-handoff-contract.
 const contract = sandbox.window.STBStoreHandoffContract;
 
 assert.ok(contract,'shared Store handoff contract did not load');
-assert.equal(contract.version,'0.6');
+assert.equal(contract.version,'0.7');
 assert.equal(typeof contract.quoteAlcoveInsert,'undefined','shared Store contract must not reprice Alcove');
 assert.deepEqual(
   Array.from(contract.actorOrder),
@@ -28,8 +28,8 @@ assert.equal(contract.currentArtifacts.alcove.artifact,'system-build-current.htm
 assert.equal(contract.currentArtifacts.windowSeat.artifact,'stb-window-seat-space-utilization-0.7.4.html');
 assert.equal(contract.currentArtifacts.sheetS001.artifact,'system-build-current.html#playhouse-s001');
 
-assert.equal(contract.storeAuthority('startOwn').capabilityPin,'c51f5f27af9a77bc7581c5d42c56f0a1ed0b650a');
-assert.equal(contract.storeAuthority('startOwn').materialCatalogPin,'c51f5f27af9a77bc7581c5d42c56f0a1ed0b650a');
+assert.equal(contract.storeAuthority('startOwn').capabilityPin,'ab8a4c5d470c310f27fef82683611622ab976168');
+assert.equal(contract.storeAuthority('startOwn').materialCatalogPin,'ab8a4c5d470c310f27fef82683611622ab976168');
 assert.equal(contract.storeAuthority('startOwn').legacyGeneralRecoverySelected,false);
 assert.equal(contract.storeAuthority('startOwn').economicsModel,'STB-STORE-ZERO-PRICE-1');
 assert.equal(contract.storeAuthority('startOwn').economicsStatus,'BUDGETARY_ESTIMATE');
@@ -37,20 +37,18 @@ const xBraceQ = contract.quoteStartOwnBoardSequence({
   material:3.13,
   definedWorkpieceLengthIn:60,
   sawCuts:3,
-  preparationSawCuts:1,
   sawAngleDeg:30,
   drillCycles:0,
-  unresolvedConditions:[
-    'MITER_LIMITED_NUMERIC_ANGLE_RANGE_STAGE2_UNRESOLVED',
-    'CENTER_SPOT_TOOLING_ENVELOPE_UNRESOLVED'
-  ],
+  spotCycles:2,
+  unresolvedConditions:[],
   widthIn:3.5
 });
-assert.equal(xBraceQ.total,54.58);
-assert.equal(xBraceQ.cycle.T_job_min,9.867);
-assert.equal(xBraceQ.completeness,'PARTIAL');
-assert.equal(xBraceQ.operationBasis.totalModeledSawCuts,4);
+assert.equal(xBraceQ.total,54.82);
+assert.equal(xBraceQ.cycle.T_job_min,10.014);
+assert.equal(xBraceQ.completeness,'COMPLETE_FOR_ENCODED_DEMAND');
+assert.equal(xBraceQ.operationBasis.totalModeledSawCuts,3);
 assert.equal(xBraceQ.operationBasis.drillCycles,0);
+assert.equal(xBraceQ.operationBasis.spotCycles,2);
 
 assert.equal(contract.storeAuthority('windowSeat').economicsModel,'STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0.1');
 assert.equal(contract.storeAuthority('alcove').economicsModel,null);
@@ -65,7 +63,7 @@ assert.equal(shelfMaterial.status,'MAPPED');
 assert.equal(shelfMaterial.storeSku,'STB-ZERO-SPF-2X4-192-001');
 assert.equal(shelfMaterial.materialTotal,8.36);
 
-assert.match(shell,/stb-store-handoff-contract\.js\?v=c3d1a79e/);
+assert.match(shell,/stb-store-handoff-contract\.js\?v=121e67b5/);
 assert.match(shell,/dataset\.startOwnArtifact = 'three-frames\.html'/);
 assert.match(shell,/dataset\.outdoorBuildArtifact = 'stb-outdoor-bench-leg-0\.1\.html'/);
 assert.match(shell,/dataset\.windowSeatArtifact = 'stb-window-seat-space-utilization-0\.7\.4\.html'/);
@@ -115,7 +113,7 @@ assert.match(outdoor,/STB_OUTDOOR_CONFIRMED/);
 assert.match(outdoor,/normalizedPart:normalized/);
 assert.match(shell,/createComparisonStoreHandoff\('start-own'/);
 assert.equal(shell.includes('previewFromDemand'),false,'Start Own still uses legacy preview authority');
-assert.match(shell,/const drillCycles = 0/,'unresolved spot was still priced as a generic drill cycle');
+assert.match(shell,/const drillCycles = 0/,'spot was silently priced as a generic drill cycle');
 assert.match(shell,/stbHostConfirmBound/,'host confirmation idempotence guard is missing');
 assert.match(shell,/payload\.storeReference\?\.unresolvedConditions/);
 assert.match(shell,/createComparisonStoreHandoff\('outdoor'/);
