@@ -73,7 +73,7 @@ assert.match(shell,/formula:'finishedLengthIn \/ 2'/);
 assert.match(shell,/renderBoardGeometry\(definition\)/);
 assert.match(shell,/showStartOwnStage\('intent'\)/);
 assert.match(shell,/showStartOwnStage\('bench'\)/);
-assert.match(shell,/id:'SYO-USER1-XBRACE-0\.1'/);
+assert.match(shell,/definitionId:'SYO-USER1-XBRACE-0\.1'/);
 assert.match(shell,/originalShow\.call\(win,'proof-store'\)/);
 assert.match(shell,/ensureProjectJourneyPage\('proof-terms'/);
 assert.match(shell,/terms:'proof-terms'/);
