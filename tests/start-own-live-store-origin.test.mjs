@@ -52,12 +52,15 @@ assert.match(surface,/RESULTING DEFINITION \/ REFERENCE ORDER — USER 1/);
 assert.match(surface,/MATERIAL REQUIRED/);
 assert.match(surface,/REFERENCE CALCULATED PRICE/);
 assert.match(surface,/STORE \/ PRICE BASIS/);
+assert.match(surface,/id="stb-basis-unit-price"/);
+assert.match(surface,/id="stb-basis-cell-family"/);
+assert.match(surface,/id="stb-basis-supported-ops"/);
 assert.match(surface,/Before you send it/);
 assert.match(surface,/CONFIRM &amp; SEND TO STORE ZERO →/);
 assert.match(surface,/id="stb-bench-dynamic-geometry"/);
 
 // Host carries one definition through intent, bench, Store, Terms and record.
-assert.match(shell,/three-frames\.html\?v=1ebd3642/);
+assert.match(shell,/three-frames\.html\?v=8fe09454/);
 assert.match(shell,/const parentLengthIn = 60;/);
 assert.match(shell,/parentLengthIn:parentLengthIn/);
 assert.match(shell,/const spotDemand =/);
