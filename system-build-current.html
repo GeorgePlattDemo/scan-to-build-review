@@ -113,106 +113,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     let seatJourneySnapshot = null;
     let proofHandoff = null;
     const storeHandoffContract = window.STBStoreHandoffContract || null;
-    let captureStartOwnProof = () => {
-            const bridge = proofFrame?.contentWindow?.STBProjectBridge;
-            const snap = bridge && typeof bridge.getSnapshot === 'function' ? bridge.getSnapshot() : null;
-            if (snap && snap.physicalDemand) {
-              const demand = snap.physicalDemand;
-              let retainedDefinition = null;
-              try {
-                retainedDefinition = JSON.parse(win.localStorage.getItem('stb-start-own-user1-definition') || 'null');
-              } catch (_) {}
-              const ref = retainedDefinition?.storeReference || null;
-              const match = startOwnPage.querySelector('#proof-job1-match');
-              const storeLine = startOwnPage.querySelector('#proof-job1-store');
-              const dec = startOwnPage.querySelector('#proof-job1-decisions');
-              if (dec) {
-                dec.textContent = String((snap.openPoints && snap.openPoints.length)
-                  ? (8 - snap.openPoints.length)
-                  : (snap.complete ? 8 : 0));
-              }
-              if (match) {
-                match.textContent = snap.complete
-                  ? 'Contract complete.'
-                  : ('Still open: ' + ((snap.openPoints||[]).join(', ') || 'facts'));
-              }
-              if (storeLine) {
-                if (ref?.materialResolution?.status === 'MAPPED' && ref?.estimate) {
-                  storeLine.textContent =
-                    'Store: current c51f5f27 Stage-2 answer retained · 60-in project workpiece · '
-                    +(ref.priceCompleteness === 'PARTIAL'
-                      ? 'modeled value is partial while named conditions remain.'
-                      : 'budgetary estimate available.');
-                } else {
-                  storeLine.textContent = 'Store: waiting on the current identified definition.';
-                }
-              }
-              try {
-                win.localStorage.setItem('stb-proof-ladder-job1', JSON.stringify({
-                  semanticOutput:{
-                    stockClass:demand.sizeKey || demand.stockClass,
-                    finishedLength:demand.finishedLengthIn || demand.finishedLength,
-                    quantity:demand.partQty || demand.quantity,
-                    endCondition:(demand.angleDeg || demand.angleDegrees) ? 'angled' : 'square',
-                    straightCut:(demand.angleDeg || demand.angleDegrees) ? false : true,
-                    angleDegrees:demand.angleDeg ?? demand.angleDegrees,
-                    cutPlane:demand.cutPlane,
-                    endIdentity:demand.endIdentity,
-                    endRelation:demand.endRelation,
-                    lengthDatum:demand.lengthDatum
-                  },
-                  storePreview:ref
-                }));
-              } catch (_) {}
-              return;
-            }
-
-            const state = proofFrame?.contentWindow?.S;
-            if (!state) return;
-            let semanticOutput = null;
-            if (state.maker === 'cuts' && state.cuts?.pieces?.length === 1 && state.cutOps?.angled) {
-              const part = state.cuts.pieces[0];
-              semanticOutput = {
-                stockClass: state.size === '2x4' ? '2x4' : state.size,
-                finishedLength: Number(part.len),
-                quantity: Number(part.qty),
-                endCondition: 'angled',
-                straightCut: true,
-                angleDegrees: Number(state.cutOps.angle),
-                angleReference: state.cutOps.angleReference,
-                cutPlane: state.cutOps.cutPlane,
-                endIdentity: state.cutOps.endIdentity,
-                endRelation: state.cutOps.endRelation,
-                lengthDatum: state.cutOps.lengthDatum
-              };
-            }
-            const targetMatch = !!semanticOutput
-              && semanticOutput.stockClass === '2x4'
-              && Math.abs(semanticOutput.finishedLength - 15.5) < 0.00001
-              && semanticOutput.quantity === 8
-              && semanticOutput.endCondition === 'angled'
-              && semanticOutput.angleDegrees === 10
-              && semanticOutput.angleReference === 'source-stated'
-              && semanticOutput.cutPlane === 'bevel-thickness'
-              && semanticOutput.endIdentity === 'both'
-              && semanticOutput.endRelation === 'parallel'
-              && semanticOutput.lengthDatum === 'source-length';
-            const payload = {
-              measured: true,
-              explicitProjectDecisions: [...proofDecisions],
-              explicitProjectDecisionCount: proofDecisions.size,
-              uiActions: proofActions,
-              semanticOutput,
-              targetMatch
-            };
-            try { win.localStorage.setItem('stb-proof-ladder-job1', JSON.stringify(payload)); } catch (_) {}
-            const d = startOwnPage.querySelector('#proof-job1-decisions');
-            const a = startOwnPage.querySelector('#proof-job1-actions');
-            const m = startOwnPage.querySelector('#proof-job1-match');
-            if (d) d.textContent = String(payload.explicitProjectDecisionCount);
-            if (a) a.textContent = String(payload.uiActions);
-            if (m) m.textContent = targetMatch ? 'Core target represented.' : 'Target not yet represented.';
-          };
+    let captureStartOwnProof = () => {};
     let pendingSeatView = {mode:'continuous',stage:null};
 
     const home = doc.getElementById('projects');
@@ -306,45 +207,55 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             const snap = bridge && typeof bridge.getSnapshot === 'function' ? bridge.getSnapshot() : null;
             if (snap && snap.physicalDemand) {
               const demand = snap.physicalDemand;
-              const preview = window.parent.STBUserDefinedBoardStore
-                ? window.parent.STBUserDefinedBoardStore.previewFromDemand(demand)
-                : (win.STBUserDefinedBoardStore ? win.STBUserDefinedBoardStore.previewFromDemand(demand) : null);
-              const startOwnAuthority = storeHandoffContract?.storeAuthorities?.startOwn || null;
-              const built = boardStore ? boardStore.previewFromDemand(demand) : preview;
-              const ev = built && built.answer && built.answer.rawEvaluation;
+              let retainedDefinition = null;
+              try {
+                retainedDefinition = JSON.parse(win.localStorage.getItem('stb-start-own-user1-definition') || 'null');
+              } catch (_) {}
+              const ref = retainedDefinition?.storeReference || null;
               const match = startOwnPage.querySelector('#proof-job1-match');
               const storeLine = startOwnPage.querySelector('#proof-job1-store');
               const dec = startOwnPage.querySelector('#proof-job1-decisions');
-              if (dec) dec.textContent = String((snap.openPoints && snap.openPoints.length) ? (8 - snap.openPoints.length) : (snap.complete ? 8 : 0));
-              if (match) match.textContent = snap.complete ? 'Contract complete.' : ('Still open: ' + ((snap.openPoints||[]).join(', ') || 'facts'));
+              if (dec) {
+                dec.textContent = String((snap.openPoints && snap.openPoints.length)
+                  ? (8 - snap.openPoints.length)
+                  : (snap.complete ? 8 : 0));
+              }
+              if (match) {
+                match.textContent = snap.complete
+                  ? 'Contract complete.'
+                  : ('Still open: ' + ((snap.openPoints||[]).join(', ') || 'facts'));
+              }
               if (storeLine) {
-                if (ev && ev.status === 'SUPPORTABLE' && ev.materialResolution) {
-                  storeLine.textContent = 'Store: comparison preview available · current 60-in definition and Store Zero budgetary Q are shown on the Start Your Own bench.';
-                } else if (ev && ev.materialResolution && ev.materialResolution.code) {
-                  storeLine.textContent = 'Store: ' + ev.materialResolution.code;
+                if (ref?.materialResolution?.status === 'MAPPED' && ref?.estimate) {
+                  storeLine.textContent =
+                    'Store: current c51f5f27 Stage-2 answer retained · 60-in project workpiece · '
+                    +(ref.priceCompleteness === 'PARTIAL'
+                      ? 'modeled value is partial while named conditions remain.'
+                      : 'budgetary estimate available.');
                 } else {
-                  storeLine.textContent = 'Store: waiting on a complete / nestable definition.';
+                  storeLine.textContent = 'Store: waiting on the current identified definition.';
                 }
               }
               try {
                 win.localStorage.setItem('stb-proof-ladder-job1', JSON.stringify({
                   semanticOutput:{
-                    stockClass:demand.sizeKey,
-                    finishedLength:demand.finishedLengthIn,
-                    quantity:demand.partQty,
-                    endCondition:demand.angleDeg ? 'angled' : 'square',
-                    straightCut:true,
-                    angleDegrees:demand.angleDeg,
+                    stockClass:demand.sizeKey || demand.stockClass,
+                    finishedLength:demand.finishedLengthIn || demand.finishedLength,
+                    quantity:demand.partQty || demand.quantity,
+                    endCondition:(demand.angleDeg || demand.angleDegrees) ? 'angled' : 'square',
+                    straightCut:(demand.angleDeg || demand.angleDegrees) ? false : true,
+                    angleDegrees:demand.angleDeg ?? demand.angleDegrees,
                     cutPlane:demand.cutPlane,
                     endIdentity:demand.endIdentity,
                     endRelation:demand.endRelation,
                     lengthDatum:demand.lengthDatum
                   },
-                  storePreview:built && built.answer
+                  storePreview:ref
                 }));
               } catch (_) {}
               return;
             }
+
             const state = proofFrame?.contentWindow?.S;
             if (!state) return;
             let semanticOutput = null;
