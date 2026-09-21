@@ -147,8 +147,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         const startOwnTile = ribbon.querySelector('.tile[data-go="start-own"]');
         if (startOwnTile) {
           startOwnTile.removeAttribute('data-go');
-          startOwnTile.dataset.startOwnArtifact = 'stb-start-own-bench-leg-0.1.html';
-          startOwnTile.title = 'Start Your Own · grab a board · bench leg 0.1';
+          startOwnTile.dataset.startOwnArtifact = 'three-frames.html';
+          startOwnTile.title = 'Start Your Own · User 1 · three-frame production-window proof';
 
           let startOwnPage = doc.getElementById('start-own-live');
           if (!startOwnPage) {
@@ -157,23 +157,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             startOwnPage.id = 'start-own-live';
             startOwnPage.innerHTML = `
               <div class="start-own-shell-main">
-                <div data-proof-job="1" style="margin:0 0 12px;padding:14px 16px;border:1px solid var(--border);border-radius:9px;background:var(--surface)">
-                  <p style="margin:0 0 5px;font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--text3)">START YOUR OWN · BENCH LEG</p>
-                  <p style="margin:0 0 8px"><b>Grab a 2×4 and define the replacement leg on the bench below.</b></p>
-                  <p class="dim" style="margin:0 0 8px">Store will map when the contract is: <b style="color:var(--text)">2×4 · 16½ in · qty 8 · 10° · both ends · parallel · through the thickness · long-to-long outer edge.</b></p>
-                  <p class="dim" style="margin:0">Long-short datum will not nest. The Store sentence appears here and on the bench. Not a quote.</p>
-                  <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:11px;color:var(--text2)">
-                    <span>Facts set: <b id="proof-job1-decisions">0</b></span>
-                    <span id="proof-job1-match">No complete contract yet.</span>
-                    <span id="proof-job1-store">Store: waiting on a complete definition.</span>
-                  </div>
-                  <button type="button" id="proof-job1-back" style="margin-top:10px">← PROJECT LIBRARY</button>
-                </div>
                 <iframe
                   id="start-own-proof-frame"
                   class="start-own-shell-frame"
-                  title="Start Your Own · definition to doing"
-                  src="stb-start-own-bench-leg-0.1.html?v=b2b2cae1"
+                  title="Start Your Own · User 1 · definition to doing"
+                  src="three-frames.html?v=9ae54584"
                 ></iframe>
               </div>
             `;
@@ -181,8 +169,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
           }
 
           const liveFrame = startOwnPage.querySelector('#start-own-proof-frame');
-          if (liveFrame && !String(liveFrame.getAttribute('src')||'').includes('stb-start-own-bench-leg-0.1.html')) {
-            liveFrame.src = 'stb-start-own-bench-leg-0.1.html?v=b2b2cae1';
+          if (liveFrame && !String(liveFrame.getAttribute('src')||'').includes('three-frames.html')) {
+            liveFrame.src = 'three-frames.html?v=9ae54584';
           }
           const banner = startOwnPage.querySelector('[data-proof-job="1"]');
           if (banner && /generic floor/.test(banner.textContent||'')) {
@@ -309,6 +297,14 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             proofFrame.addEventListener('load', () => {
               const childDoc = proofFrame.contentDocument;
               if (!childDoc) return;
+              const benchButton = childDoc.querySelector('.stb-bench-button');
+              if (benchButton && !benchButton.dataset.hostBenchWired) {
+                benchButton.dataset.hostBenchWired = 'true';
+                benchButton.addEventListener('click', () => {
+                  const frames = childDoc.querySelectorAll('.frame');
+                  frames[2]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+              }
               childDoc.addEventListener('click', event => {
                 const target = event.target?.closest?.('button,a');
                 if (!target) return;
@@ -410,7 +406,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         var projectId = source === 'start-own' ? 'start-own' : 'outdoor-build';
         var projectClass = source === 'start-own' ? 'USER_DEFINED_BOARD' : 'BOUNDED_SOURCE_BACKED';
         var sourceAuthority = source === 'start-own'
-          ? {kind:'USER-DEFINED',artifact:'stb-start-own-bench-leg-0.1.html'}
+          ? {kind:'USER-DEFINED',artifact:'three-frames.html'}
           : {kind:'BOUNDED SOURCE-BACKED',artifact:'stb-outdoor-bench-leg-0.1.html',detail:payload.sourceAuthority||null};
         if(payload.physicalDemand){
           physicalDemand = payload.physicalDemand;
