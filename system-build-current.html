@@ -161,7 +161,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   id="start-own-proof-frame"
                   class="start-own-shell-frame"
                   title="Start Your Own · User 1 · definition to doing"
-                  src="three-frames.html?v=1ebd3642"
+                  src="three-frames.html?v=8fe09454"
                 ></iframe>
               </div>
             `;
@@ -170,7 +170,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
           const liveFrame = startOwnPage.querySelector('#start-own-proof-frame');
           if (liveFrame && !String(liveFrame.getAttribute('src')||'').includes('three-frames.html')) {
-            liveFrame.src = 'three-frames.html?v=1ebd3642';
+            liveFrame.src = 'three-frames.html?v=8fe09454';
           }
           const banner = startOwnPage.querySelector('[data-proof-job="1"]');
           if (banner && /generic floor/.test(banner.textContent||'')) {
@@ -611,6 +611,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   : 'Current material value is established. Combined commercial price is not complete because Start Your Own processing / fulfillment recovery is not yet published.');
                 setText('stb-basis-sku',materialMapped?material.storeSku:'NOT MAPPED');
                 setText('stb-basis-source-stock',materialMapped?material.quantity+' × '+material.stockLengthIn+' in 2×4':'UNRESOLVED');
+                setText('stb-basis-unit-price',materialMapped && Number.isFinite(Number(material.unitPrice)) ? '$'+Number(material.unitPrice).toFixed(2)+' / ea' : 'UNRESOLVED');
+                setText('stb-basis-cell-family',materialMapped && Array.isArray(material.cellFamily) ? material.cellFamily.join(' · ') : 'UNRESOLVED');
+                setText('stb-basis-supported-ops',materialMapped && Array.isArray(material.supportedOps) ? material.supportedOps.join(' · ') : 'UNRESOLVED');
                 setText('stb-basis-clock',String(material?.source?.clock || catalogSource?.clock || '—'));
                 setText('stb-basis-catalog-pin',String(material?.source?.pin || catalogSource?.pin || '—'));
                 setText('stb-basis-capability',String(capabilityBasis));
