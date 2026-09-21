@@ -343,24 +343,37 @@
     var P=START_OWN_STORE_PRICING;
     var material=roundN(input.material || 0,2);
     var workpiece=Math.abs(Number(input.definedWorkpieceLengthIn) || 0);
-    var sawCuts=Math.max(0, Number(input.sawCuts) || 0);
+    var productionSawCuts=Math.max(0, Number(input.sawCuts) || 0);
+    var preparationSawCuts=Math.max(0, Number(input.preparationSawCuts) || 0);
+    var totalSawCuts=productionSawCuts+preparationSawCuts;
     var angle=Math.max(0, Math.min(89, Number(input.sawAngleDeg) || 0));
     var drillCycles=Math.max(0, Number(input.drillCycles) || 0);
     var width=Number(input.widthIn) || 3.5;
+    var unresolved=Array.isArray(input.unresolvedConditions)
+      ? input.unresolvedConditions.filter(function(value){return typeof value==='string' && value.trim()!=='';})
+      : [];
     var radians=angle*Math.PI/180;
     var sawTraverse=angle>0 ? width/Math.cos(radians) : width;
     var feedFpm=((P.saw.chipLoadCrossSoft*P.saw.teeth*P.saw.rpm)/12)*P.saw.finishFactor;
     var sawCycle=P.saw.deployMin + sawTraverse/(feedFpm*12) + P.saw.retractMin;
     var indexCycle=P.accelMin + workpiece/P.rapidInPerMin;
     var drillDepth=Number(input.drillReferenceDepthIn);
-    if(!Number.isFinite(drillDepth) || drillDepth<=0) drillDepth=P.drill.referenceDepthIn;
-    var drillCycle=P.saw.deployMin + drillDepth/(P.drill.ipr*P.drill.rpm) + P.saw.retractMin;
-    var cycle=P.loadSeatMin + sawCuts*sawCycle + indexCycle + drillCycles*drillCycle + P.releaseLabelMin + 8;
+    if(drillCycles>0 && (!Number.isFinite(drillDepth) || drillDepth<=0)){
+      unresolved=unresolved.concat(['DRILL_DEPTH_UNRESOLVED']);
+      drillCycles=0;
+    }
+    if(!Number.isFinite(drillDepth) || drillDepth<=0) drillDepth=0;
+    var drillCycle=drillCycles>0
+      ? P.saw.deployMin + drillDepth/(P.drill.ipr*P.drill.rpm) + P.saw.retractMin
+      : 0;
+    var cycle=P.loadSeatMin + totalSawCuts*sawCycle + indexCycle + drillCycles*drillCycle + P.releaseLabelMin + 8;
     var hours=cycle/60;
     var cell=roundN(P.recovery.setupCharge + P.recovery.machineHourRate*hours,2);
     return Object.freeze({
       status:'BUDGETARY_ESTIMATE',
-      complete:sawCuts>0 && workpiece>0,
+      complete:totalSawCuts>0 && workpiece>0 && unresolved.length===0,
+      completeness:unresolved.length ? 'PARTIAL' : 'COMPLETE_FOR_ENCODED_DEMAND',
+      unresolvedConditions:Object.freeze(unresolved.slice()),
       material:material,
       cellRecovery:cell,
       total:roundN(material+cell,2),
@@ -376,7 +389,9 @@
       }),
       operationBasis:Object.freeze({
         definedWorkpieceLengthIn:workpiece,
-        sawCuts:sawCuts,
+        preparationSawCuts:preparationSawCuts,
+        productionSawCuts:productionSawCuts,
+        totalModeledSawCuts:totalSawCuts,
         sawAngleDeg:angle,
         sawTraverseIn:roundN(sawTraverse,6),
         drillCycles:drillCycles,
@@ -483,6 +498,116 @@
       usableLeft:usable,
       remain:remain,
       waste:remain.reduce(function(sum,value){return sum+value},0)
+    });
+  }
+
+  function sequenceDefinedWorkpiece(input){
+    input=input || {};
+    var raw=Number(input.rawStockLengthIn);
+    var workpiece=Number(input.definedWorkpieceLengthIn);
+    var hold=Number(input.holdIn == null ? D001_HOLD.holdIn : input.holdIn);
+    var kerf=Number(input.kerfIn == null ? D001_HOLD.kerfIn : input.kerfIn);
+    var parts=Array.isArray(input.parts)
+      ? input.parts.map(Number).filter(function(value){return Number.isFinite(value) && value>0;})
+      : [];
+    var establish=!!input.establishAngledEnd;
+
+    if(!Number.isFinite(raw) || raw<=0 || !Number.isFinite(workpiece) || workpiece<=0 || raw<workpiece-0.0001){
+      return Object.freeze({status:'UNRESOLVED',code:'STOCK_TO_WORKPIECE_LINEAGE_INVALID'});
+    }
+    if(!Number.isFinite(hold) || hold<=0 || !Number.isFinite(kerf) || kerf<0){
+      return Object.freeze({status:'UNRESOLVED',code:'CONTROL_OR_KERF_UNRESOLVED'});
+    }
+
+    var preparationRequired=raw>workpiece+0.0001;
+    var preparation=null;
+    if(preparationRequired){
+      var rawOffcut=roundN(raw-workpiece-kerf,6);
+      if(rawOffcut<0){
+        return Object.freeze({status:'UNRESOLVED',code:'RAW_STOCK_TOO_SHORT_FOR_PREPARATION_KERF'});
+      }
+      preparation=Object.freeze({
+        required:true,
+        kind:'RAW_STOCK_TO_DEFINED_WORKPIECE',
+        retainedBeforeIn:raw,
+        retainedAfterIn:workpiece,
+        kerfIn:kerf,
+        offcutIn:rawOffcut,
+        holdRequiredIn:hold,
+        pass:workpiece>=hold-1e-9
+      });
+      if(!preparation.pass){
+        return Object.freeze({
+          status:'UNRESOLVED',
+          code:'DEFINED_WORKPIECE_BELOW_CONTROL_TAIL',
+          preparation:preparation
+        });
+      }
+    }else{
+      preparation=Object.freeze({
+        required:false,
+        kind:'DEFINED_WORKPIECE_ALREADY_MATCHES_STOCK',
+        retainedBeforeIn:raw,
+        retainedAfterIn:workpiece,
+        kerfIn:0,
+        offcutIn:0,
+        holdRequiredIn:hold,
+        pass:workpiece>=hold-1e-9
+      });
+    }
+
+    var rows=[];
+    var remaining=workpiece;
+    if(establish){
+      var establishAfter=roundN(remaining-kerf,6);
+      rows.push(Object.freeze({
+        kind:'ESTABLISH_ANGLE',
+        retainedBeforeIn:remaining,
+        retainedAfterIn:establishAfter,
+        kerfIn:kerf,
+        holdRequiredIn:hold,
+        pass:establishAfter>=hold-1e-9
+      }));
+      remaining=establishAfter;
+    }
+    for(var i=0;i<parts.length;i++){
+      var before=remaining;
+      remaining=roundN(remaining-parts[i]-kerf,6);
+      rows.push(Object.freeze({
+        kind:'PART_CUTOFF',
+        partIndex:i+1,
+        partLengthIn:parts[i],
+        retainedBeforeIn:before,
+        retainedAfterIn:remaining,
+        kerfIn:kerf,
+        holdRequiredIn:hold,
+        pass:remaining>=hold-1e-9
+      }));
+    }
+    var failed=rows.find(function(row){return row.pass!==true});
+    if(failed){
+      return Object.freeze({
+        status:'UNRESOLVED',
+        code:'LAST_REMAIN_BELOW_ROTOR_SAW_CENTER',
+        rawStockLengthIn:raw,
+        definedWorkpieceLengthIn:workpiece,
+        preparation:preparation,
+        production:Object.freeze(rows),
+        finalRemainderIn:remaining,
+        holdIn:hold,
+        kerfIn:kerf
+      });
+    }
+    return Object.freeze({
+      status:'SEQUENCED',
+      code:null,
+      rawStockLengthIn:raw,
+      definedWorkpieceLengthIn:workpiece,
+      preparation:preparation,
+      production:Object.freeze(rows),
+      finalRemainderIn:remaining,
+      holdIn:hold,
+      kerfIn:kerf
     });
   }
 
@@ -709,6 +834,7 @@
     d001Envelope:D001_ENVELOPE,
     d001Hold:D001_HOLD,
     sequenceCrosscuts:sequenceCrosscuts,
+    sequenceDefinedWorkpiece:sequenceDefinedWorkpiece,
     windowSeatRecovery:WINDOW_SEAT_RECOVERY,
     quoteModeledRecovery:quoteModeledRecovery,
     comparisonDemand:comparisonDemand,
