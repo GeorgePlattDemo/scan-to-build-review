@@ -64,7 +64,7 @@ assert.match(shell,/const definedWorkpieceLengthIn = 60;/);
 assert.match(shell,/parentLengthIn:definedWorkpieceLengthIn/);
 assert.match(shell,/materialSource:'STORE_ZERO'/);
 assert.match(shell,/sequenceDefinedWorkpiece/);
-assert.match(shell,/preparationSawCuts/);
+assert.equal(shell.includes('preparationSawCuts'),false,'phantom Store preparation cut returned');
 assert.match(shell,/const drillCycles = 0/);
 assert.equal(shell.includes('previewFromDemand'),false,'active Start Own still invokes legacy Store preview authority');
 assert.match(shell,/const spotDemand =/);
@@ -86,25 +86,23 @@ assert.equal(shell.includes('60-in customer board'),false);
 assert.equal(shell.includes('photo, board, or file you already have'),false);
 assert.equal(shell.includes('parentLengthIn = 72'),false);
 
-// Shared contract preserves raw-stock lineage, the 60-in workpiece, and unresolved spot meaning.
+// Shared contract begins at the frozen 60-in workpiece and preserves the resolved 3/16 spot meaning.
 const sandbox = {window:{}};
 vm.runInNewContext(contractSource,sandbox,{filename:'stb-store-handoff-contract.js'});
 const contract = sandbox.window.STBStoreHandoffContract;
-assert.equal(contract.version,'0.6');
+assert.equal(contract.version,'0.7');
 assert.equal(typeof contract.quoteStartOwnBoardSequence,'function');
 assert.equal(typeof contract.sequenceDefinedWorkpiece,'function');
 
 const lineage = contract.sequenceDefinedWorkpiece({
-  rawStockLengthIn:72,
   definedWorkpieceLengthIn:60,
   parts:[16,16],
   establishAngledEnd:true
 });
 assert.equal(lineage.status,'SEQUENCED');
-assert.equal(lineage.preparation.required,true);
-assert.equal(lineage.preparation.retainedBeforeIn,72);
-assert.equal(lineage.preparation.retainedAfterIn,60);
-assert.equal(lineage.preparation.offcutIn,11.875);
+assert.equal(lineage.rawStockLengthIn,undefined);
+assert.equal(lineage.preparation,undefined);
+assert.equal(lineage.definedWorkpieceLengthIn,60);
 assert.equal(lineage.production.length,3);
 assert.equal(lineage.production[0].kind,'ESTABLISH_ANGLE');
 assert.equal(lineage.finalRemainderIn,27.625);
@@ -115,29 +113,28 @@ const startQuote = contract.quoteStartOwnBoardSequence({
   material:3.13,
   definedWorkpieceLengthIn:60,
   sawCuts:3,
-  preparationSawCuts:1,
   sawAngleDeg:30,
   drillCycles:0,
-  unresolvedConditions:[
-    'MITER_LIMITED_NUMERIC_ANGLE_RANGE_STAGE2_UNRESOLVED',
-    'CENTER_SPOT_TOOLING_ENVELOPE_UNRESOLVED'
-  ],
+  spotCycles:2,
+  unresolvedConditions:[],
   widthIn:3.5
 });
 assert.equal(startQuote.status,'BUDGETARY_ESTIMATE');
-assert.equal(startQuote.complete,false);
-assert.equal(startQuote.completeness,'PARTIAL');
+assert.equal(startQuote.complete,true);
+assert.equal(startQuote.completeness,'COMPLETE_FOR_ENCODED_DEMAND');
 assert.equal(startQuote.material,3.13);
-assert.equal(startQuote.cellRecovery,51.45);
-assert.equal(startQuote.total,54.58);
-assert.equal(startQuote.cycle.T_job_min,9.867);
-assert.equal(startQuote.operationBasis.preparationSawCuts,1);
+assert.equal(startQuote.cellRecovery,51.69);
+assert.equal(startQuote.total,54.82);
+assert.equal(startQuote.cycle.T_job_min,10.014);
+assert.equal(startQuote.operationBasis.preparationSawCuts,undefined);
 assert.equal(startQuote.operationBasis.productionSawCuts,3);
-assert.equal(startQuote.operationBasis.totalModeledSawCuts,4);
+assert.equal(startQuote.operationBasis.totalModeledSawCuts,3);
 assert.equal(startQuote.operationBasis.drillCycles,0);
+assert.equal(startQuote.operationBasis.spotCycles,2);
+assert.equal(startQuote.operationBasis.spotToolDiameterIn,0.1875);
 assert.equal(startQuote.engine.id,'STB-STORE-ZERO-PRICE-1');
-assert.equal(startQuote.engine.version,'0.2.2');
-assert.equal(startQuote.source.pin,'c51f5f27af9a77bc7581c5d42c56f0a1ed0b650a');
+assert.equal(startQuote.engine.version,'0.2.3');
+assert.equal(startQuote.source.pin,'ab8a4c5d470c310f27fef82683611622ab976168');
 
 const legacyPart = {
   stockClass:'2x4',finishedLength:15.5,quantity:8,endCondition:'angled',straightCut:true,
@@ -160,14 +157,13 @@ const defined = {
   endIdentity:'both',endRelation:'parallel',lengthDatum:'long-long-outer-edge',
   spotDemand:{
     required:true,mode:'SPOT_ON_LOCATION',countPerPart:1,locationRule:'CENTERED_ON_PART',
-    locationAlongLengthIn:8,acrossWidthRule:'CENTERED_ON_WIDE_FACE',
-    derivation:{basis:'DERIVED',formula:'finishedLengthIn / 2',input:{finishedLengthIn:16},output:{locationAlongLengthIn:8}},
-    toolingStatus:'UNRESOLVED'
+    locationAlongLengthIn:8,acrossWidthRule:'CENTERED_ON_WIDE_FACE',totalCount:2,
+    derivation:{basis:'DERIVED',formula:'finishedLengthIn / 2',input:{finishedLengthIn:16},output:{locationAlongLengthIn:8}}
   }
 };
 const handoff = contract.createComparisonHandoff({
   projectId:'start-own',projectClass:'USER_DEFINED_BOARD',definitionId:'SYO-USER1-XBRACE-0.1',
-  physicalDemand:defined,unresolvedConditions:['CENTER_SPOT_TOOLING_ENVELOPE_UNRESOLVED']
+  physicalDemand:defined,unresolvedConditions:[]
 });
 assert.equal(handoff.requiredGeometryDatumFacts.parentLengthIn,60);
 const spot = handoff.operationDemand.find(op => op.kind==='SPOT_ON_LOCATION');
@@ -175,10 +171,10 @@ assert.ok(spot);
 assert.equal(spot.countPerPart,1);
 assert.equal(spot.locationAlongLengthIn,8);
 assert.equal(spot.derivation.formula,'finishedLengthIn / 2');
-assert.equal(spot.toolingStatus,'UNRESOLVED');
+assert.equal(spot.totalCount,2);
 assert.equal(handoff.operationDemand.some(op => op.kind==='DRILL'),false,'spot was silently converted into a drill operation');
 assert.equal(handoff.authority.physicalFabrication,false);
 
 
 
-console.log('PASS · Start Your Own intent → bench → Store → terms preserves one definition, raw-stock lineage, and unresolved spot meaning');
+console.log('PASS · Start Your Own intent → bench → Store → terms preserves one 60-in definition and resolved 3/16 spot meaning');

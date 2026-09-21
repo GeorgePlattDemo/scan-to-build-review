@@ -37,13 +37,13 @@
     startOwn: Object.freeze({
       projectId:'start-own',
       projectClass:'USER_DEFINED_BOARD',
-      materialCatalogPin:'c51f5f27af9a77bc7581c5d42c56f0a1ed0b650a',
-      capabilityBasis:'D001-STAGE2-ENVELOPE-0.2',
-      capabilityPin:'c51f5f27af9a77bc7581c5d42c56f0a1ed0b650a',
+      materialCatalogPin:'ab8a4c5d470c310f27fef82683611622ab976168',
+      capabilityBasis:'D001-STAGE2-ENVELOPE-0.3',
+      capabilityPin:'ab8a4c5d470c310f27fef82683611622ab976168',
       economicsModel:'STB-STORE-ZERO-PRICE-1',
-      economicsVersion:'0.2.2',
+      economicsVersion:'0.2.3',
       economicsStatus:'BUDGETARY_ESTIMATE',
-      economicsPin:'c51f5f27af9a77bc7581c5d42c56f0a1ed0b650a',
+      economicsPin:'ab8a4c5d470c310f27fef82683611622ab976168',
       legacyGeneralRecoverySelected:false
     }),
     outdoor: Object.freeze({
@@ -155,7 +155,7 @@
   var START_OWN_STORE_CATALOG = Object.freeze({
     repository:'GeorgePlattDemo/scan-to-build-store',
     file:'store-zero-catalog.json',
-    pin:'c51f5f27af9a77bc7581c5d42c56f0a1ed0b650a',
+    pin:'ab8a4c5d470c310f27fef82683611622ab976168',
     clock:"2026-09-10"
   });
 
@@ -302,11 +302,11 @@
       repository:'GeorgePlattDemo/scan-to-build-store',
       pricingFile:'store-zero-pricing-engine.mjs',
       envelopeFile:'d001-stage2-envelope.mjs',
-      pin:'c51f5f27af9a77bc7581c5d42c56f0a1ed0b650a'
+      pin:'ab8a4c5d470c310f27fef82683611622ab976168'
     }),
     engine:Object.freeze({
       id:'STB-STORE-ZERO-PRICE-1',
-      version:'0.2.2',
+      version:'0.2.3',
       clock:'2026-09-10',
       documentKind:'BudgetaryEstimate'
     }),
@@ -330,7 +330,8 @@
     accelMin:0.05,
     loadSeatMin:0.6,
     releaseLabelMin:0.4,
-    drill:Object.freeze({rpm:3000,ipr:0.008,referenceDepthIn:0.75})
+    drill:Object.freeze({rpm:3000,ipr:0.008,referenceDepthIn:0.75}),
+    spot:Object.freeze({diameterIn:0.1875,fixedCycleMin:0.16,basis:'DECLARED_FIXTURE'})
   });
 
   function roundN(value, places){
@@ -344,10 +345,10 @@
     var material=roundN(input.material || 0,2);
     var workpiece=Math.abs(Number(input.definedWorkpieceLengthIn) || 0);
     var productionSawCuts=Math.max(0, Number(input.sawCuts) || 0);
-    var preparationSawCuts=Math.max(0, Number(input.preparationSawCuts) || 0);
-    var totalSawCuts=productionSawCuts+preparationSawCuts;
+    var totalSawCuts=productionSawCuts;
     var angle=Math.max(0, Math.min(89, Number(input.sawAngleDeg) || 0));
     var drillCycles=Math.max(0, Number(input.drillCycles) || 0);
+    var spotCycles=Math.max(0, Number(input.spotCycles) || 0);
     var width=Number(input.widthIn) || 3.5;
     var unresolved=Array.isArray(input.unresolvedConditions)
       ? input.unresolvedConditions.filter(function(value){return typeof value==='string' && value.trim()!=='';})
@@ -366,7 +367,9 @@
     var drillCycle=drillCycles>0
       ? P.saw.deployMin + drillDepth/(P.drill.ipr*P.drill.rpm) + P.saw.retractMin
       : 0;
-    var cycle=P.loadSeatMin + totalSawCuts*sawCycle + indexCycle + drillCycles*drillCycle + P.releaseLabelMin + 8;
+    var cycle=P.loadSeatMin + totalSawCuts*sawCycle + indexCycle +
+      drillCycles*drillCycle + spotCycles*P.spot.fixedCycleMin +
+      P.releaseLabelMin + 8;
     var hours=cycle/60;
     var cell=roundN(P.recovery.setupCharge + P.recovery.machineHourRate*hours,2);
     return Object.freeze({
@@ -389,13 +392,14 @@
       }),
       operationBasis:Object.freeze({
         definedWorkpieceLengthIn:workpiece,
-        preparationSawCuts:preparationSawCuts,
         productionSawCuts:productionSawCuts,
         totalModeledSawCuts:totalSawCuts,
         sawAngleDeg:angle,
         sawTraverseIn:roundN(sawTraverse,6),
         drillCycles:drillCycles,
-        drillReferenceDepthIn:drillDepth
+        drillReferenceDepthIn:drillDepth,
+        spotCycles:spotCycles,
+        spotToolDiameterIn:P.spot.diameterIn
       }),
       engine:P.engine,
       source:P.source,
@@ -503,7 +507,6 @@
 
   function sequenceDefinedWorkpiece(input){
     input=input || {};
-    var raw=Number(input.rawStockLengthIn);
     var workpiece=Number(input.definedWorkpieceLengthIn);
     var hold=Number(input.holdIn == null ? D001_HOLD.holdIn : input.holdIn);
     var kerf=Number(input.kerfIn == null ? D001_HOLD.kerfIn : input.kerfIn);
@@ -512,48 +515,14 @@
       : [];
     var establish=!!input.establishAngledEnd;
 
-    if(!Number.isFinite(raw) || raw<=0 || !Number.isFinite(workpiece) || workpiece<=0 || raw<workpiece-0.0001){
-      return Object.freeze({status:'UNRESOLVED',code:'STOCK_TO_WORKPIECE_LINEAGE_INVALID'});
+    if(!Number.isFinite(workpiece) || workpiece<=0){
+      return Object.freeze({status:'UNRESOLVED',code:'DEFINED_WORKPIECE_INVALID'});
     }
     if(!Number.isFinite(hold) || hold<=0 || !Number.isFinite(kerf) || kerf<0){
       return Object.freeze({status:'UNRESOLVED',code:'CONTROL_OR_KERF_UNRESOLVED'});
     }
-
-    var preparationRequired=raw>workpiece+0.0001;
-    var preparation=null;
-    if(preparationRequired){
-      var rawOffcut=roundN(raw-workpiece-kerf,6);
-      if(rawOffcut<0){
-        return Object.freeze({status:'UNRESOLVED',code:'RAW_STOCK_TOO_SHORT_FOR_PREPARATION_KERF'});
-      }
-      preparation=Object.freeze({
-        required:true,
-        kind:'RAW_STOCK_TO_DEFINED_WORKPIECE',
-        retainedBeforeIn:raw,
-        retainedAfterIn:workpiece,
-        kerfIn:kerf,
-        offcutIn:rawOffcut,
-        holdRequiredIn:hold,
-        pass:workpiece>=hold-1e-9
-      });
-      if(!preparation.pass){
-        return Object.freeze({
-          status:'UNRESOLVED',
-          code:'DEFINED_WORKPIECE_BELOW_CONTROL_TAIL',
-          preparation:preparation
-        });
-      }
-    }else{
-      preparation=Object.freeze({
-        required:false,
-        kind:'DEFINED_WORKPIECE_ALREADY_MATCHES_STOCK',
-        retainedBeforeIn:raw,
-        retainedAfterIn:workpiece,
-        kerfIn:0,
-        offcutIn:0,
-        holdRequiredIn:hold,
-        pass:workpiece>=hold-1e-9
-      });
+    if(workpiece<hold-1e-9){
+      return Object.freeze({status:'UNRESOLVED',code:'DEFINED_WORKPIECE_BELOW_CONTROL_TAIL'});
     }
 
     var rows=[];
@@ -589,9 +558,7 @@
       return Object.freeze({
         status:'UNRESOLVED',
         code:'LAST_REMAIN_BELOW_ROTOR_SAW_CENTER',
-        rawStockLengthIn:raw,
         definedWorkpieceLengthIn:workpiece,
-        preparation:preparation,
         production:Object.freeze(rows),
         finalRemainderIn:remaining,
         holdIn:hold,
@@ -601,9 +568,7 @@
     return Object.freeze({
       status:'SEQUENCED',
       code:null,
-      rawStockLengthIn:raw,
       definedWorkpieceLengthIn:workpiece,
-      preparation:preparation,
       production:Object.freeze(rows),
       finalRemainderIn:remaining,
       holdIn:hold,
@@ -732,7 +697,7 @@
         locationAlongLengthIn:spot.locationAlongLengthIn == null ? null : Number(spot.locationAlongLengthIn),
         acrossWidthRule:String(spot.acrossWidthRule || ''),
         derivation:freezeCopy(spot.derivation || null),
-        toolingStatus:String(spot.toolingStatus || '')
+        totalCount:Number.isFinite(Number(spot.totalCount)) ? Number(spot.totalCount) : null
       }));
     }
     var geometry={
@@ -823,7 +788,7 @@
   }
 
   root.STBStoreHandoffContract = Object.freeze({
-    version:'0.6',
+    version:'0.7',
     actorOrder:ACTOR_ORDER,
     currentArtifacts:CURRENT_ARTIFACTS,
     storeAuthorities:STORE_AUTHORITIES,

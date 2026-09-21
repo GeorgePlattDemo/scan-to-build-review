@@ -38,15 +38,14 @@ const pair = contract.resolveStartOwnMaterial({
 assert.equal(pair.storeSku, 'STB-ZERO-SPF-2X4-96-001');
 
 const user1 = contract.sequenceDefinedWorkpiece({
-  rawStockLengthIn: 72,
   definedWorkpieceLengthIn: 60,
   parts: [16,16],
   establishAngledEnd: true
 });
 assert.equal(user1.status, 'SEQUENCED');
-assert.equal(user1.preparation.required, true);
-assert.equal(user1.preparation.offcutIn, 11.875);
-assert.equal(user1.preparation.retainedAfterIn, 60);
+assert.equal(user1.rawStockLengthIn, undefined);
+assert.equal(user1.preparation, undefined);
+assert.equal(user1.definedWorkpieceLengthIn, 60);
 assert.equal(user1.production.length, 3);
 assert.equal(user1.production[0].kind, 'ESTABLISH_ANGLE');
 assert.equal(user1.production[0].retainedAfterIn, 59.875);
@@ -55,4 +54,4 @@ assert.equal(user1.production[2].retainedAfterIn, 27.625);
 assert.equal(user1.finalRemainderIn, 27.625);
 assert.ok(user1.production.every(row => row.pass === true));
 
-console.log('PASS · cutoff hold 24 in, raw-stock preparation, and defined-workpiece sequence');
+console.log('PASS · cutoff hold 24 in and User 1 defined-workpiece sequence');
