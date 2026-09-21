@@ -13,7 +13,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 <body>
 <iframe id="stb-current" title="Scan-to-Build System" src="system-build-front-door-0.5.html?v=5ac9677b"></iframe>
 <script src="stb-canonical-journey.js?v=e0619841"></script>
-<script src="stb-store-handoff-contract.js?v=6be08595"></script>
+<script src="stb-store-handoff-contract.js?v=d5dae9f0"></script>
 <script src="stb-user-defined-board-store.js?v=1c99c380"></script>
 <script src="store-zero-canonical-doctrine.js?v=65366367"></script>
 <script>
@@ -161,7 +161,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   id="start-own-proof-frame"
                   class="start-own-shell-frame"
                   title="Start Your Own · User 1 · definition to doing"
-                  src="three-frames.html?v=8fe09454"
+                  src="three-frames.html?v=60fc6589"
                 ></iframe>
               </div>
             `;
@@ -170,7 +170,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
           const liveFrame = startOwnPage.querySelector('#start-own-proof-frame');
           if (liveFrame && !String(liveFrame.getAttribute('src')||'').includes('three-frames.html')) {
-            liveFrame.src = 'three-frames.html?v=8fe09454';
+            liveFrame.src = 'three-frames.html?v=60fc6589';
           }
           const banner = startOwnPage.querySelector('[data-proof-job="1"]');
           if (banner && /generic floor/.test(banner.textContent||'')) {
@@ -445,12 +445,27 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   endRelation:'parallel',
                   lengthDatum:'long-long-outer-edge'
                 });
-                const unresolved = ['START-OWN-CLASS-SCOPED-RECOVERY-NOT-PUBLISHED'];
-                if (angleDeg !== 0) unresolved.push('DIMENSIONAL_MITER_SERVICE_RECOVERY_UNRESOLVED');
+                const sawCuts = angleDeg !== 0 ? partQty + 1 : partQty;
+                const drillCycles = spotDemand ? partQty : 0;
+                const storeEstimate =
+                  storeMaterialResolution?.status === 'MAPPED' &&
+                  typeof storeHandoffContract.quoteStartOwnBoardSequence === 'function'
+                    ? storeHandoffContract.quoteStartOwnBoardSequence({
+                        material:storeMaterialResolution.materialTotal,
+                        definedWorkpieceLengthIn:parentLengthIn,
+                        sawCuts:sawCuts,
+                        sawAngleDeg:angleDeg,
+                        drillCycles:drillCycles,
+                        widthIn:3.5
+                      })
+                    : null;
+                const unresolved = [];
+                if (angleDeg !== 0) unresolved.push('MITER_LIMITED_NUMERIC_ANGLE_RANGE_STAGE2_UNRESOLVED');
                 if (spotDemand) unresolved.push('CENTER_SPOT_TOOLING_ENVELOPE_UNRESOLVED');
                 if (workpieceSequence.status !== 'SEQUENCED' || workpieceSequence.rows?.length !== 1) {
                   unresolved.push('DEFINED_60_IN_WORKPIECE_SEQUENCE_UNRESOLVED');
                 }
+                if (!storeEstimate?.complete) unresolved.push('STORE_ZERO_BUDGETARY_ESTIMATE_UNAVAILABLE');
                 currentUser1Definition = {
                   definitionId:'SYO-USER1-XBRACE-0.1',
                   versionId:'SYO-USER1-XBRACE-0.1-v'+definitionRevision,
@@ -486,10 +501,12 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   capability:capability,
                   storeReference:{
                     capabilityStatus:capability?.capability?.status || capability?.status || 'UNRESOLVED',
-                    economicsStatus:capability?.estimate?.economics?.status || 'UNRESOLVED_CLASS_SCOPED_RECOVERY',
-                    material:storeMaterialResolution?.status==='MAPPED' ? storeMaterialResolution.materialTotal : null,
-                    combinedValue:null,
-                    complete:false,
+                    economicsStatus:storeEstimate?.status || 'UNRESOLVED',
+                    material:storeEstimate?.material ?? (storeMaterialResolution?.status==='MAPPED' ? storeMaterialResolution.materialTotal : null),
+                    cellRecovery:storeEstimate?.cellRecovery ?? null,
+                    combinedValue:storeEstimate?.total ?? null,
+                    complete:storeEstimate?.complete === true,
+                    estimate:storeEstimate,
                     unresolvedConditions:Array.from(new Set(unresolved)),
                     materialResolution:storeMaterialResolution,
                     authority:storeHandoffContract.storeAuthority?.('startOwn') || null
