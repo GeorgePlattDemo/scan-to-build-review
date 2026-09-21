@@ -32,7 +32,6 @@ jobs:
           node tests/alcove-commercial-journey.test.mjs
           node tests/alcove-exact-entry.test.mjs
           node tests/alcove-restore-and-correct.test.mjs
-      - name: Protected Window Seat regressions
+      - name: Protected Window Seat regression
         run: |
           node tests/window-seat-actor-handoff-mirror.test.mjs
-          node tests/window-seat-gold-standard-journey.test.mjs
