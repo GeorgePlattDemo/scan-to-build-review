@@ -70,19 +70,18 @@ assert.match(outdoor, /STORE ECONOMICS/);
 assert.match(outdoor, /UNRESOLVED · CURRENT MODEL MISMATCH/);
 assert.equal(/\b7 clicks\b/i.test(outdoor), false);
 
-// Same common Store boundary for both jobs; no Review-only price invention.
+// Same common Store boundary; Start Own now carries pinned Store budgetary Q while Outdoor keeps its own unresolved economics.
 assert.match(shell, /STB_START_OWN_CONFIRMED/);
 assert.match(shell, /STB_OUTDOOR_CONFIRMED/);
-assert.match(shell, /STORE-PRICING-BRIDGE-GAP/);
 assert.match(shell, /MATERIAL SOURCE/);
-assert.match(shell, /CLASS-SCOPED · no legacy general recovery selected/);
-assert.match(shell, /MAPPED STORE SKU/);
+assert.match(shell, /STORE PROCUREMENT SKU/);
 assert.match(shell, /MATERIAL VALUE/);
-assert.match(shell, /PROCESSING \/ FULFILLMENT RECOVERY/);
-assert.match(shell, /CURRENT COMBINED VALUE/);
-assert.match(shell, /NOT COMPLETE/);
-assert.match(shell, /UNRESOLVED · CURRENT MODEL MISMATCH/);
-assert.equal(/STB-STORE-ZERO-PRICE-1|0\.2\.2|\$35 setup|\$100\/hour|\$50\.81|\$53\.94/.test(shell), false);
+assert.match(shell, /MODELED CELL RECOVERY/);
+assert.match(shell, /STORE BUDGETARY Q/);
+assert.match(shell, /STORE ZERO BUDGETARY ESTIMATE RETURNED/);
+assert.match(shell, /BudgetaryEstimate/);
+assert.match(shell, /COMMERCIAL OFFER<\/b><span>NOT ESTABLISHED/);
+assert.match(outdoor, /UNRESOLVED · CURRENT MODEL MISMATCH/);
 assert.match(outdoor, /No app-only discount/);
 
 // Evidence navigation remains explicit and state-preserving.
