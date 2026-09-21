@@ -6,7 +6,6 @@ const read = path => fs.readFileSync(path,'utf8');
 const surface = read('three-frames.html');
 const shell = read('system-build-current.html');
 const contractSource = read('stb-store-handoff-contract.js');
-const boardSource = read('stb-user-defined-board-store.js');
 
 // Landing remains the simple Scan-to-Build entry / intent surface.
 assert.match(surface,/id="stb-start-intent-screen"/);
@@ -61,8 +60,13 @@ assert.match(surface,/id="stb-bench-dynamic-geometry"/);
 
 // Host carries one definition through intent, bench, Store, Terms and record.
 assert.match(shell,/three-frames\.html\?v=305b7484/);
-assert.match(shell,/const parentLengthIn = 60;/);
-assert.match(shell,/parentLengthIn:parentLengthIn/);
+assert.match(shell,/const definedWorkpieceLengthIn = 60;/);
+assert.match(shell,/parentLengthIn:definedWorkpieceLengthIn/);
+assert.match(shell,/materialSource:'STORE_ZERO'/);
+assert.match(shell,/sequenceDefinedWorkpiece/);
+assert.match(shell,/preparationSawCuts/);
+assert.match(shell,/const drillCycles = 0/);
+assert.equal(shell.includes('previewFromDemand'),false,'active Start Own still invokes legacy Store preview authority');
 assert.match(shell,/const spotDemand =/);
 assert.match(shell,/physicalDemand\.spotDemand = spotDemand/);
 assert.match(shell,/formula:'finishedLengthIn \/ 2'/);
@@ -82,29 +86,58 @@ assert.equal(shell.includes('60-in customer board'),false);
 assert.equal(shell.includes('photo, board, or file you already have'),false);
 assert.equal(shell.includes('parentLengthIn = 72'),false);
 
-// Shared contract preserves 60-in geometry + structured drill demand and old callers.
+// Shared contract preserves raw-stock lineage, the 60-in workpiece, and unresolved spot meaning.
 const sandbox = {window:{}};
 vm.runInNewContext(contractSource,sandbox,{filename:'stb-store-handoff-contract.js'});
 const contract = sandbox.window.STBStoreHandoffContract;
 assert.equal(contract.version,'0.6');
 assert.equal(typeof contract.quoteStartOwnBoardSequence,'function');
+assert.equal(typeof contract.sequenceDefinedWorkpiece,'function');
+
+const lineage = contract.sequenceDefinedWorkpiece({
+  rawStockLengthIn:72,
+  definedWorkpieceLengthIn:60,
+  parts:[16,16],
+  establishAngledEnd:true
+});
+assert.equal(lineage.status,'SEQUENCED');
+assert.equal(lineage.preparation.required,true);
+assert.equal(lineage.preparation.retainedBeforeIn,72);
+assert.equal(lineage.preparation.retainedAfterIn,60);
+assert.equal(lineage.preparation.offcutIn,11.875);
+assert.equal(lineage.production.length,3);
+assert.equal(lineage.production[0].kind,'ESTABLISH_ANGLE');
+assert.equal(lineage.finalRemainderIn,27.625);
+assert.equal(lineage.holdIn,24);
+assert.equal(lineage.finalRemainderIn-lineage.holdIn,3.625);
+
 const startQuote = contract.quoteStartOwnBoardSequence({
   material:3.13,
   definedWorkpieceLengthIn:60,
   sawCuts:3,
+  preparationSawCuts:1,
   sawAngleDeg:30,
-  drillCycles:2,
+  drillCycles:0,
+  unresolvedConditions:[
+    'MITER_LIMITED_NUMERIC_ANGLE_RANGE_STAGE2_UNRESOLVED',
+    'CENTER_SPOT_TOOLING_ENVELOPE_UNRESOLVED'
+  ],
   widthIn:3.5
 });
 assert.equal(startQuote.status,'BUDGETARY_ESTIMATE');
+assert.equal(startQuote.complete,false);
+assert.equal(startQuote.completeness,'PARTIAL');
 assert.equal(startQuote.material,3.13);
-assert.equal(startQuote.cellRecovery,51.79);
-assert.equal(startQuote.total,54.92);
-assert.equal(startQuote.cycle.T_job_min,10.077);
+assert.equal(startQuote.cellRecovery,51.45);
+assert.equal(startQuote.total,54.58);
+assert.equal(startQuote.cycle.T_job_min,9.867);
+assert.equal(startQuote.operationBasis.preparationSawCuts,1);
+assert.equal(startQuote.operationBasis.productionSawCuts,3);
+assert.equal(startQuote.operationBasis.totalModeledSawCuts,4);
+assert.equal(startQuote.operationBasis.drillCycles,0);
 assert.equal(startQuote.engine.id,'STB-STORE-ZERO-PRICE-1');
 assert.equal(startQuote.engine.version,'0.2.2');
 assert.equal(startQuote.source.pin,'c51f5f27af9a77bc7581c5d42c56f0a1ed0b650a');
-
 
 const legacyPart = {
   stockClass:'2x4',finishedLength:15.5,quantity:8,endCondition:'angled',straightCut:true,
@@ -137,21 +170,15 @@ const handoff = contract.createComparisonHandoff({
   physicalDemand:defined,unresolvedConditions:['CENTER_SPOT_TOOLING_ENVELOPE_UNRESOLVED']
 });
 assert.equal(handoff.requiredGeometryDatumFacts.parentLengthIn,60);
-const drill = handoff.operationDemand.find(op => op.kind==='DRILL');
-assert.ok(drill);
-assert.equal(drill.countPerPart,1);
-assert.equal(drill.locationAlongLengthIn,8);
-assert.equal(drill.derivation.formula,'finishedLengthIn / 2');
+const spot = handoff.operationDemand.find(op => op.kind==='SPOT_ON_LOCATION');
+assert.ok(spot);
+assert.equal(spot.countPerPart,1);
+assert.equal(spot.locationAlongLengthIn,8);
+assert.equal(spot.derivation.formula,'finishedLengthIn / 2');
+assert.equal(spot.toolingStatus,'UNRESOLVED');
+assert.equal(handoff.operationDemand.some(op => op.kind==='DRILL'),false,'spot was silently converted into a drill operation');
 assert.equal(handoff.authority.physicalFabrication,false);
 
-const boardSandbox = {window:{}};
-vm.runInNewContext(boardSource,boardSandbox,{filename:'stb-user-defined-board-store.js'});
-const boardStore = boardSandbox.window.STBUserDefinedBoardStore;
-const sequence = boardStore.sequenceCrosscuts({parentLengthIn:60,parts:[16,16],establishAngledEnd:true});
-assert.equal(sequence.status,'SEQUENCED');
-assert.equal(sequence.rows.length,1);
-assert.equal(sequence.rows[0].remainingIn,27.625);
-assert.equal(sequence.holdIn,24);
-assert.equal(sequence.rows[0].remainingIn-sequence.holdIn,3.625);
 
-console.log('PASS · Start Your Own intent → bench → Store → terms path preserves one 60-in definition');
+
+console.log('PASS · Start Your Own intent → bench → Store → terms preserves one definition, raw-stock lineage, and unresolved spot meaning');
