@@ -225,7 +225,7 @@
         if(pieces.some(function(len){return len>offering.stockL_in+0.0001})) return;
         var useHold=input.sequence==='CROSSCUT_HOLD' || input.holdPolicy===D001_HOLD.id;
         if(useHold){
-          var sequenced=sequenceCrosscuts({parentLengthIn:offering.stockL_in, parts:pieces});
+          var sequenced=sequenceCrosscuts({parentLengthIn:offering.stockL_in, parts:pieces, establishAngledEnd:!!input.establishAngledEnd});
           if(sequenced.status!=='SEQUENCED') return;
           candidates.push({
             form:'board',storeSku:offering.storeSku,stockLengthIn:offering.stockL_in,
@@ -333,6 +333,7 @@
     var parent = Number(input.parentLengthIn);
     var hold = Number(input.holdIn == null ? D001_HOLD.holdIn : input.holdIn);
     var kerf = Number(input.kerfIn == null ? D001_HOLD.kerfIn : input.kerfIn);
+    var establish = !!input.establishAngledEnd;
     var parts = Array.isArray(input.parts) ? input.parts.map(Number).filter(function(len){return len>0}) : [];
     if(!Number.isFinite(parent) || parent<=0){
       return Object.freeze({status:'UNRESOLVED', code:'PARENT_LENGTH_INVALID', sticks:0, cuts:[], remain:[]});
@@ -353,7 +354,7 @@
         if(!whole && usable[i]>=need-0.0001){index=i;break;}
       }
       if(index<0){
-        var first=whole?parent:parent-hold;
+        var first=whole?parent:parent-hold-(establish?kerf:0);
         if(first<need-0.0001){
           usable.push(NaN);
           cuts.push(null);
@@ -371,7 +372,7 @@
     }
     remain=cuts.map(function(row){
       var used=row.reduce(function(sum,len){return sum+len;},0);
-      var cutKerf=row.some(function(len){return len<parent-0.0001})?row.length*kerf:0;
+      var cutKerf=row.some(function(len){return len<parent-0.0001})?(row.length+(establish?1:0))*kerf:0;
       return Math.round((parent-used-cutKerf)*1000)/1000;
     });
     return Object.freeze({
@@ -380,6 +381,7 @@
       holdIn:hold,
       kerfIn:kerf,
       parentLengthIn:parent,
+      establishAngledEnd:establish,
       sticks:cuts.length,
       cuts:cuts,
       usableLeft:usable,
@@ -485,21 +487,36 @@
 
   function comparisonDemand(part){
     if(!part) return null;
+    var operations=[
+      Object.freeze({kind:'STRAIGHT_CUT', required:part.straightCut !== false}),
+      Object.freeze({
+        kind:'ANGLED_CUT',
+        endCondition:String(part.endCondition || ''),
+        angleDegrees:Number(part.angleDegrees),
+        angleReference:String(part.angleReference || ''),
+        cutPlane:String(part.cutPlane || ''),
+        endIdentity:String(part.endIdentity || ''),
+        endRelation:String(part.endRelation || ''),
+        lengthDatum:String(part.lengthDatum || '')
+      })
+    ];
+    var spot=part.spotDemand && typeof part.spotDemand==='object' ? part.spotDemand : null;
+    if(spot && spot.required!==false){
+      operations.push(Object.freeze({
+        kind:'DRILL',
+        mode:String(spot.mode || 'SPOT_ON_LOCATION'),
+        required:true,
+        countPerPart:Number.isFinite(Number(spot.countPerPart)) ? Number(spot.countPerPart) : null,
+        locationRule:String(spot.locationRule || ''),
+        locationAlongLengthIn:Number.isFinite(Number(spot.locationAlongLengthIn)) ? Number(spot.locationAlongLengthIn) : null,
+        acrossWidthRule:String(spot.acrossWidthRule || ''),
+        derivation:freezeCopy(spot.derivation || null),
+        toolingStatus:String(spot.toolingStatus || '')
+      }));
+    }
     return Object.freeze({
       materialDemand: Object.freeze({stockClass:String(part.stockClass || '')}),
-      operationDemand: Object.freeze([
-        Object.freeze({kind:'STRAIGHT_CUT', required:part.straightCut !== false}),
-        Object.freeze({
-          kind:'ANGLED_CUT',
-          endCondition:String(part.endCondition || ''),
-          angleDegrees:Number(part.angleDegrees),
-          angleReference:String(part.angleReference || ''),
-          cutPlane:String(part.cutPlane || ''),
-          endIdentity:String(part.endIdentity || ''),
-          endRelation:String(part.endRelation || ''),
-          lengthDatum:String(part.lengthDatum || '')
-        })
-      ]),
+      operationDemand: Object.freeze(operations),
       quantity:Number(part.quantity),
       requiredGeometryDatumFacts:Object.freeze({
         finishedLength:Number(part.finishedLength),
@@ -509,7 +526,8 @@
         cutPlane:String(part.cutPlane || ''),
         endIdentity:String(part.endIdentity || ''),
         endRelation:String(part.endRelation || ''),
-        lengthDatum:String(part.lengthDatum || '')
+        lengthDatum:String(part.lengthDatum || ''),
+        spotDemand:freezeCopy(spot)
       })
     });
   }
@@ -577,7 +595,7 @@
   }
 
   root.STBStoreHandoffContract = Object.freeze({
-    version:'0.5',
+    version:'0.6',
     actorOrder:ACTOR_ORDER,
     currentArtifacts:CURRENT_ARTIFACTS,
     storeAuthorities:STORE_AUTHORITIES,
