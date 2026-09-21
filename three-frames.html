@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Start your own project — 3 frames</title>
+<title>Start your own project</title>
 <style>
   :root{
     --bg:#faf9f7; --surface:#ffffff; --rail:#f4f2ef; --tint:#f6efe4;
@@ -75,11 +75,45 @@
   .workline{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:16px -22px -22px;padding:11px 22px;
     border-top:1px solid var(--border);background:var(--tint);font-size:12px}
   .workline b{color:var(--accent)} .workline span{color:var(--text-2)}
-  @media(max-width:640px){.stb-user1-body{grid-template-columns:1fr}.stb-user1-img{max-width:260px}.specrow{grid-template-columns:repeat(2,1fr)}}
+  [hidden]{display:none!important}
+  .bench-nav{display:flex;justify-content:space-between;gap:10px;align-items:center;margin:0 0 16px}
+  .bench-nav button{font:inherit;border:0;background:transparent;color:var(--text-2);cursor:pointer;font-size:12px;font-weight:700;padding:4px 0}
+  .bench-head{margin:0 0 14px}
+  .bench-head h1{font-size:24px;margin:0 0 3px}
+  .bench-head p{margin:0;color:var(--text-2);font-size:13.5px}
+  .bench-intent-slot .stb-bench-button{display:none}
+  .bench-intent-slot .stb-user1-facts input{display:none}
+  .bench-intent-slot .stb-user1-facts label{display:none}
+  .bench-intent-slot{margin:0 0 18px}
+  .bench-panel{border:1px solid var(--border);border-radius:10px;background:var(--surface);padding:16px;margin:14px 0}
+  .bench-panel h2{font-size:16px;margin:0 0 4px}
+  .bench-panel .lede{margin:0 0 14px;color:var(--text-2);font-size:12.5px}
+  .control-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .control{border:1px solid var(--border);border-radius:8px;background:var(--bg);padding:10px}
+  .control b,.control span{display:block}.control b{font-size:10px;letter-spacing:.06em;color:var(--text-3)}
+  .control .value{font-size:13px;font-weight:700;color:var(--text);margin:3px 0 7px}
+  .control input{width:100%;font:inherit;padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text)}
+  .choice-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+  .choice-row button{font:inherit;font-size:11px;padding:5px 8px;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--text-2);cursor:pointer}
+  .choice-row button.on{border-color:var(--border-accent);background:var(--tint);color:var(--accent);font-weight:700}
+  .definition-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .defrow{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--border);padding:7px 0;font-size:12px}
+  .defrow span:first-child{color:var(--text-3)} .defrow span:last-child{text-align:right;font-weight:600}
+  .price-block{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:end;padding:12px 0}
+  .price-big{font-size:27px;font-weight:750;white-space:nowrap}
+  .basis-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .basis-box{border:1px solid var(--border);border-radius:8px;background:var(--bg);padding:9px}
+  .basis-box b,.basis-box span{display:block}.basis-box b{font-size:9px;letter-spacing:.05em;color:var(--text-3)}.basis-box span{margin-top:3px;font-size:11.5px}
+  .warn{border-left:4px solid #9b7540;padding-left:12px}
+  .confirm-block{border-top:1px solid var(--border-accent);padding-top:16px;margin-top:16px}
+  .confirm-block p{font-size:12px;color:var(--text-2);margin:6px 0 12px}
+  .confirm-block button{font:inherit;cursor:pointer;padding:10px 16px;border-radius:8px;border:1px solid var(--border-accent);background:var(--tint);color:var(--accent);font-weight:750}
+  @media(max-width:640px){.stb-user1-body{grid-template-columns:1fr}.stb-user1-img{max-width:260px}.specrow,.control-grid,.definition-grid,.basis-grid{grid-template-columns:1fr}.price-block{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="wrap">
+<section id="stb-start-intent-screen">
   <div class="frame">
     <div class="frame-in">
       <h1 class="sy">Start your own project</h1>
@@ -153,11 +187,8 @@
         <div class="stb-user1-copy">
           <h3>Outdoor X Brace to repair a picnic-table bench · 2×4 stud</h3>
           <p>The picture says what User 1 wants. The bench shows what that intent does to the board.</p>
-          <div class="stb-user1-facts">
-            <span>2 parts</span>
-            <label><input id="stb-user1-length" type="number" min="1" step="0.125" value="16" inputmode="decimal" aria-label="Finished length in inches"> in each</label>
-            <label><input id="stb-user1-angle" type="number" min="0" max="45" step="0.5" value="30" inputmode="decimal" aria-label="End angle in degrees">° ends</label>
-            <span>center spot</span>
+          <div class="stb-user1-facts" id="stb-user1-intent-facts">
+            <span>2 parts</span><span>16 in each</span><span>30° ends</span><span>center spot</span>
           </div>
           <p class="stb-intent-lineage" id="stb-user1-lineage">Center spot = 16 ÷ 2 = 8 in from either finished end.</p>
           <button class="stb-bench-button" type="button">TAKE THIS 2×4 TO THE BENCH →</button>
@@ -165,6 +196,12 @@
       </div>
     </div>
   </div>
+
+</section>
+<section id="stb-start-bench-screen" hidden>
+  <div class="bench-nav"><button type="button" id="stb-bench-back">← Back</button><button type="button" id="stb-bench-library">← PROJECT LIBRARY</button></div>
+  <div class="bench-head"><h1>Make it yours</h1><p>The intent is the reference. The board is the work User 1 defined from it.</p></div>
+  <div class="bench-intent-slot" id="stb-bench-intent-slot"></div>
 
   <div class="frame" id="stb-user1-bench">
     <div class="frame-tab">THE SAME BOARD, ON THE BENCH</div>
@@ -196,40 +233,42 @@
           </g>
 
           <!-- region tints: Part1 40..259, Part2 259..477 -->
-          <path d="M86 101 L305 101 L259 179 L40 179 Z"  fill="#a85a2a" opacity=".06"/>
-          <path d="M305 101 L523 101 L477 179 L259 179 Z" fill="#2f6f9e" opacity=".05"/>
+          <g id="stb-bench-static-parts">
+            <path d="M86 101 L305 101 L259 179 L40 179 Z"  fill="#a85a2a" opacity=".06"/>
+            <path d="M305 101 L523 101 L477 179 L259 179 Z" fill="#2f6f9e" opacity=".05"/>
+          </g>
 
           <!-- control-surface band, last 24in = x532..860 -->
           <rect x="532" y="101" width="328" height="78" fill="url(#obHatch)"/>
           <rect x="532" y="101" width="328" height="78" fill="none" stroke="#2f6f9e" stroke-width="1.5" stroke-dasharray="6 4" opacity=".8"/>
 
           <!-- three 30deg cuts: x40, x259, x477 -->
-          <g stroke="#a85a2a" stroke-width="5" stroke-linecap="round">
+          <g id="stb-bench-static-cuts" stroke="#a85a2a" stroke-width="5" stroke-linecap="round">
             <line x1="86"  y1="100" x2="40"  y2="180"/>
             <line x1="305" y1="100" x2="259" y2="180"/>
             <line x1="523" y1="100" x2="477" y2="180"/>
           </g>
-          <g font-size="12" font-weight="700">
+          <g id="stb-bench-static-cut-markers" font-size="12" font-weight="700">
             <circle cx="70" cy="74" r="13" fill="#a85a2a"/><text x="70" y="79" text-anchor="middle" fill="#fff">1</text>
             <circle cx="289" cy="74" r="13" fill="#a85a2a"/><text x="289" y="79" text-anchor="middle" fill="#fff">2</text>
             <circle cx="507" cy="74" r="13" fill="#a85a2a"/><text x="507" y="79" text-anchor="middle" fill="#fff">3</text>
           </g>
-          <text x="289" y="54" text-anchor="middle" font-size="9.5" fill="#8a795f">ends Part 1 · begins Part 2</text>
+          <text id="stb-bench-static-joint-note" x="289" y="54" text-anchor="middle" font-size="9.5" fill="#8a795f">ends Part 1 · begins Part 2</text>
 
           <!-- spots centered: Part1 mid ~x150(~8in), Part2 mid ~x368(~24in) -->
-          <g>
+          <g id="stb-bench-static-spots">
             <circle cx="150" cy="140" r="12" fill="none" stroke="#2f6f9e" stroke-width="2.4"/><circle cx="150" cy="140" r="4" fill="#2f6f9e"/>
             <circle cx="368" cy="140" r="12" fill="none" stroke="#2f6f9e" stroke-width="2.4"/><circle cx="368" cy="140" r="4" fill="#2f6f9e"/>
           </g>
-          <text x="150" y="124" text-anchor="middle" font-size="11" font-weight="700" fill="#584533">PART 1</text>
-          <text x="368" y="124" text-anchor="middle" font-size="11" font-weight="700" fill="#584533">PART 2</text>
+          <text id="stb-bench-static-part1-label" x="150" y="124" text-anchor="middle" font-size="11" font-weight="700" fill="#584533">PART 1</text>
+          <text id="stb-bench-static-part2-label" x="368" y="124" text-anchor="middle" font-size="11" font-weight="700" fill="#584533">PART 2</text>
           <!-- true spare 32..36in = x477..532 (only 55px wide; small label above) -->
           <text id="stb-bench-spare-label" x="504" y="96" text-anchor="middle" font-size="8.5" fill="#9a8a72">3⅝ in spare</text>
           <text x="696" y="136" text-anchor="middle" font-size="11" font-weight="700" fill="#2f6f9e">CONTROL SURFACE</text>
           <text x="696" y="151" text-anchor="middle" font-size="9.5" fill="#2f6f9e">machine grips this · 24 in</text>
 
           <!-- dims -->
-          <g stroke="#7a4f22" stroke-width="1.1" fill="none" opacity=".8">
+          <g id="stb-bench-static-dims" stroke="#7a4f22" stroke-width="1.1" fill="none" opacity=".8">
             <line x1="40"  y1="200" x2="259" y2="200"/><path d="M40 195v10M259 195v10"/>
             <line x1="259" y1="200" x2="477" y2="200"/><path d="M259 195v10M477 195v10"/>
             <line x1="477" y1="200" x2="860" y2="200"/><path d="M477 195v10M860 195v10"/>
@@ -237,6 +276,7 @@
           <text id="stb-bench-part1-dim" x="149" y="217" text-anchor="middle" font-size="11" font-weight="700" fill="#7a4f22">16 in</text>
           <text id="stb-bench-part2-dim" x="368" y="217" text-anchor="middle" font-size="11" font-weight="700" fill="#7a4f22">16 in</text>
           <text id="stb-bench-remain-label" x="668" y="217" text-anchor="middle" font-size="11" font-weight="600" fill="#9a8a72">27⅝ in remains · 24 in retained-control minimum · 3⅝ in spare</text>
+          <g id="stb-bench-dynamic-geometry"></g>
 
           <!-- capability line: within limits but tight -->
           <g transform="translate(40 244)">
@@ -262,18 +302,91 @@
         <div class="spec"><b>STOCK</b><span>2×4 · 60 in</span></div>
         <div class="spec"><b>EACH PART</b><span id="stb-bench-length-spec">16 in</span></div>
         <div class="spec"><b>END CUTS</b><span id="stb-bench-angle-spec">30°</span></div>
-        <div class="spec"><b>PARTS</b><span>2</span></div>
+        <div class="spec"><b>PARTS</b><span id="stb-bench-parts-spec">2</span></div>
         <div class="spec"><b>CONTROL</b><span>24 in min</span></div>
       </div>
       <div class="stb-system-answer" id="stb-system-answer" aria-live="polite"><b>STORE</b> · this same 60-in definition will be checked against current Store and machine truth.</div>
       <ol class="steps">
-        <li><b>Cut it.</b> Three cuts along the one board — a 30° angle each — make the two parts.</li>
-        <li><b>Drill it.</b> One spot, on location, centered in each part.</li>
-        <li><b>Keep the stub.</b> Two matching X-brace parts, and the rest of the board comes back to you.</li>
+        <li id="stb-bench-cut-step"><b>Cut it.</b> Three cuts along the one board — a 30° angle each — make the two parts.</li>
+        <li id="stb-bench-drill-step"><b>Drill it.</b> One spot, on location, centered in each part.</li>
+        <li id="stb-bench-stub-step"><b>Keep the stub.</b> Two matching X-brace parts, and the rest of the board comes back to you.</li>
       </ol>
-      <div class="workline"><b>THAT’S THE WHOLE JOB · 3 CUTS · 2 SPOTS ON LOCATION · WITHIN LIMITS (TIGHT)</b><span>the picture up top is what you want · this is what the board does</span></div>
+      <div class="workline"><b id="stb-bench-workline">THAT’S THE WHOLE JOB · 3 CUTS · 2 SPOTS ON LOCATION · WITHIN LIMITS (TIGHT)</b><span>the picture up top is what you want · this is what the board does</span></div>
     </div>
   </div>
+
+  <div class="bench-panel" id="stb-bench-controls">
+    <h2>Change of plans?</h2>
+    <p class="lede">These controls make a new version of the same project. The 60-in Store-origin workpiece stays the workpiece unless that fact is explicitly changed in a later pass.</p>
+    <div class="control-grid">
+      <div class="control"><b>PARTS</b><span class="value" id="stb-config-parts-value">2 parts</span><div class="choice-row" id="stb-config-parts"><button type="button" data-parts="1">1</button><button type="button" class="on" data-parts="2">2</button></div></div>
+      <div class="control"><b>EACH PART</b><span class="value" id="stb-config-length-value">16 in</span><input id="stb-config-length" type="number" min="1" max="35" step="0.125" value="16" inputmode="decimal"><div class="choice-row"><button type="button" data-length="12">12</button><button type="button" class="on" data-length="16">16</button><button type="button" data-length="18">18</button><button type="button" data-length="24">24</button></div></div>
+      <div class="control"><b>END ANGLE</b><span class="value" id="stb-config-angle-value">30° · both ends · parallel</span><input id="stb-config-angle" type="number" min="0" max="45" step="0.5" value="30" inputmode="decimal"><div class="choice-row"><button type="button" data-angle="0">0°</button><button type="button" data-angle="15">15°</button><button type="button" class="on" data-angle="30">30°</button><button type="button" data-angle="45">45°</button></div></div>
+      <div class="control"><b>SPOT</b><span class="value" id="stb-config-spot-value">1 centered spot / part</span><div class="choice-row" id="stb-config-spot"><button type="button" class="on" data-spot="centered">CENTERED</button><button type="button" data-spot="none">NONE</button></div></div>
+    </div>
+  </div>
+
+  <div class="bench-panel">
+    <h2>RESULTING DEFINITION / REFERENCE ORDER — USER 1</h2>
+    <div class="definition-grid">
+      <div class="defrow"><span>Project</span><span>Outdoor X Brace repair</span></div>
+      <div class="defrow"><span>Store-origin material</span><span>2×4 stud</span></div>
+      <div class="defrow"><span>Defined workpiece</span><span>60 in</span></div>
+      <div class="defrow"><span>Parts</span><span id="stb-def-parts">2</span></div>
+      <div class="defrow"><span>Finished length</span><span id="stb-def-length">16 in each</span></div>
+      <div class="defrow"><span>Ends</span><span id="stb-def-angle">30° · both · parallel</span></div>
+      <div class="defrow"><span>Cut plane</span><span>miter-face</span></div>
+      <div class="defrow"><span>Length datum</span><span>long-long outer edge</span></div>
+      <div class="defrow"><span>Spot</span><span id="stb-def-spot">1 centered spot / part</span></div>
+      <div class="defrow"><span>Spot location</span><span id="stb-def-spot-location">8 in · derived from 16 ÷ 2</span></div>
+      <div class="defrow"><span>Retained stock</span><span id="stb-def-retained">27⅝ in</span></div>
+      <div class="defrow"><span>Physical execution</span><span>NOT AUTHORIZED</span></div>
+    </div>
+  </div>
+
+  <div class="bench-panel">
+    <h2>MATERIAL REQUIRED</h2>
+    <p class="lede" id="stb-material-required">Store Zero material answer will be formed from this same definition.</p>
+  </div>
+
+  <div class="bench-panel">
+    <h2>REFERENCE CALCULATED PRICE</h2>
+    <div class="price-block"><div><p class="lede" id="stb-price-basis">Current Store material value plus any published class-scoped processing / fulfillment recovery.</p></div><div class="price-big" id="stb-price-total">NOT COMPLETE</div></div>
+    <div class="definition-grid">
+      <div class="defrow"><span>Material</span><span id="stb-price-material">—</span></div>
+      <div class="defrow"><span>Processing / fulfillment</span><span id="stb-price-processing">UNRESOLVED</span></div>
+    </div>
+  </div>
+
+  <div class="bench-panel">
+    <h2>STORE / PRICE BASIS</h2>
+    <div class="basis-grid">
+      <div class="basis-box"><b>STORE</b><span>Store Zero reference model</span></div>
+      <div class="basis-box"><b>STORE SKU</b><span id="stb-basis-sku">—</span></div>
+      <div class="basis-box"><b>SOURCE STOCK</b><span id="stb-basis-source-stock">—</span></div>
+      <div class="basis-box"><b>UNIT PRICE</b><span id="stb-basis-unit-price">—</span></div>
+      <div class="basis-box"><b>CELL FAMILY</b><span id="stb-basis-cell-family">—</span></div>
+      <div class="basis-box"><b>SUPPORTED OPERATIONS</b><span id="stb-basis-supported-ops">—</span></div>
+      <div class="basis-box"><b>CATALOG CLOCK</b><span id="stb-basis-clock">—</span></div>
+      <div class="basis-box"><b>CATALOG PIN</b><span id="stb-basis-catalog-pin">—</span></div>
+      <div class="basis-box"><b>CAPABILITY BASIS</b><span id="stb-basis-capability">—</span></div>
+      <div class="basis-box"><b>STORE EVALUATOR PIN</b><span id="stb-basis-store-pin">—</span></div>
+      <div class="basis-box"><b>ECONOMICS</b><span id="stb-basis-economics">—</span></div>
+    </div>
+    <p class="lede" style="margin-top:12px">The Store answer may identify source stock and a material value. It does not rewrite the 60-in workpiece that User 1 defined.</p>
+  </div>
+
+  <div class="bench-panel warn">
+    <h2>Before you send it</h2>
+    <p class="lede" id="stb-before-send">Current unresolved conditions remain attached to this version. Nothing is filled in by assumption.</p>
+  </div>
+
+  <div class="confirm-block">
+    <h2>Confirm this version.</h2>
+    <p>Confirm freezes the exact definition above as the next identified version and sends that identified version to Store Zero for its reference answer. A later change makes a new version. Confirming is not payment, material allocation, production release, machine authorization, or a cut.</p>
+    <button type="button" id="stb-confirm-store">CONFIRM &amp; SEND TO STORE ZERO →</button>
+  </div>
+</section>
 </div>
 </body>
 </html>

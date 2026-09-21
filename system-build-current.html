@@ -161,7 +161,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   id="start-own-proof-frame"
                   class="start-own-shell-frame"
                   title="Start Your Own · User 1 · definition to doing"
-                  src="three-frames.html?v=9f0bf567"
+                  src="three-frames.html?v=8fe09454"
                 ></iframe>
               </div>
             `;
@@ -170,7 +170,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
           const liveFrame = startOwnPage.querySelector('#start-own-proof-frame');
           if (liveFrame && !String(liveFrame.getAttribute('src')||'').includes('three-frames.html')) {
-            liveFrame.src = 'three-frames.html?v=9f0bf567';
+            liveFrame.src = 'three-frames.html?v=8fe09454';
           }
           const banner = startOwnPage.querySelector('[data-proof-job="1"]');
           if (banner && /generic floor/.test(banner.textContent||'')) {
@@ -178,6 +178,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             if (!storeLine) banner.insertAdjacentHTML('beforeend', '<p id="proof-job1-store" class="dim">Store: waiting on a complete definition.</p>');
           }
           const proofFrame = startOwnPage.querySelector('#start-own-proof-frame');
+          let pendingStartOwnStage = 'intent';
+          let showStartOwnStage = stage => { pendingStartOwnStage = stage === 'bench' ? 'bench' : 'intent'; };
           const proofDecisions = new Set();
           let proofActions = 0;
           const classifyStartOwnDecision = target => {
@@ -298,18 +300,27 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
               const childDoc = proofFrame.contentDocument;
               if (!childDoc) return;
               const benchButton = childDoc.querySelector('.stb-bench-button');
-              const lengthInput = childDoc.getElementById('stb-user1-length');
-              const angleInput = childDoc.getElementById('stb-user1-angle');
-              const lineageLine = childDoc.getElementById('stb-user1-lineage');
+              const intentScreen = childDoc.getElementById('stb-start-intent-screen');
+              const benchScreen = childDoc.getElementById('stb-start-bench-screen');
+              const benchBack = childDoc.getElementById('stb-bench-back');
+              const benchLibrary = childDoc.getElementById('stb-bench-library');
+              const benchIntentSlot = childDoc.getElementById('stb-bench-intent-slot');
+              const lengthInput = childDoc.getElementById('stb-config-length');
+              const angleInput = childDoc.getElementById('stb-config-angle');
+              const confirmButton = childDoc.getElementById('stb-confirm-store');
               const glossaryStatus = childDoc.getElementById('stb-store-glossary-status');
               const glossaryChoices = Array.from(childDoc.querySelectorAll('[data-store-size-key]'));
               const boardStore = window.STBUserDefinedBoardStore || win.STBUserDefinedBoardStore || null;
               const catalogSource = storeHandoffContract?.startOwnStoreCatalog || null;
-              let definitionRevision = 0;
+              let definitionRevision = 1;
+              let partQty = 2;
+              let spotMode = 'centered';
               let currentUser1Definition = null;
-              let lengthEdited = false;
-              let angleEdited = false;
 
+              const setText = (id,value) => {
+                const el = childDoc.getElementById(id);
+                if (el) el.textContent = value;
+              };
               const formatInches = value => {
                 const n = Number(value);
                 if (!Number.isFinite(n)) return 'unresolved';
@@ -319,7 +330,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 const fraction = ['', '⅛', '¼', '⅜', '½', '⅝', '¾', '⅞'][rem];
                 return (whole ? String(whole) : (rem ? '' : '0')) + fraction + ' in';
               };
-
+              const activate = (selector,attr,value) => {
+                childDoc.querySelectorAll(selector).forEach(button => {
+                  button.classList.toggle('on',String(button.getAttribute(attr))===String(value));
+                });
+              };
               const syncStoreGlossary = () => {
                 if (!storeHandoffContract || typeof storeHandoffContract.startOwnOfferings !== 'function') {
                   if (glossaryStatus) glossaryStatus.textContent = 'Current Store material truth is unavailable. No material choice is being promoted.';
@@ -345,215 +360,367 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 return true;
               };
 
-              const syncUser1Definition = reason => {
+              const showStage = stage => {
+                const bench = stage === 'bench';
+                if (intentScreen) intentScreen.hidden = bench;
+                if (benchScreen) benchScreen.hidden = !bench;
+                if (bench && benchIntentSlot && !benchIntentSlot.firstElementChild) {
+                  const sourceIntent = childDoc.querySelector('#stb-start-intent-screen .stb-user1-body');
+                  if (sourceIntent) {
+                    const clone = sourceIntent.cloneNode(true);
+                    clone.querySelector('.stb-bench-button')?.remove();
+                    clone.querySelectorAll('[id]').forEach(node => node.removeAttribute('id'));
+                    benchIntentSlot.append(clone);
+                  }
+                }
+                if (bench) syncAndRender('BENCH_VIEW');
+                proofFrame.contentWindow?.scrollTo?.(0,0);
+              };
+              showStartOwnStage = stage => {
+                pendingStartOwnStage = stage === 'bench' ? 'bench' : 'intent';
+                showStage(pendingStartOwnStage);
+              };
+
+              const syncDefinition = reason => {
                 const finishedLengthIn = Number(lengthInput?.value);
                 const angleDeg = Number(angleInput?.value);
-                const partQty = 2;
                 const parentLengthIn = 60;
-                if (!storeHandoffContract || !Number.isFinite(finishedLengthIn) || finishedLengthIn <= 0 || !Number.isFinite(angleDeg) || angleDeg < 0) {
+                if (!storeHandoffContract || !boardStore || !Number.isFinite(finishedLengthIn) || finishedLengthIn <= 0 || !Number.isFinite(angleDeg) || angleDeg < 0) {
                   currentUser1Definition = null;
-                  if (benchButton) benchButton.disabled = true;
                   return null;
                 }
                 const offerings = storeHandoffContract.startOwnOfferings('2x4');
                 if (!Array.isArray(offerings) || !offerings.length) {
                   currentUser1Definition = null;
-                  if (benchButton) benchButton.disabled = true;
                   return null;
                 }
                 const centerSpotIn = Number((finishedLengthIn / 2).toFixed(6));
-                const storeMaterialAlternative = storeHandoffContract.resolveStartOwnMaterial({
+                const storeMaterialResolution = storeHandoffContract.resolveStartOwnMaterial({
                   sizeKey:'2x4',
                   sequence:'CROSSCUT_HOLD',
                   parts:[{name:'x-brace',len:finishedLengthIn,wid:3.5,qty:partQty}]
                 });
+                const spotDemand = spotMode === 'centered' ? {
+                  required:true,
+                  mode:'SPOT_ON_LOCATION',
+                  countPerPart:1,
+                  locationRule:'CENTERED_ON_PART',
+                  locationAlongLengthIn:centerSpotIn,
+                  acrossWidthRule:'CENTERED_ON_WIDE_FACE',
+                  derivation:{
+                    basis:'DERIVED',
+                    formula:'finishedLengthIn / 2',
+                    input:{finishedLengthIn:finishedLengthIn},
+                    output:{locationAlongLengthIn:centerSpotIn}
+                  },
+                  toolingStatus:'UNRESOLVED'
+                } : null;
                 const physicalDemand = {
                   stockClass:'2x4',
                   parentLengthIn:parentLengthIn,
                   finishedLength:finishedLengthIn,
                   quantity:partQty,
                   endCondition:angleDeg ? 'angled' : 'square',
-                  straightCut:false,
+                  straightCut:angleDeg === 0,
                   angleDegrees:angleDeg,
-                  angleReference:angleEdited ? 'CUSTOMER_INPUT' : 'USER_1_INTENT_IMAGE',
+                  angleReference:'CUSTOMER_INPUT',
                   cutPlane:'miter-face',
                   endIdentity:'both',
                   endRelation:'parallel',
-                  lengthDatum:'long-long-outer-edge',
-                  spotDemand:{
-                    required:true,
-                    mode:'SPOT_ON_LOCATION',
-                    countPerPart:1,
-                    locationRule:'CENTERED_ON_PART',
-                    locationAlongLengthIn:centerSpotIn,
-                    acrossWidthRule:'CENTERED_ON_WIDE_FACE',
-                    derivation:{
-                      basis:'DERIVED',
-                      formula:'finishedLengthIn / 2',
-                      input:{finishedLengthIn:finishedLengthIn},
-                      output:{locationAlongLengthIn:centerSpotIn}
-                    },
-                    toolingStatus:'UNRESOLVED'
-                  }
+                  lengthDatum:'long-long-outer-edge'
                 };
-                definitionRevision += 1;
+                if (spotDemand) physicalDemand.spotDemand = spotDemand;
+                const workpieceSequence = boardStore.sequenceCrosscuts({
+                  parentLengthIn:parentLengthIn,
+                  parts:Array.from({length:partQty}, () => finishedLengthIn),
+                  establishAngledEnd:angleDeg !== 0
+                });
+                const capability = boardStore.evaluateUserDefinedBoardJob({
+                  sizeKey:'2x4',
+                  finishedLengthIn:finishedLengthIn,
+                  partQty:partQty,
+                  angleDeg:angleDeg,
+                  cutPlane:'miter-face',
+                  endIdentity:'both',
+                  endRelation:'parallel',
+                  lengthDatum:'long-long-outer-edge'
+                });
+                const unresolved = ['START-OWN-CLASS-SCOPED-RECOVERY-NOT-PUBLISHED'];
+                if (angleDeg !== 0) unresolved.push('DIMENSIONAL_MITER_SERVICE_RECOVERY_UNRESOLVED');
+                if (spotDemand) unresolved.push('CENTER_SPOT_TOOLING_ENVELOPE_UNRESOLVED');
+                if (workpieceSequence.status !== 'SEQUENCED' || workpieceSequence.rows?.length !== 1) {
+                  unresolved.push('DEFINED_60_IN_WORKPIECE_SEQUENCE_UNRESOLVED');
+                }
                 currentUser1Definition = {
                   definitionId:'SYO-USER1-XBRACE-0.1',
-                  versionId:'SYO-USER1-XBRACE-0.1-r'+definitionRevision,
+                  versionId:'SYO-USER1-XBRACE-0.1-v'+definitionRevision,
                   material:{
                     origin:'STORE_ZERO',
                     stockClass:'2x4',
                     stockClassAuthority:{
                       repository:catalogSource?.repository || null,
                       file:catalogSource?.file || null,
-                      pin:catalogSource?.pin || null
+                      pin:catalogSource?.pin || null,
+                      clock:catalogSource?.clock || null
                     },
-                    definedWorkpieceLengthIn:{
-                      value:parentLengthIn,
-                      basis:'EXISTING_PROJECT_FACT'
-                    },
+                    definedWorkpieceLengthIn:{value:parentLengthIn,basis:'EXISTING_PROJECT_FACT'},
                     mappedStoreSkus:offerings.map(row => row.storeSku)
                   },
                   intent:{
-                    partQty:{value:partQty,basis:'USER_1_INTENT_IMAGE'},
-                    finishedLengthIn:{value:finishedLengthIn,basis:lengthEdited ? 'CUSTOMER_INPUT' : 'USER_1_INTENT_IMAGE'},
-                    angleDeg:{value:angleDeg,basis:angleEdited ? 'CUSTOMER_INPUT' : 'USER_1_INTENT_IMAGE'},
+                    partQty:{value:partQty,basis:definitionRevision===1?'USER_1_INTENT_IMAGE':'CUSTOMER_INPUT'},
+                    finishedLengthIn:{value:finishedLengthIn,basis:definitionRevision===1?'USER_1_INTENT_IMAGE':'CUSTOMER_INPUT'},
+                    angleDeg:{value:angleDeg,basis:definitionRevision===1?'USER_1_INTENT_IMAGE':'CUSTOMER_INPUT'},
                     endIdentity:{value:'both',basis:'USER_1_INTENT'},
                     endRelation:{value:'parallel',basis:'USER_1_INTENT'},
                     cutPlane:{value:'miter-face',basis:'USER_1_INTENT'},
                     lengthDatum:{value:'long-long-outer-edge',basis:'USER_1_INTENT'},
-                    centerSpot:{value:'one-per-part',basis:'USER_1_INTENT'}
+                    centerSpot:{value:spotMode==='centered'?'one-per-part':'none',basis:definitionRevision===1?'USER_1_INTENT_IMAGE':'CUSTOMER_INPUT'}
                   },
                   derived:{
-                    centerSpotAlongLengthIn:{
-                      value:centerSpotIn,
-                      basis:'DERIVED',
-                      formula:'finishedLengthIn / 2',
-                      input:{finishedLengthIn:finishedLengthIn}
-                    }
+                    centerSpotAlongLengthIn:spotDemand ? {
+                      value:centerSpotIn,basis:'DERIVED',formula:'finishedLengthIn / 2',input:{finishedLengthIn:finishedLengthIn}
+                    } : null
                   },
                   physicalDemand:physicalDemand,
-                  storeMaterialAlternative:storeMaterialAlternative,
+                  workpieceSequence:workpieceSequence,
+                  capability:capability,
                   storeReference:{
-                    unresolvedConditions:[
-                      'CENTER_SPOT_TOOLING_ENVELOPE_UNRESOLVED',
-                      'DIMENSIONAL_MITER_SERVICE_RECOVERY_UNRESOLVED'
-                    ]
+                    capabilityStatus:capability?.capability?.status || capability?.status || 'UNRESOLVED',
+                    economicsStatus:capability?.estimate?.economics?.status || 'UNRESOLVED_CLASS_SCOPED_RECOVERY',
+                    material:storeMaterialResolution?.status==='MAPPED' ? storeMaterialResolution.materialTotal : null,
+                    combinedValue:null,
+                    complete:false,
+                    unresolvedConditions:Array.from(new Set(unresolved)),
+                    materialResolution:storeMaterialResolution,
+                    authority:storeHandoffContract.storeAuthority?.('startOwn') || null
                   },
-                  lineage:{
-                    reason:String(reason || 'SYNC'),
-                    storeCatalogPin:catalogSource?.pin || null
-                  },
+                  lineage:{reason:String(reason||'SYNC'),storeCatalogPin:catalogSource?.pin||null},
                   physicalExecutionAuthorized:false
                 };
                 try { win.localStorage.setItem('stb-start-own-user1-definition',JSON.stringify(currentUser1Definition)); } catch (_) {}
-                if (lineageLine) {
-                  lineageLine.textContent = 'Center spot = '+finishedLengthIn+' ÷ 2 = '+centerSpotIn+' in from either finished end.';
-                }
-                if (benchButton) benchButton.disabled = false;
                 return currentUser1Definition;
               };
 
-              const renderUser1Bench = (definition, workpieceSequence, handoff) => {
-                const setText = (id,value) => {
-                  const el = childDoc.getElementById(id);
-                  if (el) el.textContent = value;
-                };
-                const length = Number(definition.intent.finishedLengthIn.value);
-                const angle = Number(definition.intent.angleDeg.value);
-                const retained = workpieceSequence?.rows?.[0]?.remainingIn;
-                const holdIn = Number(workpieceSequence?.holdIn || boardStore?.holdIn || 24);
-                const spare = Number.isFinite(retained) ? Number((retained - holdIn).toFixed(6)) : null;
-                const sequencePass = workpieceSequence?.status === 'SEQUENCED';
-                setText('stb-bench-part1-dim',length+' in');
-                setText('stb-bench-part2-dim',length+' in');
-                setText('stb-bench-length-spec',length+' in');
-                setText('stb-bench-angle-spec',angle+'°');
-                setText('stb-bench-spare-label',Number.isFinite(spare) ? formatInches(spare)+' spare' : 'spare unresolved');
-                setText('stb-bench-remain-label',Number.isFinite(retained)
-                  ? formatInches(retained)+' remains · '+formatInches(holdIn)+' retained-control minimum · '+formatInches(spare)+' spare'
-                  : 'retained-control sequence unresolved');
-                setText('stb-bench-control-copy',sequencePass
-                  ? 'The 60-in workpiece leaves '+formatInches(retained)+' after the three cut kerfs; '+formatInches(holdIn)+' is the current retained-control minimum.'
-                  : 'The same 60-in workpiece does not yet form a valid retained-control sequence.');
-                setText('stb-bench-cut-copy','cut — a '+angle+'° angle · three cuts make the two parts (cut 2 is shared)');
-                const svg = childDoc.getElementById('stb-user1-bench-svg');
-                if (svg) {
-                  svg.setAttribute('aria-label','One five-foot two-by-four. Three '+angle+'-degree cuts make two '+length+'-inch parts. One centered spot per part is derived at '+definition.derived.centerSpotAlongLengthIn.value+' inches from either finished end. '+(Number.isFinite(retained)?formatInches(retained)+' remains.':'Retained stock is unresolved.'));
+              const renderBoardGeometry = definition => {
+                const demand = definition?.physicalDemand;
+                if (!demand) return;
+                const overlay = childDoc.getElementById('stb-bench-dynamic-geometry');
+                if (!overlay) return;
+                ['stb-bench-static-parts','stb-bench-static-cuts','stb-bench-static-cut-markers','stb-bench-static-joint-note','stb-bench-static-spots','stb-bench-static-part1-label','stb-bench-static-part2-label','stb-bench-static-dims','stb-bench-part1-dim','stb-bench-part2-dim'].forEach(id => {
+                  const el=childDoc.getElementById(id);
+                  if(el) el.style.display='none';
+                });
+                const x0=40, xMax=860, topY=100, bottomY=180, scale=(xMax-x0)/60;
+                const qty=Math.max(1,Math.min(2,Number(demand.quantity)||1));
+                const len=Math.max(0,Number(demand.finishedLength)||0);
+                const angle=Math.max(0,Math.min(45,Number(demand.angleDegrees)||0));
+                const delta=80*Math.tan(angle*Math.PI/180);
+                const boundaries=Array.from({length:qty+1},(_,i)=>x0+i*len*scale);
+                const cutBoundaries=angle>0?boundaries:boundaries.slice(1);
+                const colors=['#a85a2a','#2f6f9e'];
+                let svg='';
+                for(let i=0;i<qty;i++){
+                  const left=boundaries[i], right=boundaries[i+1], fill=colors[i%colors.length];
+                  svg+='<path d="M'+(left+delta)+' 101 L'+(right+delta)+' 101 L'+right+' 179 L'+left+' 179 Z" fill="'+fill+'" opacity=".06"/>';
+                  const cx=left+(right-left)/2;
+                  svg+='<text x="'+cx+'" y="124" text-anchor="middle" font-size="11" font-weight="700" fill="#584533">PART '+(i+1)+'</text>';
+                  if(demand.spotDemand){
+                    svg+='<circle cx="'+cx+'" cy="140" r="12" fill="none" stroke="#2f6f9e" stroke-width="2.4"/><circle cx="'+cx+'" cy="140" r="4" fill="#2f6f9e"/>';
+                  }
+                  svg+='<g stroke="#7a4f22" stroke-width="1.1" fill="none" opacity=".8"><line x1="'+left+'" y1="200" x2="'+right+'" y2="200"/><path d="M'+left+' 195v10M'+right+' 195v10"/></g>';
+                  svg+='<text x="'+cx+'" y="217" text-anchor="middle" font-size="11" font-weight="700" fill="#7a4f22">'+len+' in</text>';
                 }
-                const answerLine = childDoc.getElementById('stb-system-answer');
-                if (answerLine) {
-                  const material = definition.storeMaterialAlternative;
-                  const materialText = material && material.status === 'MAPPED'
-                    ? ' · Store material alternative: '+material.stockLengthIn+' in 2×4 · $'+Number(material.materialTotal||0).toFixed(2)+' material'
-                    : ' · Store material alternative unresolved';
-                  const drillCarried = Array.isArray(handoff?.operationDemand)
-                    && handoff.operationDemand.some(op => op && op.kind === 'DRILL' && op.countPerPart === 1);
-                  answerLine.innerHTML = '<b>STORE</b> · '
-                    + (sequencePass
-                        ? 'the same 60-in defined workpiece passes the current 24-in retained-control sequence'
-                        : 'the same 60-in defined workpiece does not yet pass the retained-control sequence')
-                    + materialText
-                    + ' · '+angle+'° end-cut demand'
-                    + (drillCarried ? ' and two centered drill spots are carried in the same Store handoff' : ' is carried; centered drill demand is not yet structurally present')
-                    + ' · drill tooling and service recovery remain unresolved.';
+                cutBoundaries.forEach((bottomX,index)=>{
+                  const topX=bottomX+delta;
+                  svg+='<line x1="'+topX+'" y1="'+topY+'" x2="'+bottomX+'" y2="'+bottomY+'" stroke="#a85a2a" stroke-width="5" stroke-linecap="round"/>';
+                  const mx=bottomX+delta*.65;
+                  svg+='<circle cx="'+mx+'" cy="74" r="13" fill="#a85a2a"/><text x="'+mx+'" y="79" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">'+(index+1)+'</text>';
+                });
+                overlay.innerHTML=svg;
+
+                const usedEnd=boundaries[qty];
+                const spareLabel=childDoc.getElementById('stb-bench-spare-label');
+                const remainLabel=childDoc.getElementById('stb-bench-remain-label');
+                if(spareLabel){
+                  const spareCenter=usedEnd<532?(usedEnd+532)/2:Math.min(820,(usedEnd+xMax)/2);
+                  spareLabel.setAttribute('x',String(spareCenter));
+                }
+                if(remainLabel){
+                  const remainCenter=Math.min(800,Math.max(570,(usedEnd+xMax)/2));
+                  remainLabel.setAttribute('x',String(remainCenter));
                 }
               };
 
+              const renderBench = definition => {
+                if (!definition) return;
+                const demand = definition.physicalDemand;
+                const sequence = definition.workpieceSequence;
+                const oneWorkpiece = sequence?.status === 'SEQUENCED' && sequence?.rows?.length === 1;
+                const retained = oneWorkpiece ? sequence.rows[0].remainingIn : null;
+                const holdIn = Number(sequence?.holdIn || boardStore?.holdIn || 24);
+                const spare = Number.isFinite(retained) ? Number((retained-holdIn).toFixed(6)) : null;
+                const cuts = demand.angleDegrees !== 0 ? demand.quantity + 1 : demand.quantity;
+                const spots = demand.spotDemand ? demand.quantity : 0;
+                const material = definition.storeReference.materialResolution;
+                const materialMapped = material?.status === 'MAPPED';
+                const materialValue = materialMapped && Number.isFinite(Number(material.materialTotal)) ? Number(material.materialTotal) : null;
+                const economics = definition.storeReference.economicsStatus;
+                const capabilityBasis = definition.capability?.capability?.basis || definition.capability?.capability?.status || definition.capability?.status || 'UNRESOLVED';
+
+                renderBoardGeometry(definition);
+                setText('stb-config-parts-value',demand.quantity+' part'+(demand.quantity===1?'':'s'));
+                setText('stb-config-length-value',demand.finishedLength+' in');
+                setText('stb-config-angle-value',demand.angleDegrees+'° · both ends · parallel');
+                setText('stb-config-spot-value',demand.spotDemand?'1 centered spot / part':'no spot');
+                setText('stb-bench-length-spec',demand.finishedLength+' in');
+                setText('stb-bench-angle-spec',demand.angleDegrees+'°');
+                setText('stb-bench-parts-spec',String(demand.quantity));
+                setText('stb-def-parts',String(demand.quantity));
+                setText('stb-def-length',demand.finishedLength+' in each');
+                setText('stb-def-angle',demand.angleDegrees+'° · both · parallel');
+                setText('stb-def-spot',demand.spotDemand?'1 centered spot / part':'none');
+                setText('stb-def-spot-location',demand.spotDemand
+                  ? definition.derived.centerSpotAlongLengthIn.value+' in · derived from '+demand.finishedLength+' ÷ 2'
+                  : 'not requested');
+                setText('stb-def-retained',Number.isFinite(retained)?formatInches(retained):'UNRESOLVED on one 60-in workpiece');
+                setText('stb-bench-spare-label',Number.isFinite(spare)?formatInches(spare)+' spare':'capacity unresolved');
+                setText('stb-bench-remain-label',Number.isFinite(retained)
+                  ? formatInches(retained)+' remains · '+formatInches(holdIn)+' retained-control minimum · '+formatInches(spare)+' spare'
+                  : 'one 60-in workpiece cannot satisfy this version within the current retained-control rule');
+                setText('stb-bench-control-copy',Number.isFinite(retained)
+                  ? 'The 60-in workpiece leaves '+formatInches(retained)+' after the current cut sequence; '+formatInches(holdIn)+' is the current retained-control minimum.'
+                  : 'This changed version no longer fits the single 60-in workpiece under the current retained-control rule.');
+                setText('stb-bench-cut-copy','cut — '+demand.angleDegrees+'° ends · '+cuts+' cut'+(cuts===1?'':'s')+' form '+demand.quantity+' part'+(demand.quantity===1?'':'s'));
+                setText('stb-bench-cut-step','Cut it. '+cuts+' cut'+(cuts===1?'':'s')+' on the same defined workpiece form '+demand.quantity+' part'+(demand.quantity===1?'':'s')+' at '+demand.angleDegrees+'°.');
+                setText('stb-bench-drill-step',demand.spotDemand
+                  ? 'Drill it. One spot, on location, centered in each part.'
+                  : 'Drill it. No spot is requested on this version.');
+                setText('stb-bench-stub-step','Keep the stub. The defined parts and the remaining material stay accounted for in the same version.');
+                setText('stb-bench-workline','THAT’S THE WHOLE JOB · '+cuts+' CUT'+(cuts===1?'':'S')+' · '+spots+' SPOT'+(spots===1?'':'S')+' ON LOCATION · '+(Number.isFinite(retained)?'WITHIN CURRENT RETAINED-CONTROL LIMIT':'CURRENT 60-IN WORKPIECE UNRESOLVED'));
+                const svg = childDoc.getElementById('stb-user1-bench-svg');
+                if (svg) svg.setAttribute('aria-label','One five-foot two-by-four. This version calls for '+demand.quantity+' part'+(demand.quantity===1?'':'s')+' at '+demand.finishedLength+' inches with '+demand.angleDegrees+' degree ends. '+(demand.spotDemand?'One centered spot per part is derived at '+definition.derived.centerSpotAlongLengthIn.value+' inches. ':'No spot is requested. ')+(Number.isFinite(retained)?formatInches(retained)+' remains.':'The one-workpiece retained-control sequence is unresolved.'));
+
+                setText('stb-material-required',materialMapped
+                  ? material.quantity+' × 2×4 × '+material.stockLengthIn+' in · '+material.storeSku+' · source stock for the defined 60-in workpiece and current part demand'
+                  : 'UNRESOLVED · '+String(material?.code || 'Store material mapping unavailable'));
+                setText('stb-price-material',materialValue==null?'NOT ESTABLISHED':'$'+materialValue.toFixed(2));
+                setText('stb-price-processing','UNRESOLVED · class-scoped recovery not published');
+                setText('stb-price-total',materialValue==null?'NOT COMPLETE':'$'+materialValue.toFixed(2)+' material');
+                setText('stb-price-basis',materialValue==null
+                  ? 'No complete Store material basis is established for this version.'
+                  : 'Current material value is established. Combined commercial price is not complete because Start Your Own processing / fulfillment recovery is not yet published.');
+                setText('stb-basis-sku',materialMapped?material.storeSku:'NOT MAPPED');
+                setText('stb-basis-source-stock',materialMapped?material.quantity+' × '+material.stockLengthIn+' in 2×4':'UNRESOLVED');
+                setText('stb-basis-unit-price',materialMapped && Number.isFinite(Number(material.unitPrice)) ? '$'+Number(material.unitPrice).toFixed(2)+' / ea' : 'UNRESOLVED');
+                setText('stb-basis-cell-family',materialMapped && Array.isArray(material.cellFamily) ? material.cellFamily.join(' · ') : 'UNRESOLVED');
+                setText('stb-basis-supported-ops',materialMapped && Array.isArray(material.supportedOps) ? material.supportedOps.join(' · ') : 'UNRESOLVED');
+                setText('stb-basis-clock',String(material?.source?.clock || catalogSource?.clock || '—'));
+                setText('stb-basis-catalog-pin',String(material?.source?.pin || catalogSource?.pin || '—'));
+                setText('stb-basis-capability',String(capabilityBasis));
+                setText('stb-basis-store-pin',String(definition.capability?.storePin || boardStore?.storePin || '—'));
+                setText('stb-basis-economics',String(economics));
+                setText('stb-before-send',definition.storeReference.unresolvedConditions.join(' · ')+'. These conditions remain attached to this version; confirmation does not resolve them.');
+
+                const answerLine = childDoc.getElementById('stb-system-answer');
+                if (answerLine) {
+                  answerLine.innerHTML = '<b>STORE</b> · '
+                    +(Number.isFinite(retained)
+                      ? 'the same 60-in defined workpiece passes the current retained-control sequence'
+                      : 'the same 60-in defined workpiece is unresolved for this changed part demand')
+                    +(materialMapped?' · source stock '+material.stockLengthIn+' in · material $'+materialValue.toFixed(2):' · source stock unresolved')
+                    +' · combined processing / fulfillment price remains unresolved.';
+                }
+                activate('#stb-config-parts [data-parts]','data-parts',partQty);
+                activate('[data-length]','data-length',demand.finishedLength);
+                activate('[data-angle]','data-angle',demand.angleDegrees);
+                activate('#stb-config-spot [data-spot]','data-spot',spotMode);
+              };
+
+              const syncAndRender = reason => {
+                const definition = syncDefinition(reason);
+                renderBench(definition);
+                return definition;
+              };
+              const markRevision = () => { definitionRevision += 1; };
+
               syncStoreGlossary();
-              syncUser1Definition('INITIAL');
+              syncAndRender('INITIAL');
+              showStage(pendingStartOwnStage);
 
-              if (lengthInput && !lengthInput.dataset.definitionWired) {
-                lengthInput.dataset.definitionWired = 'true';
-                lengthInput.addEventListener('input', () => {
-                  lengthEdited = true;
-                  syncUser1Definition('CUSTOMER_INPUT');
-                });
-              }
-              if (angleInput && !angleInput.dataset.definitionWired) {
-                angleInput.dataset.definitionWired = 'true';
-                angleInput.addEventListener('input', () => {
-                  angleEdited = true;
-                  syncUser1Definition('CUSTOMER_INPUT');
-                });
-              }
+              benchButton?.addEventListener('click', () => {
+                syncAndRender('BENCH_HANDOFF');
+                showStage('bench');
+              });
+              benchBack?.addEventListener('click', () => showStage('intent'));
+              benchLibrary?.addEventListener('click', () => {
+                selectJourneyProject(null);
+                originalShow.call(win,'projects');
+              });
 
-              if (benchButton && !benchButton.dataset.hostBenchWired) {
-                benchButton.dataset.hostBenchWired = 'true';
-                benchButton.addEventListener('click', () => {
-                  const bench = childDoc.getElementById('stb-user1-bench');
-                  const definition = syncUser1Definition('BENCH_HANDOFF');
-                  const answerLine = childDoc.getElementById('stb-system-answer');
-                  if (!definition || !boardStore) {
-                    if (answerLine) answerLine.innerHTML = '<b>STORE</b> · the current definition cannot be evaluated without current Store and machine truth.';
-                    bench?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    return;
-                  }
-                  const demand = definition.physicalDemand;
-                  const storeSpec = {
-                    sizeKey:demand.stockClass,
-                    finishedLengthIn:demand.finishedLength,
-                    partQty:demand.quantity,
-                    angleDeg:demand.angleDegrees,
-                    cutPlane:demand.cutPlane,
-                    endIdentity:demand.endIdentity,
-                    endRelation:demand.endRelation,
-                    lengthDatum:demand.lengthDatum
-                  };
-                  const workpieceSequence = typeof boardStore.sequenceCrosscuts === 'function'
-                    ? boardStore.sequenceCrosscuts({
-                        parentLengthIn:demand.parentLengthIn,
-                        parts:Array.from({length:demand.quantity}, () => demand.finishedLength),
-                        establishAngledEnd:demand.angleDegrees !== 0
-                      })
-                    : null;
-                  const capability = typeof boardStore.evaluateUserDefinedBoardJob === 'function'
-                    ? boardStore.evaluateUserDefinedBoardJob(storeSpec)
-                    : null;
-                  const handoff = createComparisonStoreHandoff('start-own',{
+              childDoc.querySelectorAll('#stb-config-parts [data-parts]').forEach(button => {
+                button.addEventListener('click', () => {
+                  const next = Number(button.dataset.parts);
+                  if (!Number.isInteger(next) || next < 1) return;
+                  partQty = next;
+                  markRevision();
+                  syncAndRender('CUSTOMER_INPUT');
+                });
+              });
+              lengthInput?.addEventListener('input', () => {
+                if (!Number.isFinite(Number(lengthInput.value)) || Number(lengthInput.value) <= 0) return;
+                markRevision();
+                syncAndRender('CUSTOMER_INPUT');
+              });
+              childDoc.querySelectorAll('[data-length]').forEach(button => {
+                button.addEventListener('click', () => {
+                  if (lengthInput) lengthInput.value = button.dataset.length;
+                  markRevision();
+                  syncAndRender('CUSTOMER_INPUT');
+                });
+              });
+              angleInput?.addEventListener('input', () => {
+                if (!Number.isFinite(Number(angleInput.value)) || Number(angleInput.value) < 0) return;
+                markRevision();
+                syncAndRender('CUSTOMER_INPUT');
+              });
+              childDoc.querySelectorAll('[data-angle]').forEach(button => {
+                button.addEventListener('click', () => {
+                  if (angleInput) angleInput.value = button.dataset.angle;
+                  markRevision();
+                  syncAndRender('CUSTOMER_INPUT');
+                });
+              });
+              childDoc.querySelectorAll('#stb-config-spot [data-spot]').forEach(button => {
+                button.addEventListener('click', () => {
+                  spotMode = button.dataset.spot === 'none' ? 'none' : 'centered';
+                  markRevision();
+                  syncAndRender('CUSTOMER_INPUT');
+                });
+              });
+
+              confirmButton?.addEventListener('click', () => {
+                const definition = syncAndRender('CONFIRM');
+                if (!definition) return;
+                const handoff = createComparisonStoreHandoff('start-own',{
+                  id:definition.definitionId,
+                  versionId:definition.versionId,
+                  physicalDemand:definition.physicalDemand,
+                  sourceAuthority:{
+                    kind:'STORE-ORIGIN USER-DEFINED WORK',
+                    artifact:'three-frames.html',
+                    storeCatalog:definition.material.stockClassAuthority,
+                    definedWorkpieceLengthIn:definition.material.definedWorkpieceLengthIn
+                  },
+                  storeReference:definition.storeReference
+                });
+                proofHandoff = {
+                  job:'JOB 1 · START YOUR OWN',
+                  source:'start-own',
+                  payload:{
                     id:definition.definitionId,
                     versionId:definition.versionId,
-                    physicalDemand:demand,
+                    definition:definition,
+                    physicalDemand:definition.physicalDemand,
                     sourceAuthority:{
                       kind:'STORE-ORIGIN USER-DEFINED WORK',
                       artifact:'three-frames.html',
@@ -561,30 +728,25 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                       definedWorkpieceLengthIn:definition.material.definedWorkpieceLengthIn
                     },
                     storeReference:definition.storeReference
-                  });
-                  retainComparisonStoreHandoff('start-own',handoff);
-                  try {
-                    win.localStorage.setItem('stb-start-own-user1-bench',JSON.stringify({
-                      definition:definition,
-                      workpieceSequence:workpieceSequence,
-                      capability:capability && capability.capability ? capability.capability : null,
-                      handoff:handoff,
-                      physicalExecutionAuthorized:false
-                    }));
-                  } catch (_) {}
-                  renderUser1Bench(definition,workpieceSequence,handoff);
-                  bench?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                });
-              }
+                  },
+                  storeHandoff:handoff,
+                  boardEvaluation:definition.capability
+                };
+                retainComparisonStoreHandoff('start-own',handoff);
+                try {
+                  win.localStorage.setItem('stb-start-own-user1-bench',JSON.stringify({
+                    definition:definition,
+                    handoff:handoff,
+                    physicalExecutionAuthorized:false
+                  }));
+                  win.localStorage.setItem('stb-proof-handoff-job1',JSON.stringify(proofHandoff));
+                } catch (_) {}
+                syncProofHandoff();
+                originalShow.call(win,'proof-store');
+              });
+
               childDoc.addEventListener('click', event => {
                 const target = event.target?.closest?.('button,a');
-                if (!target) return;
-                proofActions += 1;
-                classifyStartOwnDecision(target);
-                win.setTimeout(captureStartOwnProof, 0);
-              }, true);
-              childDoc.addEventListener('change', event => {
-                const target = event.target?.closest?.('[data-exact],[data-op-angle]');
                 if (!target) return;
                 proofActions += 1;
                 classifyStartOwnDecision(target);
@@ -603,6 +765,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             event.stopImmediatePropagation();
             selectJourneyProject('start-own');
             originalShow.call(win, 'start-own-live');
+            setTimeout(() => showStartOwnStage('intent'),0);
           }, true);
         }
 
@@ -1433,6 +1596,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       +'<div class="proof-actor-grid">'
         +'<div><b>JOB</b><span id="proof-store-job">—</span></div>'
         +'<div><b>VERSION</b><span id="proof-store-version">—</span></div>'
+        +'<div><b>DEFINED WORKPIECE</b><span id="proof-store-workpiece">—</span></div>'
         +'<div><b>MATERIAL SOURCE</b><span id="proof-store-material-source">Store Zero catalog · 4402abeb6b02…</span></div>'
         +'<div><b>ECONOMICS AUTHORITY</b><span>CLASS-SCOPED · no legacy general recovery selected</span></div>'
       +'</div>'
@@ -1477,8 +1641,25 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         +'<div><b>READY</b><span>NOT RECORDED</span></div>'
       +'</div>'
       +'<div class="proof-gap"><b>NO BLOOD ON WOOD.</b>Network presence, a project definition, a Store support statement, or a budgetary model does not create local motion authority.</div>'
-      +'<div class="proof-nav"><button type="button" data-proof-library>← PROJECT LIBRARY</button><button type="button" data-proof-go="proof-accept">← ACCEPT / PAY</button><button class="next" type="button" data-proof-go="proof-record">CONTINUE → HANDOFF / RECORD</button></div>',
+      +'<div class="proof-nav"><button type="button" data-proof-library>← PROJECT LIBRARY</button><button type="button" data-proof-go="proof-accept">← ACCEPT / PAY</button><button class="next" id="proof-yard-next" type="button" data-proof-go="proof-record">CONTINUE → HANDOFF / RECORD</button></div>',
       '<p class="goal">Physical events remain null</p><div class="row"><b>No release</b><span>Reference continuity is not fabrication authority.</span></div><div class="row"><b>Cycle Start remains local</b><span>Machine-local authority stays local.</span></div>'
+    );
+
+    ensureProjectJourneyPage('proof-terms',
+      '<p class="stage-tag">TERMS</p><h1>TERMS · COMMERCIAL PATH</h1>'
+      +'<p class="sub">The confirmed definition and Store answer remain identified. Commercial events stay separate, and incomplete pricing stays incomplete.</p>'
+      +'<div class="proof-actor-grid">'
+        +'<div><b>JOB</b><span id="proof-terms-job">—</span></div>'
+        +'<div><b>VERSION</b><span id="proof-terms-version">—</span></div>'
+        +'<div><b>REFERENCE MATERIAL VALUE</b><span id="proof-terms-material">—</span></div>'
+        +'<div><b>COMBINED COMMERCIAL PRICE</b><span>NOT COMPLETE</span></div>'
+        +'<div><b>OFFER VALIDITY</b><span>NOT ESTABLISHED</span></div>'
+        +'<div><b>PAYMENT</b><span>NOT AVAILABLE / NOT RECORDED</span></div>'
+      +'</div>'
+      +'<div class="proof-gap"><b>TERMS REMAIN REFERENCE-ONLY.</b>The current Start Your Own class does not publish the processing / fulfillment recovery required to form a complete commercial price. No acceptance, payment, allocation, release, or fabrication event is invented to make the path look complete.</div>'
+      +'<div class="band"><b>One version, one answer.</b> A later project change makes a new version and requires a new Store answer. Terms never rewrite the confirmed definition.</div>'
+      +'<div class="proof-nav"><button type="button" data-proof-library>← PROJECT LIBRARY</button><button type="button" data-proof-go="proof-yard">← STORE / YARD</button><button class="next" type="button" data-proof-go="proof-record">CONTINUE → HANDOFF / RECORD</button></div>',
+      '<p class="goal">Commercial truth stays separate</p><div class="row"><b>Price gap stays visible</b><span>No invented recovery or offer.</span></div><div class="row"><b>Version stays fixed</b><span>Terms may answer the version; they may not rewrite it.</span></div>'
     );
 
     ensureProjectJourneyPage('proof-record',
@@ -1500,12 +1681,18 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       const payload=proofHandoff.payload||{};
       const version=proofHandoff.storeHandoff?.versionId||payload.id||payload.versionId||payload.normalizedPart?.versionId||'IDENTIFIED VERSION';
       const job=proofHandoff.job||'PROOF JOB';
-      [['proof-store-job',job],['proof-store-version',version],['proof-record-job',job],['proof-record-version',version]].forEach(([id,value])=>{
+      [['proof-store-job',job],['proof-store-version',version],['proof-terms-job',job],['proof-terms-version',version],['proof-record-job',job],['proof-record-version',version]].forEach(([id,value])=>{
         const el=doc.getElementById(id); if(el)el.textContent=String(value);
       });
       const title=doc.getElementById('proof-store-title');
       if(title)title.textContent='STORE ANSWER · '+job;
       const materialResolution=payload.storeReference?.materialResolution || null;
+      const definedWorkpiece=payload.definition?.material?.definedWorkpieceLengthIn?.value
+        ?? payload.sourceAuthority?.definedWorkpieceLengthIn?.value
+        ?? payload.physicalDemand?.parentLengthIn
+        ?? null;
+      const workpieceEl=doc.getElementById('proof-store-workpiece');
+      if(workpieceEl)workpieceEl.textContent=definedWorkpiece==null?'NOT CARRIED':String(definedWorkpiece)+' in · confirmed project fact';
       const materialSku=doc.getElementById('proof-store-material-sku');
       const materialValue=doc.getElementById('proof-store-material-value');
       const materialSource=doc.getElementById('proof-store-material-source');
@@ -1513,6 +1700,12 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       if(materialValue)materialValue.textContent=materialResolution?.status==='MAPPED' && Number.isFinite(Number(materialResolution.materialTotal))
         ? '$'+Number(materialResolution.materialTotal).toFixed(2)
         : 'NOT ESTABLISHED';
+      const termsMaterial=doc.getElementById('proof-terms-material');
+      if(termsMaterial)termsMaterial.textContent=materialResolution?.status==='MAPPED' && Number.isFinite(Number(materialResolution.materialTotal))
+        ? '$'+Number(materialResolution.materialTotal).toFixed(2)+' material'
+        : 'NOT ESTABLISHED';
+      const yardNext=doc.getElementById('proof-yard-next');
+      if(yardNext)yardNext.textContent=proofHandoff?.source==='start-own'?'CONTINUE → TERMS':'CONTINUE → HANDOFF / RECORD';
       if(materialSource)materialSource.textContent=materialResolution?.source
         ? 'Store Zero catalog '+materialResolution.source.clock+' · '+String(materialResolution.source.pin).slice(0,12)+'…'
         : 'Store Zero catalog · exact project material mapping not carried here';
@@ -1532,6 +1725,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         if(proofHandoff?.source==='start-own'){
           selectJourneyProject('start-own');
           originalShow.call(win,'start-own-live');
+          setTimeout(() => showStartOwnStage('bench'),0);
         } else if(proofHandoff?.source==='outdoor'){
           selectJourneyProject('outdoor');
           originalShow.call(win,'outdoor-build-live');
@@ -1544,7 +1738,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         const expectedSource = activeJourneyProject === 'start-own' ? 'start-own' : (activeJourneyProject === 'outdoor' ? 'outdoor' : null);
         if(!expectedSource || proofHandoff?.source !== expectedSource) return;
         syncProofHandoff();
-        originalShow.call(win,go.dataset.proofGo);
+        let target=go.dataset.proofGo;
+        if(proofHandoff?.source==='start-own' && target==='proof-record' && go.closest('#proof-yard')) target='proof-terms';
+        originalShow.call(win,target);
       }
     }, true);
 
@@ -1819,7 +2015,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         review:'proof-store',
         request:'proof-accept',
         yard:'proof-yard',
-        terms:'proof-yard',
+        terms:'proof-terms',
         recap:'proof-record',
         record:'proof-record'
       }),
@@ -1881,7 +2077,22 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
           button.textContent = button.dataset.defaultLabel;
           button.hidden = false;
         });
-        if (['alcove','start-own','outdoor'].includes(activeJourneyProject)) {
+        if (activeJourneyProject === 'start-own') {
+          ['alcove-review','recap'].forEach(target => {
+            const button = nav.querySelector('button[data-go="'+target+'"]');
+            if (button) button.hidden = true;
+          });
+          const storeButton = nav.querySelector('button[data-go="store"]');
+          const requestButton = nav.querySelector('button[data-go="request"]');
+          const yardButton = nav.querySelector('button[data-go="yard"]');
+          const termsButton = nav.querySelector('button[data-go="terms"]');
+          const recordButton = nav.querySelector('button[data-go="record"]');
+          if (storeButton) storeButton.textContent = 'Store Answer';
+          if (requestButton) requestButton.textContent = 'Accept / Pay';
+          if (yardButton) yardButton.textContent = 'Store / Yard';
+          if (termsButton) termsButton.textContent = 'Terms';
+          if (recordButton) recordButton.textContent = 'Handoff / Record';
+        } else if (['alcove','outdoor'].includes(activeJourneyProject)) {
           ['alcove-review','terms','recap'].forEach(target => {
             const button = nav.querySelector('button[data-go="'+target+'"]');
             if (button) button.hidden = true;
@@ -1979,6 +2190,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     }
 
     function showMappedProjectStage(projectId, stage) {
+      if (projectId === 'start-own' && (stage === 'scan' || stage === 'configure')) {
+        originalShow.call(win,'start-own-live');
+        setTimeout(() => showStartOwnStage(stage === 'configure' ? 'bench' : 'intent'),0);
+        return true;
+      }
       if (projectId === 'alcove') {
         const customerStage = {
           scan:'scan',
