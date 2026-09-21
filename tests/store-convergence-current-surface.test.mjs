@@ -15,7 +15,7 @@ vm.runInNewContext(contractSource,sandbox,{filename:'stb-store-handoff-contract.
 const contract = sandbox.window.STBStoreHandoffContract;
 
 assert.ok(contract,'shared Store handoff contract did not load');
-assert.equal(contract.version,'0.5');
+assert.equal(contract.version,'0.6');
 assert.equal(typeof contract.quoteAlcoveInsert,'undefined','shared Store contract must not reprice Alcove');
 assert.deepEqual(
   Array.from(contract.actorOrder),
@@ -28,9 +28,17 @@ assert.equal(contract.currentArtifacts.alcove.artifact,'system-build-current.htm
 assert.equal(contract.currentArtifacts.windowSeat.artifact,'stb-window-seat-space-utilization-0.7.4.html');
 assert.equal(contract.currentArtifacts.sheetS001.artifact,'system-build-current.html#playhouse-s001');
 
-assert.equal(contract.storeAuthority('startOwn').capabilityPin,'f88ec61c42446755d00259f88e7fd09f2702fd92');
-assert.equal(contract.storeAuthority('startOwn').materialCatalogPin,'4402abeb6b0299a5b6db2eec85ed04c3b0236bcc');
+assert.equal(contract.storeAuthority('startOwn').capabilityPin,'c51f5f27af9a77bc7581c5d42c56f0a1ed0b650a');
+assert.equal(contract.storeAuthority('startOwn').materialCatalogPin,'c51f5f27af9a77bc7581c5d42c56f0a1ed0b650a');
 assert.equal(contract.storeAuthority('startOwn').legacyGeneralRecoverySelected,false);
+assert.equal(contract.storeAuthority('startOwn').economicsModel,'STB-STORE-ZERO-PRICE-1');
+assert.equal(contract.storeAuthority('startOwn').economicsStatus,'BUDGETARY_ESTIMATE');
+const xBraceQ = contract.quoteStartOwnBoardSequence({
+  material:3.13,definedWorkpieceLengthIn:60,sawCuts:3,sawAngleDeg:30,drillCycles:2,widthIn:3.5
+});
+assert.equal(xBraceQ.total,54.92);
+assert.equal(xBraceQ.cycle.T_job_min,10.077);
+
 assert.equal(contract.storeAuthority('windowSeat').economicsModel,'STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0.1');
 assert.equal(contract.storeAuthority('alcove').economicsModel,null);
 assert.equal(contract.storeAuthority('alcove').economicsStatus,'PROJECT_NATIVE_REFERENCE');
@@ -44,7 +52,7 @@ assert.equal(shelfMaterial.status,'MAPPED');
 assert.equal(shelfMaterial.storeSku,'STB-ZERO-SPF-2X4-192-001');
 assert.equal(shelfMaterial.materialTotal,8.36);
 
-assert.match(shell,/stb-store-handoff-contract\.js\?v=6be08595/);
+assert.match(shell,/stb-store-handoff-contract\.js\?v=d5dae9f0/);
 assert.match(shell,/dataset\.startOwnArtifact = 'three-frames\.html'/);
 assert.match(shell,/dataset\.outdoorBuildArtifact = 'stb-outdoor-bench-leg-0\.1\.html'/);
 assert.match(shell,/dataset\.windowSeatArtifact = 'stb-window-seat-space-utilization-0\.7\.4\.html'/);
@@ -120,7 +128,7 @@ assert.match(shell,/if \(QUARANTINED_OUTDOOR_TARGETS\.has\(target\)\) \{[\s\S]*o
 assert.match(shell,/outdoorTile\.removeAttribute\('data-go'\)/);
 assert.match(shell,/originalShow\.call\(win, 'outdoor-build-live'\)/);
 
-assert.match(shell,/UNRESOLVED · CURRENT MODEL MISMATCH/);
+assert.match(shell,/STORE BUDGETARY Q/);
 assert.match(shell,/PAYMENT<\/b><span>NOT AVAILABLE \/ NOT RECORDED/);
 assert.match(shell,/PRODUCTION RELEASE<\/b><span>NOT ESTABLISHED/);
 assert.match(shell,/CYCLE START<\/b><span>NOT AUTHORIZED/);
@@ -141,7 +149,7 @@ assert.match(shell,/ensureProjectJourneyPage\('proof-terms'/);
 assert.match(shell,/outdoor: Object\.freeze\(\{[\s\S]*store:'proof-store'[\s\S]*record:'proof-record'/);
 assert.match(shell,/if \(activeJourneyProject !== nextJourneyProject\) proofHandoff = null/,'project switch does not clear current handoff authority');
 assert.match(shell,/const navButton = event\.target\.closest\?\.\('\.recovery-nav button\[data-journey-stage\]'\)[\s\S]*event\.preventDefault\(\);[\s\S]*event\.stopImmediatePropagation\(\);[\s\S]*showMappedProjectStage\(activeJourneyProject, stage\);/,'project nav can still fall through to another project');
-assert.match(shell,/src="three-frames\.html\?v=8fe09454"/);
+assert.match(shell,/src="three-frames\.html\?v=60fc6589"/);
 assert.match(shell,/src="stb-outdoor-bench-leg-0\.1\.html\?v=dcefd0aa"/);
 
 console.log('PASS · current five-project Store convergence and legacy Outdoor quarantine');
