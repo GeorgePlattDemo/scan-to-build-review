@@ -1582,8 +1582,25 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         +'<div><b>READY</b><span>NOT RECORDED</span></div>'
       +'</div>'
       +'<div class="proof-gap"><b>NO BLOOD ON WOOD.</b>Network presence, a project definition, a Store support statement, or a budgetary model does not create local motion authority.</div>'
-      +'<div class="proof-nav"><button type="button" data-proof-library>← PROJECT LIBRARY</button><button type="button" data-proof-go="proof-accept">← ACCEPT / PAY</button><button class="next" type="button" data-proof-go="proof-record">CONTINUE → HANDOFF / RECORD</button></div>',
+      +'<div class="proof-nav"><button type="button" data-proof-library>← PROJECT LIBRARY</button><button type="button" data-proof-go="proof-accept">← ACCEPT / PAY</button><button class="next" id="proof-yard-next" type="button" data-proof-go="proof-record">CONTINUE → HANDOFF / RECORD</button></div>',
       '<p class="goal">Physical events remain null</p><div class="row"><b>No release</b><span>Reference continuity is not fabrication authority.</span></div><div class="row"><b>Cycle Start remains local</b><span>Machine-local authority stays local.</span></div>'
+    );
+
+    ensureProjectJourneyPage('proof-terms',
+      '<p class="stage-tag">TERMS</p><h1>TERMS · COMMERCIAL PATH</h1>'
+      +'<p class="sub">The confirmed definition and Store answer remain identified. Commercial events stay separate, and incomplete pricing stays incomplete.</p>'
+      +'<div class="proof-actor-grid">'
+        +'<div><b>JOB</b><span id="proof-terms-job">—</span></div>'
+        +'<div><b>VERSION</b><span id="proof-terms-version">—</span></div>'
+        +'<div><b>REFERENCE MATERIAL VALUE</b><span id="proof-terms-material">—</span></div>'
+        +'<div><b>COMBINED COMMERCIAL PRICE</b><span>NOT COMPLETE</span></div>'
+        +'<div><b>OFFER VALIDITY</b><span>NOT ESTABLISHED</span></div>'
+        +'<div><b>PAYMENT</b><span>NOT AVAILABLE / NOT RECORDED</span></div>'
+      +'</div>'
+      +'<div class="proof-gap"><b>TERMS REMAIN REFERENCE-ONLY.</b>The current Start Your Own class does not publish the processing / fulfillment recovery required to form a complete commercial price. No acceptance, payment, allocation, release, or fabrication event is invented to make the path look complete.</div>'
+      +'<div class="band"><b>One version, one answer.</b> A later project change makes a new version and requires a new Store answer. Terms never rewrite the confirmed definition.</div>'
+      +'<div class="proof-nav"><button type="button" data-proof-library>← PROJECT LIBRARY</button><button type="button" data-proof-go="proof-yard">← STORE / YARD</button><button class="next" type="button" data-proof-go="proof-record">CONTINUE → HANDOFF / RECORD</button></div>',
+      '<p class="goal">Commercial truth stays separate</p><div class="row"><b>Price gap stays visible</b><span>No invented recovery or offer.</span></div><div class="row"><b>Version stays fixed</b><span>Terms may answer the version; they may not rewrite it.</span></div>'
     );
 
     ensureProjectJourneyPage('proof-record',
@@ -1605,7 +1622,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       const payload=proofHandoff.payload||{};
       const version=proofHandoff.storeHandoff?.versionId||payload.id||payload.versionId||payload.normalizedPart?.versionId||'IDENTIFIED VERSION';
       const job=proofHandoff.job||'PROOF JOB';
-      [['proof-store-job',job],['proof-store-version',version],['proof-record-job',job],['proof-record-version',version]].forEach(([id,value])=>{
+      [['proof-store-job',job],['proof-store-version',version],['proof-terms-job',job],['proof-terms-version',version],['proof-record-job',job],['proof-record-version',version]].forEach(([id,value])=>{
         const el=doc.getElementById(id); if(el)el.textContent=String(value);
       });
       const title=doc.getElementById('proof-store-title');
@@ -1618,6 +1635,12 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       if(materialValue)materialValue.textContent=materialResolution?.status==='MAPPED' && Number.isFinite(Number(materialResolution.materialTotal))
         ? '$'+Number(materialResolution.materialTotal).toFixed(2)
         : 'NOT ESTABLISHED';
+      const termsMaterial=doc.getElementById('proof-terms-material');
+      if(termsMaterial)termsMaterial.textContent=materialResolution?.status==='MAPPED' && Number.isFinite(Number(materialResolution.materialTotal))
+        ? '$'+Number(materialResolution.materialTotal).toFixed(2)+' material'
+        : 'NOT ESTABLISHED';
+      const yardNext=doc.getElementById('proof-yard-next');
+      if(yardNext)yardNext.textContent=proofHandoff?.source==='start-own'?'CONTINUE → TERMS':'CONTINUE → HANDOFF / RECORD';
       if(materialSource)materialSource.textContent=materialResolution?.source
         ? 'Store Zero catalog '+materialResolution.source.clock+' · '+String(materialResolution.source.pin).slice(0,12)+'…'
         : 'Store Zero catalog · exact project material mapping not carried here';
@@ -1637,6 +1660,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         if(proofHandoff?.source==='start-own'){
           selectJourneyProject('start-own');
           originalShow.call(win,'start-own-live');
+          setTimeout(() => showStartOwnStage('bench'),0);
         } else if(proofHandoff?.source==='outdoor'){
           selectJourneyProject('outdoor');
           originalShow.call(win,'outdoor-build-live');
@@ -1649,7 +1673,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         const expectedSource = activeJourneyProject === 'start-own' ? 'start-own' : (activeJourneyProject === 'outdoor' ? 'outdoor' : null);
         if(!expectedSource || proofHandoff?.source !== expectedSource) return;
         syncProofHandoff();
-        originalShow.call(win,go.dataset.proofGo);
+        let target=go.dataset.proofGo;
+        if(proofHandoff?.source==='start-own' && target==='proof-record' && go.closest('#proof-yard')) target='proof-terms';
+        originalShow.call(win,target);
       }
     }, true);
 
@@ -1924,7 +1950,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         review:'proof-store',
         request:'proof-accept',
         yard:'proof-yard',
-        terms:'proof-yard',
+        terms:'proof-terms',
         recap:'proof-record',
         record:'proof-record'
       }),
@@ -1986,7 +2012,22 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
           button.textContent = button.dataset.defaultLabel;
           button.hidden = false;
         });
-        if (['alcove','start-own','outdoor'].includes(activeJourneyProject)) {
+        if (activeJourneyProject === 'start-own') {
+          ['alcove-review','recap'].forEach(target => {
+            const button = nav.querySelector('button[data-go="'+target+'"]');
+            if (button) button.hidden = true;
+          });
+          const storeButton = nav.querySelector('button[data-go="store"]');
+          const requestButton = nav.querySelector('button[data-go="request"]');
+          const yardButton = nav.querySelector('button[data-go="yard"]');
+          const termsButton = nav.querySelector('button[data-go="terms"]');
+          const recordButton = nav.querySelector('button[data-go="record"]');
+          if (storeButton) storeButton.textContent = 'Store Answer';
+          if (requestButton) requestButton.textContent = 'Accept / Pay';
+          if (yardButton) yardButton.textContent = 'Store / Yard';
+          if (termsButton) termsButton.textContent = 'Terms';
+          if (recordButton) recordButton.textContent = 'Handoff / Record';
+        } else if (['alcove','outdoor'].includes(activeJourneyProject)) {
           ['alcove-review','terms','recap'].forEach(target => {
             const button = nav.querySelector('button[data-go="'+target+'"]');
             if (button) button.hidden = true;
@@ -2084,6 +2125,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     }
 
     function showMappedProjectStage(projectId, stage) {
+      if (projectId === 'start-own' && (stage === 'scan' || stage === 'configure')) {
+        originalShow.call(win,'start-own-live');
+        setTimeout(() => showStartOwnStage(stage === 'configure' ? 'bench' : 'intent'),0);
+        return true;
+      }
       if (projectId === 'alcove') {
         const customerStage = {
           scan:'scan',
