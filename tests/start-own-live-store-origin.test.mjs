@@ -60,7 +60,7 @@ assert.match(surface,/CONFIRM &amp; SEND TO STORE ZERO →/);
 assert.match(surface,/id="stb-bench-dynamic-geometry"/);
 
 // Host carries one definition through intent, bench, Store, Terms and record.
-assert.match(shell,/three-frames\.html\?v=8fe09454/);
+assert.match(shell,/three-frames\.html\?v=60fc6589/);
 assert.match(shell,/const parentLengthIn = 60;/);
 assert.match(shell,/parentLengthIn:parentLengthIn/);
 assert.match(shell,/const spotDemand =/);
@@ -75,9 +75,9 @@ assert.match(shell,/ensureProjectJourneyPage\('proof-terms'/);
 assert.match(shell,/terms:'proof-terms'/);
 assert.match(shell,/target==='proof-record' && go\.closest\('#proof-yard'\)\) target='proof-terms'/);
 assert.match(shell,/setTimeout\(\(\) => showStartOwnStage\('bench'\),0\)/);
-assert.match(shell,/COMBINED COMMERCIAL PRICE<\/b><span>NOT COMPLETE/);
+assert.match(shell,/STORE BUDGETARY Q<\/b><span id="proof-store-q"/);
 assert.match(shell,/PAYMENT<\/b><span>NOT AVAILABLE \/ NOT RECORDED/);
-assert.match(shell,/START-OWN-CLASS-SCOPED-RECOVERY-NOT-PUBLISHED/);
+assert.equal(shell.includes('START-OWN-CLASS-SCOPED-RECOVERY-NOT-PUBLISHED'),false);
 assert.equal(shell.includes('60-in customer board'),false);
 assert.equal(shell.includes('photo, board, or file you already have'),false);
 assert.equal(shell.includes('parentLengthIn = 72'),false);
@@ -86,7 +86,25 @@ assert.equal(shell.includes('parentLengthIn = 72'),false);
 const sandbox = {window:{}};
 vm.runInNewContext(contractSource,sandbox,{filename:'stb-store-handoff-contract.js'});
 const contract = sandbox.window.STBStoreHandoffContract;
-assert.equal(contract.version,'0.5');
+assert.equal(contract.version,'0.6');
+assert.equal(typeof contract.quoteStartOwnBoardSequence,'function');
+const startQuote = contract.quoteStartOwnBoardSequence({
+  material:3.13,
+  definedWorkpieceLengthIn:60,
+  sawCuts:3,
+  sawAngleDeg:30,
+  drillCycles:2,
+  widthIn:3.5
+});
+assert.equal(startQuote.status,'BUDGETARY_ESTIMATE');
+assert.equal(startQuote.material,3.13);
+assert.equal(startQuote.cellRecovery,51.79);
+assert.equal(startQuote.total,54.92);
+assert.equal(startQuote.cycle.T_job_min,10.077);
+assert.equal(startQuote.engine.id,'STB-STORE-ZERO-PRICE-1');
+assert.equal(startQuote.engine.version,'0.2.2');
+assert.equal(startQuote.source.pin,'c51f5f27af9a77bc7581c5d42c56f0a1ed0b650a');
+
 
 const legacyPart = {
   stockClass:'2x4',finishedLength:15.5,quantity:8,endCondition:'angled',straightCut:true,
