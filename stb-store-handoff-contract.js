@@ -485,24 +485,10 @@
 
   function comparisonDemand(part){
     if(!part) return null;
-    return Object.freeze({
-      materialDemand: Object.freeze({stockClass:String(part.stockClass || '')}),
-      operationDemand: Object.freeze([
-        Object.freeze({kind:'STRAIGHT_CUT', required:part.straightCut !== false}),
-        Object.freeze({
-          kind:'ANGLED_CUT',
-          endCondition:String(part.endCondition || ''),
-          angleDegrees:Number(part.angleDegrees),
-          angleReference:String(part.angleReference || ''),
-          cutPlane:String(part.cutPlane || ''),
-          endIdentity:String(part.endIdentity || ''),
-          endRelation:String(part.endRelation || ''),
-          lengthDatum:String(part.lengthDatum || '')
-        })
-      ]),
-      quantity:Number(part.quantity),
-      requiredGeometryDatumFacts:Object.freeze({
-        finishedLength:Number(part.finishedLength),
+    var operations=[
+      Object.freeze({kind:'STRAIGHT_CUT', required:part.straightCut !== false}),
+      Object.freeze({
+        kind:'ANGLED_CUT',
         endCondition:String(part.endCondition || ''),
         angleDegrees:Number(part.angleDegrees),
         angleReference:String(part.angleReference || ''),
@@ -511,6 +497,40 @@
         endRelation:String(part.endRelation || ''),
         lengthDatum:String(part.lengthDatum || '')
       })
+    ];
+    var spot=part.spotDemand && typeof part.spotDemand==='object' ? part.spotDemand : null;
+    if(spot && spot.required!==false){
+      operations.push(Object.freeze({
+        kind:'DRILL',
+        mode:String(spot.mode || 'SPOT_ON_LOCATION'),
+        required:true,
+        countPerPart:Number.isFinite(Number(spot.countPerPart)) ? Number(spot.countPerPart) : null,
+        locationRule:String(spot.locationRule || ''),
+        locationAlongLengthIn:spot.locationAlongLengthIn == null ? null : Number(spot.locationAlongLengthIn),
+        acrossWidthRule:String(spot.acrossWidthRule || ''),
+        derivation:freezeCopy(spot.derivation || null),
+        toolingStatus:String(spot.toolingStatus || '')
+      }));
+    }
+    var geometry={
+      finishedLength:Number(part.finishedLength),
+      endCondition:String(part.endCondition || ''),
+      angleDegrees:Number(part.angleDegrees),
+      angleReference:String(part.angleReference || ''),
+      cutPlane:String(part.cutPlane || ''),
+      endIdentity:String(part.endIdentity || ''),
+      endRelation:String(part.endRelation || ''),
+      lengthDatum:String(part.lengthDatum || '')
+    };
+    if(part.parentLengthIn != null && Number.isFinite(Number(part.parentLengthIn))){
+      geometry.parentLengthIn=Number(part.parentLengthIn);
+    }
+    if(spot) geometry.spotDemand=freezeCopy(spot);
+    return Object.freeze({
+      materialDemand: Object.freeze({stockClass:String(part.stockClass || '')}),
+      operationDemand: Object.freeze(operations),
+      quantity:Number(part.quantity),
+      requiredGeometryDatumFacts:Object.freeze(geometry)
     });
   }
 

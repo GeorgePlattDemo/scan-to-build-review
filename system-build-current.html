@@ -13,7 +13,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 <body>
 <iframe id="stb-current" title="Scan-to-Build System" src="system-build-front-door-0.5.html?v=5ac9677b"></iframe>
 <script src="stb-canonical-journey.js?v=e0619841"></script>
-<script src="stb-store-handoff-contract.js?v=8453e493"></script>
+<script src="stb-store-handoff-contract.js?v=6be08595"></script>
 <script src="stb-user-defined-board-store.js?v=1c99c380"></script>
 <script src="store-zero-canonical-doctrine.js?v=65366367"></script>
 <script>
@@ -148,7 +148,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         if (startOwnTile) {
           startOwnTile.removeAttribute('data-go');
           startOwnTile.dataset.startOwnArtifact = 'three-frames.html';
-          startOwnTile.title = 'Start Your Own · User 1 · three-frame production-window proof';
+          startOwnTile.title = 'Start Your Own · User 1 · definition to doing';
 
           let startOwnPage = doc.getElementById('start-own-live');
           if (!startOwnPage) {
@@ -161,7 +161,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   id="start-own-proof-frame"
                   class="start-own-shell-frame"
                   title="Start Your Own · User 1 · definition to doing"
-                  src="three-frames.html?v=0bb716c2"
+                  src="three-frames.html?v=9f0bf567"
                 ></iframe>
               </div>
             `;
@@ -170,7 +170,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
           const liveFrame = startOwnPage.querySelector('#start-own-proof-frame');
           if (liveFrame && !String(liveFrame.getAttribute('src')||'').includes('three-frames.html')) {
-            liveFrame.src = 'three-frames.html?v=0bb716c2';
+            liveFrame.src = 'three-frames.html?v=9f0bf567';
           }
           const banner = startOwnPage.querySelector('[data-proof-job="1"]');
           if (banner && /generic floor/.test(banner.textContent||'')) {
@@ -298,96 +298,281 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
               const childDoc = proofFrame.contentDocument;
               if (!childDoc) return;
               const benchButton = childDoc.querySelector('.stb-bench-button');
+              const lengthInput = childDoc.getElementById('stb-user1-length');
+              const angleInput = childDoc.getElementById('stb-user1-angle');
+              const lineageLine = childDoc.getElementById('stb-user1-lineage');
+              const glossaryStatus = childDoc.getElementById('stb-store-glossary-status');
+              const glossaryChoices = Array.from(childDoc.querySelectorAll('[data-store-size-key]'));
+              const boardStore = window.STBUserDefinedBoardStore || win.STBUserDefinedBoardStore || null;
+              const catalogSource = storeHandoffContract?.startOwnStoreCatalog || null;
+              let definitionRevision = 0;
+              let currentUser1Definition = null;
+              let lengthEdited = false;
+              let angleEdited = false;
+
+              const formatInches = value => {
+                const n = Number(value);
+                if (!Number.isFinite(n)) return 'unresolved';
+                const eighths = Math.round(n * 8);
+                const whole = Math.trunc(eighths / 8);
+                const rem = Math.abs(eighths % 8);
+                const fraction = ['', '⅛', '¼', '⅜', '½', '⅝', '¾', '⅞'][rem];
+                return (whole ? String(whole) : (rem ? '' : '0')) + fraction + ' in';
+              };
+
+              const syncStoreGlossary = () => {
+                if (!storeHandoffContract || typeof storeHandoffContract.startOwnOfferings !== 'function') {
+                  if (glossaryStatus) glossaryStatus.textContent = 'Current Store material truth is unavailable. No material choice is being promoted.';
+                  if (benchButton) benchButton.disabled = true;
+                  return false;
+                }
+                let backed = 0;
+                glossaryChoices.forEach(choice => {
+                  const sizeKey = String(choice.dataset.storeSizeKey || '');
+                  const offerings = storeHandoffContract.startOwnOfferings(sizeKey);
+                  const available = Array.isArray(offerings) && offerings.length > 0;
+                  choice.dataset.storeBacked = available ? 'true' : 'false';
+                  choice.dataset.storeCatalogPin = String(catalogSource?.pin || '');
+                  choice.dataset.storeOfferingCount = String(offerings?.length || 0);
+                  choice.hidden = !available;
+                  if (available) backed += 1;
+                });
+                if (glossaryStatus) {
+                  glossaryStatus.textContent = backed === glossaryChoices.length
+                    ? 'These material choices come from the current Store catalog.'
+                    : backed+' current Store material choices are available here.';
+                }
+                return true;
+              };
+
+              const syncUser1Definition = reason => {
+                const finishedLengthIn = Number(lengthInput?.value);
+                const angleDeg = Number(angleInput?.value);
+                const partQty = 2;
+                const parentLengthIn = 60;
+                if (!storeHandoffContract || !Number.isFinite(finishedLengthIn) || finishedLengthIn <= 0 || !Number.isFinite(angleDeg) || angleDeg < 0) {
+                  currentUser1Definition = null;
+                  if (benchButton) benchButton.disabled = true;
+                  return null;
+                }
+                const offerings = storeHandoffContract.startOwnOfferings('2x4');
+                if (!Array.isArray(offerings) || !offerings.length) {
+                  currentUser1Definition = null;
+                  if (benchButton) benchButton.disabled = true;
+                  return null;
+                }
+                const centerSpotIn = Number((finishedLengthIn / 2).toFixed(6));
+                const storeMaterialAlternative = storeHandoffContract.resolveStartOwnMaterial({
+                  sizeKey:'2x4',
+                  sequence:'CROSSCUT_HOLD',
+                  parts:[{name:'x-brace',len:finishedLengthIn,wid:3.5,qty:partQty}]
+                });
+                const physicalDemand = {
+                  stockClass:'2x4',
+                  parentLengthIn:parentLengthIn,
+                  finishedLength:finishedLengthIn,
+                  quantity:partQty,
+                  endCondition:angleDeg ? 'angled' : 'square',
+                  straightCut:false,
+                  angleDegrees:angleDeg,
+                  angleReference:angleEdited ? 'CUSTOMER_INPUT' : 'USER_1_INTENT_IMAGE',
+                  cutPlane:'miter-face',
+                  endIdentity:'both',
+                  endRelation:'parallel',
+                  lengthDatum:'long-long-outer-edge',
+                  spotDemand:{
+                    required:true,
+                    mode:'SPOT_ON_LOCATION',
+                    countPerPart:1,
+                    locationRule:'CENTERED_ON_PART',
+                    locationAlongLengthIn:centerSpotIn,
+                    acrossWidthRule:'CENTERED_ON_WIDE_FACE',
+                    derivation:{
+                      basis:'DERIVED',
+                      formula:'finishedLengthIn / 2',
+                      input:{finishedLengthIn:finishedLengthIn},
+                      output:{locationAlongLengthIn:centerSpotIn}
+                    },
+                    toolingStatus:'UNRESOLVED'
+                  }
+                };
+                definitionRevision += 1;
+                currentUser1Definition = {
+                  definitionId:'SYO-USER1-XBRACE-0.1',
+                  versionId:'SYO-USER1-XBRACE-0.1-r'+definitionRevision,
+                  material:{
+                    origin:'STORE_ZERO',
+                    stockClass:'2x4',
+                    stockClassAuthority:{
+                      repository:catalogSource?.repository || null,
+                      file:catalogSource?.file || null,
+                      pin:catalogSource?.pin || null
+                    },
+                    definedWorkpieceLengthIn:{
+                      value:parentLengthIn,
+                      basis:'EXISTING_PROJECT_FACT'
+                    },
+                    mappedStoreSkus:offerings.map(row => row.storeSku)
+                  },
+                  intent:{
+                    partQty:{value:partQty,basis:'USER_1_INTENT_IMAGE'},
+                    finishedLengthIn:{value:finishedLengthIn,basis:lengthEdited ? 'CUSTOMER_INPUT' : 'USER_1_INTENT_IMAGE'},
+                    angleDeg:{value:angleDeg,basis:angleEdited ? 'CUSTOMER_INPUT' : 'USER_1_INTENT_IMAGE'},
+                    endIdentity:{value:'both',basis:'USER_1_INTENT'},
+                    endRelation:{value:'parallel',basis:'USER_1_INTENT'},
+                    cutPlane:{value:'miter-face',basis:'USER_1_INTENT'},
+                    lengthDatum:{value:'long-long-outer-edge',basis:'USER_1_INTENT'},
+                    centerSpot:{value:'one-per-part',basis:'USER_1_INTENT'}
+                  },
+                  derived:{
+                    centerSpotAlongLengthIn:{
+                      value:centerSpotIn,
+                      basis:'DERIVED',
+                      formula:'finishedLengthIn / 2',
+                      input:{finishedLengthIn:finishedLengthIn}
+                    }
+                  },
+                  physicalDemand:physicalDemand,
+                  storeMaterialAlternative:storeMaterialAlternative,
+                  storeReference:{
+                    unresolvedConditions:[
+                      'CENTER_SPOT_TOOLING_ENVELOPE_UNRESOLVED',
+                      'DIMENSIONAL_MITER_SERVICE_RECOVERY_UNRESOLVED'
+                    ]
+                  },
+                  lineage:{
+                    reason:String(reason || 'SYNC'),
+                    storeCatalogPin:catalogSource?.pin || null
+                  },
+                  physicalExecutionAuthorized:false
+                };
+                try { win.localStorage.setItem('stb-start-own-user1-definition',JSON.stringify(currentUser1Definition)); } catch (_) {}
+                if (lineageLine) {
+                  lineageLine.textContent = 'Center spot = '+finishedLengthIn+' ÷ 2 = '+centerSpotIn+' in from either finished end.';
+                }
+                if (benchButton) benchButton.disabled = false;
+                return currentUser1Definition;
+              };
+
+              const renderUser1Bench = (definition, workpieceSequence, handoff) => {
+                const setText = (id,value) => {
+                  const el = childDoc.getElementById(id);
+                  if (el) el.textContent = value;
+                };
+                const length = Number(definition.intent.finishedLengthIn.value);
+                const angle = Number(definition.intent.angleDeg.value);
+                const retained = workpieceSequence?.rows?.[0]?.remainingIn;
+                const holdIn = Number(workpieceSequence?.holdIn || boardStore?.holdIn || 24);
+                const spare = Number.isFinite(retained) ? Number((retained - holdIn).toFixed(6)) : null;
+                const sequencePass = workpieceSequence?.status === 'SEQUENCED';
+                setText('stb-bench-part1-dim',length+' in');
+                setText('stb-bench-part2-dim',length+' in');
+                setText('stb-bench-length-spec',length+' in');
+                setText('stb-bench-angle-spec',angle+'°');
+                setText('stb-bench-spare-label',Number.isFinite(spare) ? formatInches(spare)+' spare' : 'spare unresolved');
+                setText('stb-bench-remain-label',Number.isFinite(retained)
+                  ? formatInches(retained)+' remains · '+formatInches(holdIn)+' retained-control minimum · '+formatInches(spare)+' spare'
+                  : 'retained-control sequence unresolved');
+                setText('stb-bench-control-copy',sequencePass
+                  ? 'The 60-in workpiece leaves '+formatInches(retained)+' after the three cut kerfs; '+formatInches(holdIn)+' is the current retained-control minimum.'
+                  : 'The same 60-in workpiece does not yet form a valid retained-control sequence.');
+                setText('stb-bench-cut-copy','cut — a '+angle+'° angle · three cuts make the two parts (cut 2 is shared)');
+                const svg = childDoc.getElementById('stb-user1-bench-svg');
+                if (svg) {
+                  svg.setAttribute('aria-label','One five-foot two-by-four. Three '+angle+'-degree cuts make two '+length+'-inch parts. One centered spot per part is derived at '+definition.derived.centerSpotAlongLengthIn.value+' inches from either finished end. '+(Number.isFinite(retained)?formatInches(retained)+' remains.':'Retained stock is unresolved.'));
+                }
+                const answerLine = childDoc.getElementById('stb-system-answer');
+                if (answerLine) {
+                  const material = definition.storeMaterialAlternative;
+                  const materialText = material && material.status === 'MAPPED'
+                    ? ' · Store material alternative: '+material.stockLengthIn+' in 2×4 · $'+Number(material.materialTotal||0).toFixed(2)+' material'
+                    : ' · Store material alternative unresolved';
+                  const drillCarried = Array.isArray(handoff?.operationDemand)
+                    && handoff.operationDemand.some(op => op && op.kind === 'DRILL' && op.countPerPart === 1);
+                  answerLine.innerHTML = '<b>STORE</b> · '
+                    + (sequencePass
+                        ? 'the same 60-in defined workpiece passes the current 24-in retained-control sequence'
+                        : 'the same 60-in defined workpiece does not yet pass the retained-control sequence')
+                    + materialText
+                    + ' · '+angle+'° end-cut demand'
+                    + (drillCarried ? ' and two centered drill spots are carried in the same Store handoff' : ' is carried; centered drill demand is not yet structurally present')
+                    + ' · drill tooling and service recovery remain unresolved.';
+                }
+              };
+
+              syncStoreGlossary();
+              syncUser1Definition('INITIAL');
+
+              if (lengthInput && !lengthInput.dataset.definitionWired) {
+                lengthInput.dataset.definitionWired = 'true';
+                lengthInput.addEventListener('input', () => {
+                  lengthEdited = true;
+                  syncUser1Definition('CUSTOMER_INPUT');
+                });
+              }
+              if (angleInput && !angleInput.dataset.definitionWired) {
+                angleInput.dataset.definitionWired = 'true';
+                angleInput.addEventListener('input', () => {
+                  angleEdited = true;
+                  syncUser1Definition('CUSTOMER_INPUT');
+                });
+              }
+
               if (benchButton && !benchButton.dataset.hostBenchWired) {
                 benchButton.dataset.hostBenchWired = 'true';
                 benchButton.addEventListener('click', () => {
                   const bench = childDoc.getElementById('stb-user1-bench');
+                  const definition = syncUser1Definition('BENCH_HANDOFF');
                   const answerLine = childDoc.getElementById('stb-system-answer');
+                  if (!definition || !boardStore) {
+                    if (answerLine) answerLine.innerHTML = '<b>STORE</b> · the current definition cannot be evaluated without current Store and machine truth.';
+                    bench?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    return;
+                  }
+                  const demand = definition.physicalDemand;
                   const storeSpec = {
-                    sizeKey:'2x4',
-                    finishedLengthIn:16,
-                    partQty:2,
-                    angleDeg:30,
-                    cutPlane:'miter-face',
-                    endIdentity:'both',
-                    endRelation:'parallel',
-                    lengthDatum:'long-long-outer-edge'
+                    sizeKey:demand.stockClass,
+                    finishedLengthIn:demand.finishedLength,
+                    partQty:demand.quantity,
+                    angleDeg:demand.angleDegrees,
+                    cutPlane:demand.cutPlane,
+                    endIdentity:demand.endIdentity,
+                    endRelation:demand.endRelation,
+                    lengthDatum:demand.lengthDatum
                   };
-                  const physicalDemand = {
-                    stockClass:'2x4',
-                    finishedLength:16,
-                    quantity:2,
-                    endCondition:'angled',
-                    straightCut:false,
-                    angleDegrees:30,
-                    angleReference:'USER_1_INTENT_IMAGE',
-                    cutPlane:'miter-face',
-                    endIdentity:'both',
-                    endRelation:'parallel',
-                    lengthDatum:'long-long-outer-edge'
-                  };
-                  const boardStore = window.STBUserDefinedBoardStore || win.STBUserDefinedBoardStore || null;
-                  const customerSequence = boardStore && typeof boardStore.sequenceCrosscuts === 'function'
+                  const workpieceSequence = typeof boardStore.sequenceCrosscuts === 'function'
                     ? boardStore.sequenceCrosscuts({
-                        parentLengthIn:60,
-                        parts:[16,16],
-                        establishAngledEnd:true
+                        parentLengthIn:demand.parentLengthIn,
+                        parts:Array.from({length:demand.quantity}, () => demand.finishedLength),
+                        establishAngledEnd:demand.angleDegrees !== 0
                       })
                     : null;
-                  const capability = boardStore && typeof boardStore.evaluateUserDefinedBoardJob === 'function'
+                  const capability = typeof boardStore.evaluateUserDefinedBoardJob === 'function'
                     ? boardStore.evaluateUserDefinedBoardJob(storeSpec)
                     : null;
-                  const storeMaterial = storeHandoffContract && typeof storeHandoffContract.resolveStartOwnMaterial === 'function'
-                    ? storeHandoffContract.resolveStartOwnMaterial({
-                        sizeKey:'2x4',
-                        sequence:'CROSSCUT_HOLD',
-                        parts:[{name:'x-brace',len:16,wid:3.5,qty:2}]
-                      })
-                    : null;
                   const handoff = createComparisonStoreHandoff('start-own',{
-                    id:'SYO-USER1-XBRACE-0.1',
-                    physicalDemand:physicalDemand,
-                    storeReference:{
-                      unresolvedConditions:[
-                        'CENTER_SPOT_TOOLING_ENVELOPE_UNRESOLVED',
-                        'DIMENSIONAL_MITER_SERVICE_RECOVERY_UNRESOLVED'
-                      ]
-                    }
+                    id:definition.definitionId,
+                    versionId:definition.versionId,
+                    physicalDemand:demand,
+                    sourceAuthority:{
+                      kind:'STORE-ORIGIN USER-DEFINED WORK',
+                      artifact:'three-frames.html',
+                      storeCatalog:definition.material.stockClassAuthority,
+                      definedWorkpieceLengthIn:definition.material.definedWorkpieceLengthIn
+                    },
+                    storeReference:definition.storeReference
                   });
                   retainComparisonStoreHandoff('start-own',handoff);
                   try {
                     win.localStorage.setItem('stb-start-own-user1-bench',JSON.stringify({
-                      definitionId:'SYO-USER1-XBRACE-0.1',
-                      customerIntent:{
-                        stock:'2x4',
-                        parentLengthIn:60,
-                        parts:2,
-                        finishedLengthIn:16,
-                        angleDeg:30,
-                        centerSpots:2
-                      },
-                      storeSpec:storeSpec,
-                      physicalDemand:physicalDemand,
-                      customerBoardSequence:customerSequence,
+                      definition:definition,
+                      workpieceSequence:workpieceSequence,
                       capability:capability && capability.capability ? capability.capability : null,
-                      storeMaterialAlternative:storeMaterial,
                       handoff:handoff,
                       physicalExecutionAuthorized:false
                     }));
                   } catch (_) {}
-                  if (answerLine) {
-                    const sequencePass = customerSequence && customerSequence.status === 'SEQUENCED';
-                    const materialMapped = storeMaterial && storeMaterial.status === 'MAPPED';
-                    const materialText = materialMapped
-                      ? ' · if Store supplies stock: '+storeMaterial.stockLengthIn+' in 2×4 · $'+Number(storeMaterial.materialTotal||0).toFixed(2)+' material'
-                      : '';
-                    answerLine.innerHTML = '<b>STORE</b> · '
-                      + (sequencePass
-                          ? '60-in customer board passes the current 24-in retained-control sequence'
-                          : 'current cutoff-control check is not complete')
-                      + materialText
-                      + ' · 30° end cuts and two center spots carried into the Store handoff · drill tooling and service recovery still unresolved.';
-                  }
+                  renderUser1Bench(definition,workpieceSequence,handoff);
                   bench?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 });
               }
@@ -492,7 +677,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         var projectId = source === 'start-own' ? 'start-own' : 'outdoor-build';
         var projectClass = source === 'start-own' ? 'USER_DEFINED_BOARD' : 'BOUNDED_SOURCE_BACKED';
         var sourceAuthority = source === 'start-own'
-          ? {kind:'USER-DEFINED',artifact:'three-frames.html'}
+          ? (payload.sourceAuthority || {kind:'USER-DEFINED',artifact:'three-frames.html'})
           : {kind:'BOUNDED SOURCE-BACKED',artifact:'stb-outdoor-bench-leg-0.1.html',detail:payload.sourceAuthority||null};
         if(payload.physicalDemand){
           physicalDemand = payload.physicalDemand;
@@ -520,7 +705,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             projectId:projectId,
             projectClass:projectClass,
             definitionId:definitionId,
-            versionId:definitionId,
+            versionId:payload.versionId || definitionId,
             physicalDemand:physicalDemand,
             sourceAuthority:sourceAuthority,
             unresolvedConditions:source === 'start-own'
@@ -630,7 +815,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
           <p class="dim">Choose doors, for example, and the project may also need to know the door type, hardware path, clearances, and required machining.</p>
           <p class="dim">Choose no doors and those questions disappear. <b style="color:var(--text)">No choice, no unnecessary question.</b></p>
           <h3>If nothing here is your thing</h3>
-          <p class="dim"><b style="color:var(--text)">Start your own stays first.</b> Bring the need, measurements, sketch, drawing, photo, board, or file you already have. We keep the source, show what can be defined, and leave what is still missing visible.</p>
+          <p class="dim"><b style="color:var(--text)">Start your own stays first.</b> Bring the need, measurements, sketch, drawing, photo, or file you already have. We keep the source, show what can be defined, and leave what is still missing visible.</p>
           <p class="dim">When the required responsibilities are accounted for, the project can ask the Store a clear question.</p>
         `);
       }
