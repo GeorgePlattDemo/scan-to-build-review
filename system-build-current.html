@@ -178,7 +178,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             if (!storeLine) banner.insertAdjacentHTML('beforeend', '<p id="proof-job1-store" class="dim">Store: waiting on a complete definition.</p>');
           }
           const proofFrame = startOwnPage.querySelector('#start-own-proof-frame');
-          let showStartOwnStage = () => {};
+          let pendingStartOwnStage = 'intent';
+          let showStartOwnStage = stage => { pendingStartOwnStage = stage === 'bench' ? 'bench' : 'intent'; };
           const proofDecisions = new Set();
           let proofActions = 0;
           const classifyStartOwnDecision = target => {
@@ -375,7 +376,10 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 if (bench) syncAndRender('BENCH_VIEW');
                 proofFrame.contentWindow?.scrollTo?.(0,0);
               };
-              showStartOwnStage = showStage;
+              showStartOwnStage = stage => {
+                pendingStartOwnStage = stage === 'bench' ? 'bench' : 'intent';
+                showStage(pendingStartOwnStage);
+              };
 
               const syncDefinition = reason => {
                 const finishedLengthIn = Number(lengthInput?.value);
@@ -638,7 +642,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
               syncStoreGlossary();
               syncAndRender('INITIAL');
-              showStage('intent');
+              showStage(pendingStartOwnStage);
 
               benchButton?.addEventListener('click', () => {
                 syncAndRender('BENCH_HANDOFF');
@@ -1589,6 +1593,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       +'<div class="proof-actor-grid">'
         +'<div><b>JOB</b><span id="proof-store-job">—</span></div>'
         +'<div><b>VERSION</b><span id="proof-store-version">—</span></div>'
+        +'<div><b>DEFINED WORKPIECE</b><span id="proof-store-workpiece">—</span></div>'
         +'<div><b>MATERIAL SOURCE</b><span id="proof-store-material-source">Store Zero catalog · 4402abeb6b02…</span></div>'
         +'<div><b>ECONOMICS AUTHORITY</b><span>CLASS-SCOPED · no legacy general recovery selected</span></div>'
       +'</div>'
@@ -1679,6 +1684,12 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       const title=doc.getElementById('proof-store-title');
       if(title)title.textContent='STORE ANSWER · '+job;
       const materialResolution=payload.storeReference?.materialResolution || null;
+      const definedWorkpiece=payload.definition?.material?.definedWorkpieceLengthIn?.value
+        ?? payload.sourceAuthority?.definedWorkpieceLengthIn?.value
+        ?? payload.physicalDemand?.parentLengthIn
+        ?? null;
+      const workpieceEl=doc.getElementById('proof-store-workpiece');
+      if(workpieceEl)workpieceEl.textContent=definedWorkpiece==null?'NOT CARRIED':String(definedWorkpiece)+' in · confirmed project fact';
       const materialSku=doc.getElementById('proof-store-material-sku');
       const materialValue=doc.getElementById('proof-store-material-value');
       const materialSource=doc.getElementById('proof-store-material-source');
