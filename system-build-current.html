@@ -140,7 +140,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 if (ref?.materialResolution?.status === 'MAPPED' && ref?.estimate) {
                   storeLine.textContent =
                     'Store: current c51f5f27 Stage-2 answer retained · 60-in project workpiece · '
-                    +(ref.priceCompleteness === 'PARTIAL' ? 'modeled value is partial while named conditions remain.' : 'budgetary estimate available.');
+                    +(ref.priceCompleteness === 'PARTIAL'
+                      ? 'modeled value is partial while named conditions remain.'
+                      : 'budgetary estimate available.');
                 } else {
                   storeLine.textContent = 'Store: waiting on the current identified definition.';
                 }
@@ -405,7 +407,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
               const confirmButton = childDoc.getElementById('stb-confirm-store');
               const glossaryStatus = childDoc.getElementById('stb-store-glossary-status');
               const glossaryChoices = Array.from(childDoc.querySelectorAll('[data-store-size-key]'));
-              const boardStore = window.STBUserDefinedBoardStore || win.STBUserDefinedBoardStore || null;
+              const startOwnAuthority = storeHandoffContract?.storeAuthorities?.startOwn || null;
               const catalogSource = storeHandoffContract?.startOwnStoreCatalog || null;
               let definitionRevision = 1;
               let partQty = 2;
