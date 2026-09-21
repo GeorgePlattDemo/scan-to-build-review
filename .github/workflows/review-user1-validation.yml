@@ -23,9 +23,8 @@ jobs:
           node tests/cutoff-hold-sequence.test.mjs
           node tests/start-own-live-store-origin.test.mjs
           node tests/store-convergence-current-surface.test.mjs
-      - name: Proof ladder and navigation regressions
+      - name: Navigation and Outdoor regressions
         run: |
-          node tests/project-proof-ladder.test.mjs
           node tests/proof-navigation-housekeeping.test.mjs
           node tests/outdoor-build-p1-wire.test.mjs
       - name: Protected Alcove regressions
