@@ -34,10 +34,23 @@ assert.equal(contract.storeAuthority('startOwn').legacyGeneralRecoverySelected,f
 assert.equal(contract.storeAuthority('startOwn').economicsModel,'STB-STORE-ZERO-PRICE-1');
 assert.equal(contract.storeAuthority('startOwn').economicsStatus,'BUDGETARY_ESTIMATE');
 const xBraceQ = contract.quoteStartOwnBoardSequence({
-  material:3.13,definedWorkpieceLengthIn:60,sawCuts:3,sawAngleDeg:30,drillCycles:2,widthIn:3.5
+  material:3.13,
+  definedWorkpieceLengthIn:60,
+  sawCuts:3,
+  preparationSawCuts:1,
+  sawAngleDeg:30,
+  drillCycles:0,
+  unresolvedConditions:[
+    'MITER_LIMITED_NUMERIC_ANGLE_RANGE_STAGE2_UNRESOLVED',
+    'CENTER_SPOT_TOOLING_ENVELOPE_UNRESOLVED'
+  ],
+  widthIn:3.5
 });
-assert.equal(xBraceQ.total,54.92);
-assert.equal(xBraceQ.cycle.T_job_min,10.077);
+assert.equal(xBraceQ.total,54.58);
+assert.equal(xBraceQ.cycle.T_job_min,9.867);
+assert.equal(xBraceQ.completeness,'PARTIAL');
+assert.equal(xBraceQ.operationBasis.totalModeledSawCuts,4);
+assert.equal(xBraceQ.operationBasis.drillCycles,0);
 
 assert.equal(contract.storeAuthority('windowSeat').economicsModel,'STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0.1');
 assert.equal(contract.storeAuthority('alcove').economicsModel,null);
@@ -52,7 +65,7 @@ assert.equal(shelfMaterial.status,'MAPPED');
 assert.equal(shelfMaterial.storeSku,'STB-ZERO-SPF-2X4-192-001');
 assert.equal(shelfMaterial.materialTotal,8.36);
 
-assert.match(shell,/stb-store-handoff-contract\.js\?v=d5dae9f0/);
+assert.match(shell,/stb-store-handoff-contract\.js\?v=c3d1a79e/);
 assert.match(shell,/dataset\.startOwnArtifact = 'three-frames\.html'/);
 assert.match(shell,/dataset\.outdoorBuildArtifact = 'stb-outdoor-bench-leg-0\.1\.html'/);
 assert.match(shell,/dataset\.windowSeatArtifact = 'stb-window-seat-space-utilization-0\.7\.4\.html'/);
@@ -101,6 +114,9 @@ assert.match(startOwn,/S\.handoff=\{id:id,definition:/);
 assert.match(outdoor,/STB_OUTDOOR_CONFIRMED/);
 assert.match(outdoor,/normalizedPart:normalized/);
 assert.match(shell,/createComparisonStoreHandoff\('start-own'/);
+assert.equal(shell.includes('previewFromDemand'),false,'Start Own still uses legacy preview authority');
+assert.match(shell,/const drillCycles = 0/,'unresolved spot was still priced as a generic drill cycle');
+assert.match(shell,/stbHostConfirmBound/,'host confirmation idempotence guard is missing');
 assert.match(shell,/payload\.storeReference\?\.unresolvedConditions/);
 assert.match(shell,/createComparisonStoreHandoff\('outdoor'/);
 assert.match(shell,/stb-proof-store-demand-equality/);
