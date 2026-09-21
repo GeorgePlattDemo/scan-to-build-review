@@ -724,7 +724,7 @@
     var spot=part.spotDemand && typeof part.spotDemand==='object' ? part.spotDemand : null;
     if(spot && spot.required!==false){
       operations.push(Object.freeze({
-        kind:'DRILL',
+        kind:'SPOT_ON_LOCATION',
         mode:String(spot.mode || 'SPOT_ON_LOCATION'),
         required:true,
         countPerPart:Number.isFinite(Number(spot.countPerPart)) ? Number(spot.countPerPart) : null,
@@ -747,6 +747,9 @@
     };
     if(part.parentLengthIn != null && Number.isFinite(Number(part.parentLengthIn))){
       geometry.parentLengthIn=Number(part.parentLengthIn);
+    }
+    if(part.definedWorkpieceLengthIn != null && Number.isFinite(Number(part.definedWorkpieceLengthIn))){
+      geometry.definedWorkpieceLengthIn=Number(part.definedWorkpieceLengthIn);
     }
     if(spot) geometry.spotDemand=freezeCopy(spot);
     return Object.freeze({
