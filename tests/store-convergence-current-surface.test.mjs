@@ -44,8 +44,8 @@ assert.equal(shelfMaterial.status,'MAPPED');
 assert.equal(shelfMaterial.storeSku,'STB-ZERO-SPF-2X4-192-001');
 assert.equal(shelfMaterial.materialTotal,8.36);
 
-assert.match(shell,/stb-store-handoff-contract\.js\?v=8453e493/);
-assert.match(shell,/dataset\.startOwnArtifact = 'stb-start-own-bench-leg-0\.1\.html'/);
+assert.match(shell,/stb-store-handoff-contract\.js\?v=6be08595/);
+assert.match(shell,/dataset\.startOwnArtifact = 'three-frames\.html'/);
 assert.match(shell,/dataset\.outdoorBuildArtifact = 'stb-outdoor-bench-leg-0\.1\.html'/);
 assert.match(shell,/dataset\.windowSeatArtifact = 'stb-window-seat-space-utilization-0\.7\.4\.html'/);
 
@@ -136,10 +136,12 @@ assert.match(alcoveBase,/id="review-price">\$374\.42/,'native Pine review price 
 assert.match(shell,/selectJourneyProject\('start-own'\)/);
 assert.match(shell,/selectJourneyProject\('outdoor'\)/);
 assert.match(shell,/'start-own': Object\.freeze\(\{[\s\S]*store:'proof-store'[\s\S]*record:'proof-record'/);
+assert.match(shell,/'start-own': Object\.freeze\(\{[\s\S]*terms:'proof-terms'/);
+assert.match(shell,/ensureProjectJourneyPage\('proof-terms'/);
 assert.match(shell,/outdoor: Object\.freeze\(\{[\s\S]*store:'proof-store'[\s\S]*record:'proof-record'/);
 assert.match(shell,/if \(activeJourneyProject !== nextJourneyProject\) proofHandoff = null/,'project switch does not clear current handoff authority');
 assert.match(shell,/const navButton = event\.target\.closest\?\.\('\.recovery-nav button\[data-journey-stage\]'\)[\s\S]*event\.preventDefault\(\);[\s\S]*event\.stopImmediatePropagation\(\);[\s\S]*showMappedProjectStage\(activeJourneyProject, stage\);/,'project nav can still fall through to another project');
-assert.match(shell,/src="stb-start-own-bench-leg-0\.1\.html\?v=b428c100"/);
+assert.match(shell,/src="three-frames\.html\?v=1ebd3642"/);
 assert.match(shell,/src="stb-outdoor-bench-leg-0\.1\.html\?v=dcefd0aa"/);
 
 console.log('PASS · current five-project Store convergence and legacy Outdoor quarantine');
