@@ -13,7 +13,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 <body>
 <iframe id="stb-current" title="Scan-to-Build System" src="system-build-front-door-0.5.html?v=5ac9677b"></iframe>
 <script src="stb-canonical-journey.js?v=e0619841"></script>
-<script src="stb-store-handoff-contract.js?v=8453e493"></script>
+<script src="stb-store-handoff-contract.js?v=8620a21f"></script>
 <script src="stb-user-defined-board-store.js?v=1c99c380"></script>
 <script src="store-zero-canonical-doctrine.js?v=65366367"></script>
 <script>
@@ -128,7 +128,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         });
 
         const proofLabels = Object.freeze([
-          ['start-own','TEST 01 · FROM A BOARD'],
           ['picnic-chooser','TEST 02 · FROM A BOUNDED PROJECT'],
           ['alcove-capture','TEST 03 · FIT THE SPACE'],
           ['window-intake','TEST 04 · DEFINE THE ASSEMBLY'],
@@ -148,7 +147,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         if (startOwnTile) {
           startOwnTile.removeAttribute('data-go');
           startOwnTile.dataset.startOwnArtifact = 'three-frames.html';
-          startOwnTile.title = 'Start Your Own · User 1 · three-frame production-window proof';
+          startOwnTile.title = 'Start Your Own · Store board to definition to bench';
 
           let startOwnPage = doc.getElementById('start-own-live');
           if (!startOwnPage) {
@@ -160,8 +159,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 <iframe
                   id="start-own-proof-frame"
                   class="start-own-shell-frame"
-                  title="Start Your Own · User 1 · definition to doing"
-                  src="three-frames.html?v=0bb716c2"
+                  title="Start Your Own"
+                  src="three-frames.html?v=f8a56803"
                 ></iframe>
               </div>
             `;
@@ -170,7 +169,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
           const liveFrame = startOwnPage.querySelector('#start-own-proof-frame');
           if (liveFrame && !String(liveFrame.getAttribute('src')||'').includes('three-frames.html')) {
-            liveFrame.src = 'three-frames.html?v=0bb716c2';
+            liveFrame.src = 'three-frames.html?v=f8a56803';
           }
           const banner = startOwnPage.querySelector('[data-proof-job="1"]');
           if (banner && /generic floor/.test(banner.textContent||'')) {
@@ -298,96 +297,265 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
               const childDoc = proofFrame.contentDocument;
               if (!childDoc) return;
               const benchButton = childDoc.querySelector('.stb-bench-button');
+              const lengthInput = childDoc.getElementById('stb-user1-length');
+              const angleInput = childDoc.getElementById('stb-user1-angle');
+              const lineageLine = childDoc.getElementById('stb-user1-lineage');
+              const storeOriginLine = childDoc.getElementById('stb-store-origin');
+              const currentBoard = childDoc.getElementById('stb-store-board-2x4');
+              const glossaryBoards = Array.from(childDoc.querySelectorAll('[data-store-size-key]'));
+              const catalogSource = storeHandoffContract?.startOwnStoreCatalog || null;
+              let user1Revision = 0;
+              let user1Definition = null;
+
+              const formatInches = value => {
+                const n = Number(value);
+                if (!Number.isFinite(n)) return 'unresolved';
+                const eighths = Math.round(n * 8);
+                const whole = Math.trunc(eighths / 8);
+                const rem = Math.abs(eighths % 8);
+                const glyph = ['', '⅛', '¼', '⅜', '½', '⅝', '¾', '⅞'][rem];
+                return (whole ? String(whole) : (rem ? '' : '0')) + glyph + ' in';
+              };
+
+              glossaryBoards.forEach(board => {
+                const key = String(board.dataset.storeSizeKey || '');
+                const offerings = storeHandoffContract && typeof storeHandoffContract.startOwnOfferings === 'function'
+                  ? storeHandoffContract.startOwnOfferings(key)
+                  : [];
+                const backed = Array.isArray(offerings) && offerings.length > 0;
+                board.dataset.storeBacked = backed ? 'true' : 'false';
+                board.setAttribute('aria-disabled', backed ? 'false' : 'true');
+                board.title = backed
+                  ? 'Store Zero · '+offerings.length+' mapped offering'+(offerings.length===1?'':'s')+' · catalog '+String(catalogSource?.pin || '').slice(0,8)
+                  : 'No current Store Zero offering is mapped to this choice.';
+              });
+              if (currentBoard && currentBoard.dataset.storeBacked === 'true') {
+                currentBoard.classList.add('is-selected');
+                currentBoard.setAttribute('aria-current','true');
+              }
+
+              const syncUser1Definition = basis => {
+                const finishedLengthIn = Number(lengthInput?.value);
+                const angleDeg = Number(angleInput?.value);
+                const partQty = 2;
+                const sizeKey = '2x4';
+                const valid = Number.isFinite(finishedLengthIn) && finishedLengthIn > 0
+                  && Number.isFinite(angleDeg) && angleDeg >= 0;
+                if (!valid || !storeHandoffContract) {
+                  user1Definition = null;
+                  if (storeOriginLine) storeOriginLine.textContent = 'Store Zero · complete the current length and angle before this definition can be evaluated.';
+                  return null;
+                }
+                const offerings = typeof storeHandoffContract.startOwnOfferings === 'function'
+                  ? storeHandoffContract.startOwnOfferings(sizeKey)
+                  : [];
+                if (!offerings.length) {
+                  user1Definition = null;
+                  if (storeOriginLine) storeOriginLine.textContent = 'Store Zero · the current 2×4 Store offering is unresolved.';
+                  return null;
+                }
+                const centerSpotIn = Number((finishedLengthIn / 2).toFixed(6));
+                const physicalDemand = {
+                  stockClass:sizeKey,
+                  finishedLength:finishedLengthIn,
+                  quantity:partQty,
+                  endCondition:angleDeg ? 'angled' : 'square',
+                  straightCut:angleDeg === 0,
+                  angleDegrees:angleDeg,
+                  angleReference:'USER_1_INTENT',
+                  cutPlane:'miter-face',
+                  endIdentity:'both',
+                  endRelation:'parallel',
+                  lengthDatum:'long-long-outer-edge',
+                  spotDemand:{
+                    required:true,
+                    mode:'SPOT_ON_LOCATION',
+                    countPerPart:1,
+                    locationRule:'CENTERED_ON_PART',
+                    locationAlongLengthIn:centerSpotIn,
+                    acrossWidthRule:'CENTERED_ON_WIDE_FACE',
+                    derivation:{
+                      basis:'DERIVED',
+                      formula:'finishedLength / 2',
+                      input:{finishedLengthIn:finishedLengthIn},
+                      output:{locationAlongLengthIn:centerSpotIn}
+                    },
+                    toolingStatus:'UNRESOLVED'
+                  }
+                };
+                const storeMaterial = typeof storeHandoffContract.resolveStartOwnMaterial === 'function'
+                  ? storeHandoffContract.resolveStartOwnMaterial({
+                      sizeKey:sizeKey,
+                      sequence:'CROSSCUT_HOLD',
+                      establishAngledEnd:angleDeg !== 0,
+                      parts:[{name:'x-brace',len:finishedLengthIn,wid:3.5,qty:partQty}]
+                    })
+                  : null;
+                user1Revision += 1;
+                user1Definition = {
+                  definitionId:'SYO-USER1-XBRACE-0.1',
+                  versionId:'SYO-USER1-XBRACE-0.1-r'+user1Revision,
+                  projectClass:'USER_DEFINED_BOARD',
+                  materialSelection:{
+                    origin:'STORE_ZERO',
+                    sizeKey:sizeKey,
+                    catalogSource:catalogSource,
+                    mappedOfferingSkus:offerings.map(row => row.storeSku)
+                  },
+                  intent:{
+                    partQty:{value:partQty,basis:'USER_1_INTENT_IMAGE'},
+                    finishedLengthIn:{value:finishedLengthIn,basis:'CUSTOMER_INPUT',initialValue:16},
+                    angleDeg:{value:angleDeg,basis:'CUSTOMER_INPUT',initialValue:30},
+                    endIdentity:{value:'both',basis:'USER_1_INTENT'},
+                    endRelation:{value:'parallel',basis:'USER_1_INTENT'},
+                    cutPlane:{value:'miter-face',basis:'USER_1_INTENT'},
+                    lengthDatum:{value:'long-long-outer-edge',basis:'USER_1_INTENT'},
+                    centerSpot:{value:'one-per-part',basis:'USER_1_INTENT'}
+                  },
+                  derived:{
+                    centerSpotAlongLengthIn:{
+                      value:centerSpotIn,
+                      basis:'DERIVED',
+                      formula:'finishedLength / 2',
+                      inputs:['intent.finishedLengthIn']
+                    }
+                  },
+                  physicalDemand:physicalDemand,
+                  storeResolution:storeMaterial,
+                  unresolvedConditions:[
+                    'CENTER_SPOT_TOOLING_ENVELOPE_UNRESOLVED',
+                    'DIMENSIONAL_MITER_SERVICE_RECOVERY_UNRESOLVED'
+                  ],
+                  lineage:{lastBasis:String(basis || 'INITIAL'),sameDefinition:true},
+                  physicalExecutionAuthorized:false
+                };
+                try { win.localStorage.setItem('stb-start-own-user1-definition',JSON.stringify(user1Definition)); } catch (_) {}
+                if (lineageLine) {
+                  lineageLine.textContent = 'Center spot = '+finishedLengthIn+' ÷ 2 = '+centerSpotIn+' in from either finished end. The formula stays with '+user1Definition.definitionId+'.';
+                }
+                if (storeOriginLine) {
+                  if (storeMaterial && storeMaterial.status === 'MAPPED') {
+                    storeOriginLine.textContent = 'Store Zero · '+storeMaterial.stockLengthIn+' in 2×4 · '+storeMaterial.storeSku+' · $'+Number(storeMaterial.materialTotal||0).toFixed(2)+' material · catalog '+String(storeMaterial.source?.pin || catalogSource?.pin || '').slice(0,8)+'.';
+                  } else {
+                    storeOriginLine.textContent = 'Store Zero · current material resolution: '+String(storeMaterial?.code || 'UNRESOLVED')+'.';
+                  }
+                }
+                return user1Definition;
+              };
+
+              const renderBench = (definition, storeSequence, capability, handoff) => {
+                const material = definition?.storeResolution;
+                const stockLengthIn = Number(material?.stockLengthIn);
+                const retained = storeSequence?.rows?.[0]?.remainingIn;
+                const holdIn = Number(storeSequence?.holdIn || storeHandoffContract?.d001Hold?.holdIn || 24);
+                const spare = Number.isFinite(retained) ? Number((retained - holdIn).toFixed(6)) : null;
+                const length = Number(definition?.intent?.finishedLengthIn?.value);
+                const angle = Number(definition?.intent?.angleDeg?.value);
+                const spot = Number(definition?.derived?.centerSpotAlongLengthIn?.value);
+                const sequencePass = storeSequence?.status === 'SEQUENCED';
+                const setText = (id,value) => { const el=childDoc.getElementById(id); if(el) el.textContent=value; };
+                setText('stb-bench-stock-line','STORE 2×4 · '+stockLengthIn+' IN · '+String(material?.storeSku || '')+' · schematic · controlling numbers below');
+                setText('stb-bench-spare-label',Number.isFinite(spare) ? formatInches(spare)+' spare' : 'spare unresolved');
+                setText('stb-bench-remain-label',Number.isFinite(retained)
+                  ? formatInches(retained)+' remains · '+formatInches(holdIn)+' retained-control minimum · '+formatInches(spare)+' spare'
+                  : 'retained-control sequence unresolved');
+                setText('stb-bench-control-status',sequencePass ? 'WITHIN CURRENT RETAINED-CONTROL LIMIT' : 'RETAINED-CONTROL CHECK UNRESOLVED');
+                setText('stb-bench-control-copy',sequencePass
+                  ? 'Store resolves this definition to '+formatInches(stockLengthIn)+' stock: '+formatInches(retained)+' remains after the three cut kerfs; '+formatInches(holdIn)+' is the retained-control minimum.'
+                  : 'Store has not formed a valid retained-control sequence for this definition.');
+                setText('stb-bench-cut-copy','cut — a '+angle+'° angle · three cuts make the two parts (cut 2 is shared)');
+                setText('stb-bench-stock-spec','2×4 · '+stockLengthIn+' in');
+                setText('stb-bench-length-spec',length+' in');
+                setText('stb-bench-angle-spec',angle+'°');
+                setText('stb-bench-parts-spec','2');
+                setText('stb-bench-control-spec',holdIn+' in min');
+                setText('stb-bench-workline','THAT’S THE WHOLE JOB · 3 CUTS · 2 SPOTS ON LOCATION · '+(sequencePass?'WITHIN CURRENT RETAINED-CONTROL LIMIT':'CONTROL CHECK UNRESOLVED'));
+                const svg = childDoc.getElementById('stb-bench-svg');
+                if (svg) svg.setAttribute('aria-label','Store-supplied '+stockLengthIn+'-inch two-by-four. Three '+angle+'-degree cuts make two '+length+'-inch parts. Each part carries one centered spot derived at '+spot+' inches. '+(Number.isFinite(retained)?formatInches(retained)+' remains.':'Retained stock is unresolved.'));
+                const answerLine = childDoc.getElementById('stb-system-answer');
+                if (answerLine) {
+                  const materialText = material && material.status === 'MAPPED'
+                    ? material.stockLengthIn+' in 2×4 · '+material.storeSku+' · $'+Number(material.materialTotal||0).toFixed(2)+' material'
+                    : 'material unresolved';
+                  const drillCarried = Array.isArray(handoff?.operationDemand)
+                    && handoff.operationDemand.some(op => op && op.kind === 'DRILL' && op.countPerPart === 1);
+                  answerLine.innerHTML = '<b>STORE</b> · '+materialText
+                    + (sequencePass ? ' · retained-control sequence passes' : ' · retained-control sequence unresolved')
+                    + ' · '+angle+'° end-cut demand '+(drillCarried?'and two centered drill spots are carried in the same Store handoff':'is carried; centered drill demand is not yet structurally present')
+                    + ' · drill tooling and service recovery remain unresolved.';
+                }
+              };
+
+              syncUser1Definition('INITIAL_STORE_ORIGIN');
+              [lengthInput,angleInput].forEach(input => {
+                if (!input || input.dataset.definitionWired) return;
+                input.dataset.definitionWired = 'true';
+                input.addEventListener('input', () => syncUser1Definition('CUSTOMER_INPUT'));
+                input.addEventListener('change', () => syncUser1Definition('CUSTOMER_INPUT'));
+              });
+
               if (benchButton && !benchButton.dataset.hostBenchWired) {
                 benchButton.dataset.hostBenchWired = 'true';
                 benchButton.addEventListener('click', () => {
                   const bench = childDoc.getElementById('stb-user1-bench');
-                  const answerLine = childDoc.getElementById('stb-system-answer');
+                  const definition = syncUser1Definition('BENCH_HANDOFF');
+                  const material = definition?.storeResolution;
+                  if (!definition || !material || material.status !== 'MAPPED') {
+                    const answerLine = childDoc.getElementById('stb-system-answer');
+                    if (answerLine) answerLine.innerHTML = '<b>STORE</b> · this definition does not yet resolve to Store material. Nothing has been invented or sent to physical execution.';
+                    bench?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    return;
+                  }
+                  const demand = definition.physicalDemand;
                   const storeSpec = {
-                    sizeKey:'2x4',
-                    finishedLengthIn:16,
-                    partQty:2,
-                    angleDeg:30,
-                    cutPlane:'miter-face',
-                    endIdentity:'both',
-                    endRelation:'parallel',
-                    lengthDatum:'long-long-outer-edge'
-                  };
-                  const physicalDemand = {
-                    stockClass:'2x4',
-                    finishedLength:16,
-                    quantity:2,
-                    endCondition:'angled',
-                    straightCut:false,
-                    angleDegrees:30,
-                    angleReference:'USER_1_INTENT_IMAGE',
-                    cutPlane:'miter-face',
-                    endIdentity:'both',
-                    endRelation:'parallel',
-                    lengthDatum:'long-long-outer-edge'
+                    sizeKey:demand.stockClass,
+                    finishedLengthIn:demand.finishedLength,
+                    partQty:demand.quantity,
+                    angleDeg:demand.angleDegrees,
+                    cutPlane:demand.cutPlane,
+                    endIdentity:demand.endIdentity,
+                    endRelation:demand.endRelation,
+                    lengthDatum:demand.lengthDatum
                   };
                   const boardStore = window.STBUserDefinedBoardStore || win.STBUserDefinedBoardStore || null;
-                  const customerSequence = boardStore && typeof boardStore.sequenceCrosscuts === 'function'
+                  const storeSequence = boardStore && typeof boardStore.sequenceCrosscuts === 'function'
                     ? boardStore.sequenceCrosscuts({
-                        parentLengthIn:60,
-                        parts:[16,16],
-                        establishAngledEnd:true
+                        parentLengthIn:material.stockLengthIn,
+                        parts:Array.from({length:demand.quantity}, () => demand.finishedLength),
+                        establishAngledEnd:demand.angleDegrees !== 0
                       })
                     : null;
                   const capability = boardStore && typeof boardStore.evaluateUserDefinedBoardJob === 'function'
                     ? boardStore.evaluateUserDefinedBoardJob(storeSpec)
                     : null;
-                  const storeMaterial = storeHandoffContract && typeof storeHandoffContract.resolveStartOwnMaterial === 'function'
-                    ? storeHandoffContract.resolveStartOwnMaterial({
-                        sizeKey:'2x4',
-                        sequence:'CROSSCUT_HOLD',
-                        parts:[{name:'x-brace',len:16,wid:3.5,qty:2}]
-                      })
-                    : null;
                   const handoff = createComparisonStoreHandoff('start-own',{
-                    id:'SYO-USER1-XBRACE-0.1',
-                    physicalDemand:physicalDemand,
-                    storeReference:{
-                      unresolvedConditions:[
-                        'CENTER_SPOT_TOOLING_ENVELOPE_UNRESOLVED',
-                        'DIMENSIONAL_MITER_SERVICE_RECOVERY_UNRESOLVED'
-                      ]
-                    }
+                    id:definition.definitionId,
+                    versionId:definition.versionId,
+                    physicalDemand:demand,
+                    sourceAuthority:{
+                      kind:'STORE-ORIGIN USER-DEFINED',
+                      artifact:'three-frames.html',
+                      materialSelection:definition.materialSelection,
+                      storeResolution:{
+                        storeSku:material.storeSku,
+                        stockLengthIn:material.stockLengthIn,
+                        source:material.source
+                      }
+                    },
+                    storeReference:{unresolvedConditions:definition.unresolvedConditions}
                   });
                   retainComparisonStoreHandoff('start-own',handoff);
                   try {
                     win.localStorage.setItem('stb-start-own-user1-bench',JSON.stringify({
-                      definitionId:'SYO-USER1-XBRACE-0.1',
-                      customerIntent:{
-                        stock:'2x4',
-                        parentLengthIn:60,
-                        parts:2,
-                        finishedLengthIn:16,
-                        angleDeg:30,
-                        centerSpots:2
-                      },
+                      definition:definition,
                       storeSpec:storeSpec,
-                      physicalDemand:physicalDemand,
-                      customerBoardSequence:customerSequence,
+                      storeSequence:storeSequence,
                       capability:capability && capability.capability ? capability.capability : null,
-                      storeMaterialAlternative:storeMaterial,
                       handoff:handoff,
                       physicalExecutionAuthorized:false
                     }));
                   } catch (_) {}
-                  if (answerLine) {
-                    const sequencePass = customerSequence && customerSequence.status === 'SEQUENCED';
-                    const materialMapped = storeMaterial && storeMaterial.status === 'MAPPED';
-                    const materialText = materialMapped
-                      ? ' · if Store supplies stock: '+storeMaterial.stockLengthIn+' in 2×4 · $'+Number(storeMaterial.materialTotal||0).toFixed(2)+' material'
-                      : '';
-                    answerLine.innerHTML = '<b>STORE</b> · '
-                      + (sequencePass
-                          ? '60-in customer board passes the current 24-in retained-control sequence'
-                          : 'current cutoff-control check is not complete')
-                      + materialText
-                      + ' · 30° end cuts and two center spots carried into the Store handoff · drill tooling and service recovery still unresolved.';
-                  }
+                  renderBench(definition,storeSequence,capability,handoff);
                   bench?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 });
               }
@@ -492,7 +660,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         var projectId = source === 'start-own' ? 'start-own' : 'outdoor-build';
         var projectClass = source === 'start-own' ? 'USER_DEFINED_BOARD' : 'BOUNDED_SOURCE_BACKED';
         var sourceAuthority = source === 'start-own'
-          ? {kind:'USER-DEFINED',artifact:'three-frames.html'}
+          ? (payload.sourceAuthority || {kind:'USER-DEFINED',artifact:'three-frames.html'})
           : {kind:'BOUNDED SOURCE-BACKED',artifact:'stb-outdoor-bench-leg-0.1.html',detail:payload.sourceAuthority||null};
         if(payload.physicalDemand){
           physicalDemand = payload.physicalDemand;
@@ -520,7 +688,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             projectId:projectId,
             projectClass:projectClass,
             definitionId:definitionId,
-            versionId:definitionId,
+            versionId:payload.versionId || definitionId,
             physicalDemand:physicalDemand,
             sourceAuthority:sourceAuthority,
             unresolvedConditions:source === 'start-own'
