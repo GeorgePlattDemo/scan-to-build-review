@@ -220,9 +220,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
               if (match) match.textContent = snap.complete ? 'Contract complete.' : ('Still open: ' + ((snap.openPoints||[]).join(', ') || 'facts'));
               if (storeLine) {
                 if (ev && ev.status === 'SUPPORTABLE' && ev.materialResolution) {
-                  const mat = ev.materialResolution;
-                  const rec = ev.estimate && ev.estimate.totals && ev.estimate.totals.cell_recovery;
-                  storeLine.textContent = 'Store: ' + mat.storeSku + ' × ' + mat.quantity + ' · material $' + Number(mat.materialTotal||0).toFixed(2) + (rec!=null ? ' + recovery $'+Number(rec).toFixed(2) : ' · recovery unpublished');
+                  storeLine.textContent = 'Store: comparison preview available · current 60-in definition and Store Zero budgetary Q are shown on the Start Your Own bench.';
                 } else if (ev && ev.materialResolution && ev.materialResolution.code) {
                   storeLine.textContent = 'Store: ' + ev.materialResolution.code;
                 } else {
