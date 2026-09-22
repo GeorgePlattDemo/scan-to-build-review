@@ -13,7 +13,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 <body>
 <iframe id="stb-current" title="Scan-to-Build System" src="system-build-front-door-0.5.html?v=5ac9677b"></iframe>
 <script src="stb-canonical-journey.js?v=e0619841"></script>
-<script src="stb-store-zero-user1.generated.js?v=1a470b8e"></script>
+<script src="stb-store-zero-user1.generated.js?v=a55641dc"></script>
+<script src="stb-store-zero-s001.generated.js?v=f980dfb4"></script>
 <script src="stb-store-handoff-contract.js?v=1ee4f13b"></script>
 <script src="stb-user-defined-board-store.js?v=1c99c380"></script>
 <script src="store-zero-canonical-doctrine.js?v=65366367"></script>
@@ -521,7 +522,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   materialResolution.status ||
                   'UNRESOLVED';
                 const estimateRaw = storeAnswer.rawEstimate || null;
-                const estimatePiece = storeAnswer.mappedCallInputs?.estimate?.pieces?.[0] || null;
+                const estimateRequest = storeAnswer.mappedCallInputs?.estimate || null;
+                const storeSpotOperation = storeAnswer.mappedCallInputs?.definition?.spotOperation || null;
                 const storeEstimate = estimateRaw ? {
                   status:estimateRaw.status,
                   complete:storeAnswer.priceCompleteness?.status === 'COMPLETE_FOR_ENCODED_DEMAND',
@@ -531,16 +533,15 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   cellRecovery:estimateRaw.totals?.cell_recovery ?? null,
                   total:estimateRaw.totals?.Q ?? null,
                   cycle:estimateRaw.cycle || null,
-                  operationBasis:estimatePiece ? {
+                  operationBasis:estimateRequest ? {
                     definedWorkpieceLengthIn:definedWorkpieceLengthIn,
                     productionSawCuts:productionSawCuts,
                     totalModeledSawCuts:productionSawCuts,
                     sawAngleDeg:angleDeg,
-                    sawTraverseIn:estimatePiece.sawTraverseIn ?? null,
-                    drillCycles:estimatePiece.holes ?? 0,
-                    drillReferenceDepthIn:estimatePiece.depthIn ?? null,
-                    spotCycles:estimatePiece.spots ?? 0,
-                    spotToolDiameterIn:storeAnswer.attributedBasis?.envelope?.spotToolDiameterIn ?? null
+                    drillCycles:estimateRequest.drillCycles ?? 0,
+                    drillReferenceDepthIn:estimateRequest.drillReferenceDepthIn ?? null,
+                    spotCycles:estimateRequest.spotCycles ?? 0,
+                    spotOperation:storeSpotOperation
                   } : null,
                   engine:storeAnswer.attributedBasis?.pricingEngine || null,
                   source:{
@@ -574,13 +575,14 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                       pin:storeAnswer.storePin || user1StoreRuntime.storePin || null,
                       clock:materialResolution.source?.clock || null
                     },
-                    procurement:materialResolution.status === 'MAPPED' ? {
+                    procurement:(materialResolution.pricingReferenceSku || materialResolution.storeSku) ? {
                       pricingReferenceSku:materialResolution.pricingReferenceSku || materialResolution.storeSku || null,
                       pricingReferenceStockLengthIn:materialResolution.pricingReferenceStockLengthIn || materialResolution.stockLengthIn || null,
                       quantity:materialResolution.quantity ?? 1,
                       unitPrice:materialResolution.unitPrice ?? null,
                       materialTotal:materialResolution.materialTotal ?? null,
-                      allocationClaimed:false
+                      allocationClaimed:false,
+                      capabilityStatus:materialResolution.status || 'UNRESOLVED'
                     } : null,
                     definedWorkpieceLengthIn:{value:definedWorkpieceLengthIn,basis:'EXISTING_PROJECT_FACT'},
                     mappedStoreSkus:offerings.map(row => row.storeSku)
@@ -618,6 +620,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                     refusalConditions:storeRefusals,
                     unresolvedConditions:storeUnresolved,
                     materialResolution:materialResolution,
+                    spotOperation:storeSpotOperation,
                     authoritativeRequest:authoritativeRequest,
                     authoritativeAnswer:storeAnswer,
                     authority:startOwnAuthority
@@ -1866,14 +1869,14 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       const materialValue=doc.getElementById('proof-store-material-value');
       const materialSource=doc.getElementById('proof-store-material-source');
       if(materialSku)materialSku.textContent=materialResolution?.storeSku || 'NOT MAPPED ON THIS PROJECT PAYLOAD';
-      if(materialValue)materialValue.textContent=materialResolution?.status==='MAPPED' && Number.isFinite(Number(materialResolution.materialTotal))
+      if(materialValue)materialValue.textContent=Number.isFinite(Number(materialResolution?.materialTotal))
         ? '$'+Number(materialResolution.materialTotal).toFixed(2)
         : 'NOT ESTABLISHED';
       const estimate=payload.storeReference?.estimate || null;
       const termsMaterial=doc.getElementById('proof-terms-material');
       if(termsMaterial)termsMaterial.textContent=estimate?.material!=null
         ? '$'+Number(estimate.material).toFixed(2)+' material'
-        : (materialResolution?.status==='MAPPED' && Number.isFinite(Number(materialResolution.materialTotal))
+        : (Number.isFinite(Number(materialResolution?.materialTotal))
           ? '$'+Number(materialResolution.materialTotal).toFixed(2)+' material'
           : 'NOT ESTABLISHED');
       const recoveryEl=doc.getElementById('proof-store-cell-recovery');
@@ -1887,7 +1890,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       const recordEconomics=doc.getElementById('proof-record-economics');
       const isStartOwn=proofHandoff?.source==='start-own';
       if(recoveryEl)recoveryEl.textContent=estimate?.cellRecovery!=null?'$'+Number(estimate.cellRecovery).toFixed(2):'UNRESOLVED';
-      if(qEl)qEl.textContent=estimate?.total!=null?'$'+Number(estimate.total).toFixed(2)+' · BudgetaryEstimate':'NOT COMPLETE';
+      if(qEl)qEl.textContent=estimate?.total!=null
+        ? '$'+Number(estimate.total).toFixed(2)+(estimate.complete?' · BudgetaryEstimate':' · PARTIAL RESOLVED SUBTOTAL')
+        : 'NOT COMPLETE';
       if(cycleEl)cycleEl.textContent=Number.isFinite(Number(estimate?.cycle?.T_job_min))
         ? Number(estimate.cycle.T_job_min).toFixed(3)+' min · '+String(estimate.cycle.model || 'modeled')
         : 'NOT ESTABLISHED';
@@ -1898,12 +1903,14 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         ? '<b>STORE ZERO BUDGETARY ESTIMATE RETURNED</b>Q is material plus modeled Store cell recovery for this exact identified definition. It is not a commercial quote, payment, allocation, production release, machine readiness, or physical fabrication authority.'
         : '<b>STORE ECONOMICS UNRESOLVED</b>The physical demand remains preserved exactly. No app-side discount, made-up cycle, or guessed combined value is substituted.';
       if(acceptStatus)acceptStatus.textContent=estimate?.complete?'RETURNED · BUDGETARY ESTIMATE':'RETURNED · ECONOMICS INCOMPLETE';
-      if(termsQ)termsQ.textContent=estimate?.total!=null?'$'+Number(estimate.total).toFixed(2)+' · budgetary only':'NOT COMPLETE';
+      if(termsQ)termsQ.textContent=estimate?.total!=null
+        ? '$'+Number(estimate.total).toFixed(2)+(estimate.complete?' · budgetary only':' · partial resolved subtotal')
+        : 'NOT COMPLETE';
       if(termsNote)termsNote.innerHTML=estimate?.complete
         ? '<b>TERMS REMAIN REFERENCE-ONLY.</b>The Store Zero Q is a BudgetaryEstimate, not a commercial quote or seller-of-record offer. No acceptance, payment, allocation, release, or fabrication event is created from it.'
         : '<b>TERMS REMAIN REFERENCE-ONLY.</b>Economics remain incomplete on this project answer. No acceptance, payment, allocation, release, or fabrication event is invented.';
       if(recordEconomics)recordEconomics.textContent=estimate?.total!=null
-        ? 'BUDGETARY ESTIMATE · Q $'+Number(estimate.total).toFixed(2)+' · '+String(estimate.engine?.id || 'Store Zero')
+        ? (estimate.complete?'BUDGETARY ESTIMATE · Q $':'PARTIAL RESOLVED SUBTOTAL · $')+Number(estimate.total).toFixed(2)+' · '+String(estimate.engine?.id || 'Store Zero')
         : 'UNRESOLVED';
       const yardNext=doc.getElementById('proof-yard-next');
       if(yardNext)yardNext.textContent=isStartOwn?'CONTINUE → TERMS':'CONTINUE → HANDOFF / RECORD';
