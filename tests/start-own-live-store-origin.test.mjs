@@ -45,6 +45,7 @@ assert.match(surface,/One change\. Same span\./);
 assert.match(surface,/id="stb-config-length"[^>]*min="16"[^>]*max="18"[^>]*value="16"/);
 assert.match(surface,/data-length="16">16 IN/);
 assert.match(surface,/data-length="18">18 IN/);
+assert.match(surface,/<div class="length-switch"[^>]*>[\s\S]*?data-length="16">16 IN<\/button>[\s\S]*?id="stb-config-length"[\s\S]*?data-length="18">18 IN<\/button>/,'length input is not physically between the 16 and 18 buttons');
 assert.match(surface,/18\.000 in → 26\.388° end cuts/);
 assert.equal(surface.includes('id="stb-config-angle"'),false,'customer angle control returned');
 assert.equal(surface.includes('data-parts='),false,'quantity choices returned');
@@ -61,7 +62,7 @@ assert.match(surface,/CONFIRM &amp; SEND TO STORE ZERO →/);
 assert.match(surface,/id="stb-bench-dynamic-geometry"/);
 
 // Host carries one definition through intent, bench, Store, Terms and record.
-assert.match(shell,/three-frames\.html\?v=e7321f0e/);
+assert.match(shell,/three-frames\.html\?v=77152303/);
 assert.match(shell,/const definedWorkpieceLengthIn = 60;/);
 assert.match(shell,/DEMO_HORIZONTAL_SPAN_IN = 8/);
 assert.match(shell,/Math\.asin\(spanRatio\)/);
