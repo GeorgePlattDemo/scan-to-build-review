@@ -7,6 +7,16 @@ function appFrame(page){
 }
 
 test('actual User 1 journey carries one authoritative Store answer through confirmation and record', async ({ page }) => {
+  await page.addInitScript(() => {
+    const originalAddEventListener=EventTarget.prototype.addEventListener;
+    EventTarget.prototype.addEventListener=function(type,listener,options){
+      if(type==='click' && this instanceof Element && this.classList?.contains('stb-bench-button')){
+        const count=Number(this.dataset.stbTestClickListeners || '0') + 1;
+        this.dataset.stbTestClickListeners=String(count);
+      }
+      return originalAddEventListener.call(this,type,listener,options);
+    };
+  });
   const pageErrors=[];
   page.on('pageerror', error => pageErrors.push(String(error?.stack || error)));
   const base=process.env.STB_REVIEW_URL || 'http://127.0.0.1:4173';
@@ -64,8 +74,29 @@ test('actual User 1 journey carries one authoritative Store answer through confi
   }
   await expect(project.locator('.stb-bench-button')).toHaveCount(1);
   await expect(project.locator('.stb-bench-button')).toBeVisible();
-  await project.locator('.stb-bench-button').click();
-  await expect(project.locator('#stb-start-bench-screen')).toBeVisible();
+  try {
+    await expect(project.locator('.stb-bench-button')).toHaveAttribute('data-stb-test-click-listeners','1');
+    await project.locator('.stb-bench-button').click();
+    await expect(project.locator('#stb-start-bench-screen')).toBeVisible();
+  } catch (error) {
+    const diagnostic=await project.locator('html').evaluate(() => ({
+      readyState:document.readyState,
+      intentHidden:document.getElementById('stb-start-intent-screen')?.hidden,
+      benchHidden:document.getElementById('stb-start-bench-screen')?.hidden,
+      button:{
+        listenerCount:document.querySelector('.stb-bench-button')?.dataset.stbTestClickListeners || '0',
+        disabled:document.querySelector('.stb-bench-button')?.disabled || false,
+        connected:document.querySelector('.stb-bench-button')?.isConnected || false
+      },
+      answer:{
+        authoritative:document.getElementById('stb-system-answer')?.dataset.storeAuthoritative || null,
+        disposition:document.getElementById('stb-system-answer')?.dataset.storeDisposition || null,
+        pin:document.getElementById('stb-system-answer')?.dataset.storePin || null
+      },
+      localDefinition:parent.localStorage.getItem('stb-start-own-user1-definition')
+    }));
+    throw new Error('User 1 bench click diagnostic: '+JSON.stringify({diagnostic,pageErrors,cause:String(error)}));
+  }
 
   await expect(answer).toHaveAttribute('data-store-authoritative','true');
   await expect(answer).toHaveAttribute('data-store-disposition','SUPPORTABLE');
