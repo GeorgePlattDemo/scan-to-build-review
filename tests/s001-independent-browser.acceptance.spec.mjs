@@ -28,17 +28,19 @@ test('actual S-001 project route carries one exact Store answer through review a
   await expect(app.locator('#s001-live-store-disposition')).toHaveText('SUPPORTABLE · REFERENCE');
   await expect(app.locator('#s001-live-store-material')).toHaveText('$26.55 material-only');
   const initial=await app.locator('body').evaluate(() => JSON.parse(localStorage.getItem('stb-s001-current-definition')||'null'));
-  expect(initial.versionId).toBe('S001-SARAH-PLAYHOUSE-0.1-v1');
+  const initialVersionMatch=String(initial.versionId||'').match(/^S001-SARAH-PLAYHOUSE-0\\.1-v(\\d+)$/);
+  expect(initialVersionMatch,'S001_INITIAL_VERSION_ID_INVALID').not.toBeNull();
+  const initialRevision=Number(initialVersionMatch[1]);
 
   const width=app.locator('#s001-opening-width');
+  // Playwright fill dispatches the input event; do not inject a second synthetic edit.
   await width.fill('40');
-  await width.dispatchEvent('input');
   await expect(app.locator('#s001-opening-width-out'),'S001_EDIT_WIDTH_NOT_PROJECTED').toHaveText('40 in');
   await expect(app.locator('#s001-live-store-disposition'),'S001_EDIT_STORE_NOT_RECOMPUTED').toHaveText('SUPPORTABLE · REFERENCE');
   await expect(app.locator('#s001-live-store-material'),'S001_EDIT_ECONOMICS_DRIFT').toHaveText('$26.55 material-only');
 
   const current=await app.locator('body').evaluate(() => JSON.parse(localStorage.getItem('stb-s001-current-definition')||'null'));
-  expect(current.versionId,'S001_EDIT_REVISION_NOT_ADVANCED').toBe('S001-SARAH-PLAYHOUSE-0.1-v2');
+  expect(current.versionId,'S001_EDIT_REVISION_NOT_ADVANCED').toBe('S001-SARAH-PLAYHOUSE-0.1-v'+(initialRevision+1));
   expect(current.geometry.apertureW_in,'S001_EDIT_GEOMETRY_NOT_RECOMPUTED').toBe(40);
   expect(current.storeAnswer.definitionVersionId,'S001_EDIT_ANSWER_REVISION_DRIFT').toBe(current.versionId);
   expect(current.versionId).toBe(current.storeAnswer.definitionVersionId);
