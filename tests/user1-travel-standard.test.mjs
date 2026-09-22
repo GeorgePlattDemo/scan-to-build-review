@@ -117,9 +117,14 @@ assert.match(shell,/proof-accept/);
 assert.match(shell,/proof-yard/);
 assert.match(shell,/proof-terms/);
 assert.match(shell,/proof-record/);
-assert.match(shell,/PAYMENT<\/b><span>NOT AVAILABLE \/ NOT RECORDED/);
-assert.match(shell,/CYCLE START<\/b><span>NOT AUTHORIZED/);
-assert.match(shell,/PHYSICAL FABRICATION<\/b><span>NOT RECORDED/);
+assert.match(shell,/data-job1-action="SIMULATE_PURCHASE"/);
+assert.match(shell,/data-job1-yard-next/);
+assert.match(shell,/data-job1-action="RECORD_PICKUP"/);
+assert.match(shell,/NO REAL PAYMENT/);
+assert.match(shell,/NO BLOOD ON WOOD/);
+assert.match(shell,/SIMULATED PHYSICAL COMPLETION/);
+assert.match(shell,/liveCommerce:false/);
+assert.match(shell,/liveMotion:false/);
 
 assert.match(frame,/Modeled machine service/);
 assert.match(frame,/id="stb-config-length"[^>]*value="16"/);
