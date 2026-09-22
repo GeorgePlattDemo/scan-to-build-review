@@ -28,8 +28,8 @@ assert.equal(contract.currentArtifacts.alcove.artifact,'system-build-current.htm
 assert.equal(contract.currentArtifacts.windowSeat.artifact,'stb-window-seat-space-utilization-0.7.4.html');
 assert.equal(contract.currentArtifacts.sheetS001.artifact,'system-build-current.html#playhouse-s001');
 
-assert.equal(contract.storeAuthority('startOwn').capabilityPin,'f8373520a726090ed91eff82e5e720f4a9634615');
-assert.equal(contract.storeAuthority('startOwn').materialCatalogPin,'f8373520a726090ed91eff82e5e720f4a9634615');
+assert.equal(contract.storeAuthority('startOwn').capabilityPin,'95c639a1d0d4812df097ad1eb628594b38f921de');
+assert.equal(contract.storeAuthority('startOwn').materialCatalogPin,'95c639a1d0d4812df097ad1eb628594b38f921de');
 assert.equal(contract.storeAuthority('startOwn').legacyGeneralRecoverySelected,false);
 assert.equal(contract.storeAuthority('startOwn').economicsModel,'STB-STORE-ZERO-PRICE-1');
 assert.equal(contract.storeAuthority('startOwn').economicsStatus,'PINNED_STORE_ISSUED_REFERENCE');
@@ -59,7 +59,7 @@ assert.equal(xBraceQ.priceCompleteness,'COMPLETE_FOR_TRAVEL_STANDARD');
 assert.equal(xBraceQ.estimate.travel.derivedSawCuts,3);
 assert.equal(xBraceQ.estimate.travel.derivedSpotCount,2);
 assert.equal(xBraceQ.estimate.travel.finalRemainderIn,27.625);
-assert.equal(xBraceQ.calculationIdentity.resultHash,'15a8835dd50771136020190db7f5dbed1bd35b78930bf338be63bea8427353c2');
+assert.equal(xBraceQ.calculationIdentity.resultHash,'9ad8d16a7c211d420b83e46ed8a8d224bd289e26a48764ff8d0389b6db698604');
 
 const changedXBrace = contract.resolveUser1StoreReference({
   configurationId:'SYO-USER1-XBRACE',
