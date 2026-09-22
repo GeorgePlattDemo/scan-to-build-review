@@ -69,9 +69,11 @@ jobs:
 
       - name: Prove browser acceptance fails on unrepaired Review checkpoint
         run: |
+          git fetch origin 740b510a9688c60e20af93179979dc83fe6b602f --depth=1
           mkdir -p "$RUNNER_TEMP/before-review"
           git archive 740b510a9688c60e20af93179979dc83fe6b602f | tar -x -C "$RUNNER_TEMP/before-review"
           cp tests/user1-independent-browser.acceptance.spec.mjs "$RUNNER_TEMP/before-review/tests/"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$RUNNER_TEMP/before-review/node_modules"
           cd "$RUNNER_TEMP/before-review"
           python3 -m http.server 4174 --bind 127.0.0.1 > "$RUNNER_TEMP/before-review-server.log" 2>&1 &
           server_pid=$!
@@ -106,6 +108,7 @@ jobs:
               done
             )
           }
+          git fetch origin 740b510a9688c60e20af93179979dc83fe6b602f --depth=1
           mkdir -p "$RUNNER_TEMP/review-baseline"
           git archive 740b510a9688c60e20af93179979dc83fe6b602f | tar -x -C "$RUNNER_TEMP/review-baseline"
           audit_dir "$RUNNER_TEMP/review-baseline" "$RUNNER_TEMP/baseline-failures.txt"
@@ -166,9 +169,11 @@ jobs:
           rm -rf "$RUNNER_TEMP/fault-visible"
           mkdir -p "$RUNNER_TEMP/fault-visible"
           git archive HEAD | tar -x -C "$RUNNER_TEMP/fault-visible"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$RUNNER_TEMP/fault-visible/node_modules"
           python3 - <<'PY'
           from pathlib import Path
-          p=Path("$RUNNER_TEMP/fault-visible/system-build-current.html")
+          import os
+          p=Path(os.environ["RUNNER_TEMP"])/"fault-visible/system-build-current.html"
           s=p.read_text()
           old="'$'+Number(estimate.total).toFixed(2)"
           assert old in s
@@ -191,9 +196,11 @@ jobs:
           rm -rf "$RUNNER_TEMP/fault-revision"
           mkdir -p "$RUNNER_TEMP/fault-revision"
           git archive HEAD | tar -x -C "$RUNNER_TEMP/fault-revision"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$RUNNER_TEMP/fault-revision/node_modules"
           python3 - <<'PY'
           from pathlib import Path
-          p=Path("$RUNNER_TEMP/fault-revision/system-build-current.html")
+          import os
+          p=Path(os.environ["RUNNER_TEMP"])/"fault-revision/system-build-current.html"
           s=p.read_text()
           old='answerVersionId:storeAnswer.definitionVersionId,'
           assert old in s
