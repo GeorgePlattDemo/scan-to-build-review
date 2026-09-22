@@ -156,7 +156,7 @@
   var START_OWN_STORE_CATALOG = Object.freeze({
     repository:'GeorgePlattDemo/scan-to-build-store',
     file:'store-zero-catalog.json',
-    pin:'bc1a77297df752e32fb3687acc883a629c0b5b13',
+    pin:'34d4c6e7a2cb7e4bce428e396c7d7cbf228d20b7',
     clock:"2026-09-10"
   });
 
@@ -301,7 +301,7 @@
   var START_OWN_STORE_PRICING_REFERENCE = Object.freeze({
     source:Object.freeze({
       repository:'GeorgePlattDemo/scan-to-build-store',
-      pin:'bc1a77297df752e32fb3687acc883a629c0b5b13',
+      pin:'34d4c6e7a2cb7e4bce428e396c7d7cbf228d20b7',
       generatedArtifact:'stb-store-zero-user1.generated.js'
     }),
     authority:'GENERATED_FROM_PINNED_STORE_SOURCE',
