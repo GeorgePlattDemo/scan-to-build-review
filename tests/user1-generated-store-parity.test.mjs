@@ -4,12 +4,11 @@ import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import vm from 'node:vm';
 
-const STORE_PIN='7303793620d0ceda509810a661d11e6c31c7d59f';
+const STORE_PIN='bc1a77297df752e32fb3687acc883a629c0b5b13';
 const storeRoot=process.env.STB_STORE_ZERO_ROOT;
 assert.ok(storeRoot,'STB_STORE_ZERO_ROOT is required for parity acceptance');
 
 const store=await import(pathToFileURL(resolve(storeRoot,'store-zero-stage2-store.mjs')).href);
-const pricing=await import(pathToFileURL(resolve(storeRoot,'store-zero-pricing-engine.mjs')).href);
 const catalog=store.loadCatalog();
 
 const sandbox={window:{}};
@@ -18,31 +17,33 @@ const browserStore=sandbox.window.STBStoreZeroUser1;
 assert.ok(browserStore);
 assert.equal(browserStore.storePin,STORE_PIN);
 
-const centeredSpot={
-  required:true,
-  mode:'SPOT_ON_LOCATION',
-  countPerPart:1,
-  totalCount:2,
-  locationRule:'CENTERED_ON_PART',
-  locationAlongLengthIn:8,
-  acrossWidthRule:'CENTERED_ON_WIDE_FACE'
-};
-
-function input(angle,spotDemand=centeredSpot){
+function centeredSpot(length,quantity){
   return {
-    definitionVersionId:'PARITY-'+angle+'-'+(spotDemand?'SPOT':'NO-SPOT'),
+    required:true,
+    mode:'SPOT_ON_LOCATION',
+    countPerPart:1,
+    totalCount:quantity,
+    locationRule:'CENTERED_ON_PART',
+    locationAlongLengthIn:length/2,
+    acrossWidthRule:'CENTERED_ON_WIDE_FACE'
+  };
+}
+
+function input({length=16,quantity=2,angle=30,spot=true}={}){
+  return {
+    definitionVersionId:'PARITY-'+length+'-'+quantity+'-'+angle+'-'+(spot?'SPOT':'NO-SPOT'),
     materialDemand:{species:'spf',form:'board',nominalT:2,nominalW:4},
-    definedWorkpieceLengthIn:60,
-    sawCuts:3,
+    finishedPartLengthIn:length,
+    quantity,
     sawAngleDeg:angle,
     drillCycles:0,
     drillDepthIn:null,
-    requiredOps:['MITER_LIMITED'],
+    requiredOps:[angle===0?'CROSSCUT':'MITER_LIMITED'],
     cutPlane:'miter-face',
     endIdentity:'both',
     endRelation:'parallel',
     lengthDatum:'long-long-outer-edge',
-    spotDemand,
+    spotDemand:spot?centeredSpot(length,quantity):null,
     unresolvedConditions:[]
   };
 }
@@ -50,22 +51,28 @@ function input(angle,spotDemand=centeredSpot){
 function directMaterial(request){
   return store.resolveBoardMaterial(catalog,{
     ...request.materialDemand,
-    definedWorkpieceLengthIn:request.definedWorkpieceLengthIn,
-    qty:1,
+    finishedPartLengthIn:request.finishedPartLengthIn,
+    quantity:request.quantity,
     requiredOps:request.requiredOps,
     sawAngleDeg:request.sawAngleDeg,
     cutPlane:request.cutPlane,
+    endIdentity:request.endIdentity,
+    endRelation:request.endRelation,
+    lengthDatum:request.lengthDatum,
     spotDemand:request.spotDemand
   });
 }
 
-// Miter boundaries are tested with otherwise-complete demand.
 for(const angle of [30,45,46]){
-  const request=input(angle,null);
+  const request=input({angle,spot:false});
   const browser=browserStore.evaluate(request);
   const direct=directMaterial(request);
   const directDisposition=direct.status==='MAPPED' ? direct.capability.status : direct.status;
-  assert.equal(browser.rawEvaluation.status,directDisposition,(angle===46?'FAULT_TARGET_46_DEGREE_MITER_REFUSAL · ':'')+angle+' degree browser/Store disposition drift');
+  assert.equal(
+    browser.rawEvaluation.status,
+    directDisposition,
+    (angle===46?'FAULT_TARGET_46_DEGREE_MITER_REFUSAL · ':'')+angle+' degree browser/Store disposition drift'
+  );
   if(angle<=45){
     assert.equal(browser.rawEvaluation.status,'SUPPORTABLE');
     assert.equal(browser.priceCompleteness.status,'COMPLETE_FOR_ENCODED_DEMAND');
@@ -75,56 +82,80 @@ for(const angle of [30,45,46]){
   }
 }
 
-// The default User 1 spot is depth-defined but point/cycle economics remain explicitly partial.
-const spotRequest=input(30,centeredSpot);
+const noSpotRequest=input({spot:false});
+const noSpotBrowser=browserStore.evaluate(noSpotRequest);
+const noSpotDirect=directMaterial(noSpotRequest);
+assert.equal(noSpotBrowser.rawEvaluation.status,'SUPPORTABLE');
+assert.equal(noSpotDirect.status,'MAPPED');
+assert.equal(noSpotBrowser.materialResolution.pricingReferenceSku,'STB-ZERO-SPF-2X4-72-001');
+assert.equal(noSpotBrowser.materialResolution.pricingReferenceStockLengthIn,72);
+assert.equal(noSpotBrowser.materialResolution.parentCount,1);
+assert.equal(noSpotBrowser.materialResolution.plan.intermediateBlank,null);
+assert.equal(noSpotBrowser.materialResolution.plan.accounting.productionSawCuts,3);
+assert.equal(noSpotBrowser.materialResolution.plan.accounting.preparationSawCuts,0);
+assert.equal(noSpotBrowser.materialResolution.plan.parents[0].remainderIn,39.625);
+assert.equal(noSpotBrowser.mappedCallInputs.definition.finishedPartLengthIn,16);
+assert.equal(noSpotBrowser.mappedCallInputs.definition.finishedPartQuantity,2);
+assert.equal(noSpotBrowser.mappedCallInputs.definition.definedWorkpieceLengthIn,undefined);
+assert.equal(noSpotBrowser.mappedCallInputs.definition.spotDemand,null);
+assert.equal(noSpotBrowser.mappedCallInputs.estimate.spotCycles,0);
+
+const directNoSpotEstimate=store.estimateResolvedBoardPlan(catalog,noSpotDirect,{
+  title:'User-defined Board · 2 × 16 in finished members',
+  classId:'app.user-defined-board.v1',
+  spotCycles:0
+});
+assert.equal(noSpotBrowser.rawEstimate.status,directNoSpotEstimate.status);
+assert.equal(noSpotBrowser.rawEstimate.totals.material,3.13);
+assert.equal(noSpotBrowser.rawEstimate.totals.cell_recovery,51.14);
+assert.equal(noSpotBrowser.rawEstimate.totals.Q,54.27);
+assert.equal(noSpotBrowser.rawEstimate.cycle.T_job_min,9.686);
+assert.deepEqual(
+  JSON.parse(JSON.stringify(noSpotBrowser.materialResolution.plan)),
+  JSON.parse(JSON.stringify(noSpotDirect.plan)),
+  'FAULT_TARGET_BROWSER_STORE_PLAN_DRIFT'
+);
+
+const spotRequest=input({spot:true});
 const spotBrowser=browserStore.evaluate(spotRequest);
 const spotDirect=directMaterial(spotRequest);
-assert.equal(spotDirect.status,'UNRESOLVED');
+assert.equal(spotDirect.status,'MAPPED');
+assert.equal(spotDirect.capability.status,'UNRESOLVED');
 assert.equal(spotBrowser.rawEvaluation.status,'UNRESOLVED');
+assert.equal(spotBrowser.materialResolution.pricingReferenceSku,noSpotBrowser.materialResolution.pricingReferenceSku);
+assert.equal(spotBrowser.materialResolution.pricingReferenceStockLengthIn,noSpotBrowser.materialResolution.pricingReferenceStockLengthIn);
+assert.equal(spotBrowser.materialResolution.plan.parents[0].remainderIn,noSpotBrowser.materialResolution.plan.parents[0].remainderIn);
 assert.ok(spotBrowser.priceCompleteness.unresolvedConditions.includes('SPOT_TOOL_POINT_GEOMETRY_REQUIRED'));
 assert.ok(spotBrowser.priceCompleteness.unresolvedConditions.includes('SPOT_CYCLE_TIME_APPLICABILITY_UNRESOLVED'));
 assert.equal(spotBrowser.mappedCallInputs.definition.spotOperation.toolDiameterIn,0.1875);
 assert.equal(spotBrowser.mappedCallInputs.definition.spotOperation.fullDiameterPenetrationIn,0.1875);
-assert.equal(spotBrowser.mappedCallInputs.definition.spotOperation.depthReference,'ENTRY_SURFACE_ALONG_DRILL_AXIS');
 assert.equal(spotBrowser.mappedCallInputs.definition.spotOperation.pointGeometryStatus,'UNRESOLVED');
 assert.equal(spotBrowser.mappedCallInputs.definition.spotOperation.totalTipPenetrationIn,null);
+assert.equal(spotBrowser.rawEstimate.status,'PARTIAL_BUDGETARY_ESTIMATE');
+assert.equal(spotBrowser.rawEstimate.totals.material,3.13);
+assert.equal(spotBrowser.rawEstimate.totals.cell_recovery,51.14);
+assert.equal(spotBrowser.rawEstimate.totals.Q,54.27);
+assert.equal(spotBrowser.rawEstimate.cycle.T_job_min,9.686);
 
-const directSpotEstimate=pricing.estimateBoardSequence(catalog,{
-  title:'User-defined Board · 60 in workpiece',
-  classId:'app.user-defined-board.v1',
-  storeSku:spotDirect.storeSku,
-  qty:1,
-  definedWorkpieceLengthIn:60,
-  sawCuts:3,
-  sawAngleDeg:30,
-  drillCycles:0,
-  spotCycles:2,
-  drillReferenceDepthIn:0
-});
-assert.equal(spotBrowser.rawEstimate.status,directSpotEstimate.status);
-assert.equal(spotBrowser.rawEstimate.totals.material,directSpotEstimate.totals.material);
-assert.equal(spotBrowser.rawEstimate.totals.cell_recovery,directSpotEstimate.totals.cell_recovery);
-assert.equal(spotBrowser.rawEstimate.totals.Q,directSpotEstimate.totals.Q);
-assert.equal(spotBrowser.rawEstimate.cycle.T_job_min,directSpotEstimate.cycle.T_job_min);
+const lengthEdit=browserStore.evaluate(input({length:16.5,spot:false}));
+assert.equal(lengthEdit.materialResolution.pricingReferenceStockLengthIn,72);
+assert.equal(lengthEdit.materialResolution.plan.parents[0].remainderIn,38.625);
+assert.equal(lengthEdit.rawEstimate.totals.Q,54.28);
 
-const missing=input(30,{
-  required:true,
-  mode:'SPOT_ON_LOCATION',
-  countPerPart:1,
-  totalCount:2,
-  locationRule:'CENTERED_ON_PART',
-  acrossWidthRule:'CENTERED_ON_WIDE_FACE'
-});
+const qtyEdit=browserStore.evaluate(input({quantity:4,spot:false}));
+assert.equal(qtyEdit.materialResolution.pricingReferenceSku,'STB-ZERO-SPF-2X4-96-001');
+assert.equal(qtyEdit.materialResolution.pricingReferenceStockLengthIn,96);
+assert.equal(qtyEdit.materialResolution.plan.finishedPart.lengthIn,16);
+assert.equal(qtyEdit.materialResolution.plan.finishedPart.quantity,4);
+assert.equal(qtyEdit.materialResolution.plan.accounting.productionSawCuts,5);
+assert.equal(qtyEdit.materialResolution.plan.accounting.preparationSawCuts,0);
+assert.equal(qtyEdit.materialResolution.plan.parents[0].remainderIn,31.375);
+assert.equal(qtyEdit.rawEstimate.totals.material,4.18);
+assert.equal(qtyEdit.rawEstimate.totals.Q,56.18);
+
+const missing=input({spot:true});
+delete missing.spotDemand.locationAlongLengthIn;
 const missingBrowser=browserStore.evaluate(missing);
-const missingDirect=directMaterial(missing);
-const directMissingReasons=(missingDirect.considered||[]).flatMap(entry=>entry?.capability?.unresolved||[]);
-assert.ok(directMissingReasons.includes('SPOT_LOCATION_REQUIRED'));
 assert.ok(missingBrowser.priceCompleteness.unresolvedConditions.includes('SPOT_LOCATION_REQUIRED'));
 
-const noSpot=input(30,null);
-const noSpotBrowser=browserStore.evaluate(noSpot);
-assert.equal(noSpotBrowser.rawEvaluation.status,'SUPPORTABLE');
-assert.equal(noSpotBrowser.mappedCallInputs.definition.spotDemand,null);
-assert.equal(noSpotBrowser.mappedCallInputs.estimate.spotCycles,0);
-
-console.log('PASS · generated User 1 browser Store matches depth-defined exact Store behavior');
+console.log('PASS · generated User 1 browser Store matches demand-driven exact Store behavior');
