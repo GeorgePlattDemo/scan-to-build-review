@@ -207,8 +207,8 @@ jobs:
           node tools/generate-user1-store-browser-bundle.mjs --check stb-store-zero-user1.generated.js
           STB_STORE_ZERO_ROOT="$GITHUB_WORKSPACE/store-zero" node tests/user1-generated-store-parity.test.mjs
           python3 -m http.server 4173 --bind 127.0.0.1 > "$RUNNER_TEMP/fault-control-server.log" 2>&1 &
-          control_server_pid=$!
-          trap 'kill $control_server_pid || true' EXIT
+          server_pid=$!
+          trap 'kill $server_pid || true' EXIT
           for i in {1..30}; do
             curl -fsS http://127.0.0.1:4173/system-build-current.html >/dev/null && break
             sleep 1
@@ -239,36 +239,92 @@ jobs:
           test "$rc" -ne 0
           grep -Fq "FAULT_TARGET_46_DEGREE_MITER_REFUSAL" "$RUNNER_TEMP/fault-46.log"
 
-      - name: Fault check — visible answer differing from Store answer is detected
+      - name: Fault check — unjustified intermediate blank is detected by name
         run: |
-          rm -rf "$RUNNER_TEMP/fault-visible"
-          mkdir -p "$RUNNER_TEMP/fault-visible"
-          git archive HEAD | tar -x -C "$RUNNER_TEMP/fault-visible"
-          ln -s "$GITHUB_WORKSPACE/node_modules" "$RUNNER_TEMP/fault-visible/node_modules"
+          rm -rf "$RUNNER_TEMP/fault-blank"
+          mkdir -p "$RUNNER_TEMP/fault-blank"
+          git archive HEAD | tar -x -C "$RUNNER_TEMP/fault-blank"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$RUNNER_TEMP/fault-blank/node_modules"
           python3 - <<'PY'
           from pathlib import Path
           import os
-          p=Path(os.environ["RUNNER_TEMP"])/"fault-visible/system-build-current.html"
+          p=Path(os.environ["RUNNER_TEMP"])/"fault-blank/system-build-current.html"
           s=p.read_text()
-          old="'$'+Number(estimate.total).toFixed(2)"
+          old="const selectedPlan = materialResolution.plan || null;"
           assert old in s
-          p.write_text(s.replace(old,"'$999.00'",1))
+          new="const selectedPlan = materialResolution.plan ? {...materialResolution.plan, intermediateBlank:{lengthIn:60,reason:'UNJUSTIFIED_FAULT',source:null}} : null;"
+          p.write_text(s.replace(old,new,1))
           PY
-          cd "$RUNNER_TEMP/fault-visible"
-          python3 -m http.server 4175 --bind 127.0.0.1 > "$RUNNER_TEMP/fault-visible-server.log" 2>&1 &
+          cd "$RUNNER_TEMP/fault-blank"
+          python3 -m http.server 4175 --bind 127.0.0.1 > "$RUNNER_TEMP/fault-blank-server.log" 2>&1 &
           server_pid=$!
           trap 'kill $server_pid || true' EXIT
           sleep 2
           set +e
-          STB_REVIEW_URL=http://127.0.0.1:4175 "$GITHUB_WORKSPACE/node_modules/.bin/playwright" test tests/user1-independent-browser.acceptance.spec.mjs --workers=1 > "$RUNNER_TEMP/fault-visible.log" 2>&1
+          STB_REVIEW_URL=http://127.0.0.1:4175 "$GITHUB_WORKSPACE/node_modules/.bin/playwright" test tests/user1-independent-browser.acceptance.spec.mjs --workers=1 > "$RUNNER_TEMP/fault-blank.log" 2>&1
           rc=$?
           set -e
-          cat "$RUNNER_TEMP/fault-visible.log"
+          cat "$RUNNER_TEMP/fault-blank.log"
           test "$rc" -ne 0
-          grep -Fq "FAULT_TARGET_VISIBLE_STORE_VALUE_MISMATCH" "$RUNNER_TEMP/fault-visible.log"
-          kill "$server_pid" || true
+          grep -Fq "FAULT_TARGET_UNJUSTIFIED_BLANK_INSERTED" "$RUNNER_TEMP/fault-blank.log"
 
-      - name: Fault check — visible picture operation count diverging from priced plan is detected
+      - name: Fault check — parent stock overwriting finished geometry is detected by name
+        run: |
+          rm -rf "$RUNNER_TEMP/fault-geometry"
+          mkdir -p "$RUNNER_TEMP/fault-geometry"
+          git archive HEAD | tar -x -C "$RUNNER_TEMP/fault-geometry"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$RUNNER_TEMP/fault-geometry/node_modules"
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          p=Path(os.environ["RUNNER_TEMP"])/"fault-geometry/stb-store-zero-user1.generated.js"
+          s=p.read_text()
+          old="lengthIn: finishedPartLengthIn,"
+          assert s.count(old) == 1
+          p.write_text(s.replace(old,"lengthIn: selected.parentLengthIn,",1))
+          PY
+          cd "$RUNNER_TEMP/fault-geometry"
+          python3 -m http.server 4176 --bind 127.0.0.1 > "$RUNNER_TEMP/fault-geometry-server.log" 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid || true' EXIT
+          sleep 2
+          set +e
+          STB_REVIEW_URL=http://127.0.0.1:4176 "$GITHUB_WORKSPACE/node_modules/.bin/playwright" test tests/user1-independent-browser.acceptance.spec.mjs --workers=1 > "$RUNNER_TEMP/fault-geometry.log" 2>&1
+          rc=$?
+          set -e
+          cat "$RUNNER_TEMP/fault-geometry.log"
+          test "$rc" -ne 0
+          grep -Fq "FAULT_TARGET_STOCK_LENGTH_OVERWRITES_FINISHED_GEOMETRY" "$RUNNER_TEMP/fault-geometry.log"
+
+      - name: Fault check — priced plan omitting a necessary saw operation is detected by name
+        run: |
+          rm -rf "$RUNNER_TEMP/fault-priced-op"
+          mkdir -p "$RUNNER_TEMP/fault-priced-op"
+          git archive HEAD | tar -x -C "$RUNNER_TEMP/fault-priced-op"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$RUNNER_TEMP/fault-priced-op/node_modules"
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          p=Path(os.environ["RUNNER_TEMP"])/"fault-priced-op/stb-store-zero-user1.generated.js"
+          s=p.read_text()
+          old="totalModeledSawCuts: productionSawCuts + preparationSawCuts,"
+          assert s.count(old) == 1
+          p.write_text(s.replace(old,"totalModeledSawCuts: productionSawCuts + preparationSawCuts - 1,",1))
+          PY
+          cd "$RUNNER_TEMP/fault-priced-op"
+          python3 -m http.server 4177 --bind 127.0.0.1 > "$RUNNER_TEMP/fault-priced-op-server.log" 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid || true' EXIT
+          sleep 2
+          set +e
+          STB_REVIEW_URL=http://127.0.0.1:4177 "$GITHUB_WORKSPACE/node_modules/.bin/playwright" test tests/user1-independent-browser.acceptance.spec.mjs --workers=1 > "$RUNNER_TEMP/fault-priced-op.log" 2>&1
+          rc=$?
+          set -e
+          cat "$RUNNER_TEMP/fault-priced-op.log"
+          test "$rc" -ne 0
+          grep -Fq "FAULT_TARGET_PRICED_PLAN_OMITS_NECESSARY_OPERATION" "$RUNNER_TEMP/fault-priced-op.log"
+
+      - name: Fault check — picture diverging from priced plan is detected by name
         run: |
           rm -rf "$RUNNER_TEMP/fault-picture"
           mkdir -p "$RUNNER_TEMP/fault-picture"
@@ -284,44 +340,42 @@ jobs:
           p.write_text(s.replace(old,"const productionCuts = Number(plan?.accounting?.productionSawCuts) + 1;",1))
           PY
           cd "$RUNNER_TEMP/fault-picture"
-          python3 -m http.server 4177 --bind 127.0.0.1 > "$RUNNER_TEMP/fault-picture-server.log" 2>&1 &
+          python3 -m http.server 4178 --bind 127.0.0.1 > "$RUNNER_TEMP/fault-picture-server.log" 2>&1 &
           server_pid=$!
           trap 'kill $server_pid || true' EXIT
           sleep 2
           set +e
-          STB_REVIEW_URL=http://127.0.0.1:4177 "$GITHUB_WORKSPACE/node_modules/.bin/playwright" test tests/user1-independent-browser.acceptance.spec.mjs --workers=1 > "$RUNNER_TEMP/fault-picture.log" 2>&1
+          STB_REVIEW_URL=http://127.0.0.1:4178 "$GITHUB_WORKSPACE/node_modules/.bin/playwright" test tests/user1-independent-browser.acceptance.spec.mjs --workers=1 > "$RUNNER_TEMP/fault-picture.log" 2>&1
           rc=$?
           set -e
           cat "$RUNNER_TEMP/fault-picture.log"
           test "$rc" -ne 0
           grep -Fq "FAULT_TARGET_PICTURE_PRICED_PLAN_MISMATCH" "$RUNNER_TEMP/fault-picture.log"
-          kill "$server_pid" || true
 
-      - name: Fault check — synchronous Store answer revision mismatch is detected specifically
+      - name: Fault check — stale Store answer after a new revision is detected by name
         run: |
-          rm -rf "$RUNNER_TEMP/fault-revision"
-          mkdir -p "$RUNNER_TEMP/fault-revision"
-          git archive HEAD | tar -x -C "$RUNNER_TEMP/fault-revision"
-          ln -s "$GITHUB_WORKSPACE/node_modules" "$RUNNER_TEMP/fault-revision/node_modules"
+          rm -rf "$RUNNER_TEMP/fault-stale"
+          mkdir -p "$RUNNER_TEMP/fault-stale"
+          git archive HEAD | tar -x -C "$RUNNER_TEMP/fault-stale"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$RUNNER_TEMP/fault-stale/node_modules"
           python3 - <<'PY'
           from pathlib import Path
           import os
-          p=Path(os.environ["RUNNER_TEMP"])/"fault-revision/system-build-current.html"
+          p=Path(os.environ["RUNNER_TEMP"])/"fault-stale/system-build-current.html"
           s=p.read_text()
-          old='answerVersionId:storeAnswer.definitionVersionId,'
+          old="const markRevision = () => { definitionRevision += 1; };"
           assert old in s
-          p.write_text(s.replace(old,"answerVersionId:'OLDER-REVISION',",1))
+          p.write_text(s.replace(old,"const markRevision = () => {};",1))
           PY
-          cd "$RUNNER_TEMP/fault-revision"
-          python3 -m http.server 4176 --bind 127.0.0.1 > "$RUNNER_TEMP/fault-revision-server.log" 2>&1 &
+          cd "$RUNNER_TEMP/fault-stale"
+          python3 -m http.server 4179 --bind 127.0.0.1 > "$RUNNER_TEMP/fault-stale-server.log" 2>&1 &
           server_pid=$!
           trap 'kill $server_pid || true' EXIT
           sleep 2
           set +e
-          STB_REVIEW_URL=http://127.0.0.1:4176 "$GITHUB_WORKSPACE/node_modules/.bin/playwright" test tests/user1-independent-browser.acceptance.spec.mjs --workers=1 > "$RUNNER_TEMP/fault-revision.log" 2>&1
+          STB_REVIEW_URL=http://127.0.0.1:4179 "$GITHUB_WORKSPACE/node_modules/.bin/playwright" test tests/user1-independent-browser.acceptance.spec.mjs --workers=1 > "$RUNNER_TEMP/fault-stale.log" 2>&1
           rc=$?
           set -e
-          cat "$RUNNER_TEMP/fault-revision.log"
+          cat "$RUNNER_TEMP/fault-stale.log"
           test "$rc" -ne 0
-          grep -Fq "FAULT_TARGET_STORE_ANSWER_VERSION_MISMATCH" "$RUNNER_TEMP/fault-revision.log"
-          kill "$server_pid" || true
+          grep -Fq "FAULT_TARGET_STALE_ANSWER_ON_NEW_REVISION" "$RUNNER_TEMP/fault-stale.log"
