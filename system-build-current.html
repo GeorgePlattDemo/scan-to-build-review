@@ -180,7 +180,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
           }
           const proofFrame = startOwnPage.querySelector('#start-own-proof-frame');
           let pendingStartOwnStage = 'intent';
-          let showStartOwnStage = stage => { pendingStartOwnStage = stage === 'bench' ? 'bench' : 'intent'; };
+          let pendingStartOwnFocus = null;
+          let showStartOwnStage = (stage, focus = null) => {
+            pendingStartOwnStage = stage === 'bench' ? 'bench' : 'intent';
+            pendingStartOwnFocus = focus === 'definition-boundary' ? 'definition-boundary' : null;
+          };
           const proofDecisions = new Set();
           let proofActions = 0;
           const classifyStartOwnDecision = target => {
@@ -369,7 +373,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 return true;
               };
 
-              const showStage = stage => {
+              const showStage = (stage, focus = null) => {
                 const bench = stage === 'bench';
                 if (intentScreen) intentScreen.hidden = bench;
                 if (benchScreen) benchScreen.hidden = !bench;
@@ -383,11 +387,23 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   }
                 }
                 if (bench) syncAndRender('BENCH_VIEW');
-                proofFrame.contentWindow?.scrollTo?.(0,0);
+                if (bench && focus === 'definition-boundary') {
+                  const confirmBlock = childDoc.querySelector('.confirm-block');
+                  if (confirmBlock) {
+                    proofFrame.contentWindow?.requestAnimationFrame?.(() => {
+                      confirmBlock.scrollIntoView({block:'end'});
+                    });
+                  } else {
+                    proofFrame.contentWindow?.scrollTo?.(0,0);
+                  }
+                } else {
+                  proofFrame.contentWindow?.scrollTo?.(0,0);
+                }
               };
-              showStartOwnStage = stage => {
+              showStartOwnStage = (stage, focus = null) => {
                 pendingStartOwnStage = stage === 'bench' ? 'bench' : 'intent';
-                showStage(pendingStartOwnStage);
+                pendingStartOwnFocus = focus === 'definition-boundary' ? 'definition-boundary' : null;
+                showStage(pendingStartOwnStage, pendingStartOwnFocus);
               };
 
               const syncDefinition = reason => {
@@ -775,7 +791,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
               syncStoreGlossary();
               syncAndRender('INITIAL');
-              showStage(pendingStartOwnStage);
+              showStage(pendingStartOwnStage, pendingStartOwnFocus);
 
               benchButton?.addEventListener('click', () => {
                 syncAndRender('BENCH_HANDOFF');
@@ -2490,7 +2506,10 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     function showMappedProjectStage(projectId, stage) {
       if (projectId === 'start-own' && (stage === 'scan' || stage === 'configure')) {
         originalShow.call(win,'start-own-live');
-        setTimeout(() => showStartOwnStage(stage === 'configure' ? 'bench' : 'intent'),0);
+        setTimeout(() => showStartOwnStage(
+          stage === 'configure' ? 'bench' : 'intent',
+          stage === 'configure' ? 'definition-boundary' : null
+        ),0);
         syncJourneyNav(stage);
         return true;
       }
