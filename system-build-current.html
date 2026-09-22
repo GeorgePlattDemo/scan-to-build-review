@@ -424,12 +424,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   return null;
                 }
 
-                const offerings = storeOfferingsForSize('2x4');
-                if (!offerings.length) {
-                  currentUser1Definition = null;
-                  return null;
-                }
-
                 const centerSpotIn = Number((finishedLengthIn / 2).toFixed(6));
                 const spotDemand = spotMode === 'centered' ? {
                   required:true,
@@ -447,9 +441,12 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   }
                 } : null;
 
+                const requiredOps = [angleDeg === 0 ? 'CROSSCUT' : 'MITER_LIMITED'];
+                const versionId = 'SYO-USER1-XBRACE-0.2-v'+definitionRevision;
                 const physicalDemand = {
                   stockClass:'2x4',
                   materialSource:'STORE_SELECTED',
+                  finishedPartLengthIn:finishedLengthIn,
                   finishedLength:finishedLengthIn,
                   quantity:partQty,
                   endCondition:angleDeg ? 'angled' : 'square',
@@ -463,11 +460,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 };
                 if (spotDemand) physicalDemand.spotDemand = spotDemand;
 
-                const requiredOps = [];
-                if (angleDeg === 0) requiredOps.push('CROSSCUT');
-                if (angleDeg !== 0) requiredOps.push('MITER_LIMITED');
-
-                const versionId = 'SYO-USER1-XBRACE-0.2-v'+definitionRevision;
                 const authoritativeRequest = {
                   definitionVersionId:versionId,
                   materialDemand:{species:'spf',form:'board',nominalT:2,nominalW:4},
@@ -492,10 +484,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
                 const materialResolution = storeAnswer.materialResolution || {
                   status:'UNRESOLVED',
-                  unresolvedConditions:['STORE_MATERIAL_RESPONSE_MISSING'],
-                  plan:null
+                  unresolvedConditions:['STORE_MATERIAL_RESPONSE_MISSING']
                 };
-                const storePlan = materialResolution.plan || storeAnswer.mappedCallInputs?.definition?.selectedParentPlan || null;
+                const selectedPlan = materialResolution.plan || null;
                 const storeUnresolved = Array.isArray(storeAnswer.priceCompleteness?.unresolvedConditions)
                   ? storeAnswer.priceCompleteness.unresolvedConditions.slice()
                   : [];
@@ -507,6 +498,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   materialResolution.status ||
                   'UNRESOLVED';
                 const estimateRaw = storeAnswer.rawEstimate || null;
+                const estimateRequest = storeAnswer.mappedCallInputs?.estimate || null;
                 const storeSpotOperation = storeAnswer.mappedCallInputs?.definition?.spotOperation || null;
                 const storeEstimate = estimateRaw ? {
                   status:estimateRaw.status,
@@ -517,14 +509,19 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   cellRecovery:estimateRaw.totals?.cell_recovery ?? null,
                   total:estimateRaw.totals?.Q ?? null,
                   cycle:estimateRaw.cycle || null,
-                  operationBasis:{
-                    selectedParentPlan:storePlan,
-                    productionSawCuts:storePlan?.accounting?.productionSawCuts ?? null,
-                    preparationSawCuts:storePlan?.accounting?.preparationSawCuts ?? null,
-                    totalModeledSawCuts:storePlan?.accounting?.totalModeledSawCuts ?? null,
-                    spotCycles:spotDemand ? partQty : 0,
+                  operationAccounting:estimateRaw.operationAccounting || null,
+                  operationBasis:estimateRequest ? {
+                    planId:selectedPlan?.planId || null,
+                    selectedParentSku:selectedPlan?.selected?.storeSku || null,
+                    selectedParentLengthIn:selectedPlan?.selected?.parentStockLengthIn ?? null,
+                    parentCount:selectedPlan?.selected?.parentCount ?? null,
+                    productionSawCuts:selectedPlan?.accounting?.productionSawCuts ?? null,
+                    preparationSawCuts:selectedPlan?.accounting?.preparationSawCuts ?? null,
+                    totalModeledSawCuts:selectedPlan?.accounting?.totalModeledSawCuts ?? null,
+                    sawAngleDeg:angleDeg,
+                    spotCycles:estimateRequest.spotCycles ?? 0,
                     spotOperation:storeSpotOperation
-                  },
+                  } : null,
                   engine:storeAnswer.attributedBasis?.pricingEngine || null,
                   source:{
                     repository:'GeorgePlattDemo/scan-to-build-store',
@@ -549,7 +546,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   definitionId:'SYO-USER1-XBRACE-0.2',
                   versionId:versionId,
                   material:{
-                    origin:'STORE_SELECTED',
+                    origin:'STORE_ZERO',
+                    materialSource:'STORE_SELECTED',
                     stockClass:'2x4',
                     stockClassAuthority:{
                       repository:'GeorgePlattDemo/scan-to-build-store',
@@ -560,14 +558,15 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                     procurement:(materialResolution.pricingReferenceSku || materialResolution.storeSku) ? {
                       pricingReferenceSku:materialResolution.pricingReferenceSku || materialResolution.storeSku || null,
                       pricingReferenceStockLengthIn:materialResolution.pricingReferenceStockLengthIn || materialResolution.stockLengthIn || null,
-                      parentCount:materialResolution.parentCount ?? storePlan?.selected?.parentCount ?? null,
+                      parentCount:materialResolution.parentCount ?? null,
                       unitPrice:materialResolution.unitPrice ?? null,
                       materialTotal:materialResolution.materialTotal ?? null,
                       allocationClaimed:false,
                       capabilityStatus:materialResolution.status || 'UNRESOLVED',
-                      selectionPolicy:materialResolution.selectionPolicy || storePlan?.selectionPolicy || null
+                      selectionPolicy:materialResolution.selectionPolicy || null
                     } : null,
-                    mappedStoreSkus:offerings.map(row => row.storeSku)
+                    intermediateBlank:selectedPlan?.intermediateBlank || null,
+                    mappedStoreSkus:storeOfferingsForSize('2x4').map(row => row.storeSku)
                   },
                   intent:{
                     partQty:{value:partQty,basis:definitionRevision===1?'USER_1_INTENT_IMAGE':'CUSTOMER_INPUT'},
@@ -585,7 +584,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                     } : null
                   },
                   physicalDemand:physicalDemand,
-                  storePlan:storePlan,
+                  operationPlan:selectedPlan,
+                  definitionUnresolvedConditions:[],
                   capability:capability,
                   storeReference:{
                     answerVersionId:storeAnswer.definitionVersionId,
@@ -601,7 +601,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                     refusalConditions:storeRefusals,
                     unresolvedConditions:storeUnresolved,
                     materialResolution:materialResolution,
-                    selectedParentPlan:storePlan,
                     spotOperation:storeSpotOperation,
                     authoritativeRequest:authoritativeRequest,
                     authoritativeAnswer:storeAnswer,
@@ -611,7 +610,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                     reason:String(reason||'SYNC'),
                     storeCatalogPin:storeAnswer.storePin || user1StoreRuntime.storePin || null,
                     storeSourceBlobs:storeAnswer.sourceBlobs || user1StoreRuntime.sourceBlobs || null,
-                    finishedPartDemand:{lengthIn:finishedLengthIn,quantity:partQty}
+                    finishedPartLengthIn:finishedLengthIn,
+                    finishedPartQuantity:partQty
                   },
                   physicalExecutionAuthorized:false
                 };
@@ -620,192 +620,166 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 } catch (_) {}
                 return currentUser1Definition;
               };
-
               const renderBoardGeometry = definition => {
                 const demand = definition?.physicalDemand;
-                const plan = definition?.storePlan;
-                const selected = plan?.selected;
-                const parent = Array.isArray(plan?.parents) ? plan.parents[0] : null;
-                if (!demand || !selected || !parent) return;
+                const plan = definition?.operationPlan;
                 const overlay = childDoc.getElementById('stb-bench-dynamic-geometry');
-                if (!overlay) return;
-                [
-                  'stb-bench-static-parts',
-                  'stb-bench-static-cuts',
-                  'stb-bench-static-cut-markers',
-                  'stb-bench-static-joint-note',
-                  'stb-bench-static-spots',
-                  'stb-bench-static-part1-label',
-                  'stb-bench-static-part2-label',
-                  'stb-bench-static-dims',
-                  'stb-bench-static-control',
-                  'stb-bench-part1-dim',
-                  'stb-bench-part2-dim'
-                ].forEach(id => {
+                if (!demand || !overlay) return;
+                ['stb-bench-static-parts','stb-bench-static-cuts','stb-bench-static-cut-markers','stb-bench-static-joint-note','stb-bench-static-spots','stb-bench-static-part1-label','stb-bench-static-part2-label','stb-bench-static-dims','stb-bench-part1-dim','stb-bench-part2-dim'].forEach(id => {
                   const el=childDoc.getElementById(id);
                   if(el) el.style.display='none';
                 });
 
-                const x0=40, xMax=860, topY=100, bottomY=180;
-                const parentLength=Math.max(1,Number(selected.parentStockLengthIn)||1);
-                const scale=(xMax-x0)/parentLength;
+                const controlStatic=childDoc.getElementById('stb-bench-static-control');
+                if(controlStatic) controlStatic.style.display='none';
+                if (!plan?.selected || !Array.isArray(plan.parents) || !plan.parents.length) {
+                  overlay.innerHTML='';
+                  return;
+                }
+
+                const parent=plan.parents[0];
+                const parentLength=Math.max(0,Number(plan.selected.parentStockLengthIn)||0);
+                const qty=Math.max(1,Number(parent.producedParts)||Number(demand.quantity)||1);
+                const len=Math.max(0,Number(demand.finishedPartLengthIn)||Number(demand.finishedLength)||0);
                 const angle=Math.max(0,Math.min(89,Number(demand.angleDegrees)||0));
-                const delta=80*Math.tan(angle*Math.PI/180);
-                const holdIn=Number(plan?.sequenceRules?.retainedControlTailIn || 24);
-                const workingLength=Number(parent.workingLengthIn || parentLength);
-                const workingEndX=x0+workingLength*scale;
-                const controlStartX=Math.max(x0,workingEndX-holdIn*scale);
-                const colors=['#a85a2a','#2f6f9e','#7a4f22','#5d6e52'];
-                const kerf=Number(plan?.sequenceRules?.kerfIn || 0.125);
+                const retainedTail=Math.max(0,Number(plan.sequenceRules?.retainedControlTailIn)||24);
+                if (!(parentLength > 0)) {
+                  overlay.innerHTML='';
+                  return;
+                }
+
+                const x0=40, xMax=860, topY=100, bottomY=180, scale=(xMax-x0)/parentLength;
+                const delta=Math.min(70,80*Math.tan(Math.min(angle,40)*Math.PI/180));
+                const kerf=Number(plan.sequenceRules?.kerfIn)||0.125;
                 let cursor=0;
-                let partIndex=0;
-                let cutIndex=0;
                 let svg='';
+                const colors=['#a85a2a','#2f6f9e'];
+                const productionOps=(parent.operations||[]).filter(op=>op.operation!=='PREPARE_FINISHED_BLANK');
 
-                svg+='<rect x="'+controlStartX+'" y="101" width="'+Math.max(0,workingEndX-controlStartX)+'" height="78" fill="url(#obHatch)"/>';
-                svg+='<rect x="'+controlStartX+'" y="101" width="'+Math.max(0,workingEndX-controlStartX)+'" height="78" fill="none" stroke="#2f6f9e" stroke-width="1.5" stroke-dasharray="6 4" opacity=".8"/>';
-
-                for (const op of (parent.operations || [])) {
-                  if (op.operation === 'PREPARE_FINISHED_BLANK') {
-                    const prepX=x0+Number(op.outputLengthIn||workingLength)*scale;
-                    svg+='<line x1="'+prepX+'" y1="'+topY+'" x2="'+prepX+'" y2="'+bottomY+'" stroke="#7a4f22" stroke-width="3" stroke-dasharray="5 4"/>';
-                    svg+='<text x="'+Math.min(xMax-8,prepX+6)+'" y="92" font-size="9" fill="#7a4f22">PREP · '+String(op.reason||'DECLARED')+'</text>';
-                    continue;
-                  }
-                  if (op.operation === 'ESTABLISH_FIRST_END') {
+                productionOps.forEach((op,index)=>{
+                  if(op.operation==='ESTABLISH_FIRST_END'){
+                    cursor+=kerf;
                     const bottomX=x0+cursor*scale;
                     const topX=bottomX+delta;
-                    cutIndex += 1;
                     svg+='<line x1="'+topX+'" y1="'+topY+'" x2="'+bottomX+'" y2="'+bottomY+'" stroke="#a85a2a" stroke-width="5" stroke-linecap="round"/>';
-                    svg+='<circle cx="'+(bottomX+delta*.65)+'" cy="74" r="13" fill="#a85a2a"/><text x="'+(bottomX+delta*.65)+'" y="79" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">'+cutIndex+'</text>';
-                    cursor += kerf;
-                    continue;
-                  }
-                  if (op.operation === 'SEPARATE_FINISHED_PART') {
-                    const partStart=cursor;
-                    const partEnd=partStart+Number(op.finishedLengthIn||demand.finishedLength||0);
-                    const left=x0+partStart*scale;
-                    const right=x0+partEnd*scale;
-                    const fill=colors[partIndex%colors.length];
+                    svg+='<circle cx="'+(bottomX+delta*.65)+'" cy="74" r="13" fill="#a85a2a"/><text x="'+(bottomX+delta*.65)+'" y="79" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">'+(index+1)+'</text>';
+                  } else if(op.operation==='SEPARATE_FINISHED_PART'){
+                    const left=x0+cursor*scale;
+                    const right=x0+(cursor+len)*scale;
+                    const fill=colors[(Number(op.partNumber)||1)%colors.length];
                     const cx=(left+right)/2;
-                    svg+='<path d="M'+(left+delta)+' 101 L'+(right+delta)+' 101 L'+right+' 179 L'+left+' 179 Z" fill="'+fill+'" opacity=".07"/>';
-                    svg+='<text x="'+cx+'" y="124" text-anchor="middle" font-size="11" font-weight="700" fill="#584533">PART '+(partIndex+1)+'</text>';
+                    svg+='<path d="M'+(left+delta)+' 101 L'+(right+delta)+' 101 L'+right+' 179 L'+left+' 179 Z" fill="'+fill+'" opacity=".06"/>';
+                    svg+='<text x="'+cx+'" y="124" text-anchor="middle" font-size="11" font-weight="700" fill="#584533">PART '+String(op.partNumber||'')+'</text>';
                     if(demand.spotDemand){
                       svg+='<circle cx="'+cx+'" cy="140" r="12" fill="none" stroke="#2f6f9e" stroke-width="2.4"/><circle cx="'+cx+'" cy="140" r="4" fill="#2f6f9e"/>';
                     }
                     svg+='<g stroke="#7a4f22" stroke-width="1.1" fill="none" opacity=".8"><line x1="'+left+'" y1="200" x2="'+right+'" y2="200"/><path d="M'+left+' 195v10M'+right+' 195v10"/></g>';
-                    svg+='<text x="'+cx+'" y="217" text-anchor="middle" font-size="11" font-weight="700" fill="#7a4f22">'+Number(op.finishedLengthIn||demand.finishedLength)+' in</text>';
-                    cutIndex += 1;
-                    const cutBottom=right;
-                    const cutTop=cutBottom+delta;
-                    svg+='<line x1="'+cutTop+'" y1="'+topY+'" x2="'+cutBottom+'" y2="'+bottomY+'" stroke="#a85a2a" stroke-width="5" stroke-linecap="round"/>';
-                    svg+='<circle cx="'+(cutBottom+delta*.65)+'" cy="74" r="13" fill="#a85a2a"/><text x="'+(cutBottom+delta*.65)+'" y="79" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">'+cutIndex+'</text>';
-                    cursor=partEnd+kerf;
-                    partIndex += 1;
+                    svg+='<text x="'+cx+'" y="217" text-anchor="middle" font-size="11" font-weight="700" fill="#7a4f22">'+len+' in</text>';
+                    cursor+=len+kerf;
+                    const bottomX=x0+cursor*scale;
+                    const topX=bottomX+delta;
+                    svg+='<line x1="'+topX+'" y1="'+topY+'" x2="'+bottomX+'" y2="'+bottomY+'" stroke="#a85a2a" stroke-width="5" stroke-linecap="round"/>';
+                    svg+='<circle cx="'+(bottomX+delta*.65)+'" cy="74" r="13" fill="#a85a2a"/><text x="'+(bottomX+delta*.65)+'" y="79" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">'+(index+1)+'</text>';
+                  }
+                });
+
+                const retained=Number(parent.remainderIn);
+                if(Number.isFinite(retained)){
+                  const retainStart=xMax-retainedTail*scale;
+                  const remainderStart=xMax-retained*scale;
+                  svg+='<rect x="'+retainStart+'" y="101" width="'+(retainedTail*scale)+'" height="78" fill="url(#obHatch)"/>';
+                  svg+='<rect x="'+retainStart+'" y="101" width="'+(retainedTail*scale)+'" height="78" fill="none" stroke="#2f6f9e" stroke-width="1.5" stroke-dasharray="6 4" opacity=".8"/>';
+                  svg+='<text x="'+((retainStart+xMax)/2)+'" y="136" text-anchor="middle" font-size="11" font-weight="700" fill="#2f6f9e">CONTROL SURFACE</text>';
+                  svg+='<text x="'+((retainStart+xMax)/2)+'" y="151" text-anchor="middle" font-size="9.5" fill="#2f6f9e">machine grips this · '+retainedTail+' in</text>';
+                  if(remainderStart < retainStart){
+                    svg+='<text x="'+((remainderStart+retainStart)/2)+'" y="96" text-anchor="middle" font-size="8.5" fill="#9a8a72">'+formatInches(retained-retainedTail)+' beyond retained tail</text>';
                   }
                 }
                 overlay.innerHTML=svg;
-
-                const usedEnd=x0+cursor*scale;
-                const spareLabel=childDoc.getElementById('stb-bench-spare-label');
-                const remainLabel=childDoc.getElementById('stb-bench-remain-label');
-                if(spareLabel){
-                  const spareCenter=Math.min(820,Math.max(x0+40,(usedEnd+controlStartX)/2));
-                  spareLabel.setAttribute('x',String(spareCenter));
-                }
-                if(remainLabel){
-                  const remainCenter=Math.min(800,Math.max(570,(usedEnd+workingEndX)/2));
-                  remainLabel.setAttribute('x',String(remainCenter));
-                }
               };
 
               const renderBench = definition => {
                 if (!definition) return;
                 const demand = definition.physicalDemand;
+                const plan = definition.operationPlan;
                 const material = definition.storeReference.materialResolution;
-                const plan = definition.storePlan;
-                const selected = plan?.selected || null;
-                const parent = Array.isArray(plan?.parents) ? plan.parents[0] : null;
-                const materialMapped = material?.status === 'MAPPED' && !!selected && !!parent;
-                const parentLength = materialMapped ? Number(selected.parentStockLengthIn) : null;
-                const parentCount = materialMapped ? Number(selected.parentCount) : null;
-                const retained = materialMapped ? Number(parent.remainderIn) : null;
+                const materialMapped = material?.status === 'MAPPED' && plan?.selected;
+                const firstParent = materialMapped && Array.isArray(plan.parents) ? plan.parents[0] : null;
+                const retained = firstParent && Number.isFinite(Number(firstParent.remainderIn))
+                  ? Number(firstParent.remainderIn)
+                  : null;
                 const holdIn = Number(plan?.sequenceRules?.retainedControlTailIn || 24);
                 const spare = Number.isFinite(retained) ? Number((retained-holdIn).toFixed(6)) : null;
                 const productionCuts = Number(plan?.accounting?.productionSawCuts);
-                const prepCuts = Number(plan?.accounting?.preparationSawCuts);
+                const preparationCuts = Number(plan?.accounting?.preparationSawCuts);
                 const totalModeledCuts = Number(plan?.accounting?.totalModeledSawCuts);
                 const spots = demand.spotDemand ? demand.quantity : 0;
                 const estimate = definition.storeReference.estimate || null;
                 const economics = definition.storeReference.economicsStatus;
                 const capabilityBasis = definition.capability?.basis || definition.capability?.status || 'UNRESOLVED';
-                const sku = material?.pricingReferenceSku || material?.storeSku || selected?.storeSku || null;
-                const prepLabel = Number.isFinite(prepCuts) && prepCuts > 0
-                  ? prepCuts+' declared preparation cut'+(prepCuts===1?'':'s')
-                  : 'no intermediate blank / no preparation cut';
+                const parentCount = Number(plan?.selected?.parentCount);
+                const parentLength = Number(plan?.selected?.parentStockLengthIn);
+                const parentSku = plan?.selected?.storeSku || material?.storeSku || null;
+                const selectionRule = plan?.selectionPolicy?.id || material?.selectionPolicy?.id || 'UNRESOLVED';
 
                 renderBoardGeometry(definition);
                 setText('stb-config-parts-value',demand.quantity+' part'+(demand.quantity===1?'':'s'));
-                setText('stb-config-length-value',demand.finishedLength+' in');
+                setText('stb-config-length-value',demand.finishedPartLengthIn+' in');
                 setText('stb-config-angle-value',demand.angleDegrees+'° · both ends · parallel');
                 setText('stb-config-spot-value',demand.spotDemand?'1 centered spot / part':'no spot');
-                setText('stb-bench-length-spec',demand.finishedLength+' in');
+                setText('stb-bench-length-spec',demand.finishedPartLengthIn+' in');
                 setText('stb-bench-angle-spec',demand.angleDegrees+'°');
                 setText('stb-bench-parts-spec',String(demand.quantity));
-                setText('stb-bench-stock-spec',materialMapped ? parentCount+' × 2×4 × '+parentLength+' in' : '2×4 · Store selection unresolved');
+                setText('stb-bench-stock-spec',materialMapped ? parentCount+' × 2×4 × '+parentLength+' in' : '2×4 · Store answer unresolved');
                 setText('stb-bench-stock-line',materialMapped
-                  ? parentCount+' × STORE-SELECTED 2×4 · '+parentLength+' IN · '+String(sku||'SKU UNRESOLVED')+' · SCHEMATIC'
-                  : 'STORE-SELECTED 2×4 PARENT · UNRESOLVED');
-                setText('stb-def-parent',materialMapped
-                  ? parentCount+' × '+parentLength+' in · '+String(sku||'SKU unresolved')
-                  : 'unresolved');
+                  ? parentCount+' × STORE-SELECTED 2×4 · '+parentLength+' IN · '+parentSku+' · SCHEMATIC'
+                  : 'STORE-SELECTED 2×4 PARENT · UNRESOLVED FOR THIS REVISION');
+                setText('stb-def-parent',materialMapped ? parentCount+' × '+parentSku+' · '+parentLength+' in' : 'UNRESOLVED');
                 setText('stb-def-parts',String(demand.quantity));
-                setText('stb-def-length',demand.finishedLength+' in each');
+                setText('stb-def-length',demand.finishedPartLengthIn+' in each');
                 setText('stb-def-angle',demand.angleDegrees+'° · both · parallel');
                 setText('stb-def-spot',demand.spotDemand?'1 centered spot / part':'none');
                 setText('stb-def-spot-location',demand.spotDemand
-                  ? definition.derived.centerSpotAlongLengthIn.value+' in · derived from '+demand.finishedLength+' ÷ 2 · fixed 3/16 in spot/pilot tool'
+                  ? definition.derived.centerSpotAlongLengthIn.value+' in · derived from '+demand.finishedPartLengthIn+' ÷ 2 · bounded 3/16 in spot'
                   : 'not requested');
-                setText('stb-def-retained',Number.isFinite(retained)
-                  ? formatInches(retained)+' on parent 1 · '+prepLabel
-                  : 'UNRESOLVED');
-                setText('stb-bench-spare-label',Number.isFinite(spare)?formatInches(spare)+' beyond control tail':'capacity unresolved');
+                setText('stb-def-retained',Number.isFinite(retained)?formatInches(retained)+' on parent 1':'UNRESOLVED');
+                setText('stb-bench-spare-label',Number.isFinite(spare)?formatInches(spare)+' beyond retained tail':'capacity unresolved');
                 setText('stb-bench-remain-label',Number.isFinite(retained)
-                  ? formatInches(retained)+' remains · '+formatInches(holdIn)+' retained-control minimum · '+formatInches(spare)+' spare'
-                  : 'Store could not prove a retained-control sequence for this demand');
+                  ? formatInches(retained)+' remains · '+formatInches(holdIn)+' retained-control minimum · '+formatInches(spare)+' beyond retained tail'
+                  : 'Store could not prove a retained-control remainder for this revision');
                 setText('stb-bench-control-copy',Number.isFinite(retained)
-                  ? 'Store selected '+parentCount+' × '+parentLength+' in parent stock. Parent 1 leaves '+formatInches(retained)+' after the priced plan; '+formatInches(holdIn)+' is the retained-control minimum.'
-                  : 'Store has not resolved a feasible parent-stock sequence for this revision.');
-                setText('stb-bench-cut-copy','cut — '+demand.angleDegrees+'° ends · '+(Number.isFinite(productionCuts)?productionCuts:'unresolved')+' production saw cycle'+(productionCuts===1?'':'s')+' · '+prepLabel);
+                  ? 'Store selected '+formatInches(parentLength)+' parent stock and leaves '+formatInches(retained)+' after the same priced cut plan; '+formatInches(holdIn)+' is the retained-control minimum.'
+                  : 'No parent stock sequence is proven for this revision; the finished-member demand has not been resized.');
+                setText('stb-bench-cut-copy',Number.isFinite(productionCuts)
+                  ? 'cut — '+demand.angleDegrees+'° ends · '+productionCuts+' production saw cycle'+(productionCuts===1?'':'s')+' form '+demand.quantity+' part'+(demand.quantity===1?'':'s')
+                  : 'cut — Store sequence unresolved');
                 setText('stb-bench-cut-step',Number.isFinite(productionCuts)
-                  ? 'Cut it. Store resolved '+productionCuts+' production saw cycle'+(productionCuts===1?'':'s')+' to form '+demand.quantity+' finished part'+(demand.quantity===1?'':'s')+' at '+demand.angleDegrees+'°. '+prepLabel+'.'
-                  : 'Cut it. Store sequence is unresolved for this revision.');
+                  ? 'Cut it. '+productionCuts+' production saw cycle'+(productionCuts===1?'':'s')+' on the Store-selected parent plan form '+demand.quantity+' part'+(demand.quantity===1?'':'s')+' at '+demand.angleDegrees+'°. '+(preparationCuts?'Preparation adds '+preparationCuts+' separately named saw cycle'+(preparationCuts===1?'':'s')+'.':'No preparation cut is required.')
+                  : 'Cut it. No feasible Store-selected sequence is proven for this revision.');
                 setText('stb-bench-drill-step',demand.spotDemand
-                  ? 'Spot it. One centered 3/16 in bounded spot per part is requested. Point geometry and spot-cycle economics remain unresolved.'
-                  : 'Spot it. No spot is requested on this version.');
+                  ? 'Spot it. One centered 3/16 in bounded spot per part is requested. Tool-point geometry and the depth-defined spot cycle remain unresolved; the saw/material plan stays resolved.'
+                  : 'Spot it. No spot is requested on this version; material and saw economics stand on their own.');
                 setText('stb-bench-stub-step',materialMapped
-                  ? 'Keep the remainder. The finished parts, Store-selected parent stock, kerf, and '+formatInches(retained)+' parent-1 remainder are one accounted plan.'
-                  : 'Keep the remainder. No remainder is stated until Store resolves the parent plan.');
-                setText('stb-bench-workline','THAT’S THE WHOLE DEFINED JOB · '
-                  +(Number.isFinite(productionCuts)?productionCuts+' PRODUCTION SAW CUT'+(productionCuts===1?'':'S'):'SAW PLAN UNRESOLVED')
-                  +' · '+spots+' SPOT'+(spots===1?'':'S')+' ON LOCATION · '+prepLabel.toUpperCase());
+                  ? 'Keep the remainder. The finished parts, '+formatInches(retained)+' parent remainder, and retained-control check are one Store plan.'
+                  : 'Keep the demand unchanged. Store did not produce a feasible parent plan for this revision.');
+                setText('stb-bench-workline','THAT’S THE WHOLE DEFINED JOB · '+(Number.isFinite(productionCuts)?productionCuts:'—')+' PRODUCTION SAW CYCLE'+(productionCuts===1?'':'S')+' · '+spots+' SPOT'+(spots===1?'':'S')+' · '+String(definition.capability.status));
 
                 const svg = childDoc.getElementById('stb-user1-bench-svg');
                 if (svg) {
                   svg.setAttribute(
                     'aria-label',
                     (materialMapped
-                      ? 'Store selected '+parentCount+' parent board'+(parentCount===1?'':'s')+' at '+parentLength+' inches. '
-                      : 'Store parent selection unresolved. ')
-                    +'This version calls for '+demand.quantity+' finished part'+(demand.quantity===1?'':'s')+' at '+demand.finishedLength+' inches, long-long outer-edge datum, with '+demand.angleDegrees+' degree parallel face miters. '
-                    +(demand.spotDemand?'One centered 3/16 inch bounded spot per part is requested. ':'No spot is requested. ')
-                    +(Number.isFinite(retained)?formatInches(retained)+' remains on parent 1.':'Remainder unresolved.')
+                      ? 'Store selected '+parentCount+' parent '+parentSku+' at '+parentLength+' inches. '
+                      : 'Store parent selection is unresolved. ')+
+                    'The finished requirement is '+demand.quantity+' part'+(demand.quantity===1?'':'s')+' at '+demand.finishedPartLengthIn+' inches, long-long outer-edge datum, with '+demand.angleDegrees+' degree parallel face-miter ends. '+
+                    (demand.spotDemand?'One centered 3/16 inch bounded spot per part is requested. ':'No spot is requested. ')+
+                    (Number.isFinite(retained)?formatInches(retained)+' remains on the first parent.':'No retained remainder is claimed.')
                   );
                 }
 
                 setText('stb-material-required',materialMapped
-                  ? parentCount+' × '+String(sku||'Store SKU')+' · 2×4 × '+parentLength+' in Store-selected parent stock · '+demand.quantity+' finished part'+(demand.quantity===1?'':'s')+' × '+demand.finishedLength+' in · '+prepLabel
-                  : 'Store-selected parent stock is unresolved for this finished-member demand.');
+                  ? parentCount+' × '+parentSku+' · '+parentLength+' in Store-selected parent'+(parentCount===1?'':'s')+' · '+demand.quantity+' finished part'+(demand.quantity===1?'':'s')+' × '+demand.finishedPartLengthIn+' in'
+                  : 'Store-selected 2×4 parent stock unresolved for this unchanged finished-member demand.');
                 setText('stb-price-material',estimate?.material==null?'NOT ESTABLISHED':'$'+Number(estimate.material).toFixed(2));
                 setText('stb-price-processing',estimate?.cellRecovery==null?'NOT ESTABLISHED':'$'+Number(estimate.cellRecovery).toFixed(2));
                 setText('stb-price-total',estimate?.total==null
@@ -813,31 +787,31 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   : '$'+Number(estimate.total).toFixed(2)+(estimate.complete?' · COMPLETE':' · PARTIAL'));
                 setText('stb-price-basis',estimate
                   ? (estimate.complete
-                    ? 'Store Zero BudgetaryEstimate · selected parent material + modeled operations in this exact plan · not a commercial quote.'
-                    : 'Store Zero partial BudgetaryEstimate · selected parent material + resolved modeled operations only. Named unresolved spot work is excluded; not a commercial quote.')
-                  : 'Store Zero could not form a budgetary estimate for this version.');
-                setText('stb-basis-sku',materialMapped?String(sku):'NOT MAPPED');
+                    ? 'Store Zero BudgetaryEstimate · selected parent material + only the modeled operations in this Store plan · complete for encoded demand · not a commercial quote.'
+                    : 'Store Zero BudgetaryEstimate · selected parent material + resolved modeled operations only. Named unresolved work is excluded; not a commercial quote.')
+                  : 'Store Zero could not form a budgetary estimate for this revision.');
+                setText('stb-basis-sku',materialMapped?parentSku:'NOT MAPPED');
                 setText('stb-basis-source-stock',materialMapped
-                  ? parentCount+' × '+parentLength+' in 2×4 · Store-selected parent stock · '+prepLabel
+                  ? parentCount+' × '+parentLength+' in 2×4 Store-selected parent · selection rule '+selectionRule
                   : 'UNRESOLVED');
-                setText('stb-basis-unit-price',materialMapped && Number.isFinite(Number(material.unitPrice)) ? '$'+Number(material.unitPrice).toFixed(2)+' / ea' : 'UNRESOLVED');
+                setText('stb-basis-unit-price',materialMapped && Number.isFinite(Number(material.unitPrice)) ? '$'+Number(material.unitPrice).toFixed(2)+' / parent' : 'UNRESOLVED');
                 setText('stb-basis-cell-family',materialMapped && Array.isArray(material.cellFamily) ? material.cellFamily.join(' · ') : 'UNRESOLVED');
                 setText('stb-basis-supported-ops',materialMapped && Array.isArray(material.supportedOps) ? material.supportedOps.join(' · ') : 'UNRESOLVED');
                 setText('stb-basis-clock',String(material?.source?.clock || catalogSource?.clock || '—'));
                 setText('stb-basis-catalog-pin',String(material?.source?.pin || catalogSource?.pin || '—'));
                 setText('stb-basis-capability',String(capabilityBasis)+' · '+String(definition.capability.status));
-                setText('stb-basis-store-pin',String(estimate?.source?.pin || definition.storeReference.authority?.economicsPin || definition.storeReference.storePin || '—'));
+                setText('stb-basis-store-pin',String(estimate?.source?.pin || definition.storeReference.storePin || '—'));
                 setText('stb-basis-economics',estimate?.status
                   ? estimate.status+' · '+String(estimate.completeness || 'UNRESOLVED')+' · BUDGETARY ONLY'
                   : String(economics));
                 setText('stb-basis-pricing-engine',estimate?.engine ? estimate.engine.id+' · v'+estimate.engine.version : 'UNRESOLVED');
                 setText('stb-basis-cycle-model',estimate?.cycle?.model || 'UNRESOLVED');
                 setText('stb-basis-job-time',Number.isFinite(Number(estimate?.cycle?.T_job_min))
-                  ? Number(estimate.cycle.T_job_min).toFixed(3)+' min · modeled · '+(Number.isFinite(totalModeledCuts)?totalModeledCuts:'?')+' saw cycles'
+                  ? Number(estimate.cycle.T_job_min).toFixed(3)+' min · modeled · '+String(Number.isFinite(totalModeledCuts)?totalModeledCuts:'—')+' saw cycle'+(totalModeledCuts===1?'':'s')
                   : 'UNRESOLVED');
                 setText('stb-before-send',definition.storeReference.unresolvedConditions.length
-                  ? definition.storeReference.unresolvedConditions.join(' · ')+'. These conditions remain attached to this version. The displayed Store value covers resolved material and modeled operations only and does not authorize fabrication.'
-                  : 'No operation-specific unresolved conditions are attached to this reference estimate. Budgetary pricing still does not authorize fabrication.');
+                  ? definition.storeReference.unresolvedConditions.join(' · ')+'. These conditions remain attached to this version. Resolved parent material and saw work remain visible; unresolved spot work is not silently priced.'
+                  : 'No additional unresolved conditions are attached to this Store answer. Budgetary pricing still does not authorize fabrication.');
 
                 const answerLine = childDoc.getElementById('stb-system-answer');
                 if (answerLine) {
@@ -846,17 +820,16 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   answerLine.dataset.storePin = String(definition.storeReference.storePin || '');
                   answerLine.dataset.storeDisposition = String(definition.storeReference.capabilityStatus || 'UNRESOLVED');
                   answerLine.innerHTML = '<b>STORE</b> · '+String(definition.storeReference.capabilityStatus || 'UNRESOLVED')
-                    +' · '
-                    +(materialMapped
-                      ? 'selected '+parentCount+' × '+parentLength+' in '+String(sku||'2×4')+'; '+(Number.isFinite(productionCuts)?productionCuts+' production saw cycles':'saw plan unresolved')+'; '+(Number.isFinite(retained)?formatInches(retained)+' remainder':'remainder unresolved')
-                      : 'no feasible Store-selected parent plan is resolved')
+                    +' · '+(materialMapped
+                      ? parentCount+' × '+parentSku+' at '+parentLength+' in · '+formatInches(retained)+' remainder · selection '+selectionRule
+                      : 'no feasible parent stock plan for the unchanged finished-member demand')
                     +(estimate
-                      ? ' · modeled value $'+Number(estimate.total).toFixed(2)+(estimate.complete?' · complete for encoded demand':' · partial; unresolved work excluded')
+                      ? ' · modeled value $'+Number(estimate.total).toFixed(2)+(estimate.complete?' complete for encoded demand':' partial; unresolved work excluded')
                       : ' · budgetary estimate unavailable')
                     +' · answer '+String(definition.storeReference.answerVersionId || 'UNIDENTIFIED')+'.';
                 }
                 activate('#stb-config-parts [data-parts]','data-parts',partQty);
-                activate('[data-length]','data-length',demand.finishedLength);
+                activate('[data-length]','data-length',demand.finishedPartLengthIn);
                 activate('[data-angle]','data-angle',demand.angleDegrees);
                 activate('#stb-config-spot [data-spot]','data-spot',spotMode);
               };
