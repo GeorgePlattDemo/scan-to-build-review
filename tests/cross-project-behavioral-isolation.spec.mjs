@@ -67,6 +67,19 @@ test('project switching preserves separate definitions, Store answers, prices, a
   await app.locator('#playhouse-s001 [data-canonical-go="projects"]').click();
   await expect(app.locator('#projects.on')).toBeVisible();
 
+  // Closing a read-only library preview intentionally restores the published baseline.
+  // Capture the normalized S-001 state here so the next assertion tests Window Seat
+  // isolation rather than mistaking S-001's own preview-close lifecycle for leakage.
+  const afterS001Exit=await app.locator('body').evaluate(() => ({
+    user1:JSON.parse(localStorage.getItem('stb-start-own-user1-definition')||'null'),
+    s001:JSON.parse(localStorage.getItem('stb-s001-current-definition')||'null')
+  }));
+  expect(afterS001Exit.s001.versionId,'ISOLATION_S001_EXIT_VERSION_MISSING').toMatch(/^S001-SARAH-PLAYHOUSE-0\\.1-v\\d+$/);
+  expect(afterS001Exit.s001.storeAnswer.definitionVersionId,'ISOLATION_S001_EXIT_ANSWER_VERSION_DRIFT').toBe(afterS001Exit.s001.versionId);
+  expect(afterS001Exit.s001.storeAnswer.storePin,'ISOLATION_S001_EXIT_STORE_PIN_DRIFT').toBe(S001_STORE_PIN);
+  expect(afterS001Exit.s001.storeAnswer.rawEstimate.Q,'ISOLATION_S001_EXIT_PRICE_DRIFT').toBe(26.55);
+  expect(afterS001Exit.user1.versionId,'ISOLATION_S001_EXIT_MUTATED_USER1_VERSION').toBe(user1.versionId);
+
   // 3. Window Seat — native project-specific Store recovery/capability authority.
   const seatTile=app.locator('.tile[data-window-seat-artifact="stb-window-seat-space-utilization-0.7.4.html"]');
   await expect(seatTile).toBeVisible();
@@ -88,8 +101,10 @@ test('project switching preserves separate definitions, Store answers, prices, a
   }));
   expect(afterSeat.user1.versionId,'ISOLATION_WINDOW_SWITCH_MUTATED_USER1_VERSION').toBe(user1.versionId);
   expect(afterSeat.user1.storeReference.storePin,'ISOLATION_WINDOW_SWITCH_MUTATED_USER1_STORE').toBe(USER1_STORE_PIN);
-  expect(afterSeat.s001.versionId,'ISOLATION_WINDOW_SWITCH_MUTATED_S001_VERSION').toBe(afterS001.s001.versionId);
+  expect(afterSeat.s001.versionId,'ISOLATION_WINDOW_SWITCH_MUTATED_S001_VERSION').toBe(afterS001Exit.s001.versionId);
+  expect(afterSeat.s001.storeAnswer.definitionVersionId,'ISOLATION_WINDOW_SWITCH_MUTATED_S001_ANSWER_VERSION').toBe(afterS001Exit.s001.storeAnswer.definitionVersionId);
   expect(afterSeat.s001.storeAnswer.storePin,'ISOLATION_WINDOW_SWITCH_MUTATED_S001_STORE').toBe(S001_STORE_PIN);
+  expect(afterSeat.s001.storeAnswer.rawEstimate.Q,'ISOLATION_WINDOW_SWITCH_MUTATED_S001_PRICE').toBe(26.55);
 
   // Return to User 1 and prove the original retained definition/answer still owns that path.
   await app.locator('#window-seat-live [data-proof-library]').click();
