@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 env:
-  STORE_PIN: ab8a4c5d470c310f27fef82683611622ab976168
+  STORE_PIN: 7303793620d0ceda509810a661d11e6c31c7d59f
   STB_STORE_ZERO_ROOT: ${{ github.workspace }}/store-zero
 
 jobs:
@@ -28,7 +28,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: GeorgePlattDemo/scan-to-build-store
-          ref: ab8a4c5d470c310f27fef82683611622ab976168
+          ref: 7303793620d0ceda509810a661d11e6c31c7d59f
           path: store-zero
 
       - name: Verify exact Store identity
@@ -131,7 +131,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: GeorgePlattDemo/scan-to-build-store
-          ref: ab8a4c5d470c310f27fef82683611622ab976168
+          ref: 7303793620d0ceda509810a661d11e6c31c7d59f
           path: store-zero
 
       - name: Setup Node and browser
