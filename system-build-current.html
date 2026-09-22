@@ -2023,6 +2023,144 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     const oldStoreBack = doc.querySelector('#playhouse-store [data-canonical-go="playhouse-s001"]');
     if (oldStoreBack) oldStoreBack.setAttribute('data-canonical-go', 'playhouse-machine');
 
+    const s001StoreRuntime = window.STBStoreZeroS001 || null;
+    let s001Revision = 1;
+    let currentS001Definition = null;
+    let confirmedS001Definition = null;
+
+    const s001StoreReasons = answer => {
+      const cap = answer?.rawEvaluation?.line?.capability || null;
+      const unresolved = Array.isArray(cap?.unresolved) ? cap.unresolved : [];
+      const refused = Array.isArray(cap?.reasons) ? cap.reasons : [];
+      return Array.from(new Set([...unresolved,...refused]));
+    };
+
+    const evaluateS001 = (g, reason) => {
+      const versionId = 'S001-SARAH-PLAYHOUSE-0.1-v'+s001Revision;
+      if (!s001StoreRuntime || typeof s001StoreRuntime.evaluate !== 'function') {
+        currentS001Definition = {
+          definitionId:'S001-SARAH-PLAYHOUSE-0.1',
+          versionId,
+          geometry:{...g},
+          routeDepthIn:null,
+          storeAnswer:null,
+          unresolvedConditions:['AUTHORITATIVE_S001_STORE_RUNTIME_UNAVAILABLE'],
+          physicalExecutionAuthorized:false,
+          lineage:{reason:String(reason||'SYNC')}
+        };
+        return currentS001Definition;
+      }
+      const answer = s001StoreRuntime.evaluate({
+        definitionVersionId:versionId,
+        apertureW_in:g.width,
+        apertureStraightH_in:g.straight,
+        arcChord_in:g.width,
+        arcRise_in:g.rise,
+        arcRadius_in:g.radius,
+        tabCount:4
+      });
+      if (!answer || answer.definitionVersionId !== versionId) return null;
+      const reasons = s001StoreReasons(answer);
+      currentS001Definition = {
+        definitionId:'S001-SARAH-PLAYHOUSE-0.1',
+        versionId,
+        geometry:{
+          parentL_in:96,
+          parentW_in:48,
+          apertureW_in:g.width,
+          apertureStraightH_in:g.straight,
+          arcChord_in:g.width,
+          arcRise_in:g.rise,
+          arcRadius_in:g.radius,
+          tabCount:4,
+          routeDepthIn:null
+        },
+        material:{
+          storeSku:'STB-ZERO-PLY-050-48X96-001',
+          quantity:1,
+          sourcePin:answer.storePin
+        },
+        primaryOperation:{
+          jobType:'SHEET_MODE2_ARCHED_APERTURE_V0',
+          routeDepthIn:null,
+          reason:'Active Sarah definition does not declare route depth.'
+        },
+        additionalRequests:{
+          centerRoute:'RETAINED_SEPARATE',
+          straightCuts:{count:2,offsetFromSheetEndsIn:18,status:'RETAINED_SEPARATE'}
+        },
+        storeAnswer:answer,
+        unresolvedConditions:reasons,
+        physicalExecutionAuthorized:false,
+        lineage:{
+          reason:String(reason||'SYNC'),
+          storePin:answer.storePin,
+          storeSourceBlobs:answer.sourceBlobs
+        }
+      };
+      try {
+        win.localStorage.setItem('stb-s001-current-definition',JSON.stringify(currentS001Definition));
+      } catch (_) {}
+      return currentS001Definition;
+    };
+
+    const renderS001Live = definition => {
+      const answer = definition?.storeAnswer || null;
+      const disposition = answer?.rawEvaluation?.status || 'UNRESOLVED';
+      const amount = Number(answer?.rawEstimate?.Q);
+      const reasons = definition?.unresolvedConditions || ['STORE_ANSWER_UNAVAILABLE'];
+      const reasonText = reasons.length ? reasons.join(' · ') : 'No unresolved Store conditions.';
+      const amountText = Number.isFinite(amount) ? '$'+amount.toFixed(2)+' material-only' : 'UNRESOLVED';
+      const version = definition?.versionId || '—';
+
+      text('s001-live-store-disposition', disposition+' · REFERENCE');
+      text('s001-live-store-material', amountText);
+      text('s001-live-store-reasons', reasonText);
+      text('s001-live-store-version', 'Answer '+version+' · Store '+String(answer?.storePin || 'UNAVAILABLE').slice(0,12)+'…');
+      text('s001-store-card-status', disposition+' · REFERENCE');
+      text('s001-store-disposition', disposition+' · REFERENCE');
+      text('s001-store-reference-amount', amountText);
+      text('s001-store-process-cost', answer?.rawEstimate?.processQ_status || 'UNRESOLVED');
+      text('s001-store-reasons', reasonText);
+      text('s001-store-answer-version', version);
+      text('s001-review-primary-route', disposition+' · REFERENCE');
+      text('s001-review-store-version', version);
+
+      const card = doc.getElementById('s001-store-card-status')?.closest('.s001-v2-store-card');
+      if (card) {
+        card.classList.toggle('s001-v2-pass', disposition === 'SUPPORTABLE');
+        card.classList.toggle('s001-v2-separate', disposition !== 'SUPPORTABLE');
+      }
+    };
+
+    const renderS001Confirmed = definition => {
+      if (!definition) return;
+      const answer = definition.storeAnswer || null;
+      const disposition = answer?.rawEvaluation?.status || 'UNRESOLVED';
+      const amount = Number(answer?.rawEstimate?.Q);
+      const amountText = Number.isFinite(amount) ? '$'+amount.toFixed(2)+' material-only' : 'UNRESOLVED';
+      const version = definition.versionId || '—';
+      text('s001-request-primary-route', disposition+' · REFERENCE');
+      text('s001-request-store-version', version);
+      text('s001-yard-route', disposition+' · REFERENCE');
+      text('s001-yard-material-reference', amountText);
+      text('s001-result-store-status', disposition+' · REFERENCE');
+      text('s001-record-store-result', disposition+' · REFERENCE');
+      text('s001-record-material-reference', amountText);
+      text('s001-record-store-pin', answer?.storePin || 'UNAVAILABLE');
+      text('s001-record-store-version', version);
+    };
+
+    const restoreS001Confirmed = () => {
+      try {
+        const parsed = JSON.parse(win.localStorage.getItem('stb-s001-confirmed-definition') || 'null');
+        if (parsed?.definitionId === 'S001-SARAH-PLAYHOUSE-0.1') {
+          confirmedS001Definition = parsed;
+          renderS001Confirmed(confirmedS001Definition);
+        }
+      } catch (_) {}
+    };
+
     const fmt = (value) => Number(value).toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
     const read = () => {
       const width = Number(doc.getElementById('s001-opening-width')?.value || 36);
@@ -2033,7 +2171,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       return { width, straight, rise, total, radius };
     };
     const text = (id, value) => { const el = doc.getElementById(id); if (el) el.textContent = value; };
-    const sync = () => {
+    const sync = (reason = 'SYNC') => {
       const widthInput = doc.getElementById('s001-opening-width');
       const straightInput = doc.getElementById('s001-straight-height');
       const riseInput = doc.getElementById('s001-arch-rise');
@@ -2079,16 +2217,43 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       text('s001-request-geometry', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise · ${fmt(g.total)} total height`);
       text('s001-yard-geometry', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise · ${fmt(g.total)} total height`);
       text('s001-record-geometry', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise`);
+      const definition = evaluateS001(g, reason);
+      renderS001Live(definition);
+      return definition;
     };
 
-    ['s001-opening-width','s001-straight-height','s001-arch-rise'].forEach(id => doc.getElementById(id)?.addEventListener('input', sync));
+    ['s001-opening-width','s001-straight-height','s001-arch-rise'].forEach(id => doc.getElementById(id)?.addEventListener('input', () => {
+      s001Revision += 1;
+      sync('CUSTOMER_INPUT');
+    }));
     doc.getElementById('s001-reset')?.addEventListener('click', () => {
       doc.getElementById('s001-opening-width').value = '36';
       doc.getElementById('s001-straight-height').value = '24';
       doc.getElementById('s001-arch-rise').value = '12';
-      sync();
+      s001Revision += 1;
+      sync('CUSTOMER_RESET');
     });
-    sync();
+
+    const s001Confirm = doc.querySelector('#playhouse-review [data-canonical-go="playhouse-request"]');
+    if (s001Confirm && s001Confirm.dataset.s001ConfirmBound !== 'true') {
+      s001Confirm.dataset.s001ConfirmBound = 'true';
+      s001Confirm.addEventListener('click', () => {
+        const definition = sync('CONFIRM');
+        if (!definition?.storeAnswer) return;
+        if (definition.storeAnswer.definitionVersionId !== definition.versionId) return;
+        const key = definition.definitionId+'@'+definition.versionId;
+        if (s001Confirm.dataset.s001LastConfirmed === key) return;
+        confirmedS001Definition = JSON.parse(JSON.stringify(definition));
+        s001Confirm.dataset.s001LastConfirmed = key;
+        renderS001Confirmed(confirmedS001Definition);
+        try {
+          win.localStorage.setItem('stb-s001-confirmed-definition',JSON.stringify(confirmedS001Definition));
+        } catch (_) {}
+      });
+    }
+
+    sync('INITIAL');
+    restoreS001Confirmed();
 
 
     const picnicConfigNext = doc.querySelector('#picnic-config [data-go="picnic-review"]');
