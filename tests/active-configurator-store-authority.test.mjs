@@ -38,7 +38,7 @@ assert.equal(out.economicsModel,null);
 assert.equal(out.economicsStatus,'UNRESOLVED_CLASS_SCOPED_RECOVERY');
 assert.equal(outdoor.includes('STBStoreZeroUser1'),false,'Outdoor borrowed User1 Store runtime');
 assert.equal(outdoor.includes('$54.29'),false,'Outdoor borrowed User1 economics');
-assert.match(outdoor,/does not price, order, allocate,[\s\S]*production readiness/i);
+assert.match(outdoor,/does not price, order, allocate,[\s\S]*release or drive anything/i);
 
 const alc=contract.storeAuthority('alcove');
 assert.equal(alc.capabilityPin,'f88ec61c42446755d00259f88e7fd09f2702fd92');
