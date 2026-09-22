@@ -35,6 +35,7 @@ test('actual User 1 journey carries one authoritative Store answer through confi
   await expect(startOwn).toBeVisible();
   await startOwn.click();
   await expect(app.locator('#start-own-live.on')).toBeVisible();
+  await app.locator('#start-own-live').evaluate(() => new Promise(resolve => setTimeout(resolve, 0)));
 
   const project=app.frameLocator('#start-own-proof-frame');
   await expect(project.locator('.stb-bench-button')).toBeVisible();
@@ -101,6 +102,7 @@ test('actual User 1 journey carries one authoritative Store answer through confi
   await app.locator('#proof-record [data-proof-library]').click();
   await expect(app.locator('#projects.on')).toBeVisible();
   await startOwn.click();
+  await app.locator('#start-own-live').evaluate(() => new Promise(resolve => setTimeout(resolve, 0)));
   await expect(project.locator('.stb-bench-button')).toBeVisible();
   await project.locator('.stb-bench-button').click();
   await project.locator('#stb-confirm-store').click();
