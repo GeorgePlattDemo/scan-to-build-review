@@ -67,12 +67,20 @@ assert.equal(contract.sameUser1StoreAnswerIdentity(storeAnswer,formalStoreAnswer
 // ENTRY / DEFINE
 assert.match(frame,/Start your own project/);
 assert.match(frame,/2×4 · 60 in/);
-assert.match(frame,/id="stb-config-length"[^>]*value="16"/);
-assert.match(frame,/id="stb-config-angle"[^>]*value="30"/);
+assert.match(frame,/id="stb-config-length"[^>]*min="16"[^>]*max="18"[^>]*value="16"/);
+assert.match(frame,/data-length="16">16 IN/);
+assert.match(frame,/data-length="18">18 IN/);
+assert.equal(frame.includes('id="stb-config-angle"'),false);
+assert.equal(frame.includes('data-parts='),false);
+assert.equal(frame.includes('data-spot='),false);
+assert.match(frame,/18\.000 in → 26\.388° end cuts/);
 assert.match(frame,/Center spot = 16 ÷ 2 = 8 in/);
 assert.match(shell,/definitionId:'SYO-USER1-XBRACE-0\.1'/);
 assert.match(shell,/configurationId = 'SYO-USER1-XBRACE'/);
-assert.match(shell,/configurationVersion = definitionRevision === 1[\s\S]*?'0\.1'/);
+assert.match(shell,/endpoint16[\s\S]*?endpoint18[\s\S]*?'0\.1'[\s\S]*?'0\.2'/);
+assert.match(shell,/DEMO_HORIZONTAL_SPAN_IN = 8/);
+assert.match(shell,/Math\.asin\(spanRatio\)/);
+assert.match(shell,/workpiecePolicy = finishedLengthIn > DEMO_MIN_LENGTH_IN/);
 assert.match(shell,/parts = Array\.from/);
 assert.match(shell,/requiredOps\.push\('SPOT_ON_LOCATION'\)/);
 assert.match(shell,/resolveUser1StoreReference\(storeDemand\)/);
@@ -80,7 +88,7 @@ assert.match(shell,/resolveUser1StoreReference\(storeDemand\)/);
 // CHANGED DEFINITIONS FAIL CLOSED BEFORE CONFIRM
 assert.match(shell,/if \(definition\.storeReference\?\.complete !== true\)/);
 assert.match(shell,/STORE_REFRESH_REQUIRED · confirmation is blocked until Store evaluates this exact revision/);
-assert.match(shell,/confirmButton\.disabled = !storeComplete/);
+assert.match(shell,/confirmButton\.disabled = !storeComplete \|\| candidateReference/);
 
 // CONFIRM performs a fresh Store-authority check on every press, then creates the Job 1 handoff.
 assert.match(shell,/job:'JOB 1 · START YOUR OWN'/);
@@ -200,6 +208,41 @@ assert.equal(contract.user1StoreReference.source.storePin,STORE_SHA);
 assert.equal(contract.user1StoreReference.source.systemIntegrationPin,SYSTEM_SHA);
 assert.equal(contract.user1StoreReference.estimate.calculationIdentity.inputHash,INPUT_HASH);
 assert.equal(contract.user1StoreReference.estimate.calculationIdentity.resultHash,RESULT_HASH);
+
+
+const exactDemand18={
+  configurationId:'SYO-USER1-XBRACE',
+  configurationVersion:'0.2',
+  definedWorkpieceLengthIn:60,
+  workpiecePolicy:'GROW_TO_RETAINED_CONTROL',
+  sawAngleDeg:26.387799961243,
+  cutPlane:'miter-face',
+  endIdentity:'both',
+  endRelation:'parallel',
+  lengthDatum:'long-long-outer-edge',
+  datumCMethod:'REFERENCE_CUT',
+  requiredOps:['MITER_LIMITED','SPOT_ON_LOCATION'],
+  declaredSawCuts:3,
+  declaredSpotCount:2,
+  parts:[
+    {partId:'PART-1',lengthIn:18,features:[{featureId:'SPOT-1',kind:'SPOT_ON_LOCATION',xIn:9,locationRule:'CENTERED_ON_PART',acrossWidthRule:'CENTERED_ON_WIDE_FACE'}]},
+    {partId:'PART-2',lengthIn:18,features:[{featureId:'SPOT-2',kind:'SPOT_ON_LOCATION',xIn:9,locationRule:'CENTERED_ON_PART',acrossWidthRule:'CENTERED_ON_WIDE_FACE'}]},
+  ],
+};
+const storeAnswer18=contract.resolveUser1StoreReference(exactDemand18);
+assert.equal(storeAnswer18.complete,true);
+assert.equal(storeAnswer18.source.storePin,'87c4d2187d051a577ab301acfa12f2c12a6880ea');
+assert.equal(storeAnswer18.materialResolution.workpieceLengthIn,60.375);
+assert.equal(storeAnswer18.materialResolution.pricingReferenceStockLengthIn,72);
+assert.equal(storeAnswer18.material,3.13);
+assert.equal(storeAnswer18.machineService,5.90);
+assert.equal(storeAnswer18.combinedValue,9.03);
+assert.equal(storeAnswer18.estimate.cycle.T_job_min,1.4151);
+assert.equal(storeAnswer18.estimate.travel.finalRemainderIn,24);
+assert.equal(storeAnswer18.calculationIdentity.inputHash,'f32ed01b11d7c2987f526eb154c36220b3f8361b38e394b91efd30c073f69f9d');
+assert.equal(storeAnswer18.calculationIdentity.resultHash,'5e8e73e3fb197eb4e0955a5c850e367b3542cbbdc31df7c18975b9b9146a2985');
+assert.match(shell,/candidateReference/);
+assert.match(shell,/CANDIDATE STORE PIN/);
 
 // A moved Store authority invalidates the displayed result even when the definition did not change.
 const staleStoreAnswer=contract.requestUser1StoreEvaluation(exactDemand,{
