@@ -460,9 +460,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   DEMO_HORIZONTAL_SPAN_IN * DEMO_HORIZONTAL_SPAN_IN
                 ).toFixed(6));
                 const definedWorkpieceLengthIn = 60;
-                const workpiecePolicy = finishedLengthIn > DEMO_MIN_LENGTH_IN
-                  ? 'GROW_TO_RETAINED_CONTROL'
-                  : 'PRESERVE_DEFINED';
                 const centerSpotIn = Number((finishedLengthIn / 2).toFixed(6));
                 const spotDemand = spotMode === 'centered' ? {
                   required:true,
@@ -500,8 +497,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 /*
                  * This is the project/configurator demand only. Store owns whether
                  * it is supportable, how D-001 moves, modeled occupied time, and Q.
-                 * The static Review build may present only the exact Store-issued
-                 * 0.1 reference. Any changed revision requires a fresh Store answer.
+                 * The static public Review build may present only exact Store-issued
+                 * references proven against promoted authority. Other values require a live Store answer.
                  */
                 const configurationId = 'SYO-USER1-XBRACE';
                 const endpoint16 = Math.abs(finishedLengthIn - 16) < 1e-9;
@@ -517,7 +514,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   configurationId:configurationId,
                   configurationVersion:configurationVersion,
                   definedWorkpieceLengthIn:definedWorkpieceLengthIn,
-                  workpiecePolicy:workpiecePolicy,
                   sawAngleDeg:angleDeg,
                   cutPlane:'miter-face',
                   endIdentity:'both',
@@ -614,9 +610,12 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                       allocationClaimed:false
                     } : null,
                     definedWorkpieceLengthIn:{
+                      value:definedWorkpieceLengthIn,
+                      basis:'PROJECT_MINIMUM_REQUEST'
+                    },
+                    selectedStoreWorkpieceLengthIn:{
                       value:effectiveWorkpieceLengthIn,
-                      requestedValue:definedWorkpieceLengthIn,
-                      basis:storeMaterialResolution?.workpieceAdjusted===true?'STORE_RETURNED_GROWTH':'EXISTING_PROJECT_FACT'
+                      basis:storeMaterialResolution?.selectionPolicy || 'STORE_ANSWER_REQUIRED'
                     },
                     mappedStoreSkus:storeMaterialResolution?.storeSku ? [storeMaterialResolution.storeSku] : []
                   },
@@ -675,7 +674,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                     storeCalculationResultHash:storeAnswer.calculationIdentity?.resultHash || null,
                     requestedDefinedWorkpieceLengthIn:definedWorkpieceLengthIn,
                     effectiveDefinedWorkpieceLengthIn:effectiveWorkpieceLengthIn,
-                    workpiecePolicy:workpiecePolicy,
+                    storeSelectionPolicy:storeMaterialResolution?.selectionPolicy || null,
                     fixedHorizontalSpanIn:DEMO_HORIZONTAL_SPAN_IN,
                     achievedRiseIn:achievedRiseIn
                   },
@@ -807,7 +806,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 }
 
                 setText('stb-material-required',
-                  '1 × 2×4 × '+formatInches(demand.definedWorkpieceLengthIn)+' defined workpiece · '+demand.quantity+' finished parts · Store stock/pricing reference remains separate');
+                  '1 × 2×4 × '+formatInches(demand.definedWorkpieceLengthIn)+' Store-selected workpiece · '+demand.quantity+' finished parts · project minimum remains 60 in');
                 setText('stb-price-material',totals?.material==null?'NOT ESTABLISHED':'$'+Number(totals.material).toFixed(2));
                 setText('stb-price-processing',totals?.machine_service==null?'NOT ESTABLISHED':'$'+Number(totals.machine_service).toFixed(2));
                 setText('stb-price-total',totals?.Q==null ? 'NOT COMPLETE' : '$'+Number(totals.Q).toFixed(2));
@@ -816,7 +815,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   : 'STORE_REFRESH_REQUIRED · this static Review build does not calculate Store capability, machine time, economics, or Q for changed definitions.');
                 setText('stb-basis-sku',materialMapped?material.storeSku:'NOT MAPPED');
                 setText('stb-basis-source-stock',materialMapped
-                  ? material.quantity+' × '+material.stockLengthIn+' in 2×4 Store stock/pricing reference · defined workpiece '+formatInches(demand.definedWorkpieceLengthIn)
+                  ? material.quantity+' × '+material.stockLengthIn+' in 2×4 Store stock/pricing reference · Store-selected workpiece '+formatInches(demand.definedWorkpieceLengthIn)
                   : 'FRESH STORE ANSWER REQUIRED');
                 setText('stb-basis-unit-price',materialMapped && Number.isFinite(Number(material.unitPrice)) ? '$'+Number(material.unitPrice).toFixed(2)+' / ea' : 'UNRESOLVED');
                 setText('stb-basis-cell-family',materialMapped && Array.isArray(material.cellFamily) ? material.cellFamily.join(' · ') : 'UNRESOLVED');
@@ -837,26 +836,18 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   ? definition.storeReference.unresolvedConditions.join(' · ')+'. No browser-side Store answer is substituted. A fresh Store evaluation is required before confirmation.'
                   : 'No unresolved Store conditions are attached to this exact pinned reference. Q remains budgetary and does not authorize fabrication.');
 
-                const candidateReference = storeComplete &&
-                  String(definition.storeReference.source?.storePin || '') !==
-                  String(startOwnAuthority?.economicsPin || '');
                 const answerLine = childDoc.getElementById('stb-system-answer');
                 if (answerLine) {
                   answerLine.innerHTML = storeComplete
-                    ? '<b>STORE</b> · exact Store-issued reference matched · Q $'+Number(totals.Q).toFixed(2)+' · '+Number(estimate.cycle.T_job_min).toFixed(4)+' modeled min · 3 saw operations · 2 spots · calculation '+String(estimate.calculationIdentity?.resultHash || '').slice(0,12)+'…'
-                    : '<b>STORE</b> · STORE_REFRESH_REQUIRED · this value is inside the geometry demo, but the static Review build carries exact Store answers only for 16.000 and 18.000 in.';
-                  if (candidateReference) {
-                    answerLine.innerHTML += ' · <b>CANDIDATE STORE PIN</b> · tested but not promoted to Store main.';
-                  }
+                    ? '<b>STORE</b> · exact promoted Store reference matched · '+String(material?.stockLengthIn || demand.definedWorkpieceLengthIn)+' in stock · Q $'+Number(totals.Q).toFixed(2)+' · '+Number(estimate.cycle.T_job_min).toFixed(4)+' modeled min · 3 saw operations · 2 spots · calculation '+String(estimate.calculationIdentity?.resultHash || '').slice(0,12)+'…'
+                    : '<b>STORE</b> · STORE_REFRESH_REQUIRED · this typed value is inside the geometry demo, but the static public Review surface carries exact Store answers only for 16.000 and 18.000 in.';
                 }
 
                 if (confirmButton) {
-                  confirmButton.disabled = !storeComplete || candidateReference;
-                  confirmButton.title = candidateReference
-                    ? 'This 18-in candidate has a tested Store answer, but its Store pin is not promoted to main. Configuration may be reviewed here; formal confirmation stays blocked.'
-                    : storeComplete
-                      ? 'Confirm the exact definition with its pinned Store-issued reference answer.'
-                      : 'A fresh Store answer is required for this changed definition before confirmation.';
+                  confirmButton.disabled = !storeComplete;
+                  confirmButton.title = storeComplete
+                    ? 'Confirm this exact definition and revalidate the current promoted Store authority.'
+                    : 'A fresh Store answer is required for this changed definition before confirmation.';
                 }
                 activate('[data-length]','data-length',demand.finishedLength);
               };
