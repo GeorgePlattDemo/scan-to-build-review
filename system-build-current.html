@@ -1737,6 +1737,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         +'<div><b>DEFINED WORKPIECE</b><span id="proof-store-workpiece">—</span></div>'
         +'<div><b>MATERIAL SOURCE</b><span id="proof-store-material-source">Store Zero catalog</span></div>'
         +'<div><b>ECONOMICS AUTHORITY</b><span id="proof-store-economics-authority">—</span></div>'
+        +'<div><b>STORE SHA</b><span id="proof-store-pin">—</span></div>'
+        +'<div><b>INPUT HASH</b><span id="proof-store-input-hash">—</span></div>'
+        +'<div><b>RESULT HASH</b><span id="proof-store-result-hash">—</span></div>'
       +'</div>'
       +'<h2>Current economics answer</h2>'
       +'<div class="proof-actor-grid">'
@@ -1756,6 +1759,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       '<p class="stage-tag">ACCEPT / PAY</p><h1>STORE ANSWER RECEIVED. CUSTOMER EVENT REMAINS SEPARATE.</h1>'
       +'<p class="sub">A Store budgetary answer can be complete as an estimate without becoming a payable commercial offer. Those events remain separate.</p>'
       +'<div class="proof-actor-grid">'
+        +'<div><b>JOB</b><span id="proof-accept-job">—</span></div>'
+        +'<div><b>VERSION</b><span id="proof-accept-version">—</span></div>'
+        +'<div><b>STORE SHA</b><span id="proof-accept-pin">—</span></div>'
+        +'<div><b>INPUT HASH</b><span id="proof-accept-input-hash">—</span></div>'
+        +'<div><b>RESULT HASH</b><span id="proof-accept-result-hash">—</span></div>'
         +'<div><b>STORE ANSWER</b><span id="proof-accept-store-status">RETURNED</span></div>'
         +'<div><b>COMMERCIAL OFFER</b><span>NOT ESTABLISHED</span></div>'
         +'<div><b>ACCEPTANCE</b><span>NOT ESTABLISHED</span></div>'
@@ -1770,6 +1778,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       '<p class="stage-tag">STORE / YARD</p><h1>STORE / YARD · REFERENCE HANDOFF</h1>'
       +'<p class="sub">The identified definition and Store answer can move through the demonstration record without being promoted into physical work.</p>'
       +'<div class="proof-actor-grid">'
+        +'<div><b>JOB</b><span id="proof-yard-job">—</span></div>'
+        +'<div><b>VERSION</b><span id="proof-yard-version">—</span></div>'
+        +'<div><b>STORE SHA</b><span id="proof-yard-pin">—</span></div>'
+        +'<div><b>INPUT HASH</b><span id="proof-yard-input-hash">—</span></div>'
+        +'<div><b>RESULT HASH</b><span id="proof-yard-result-hash">—</span></div>'
         +'<div><b>ALLOCATION</b><span>NOT ESTABLISHED</span></div>'
         +'<div><b>PRODUCTION RELEASE</b><span>NOT ESTABLISHED</span></div>'
         +'<div><b>MACHINE READINESS</b><span>NOT ESTABLISHED</span></div>'
@@ -1788,6 +1801,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       +'<div class="proof-actor-grid">'
         +'<div><b>JOB</b><span id="proof-terms-job">—</span></div>'
         +'<div><b>VERSION</b><span id="proof-terms-version">—</span></div>'
+        +'<div><b>STORE SHA</b><span id="proof-terms-pin">—</span></div>'
+        +'<div><b>INPUT HASH</b><span id="proof-terms-input-hash">—</span></div>'
+        +'<div><b>RESULT HASH</b><span id="proof-terms-result-hash">—</span></div>'
         +'<div><b>REFERENCE MATERIAL VALUE</b><span id="proof-terms-material">—</span></div>'
         +'<div><b>STORE BUDGETARY Q</b><span id="proof-terms-q">—</span></div>'
         +'<div><b>COMMERCIAL OFFER</b><span>NOT ESTABLISHED</span></div>'
@@ -1806,6 +1822,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       +'<div class="proof-actor-grid">'
         +'<div><b>JOB</b><span id="proof-record-job">—</span></div>'
         +'<div><b>VERSION</b><span id="proof-record-version">—</span></div>'
+        +'<div><b>STORE SHA</b><span id="proof-record-pin">—</span></div>'
+        +'<div><b>INPUT HASH</b><span id="proof-record-input-hash">—</span></div>'
+        +'<div><b>RESULT HASH</b><span id="proof-record-result-hash">—</span></div>'
         +'<div><b>STORE ECONOMICS</b><span id="proof-record-economics">—</span></div>'
         +'<div><b>PHYSICAL FABRICATION</b><span>NOT RECORDED</span></div>'
       +'</div>'
@@ -1819,7 +1838,13 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       const payload=proofHandoff.payload||{};
       const version=proofHandoff.storeHandoff?.versionId||payload.id||payload.versionId||payload.normalizedPart?.versionId||'IDENTIFIED VERSION';
       const job=proofHandoff.job||'PROOF JOB';
-      [['proof-store-job',job],['proof-store-version',version],['proof-terms-job',job],['proof-terms-version',version],['proof-record-job',job],['proof-record-version',version]].forEach(([id,value])=>{
+      [
+        ['proof-store-job',job],['proof-store-version',version],
+        ['proof-accept-job',job],['proof-accept-version',version],
+        ['proof-yard-job',job],['proof-yard-version',version],
+        ['proof-terms-job',job],['proof-terms-version',version],
+        ['proof-record-job',job],['proof-record-version',version]
+      ].forEach(([id,value])=>{
         const el=doc.getElementById(id); if(el)el.textContent=String(value);
       });
       const title=doc.getElementById('proof-store-title');
@@ -1843,6 +1868,18 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       const machineService=totals?.machine_service ?? estimate?.cellRecovery ?? null;
       const q=totals?.Q ?? estimate?.total ?? null;
       const complete=storeReference?.complete === true || estimate?.complete === true;
+      const storePin=storeReference?.source?.storePin || storeReference?.authority?.economicsPin || null;
+      const inputHash=estimate?.calculationIdentity?.inputHash || storeReference?.calculationIdentity?.inputHash || null;
+      const resultHash=estimate?.calculationIdentity?.resultHash || storeReference?.calculationIdentity?.resultHash || null;
+      [
+        'proof-store-pin','proof-accept-pin','proof-yard-pin','proof-terms-pin','proof-record-pin'
+      ].forEach(id=>{ const el=doc.getElementById(id); if(el) el.textContent=storePin || 'UNRESOLVED'; });
+      [
+        'proof-store-input-hash','proof-accept-input-hash','proof-yard-input-hash','proof-terms-input-hash','proof-record-input-hash'
+      ].forEach(id=>{ const el=doc.getElementById(id); if(el) el.textContent=inputHash || 'UNRESOLVED'; });
+      [
+        'proof-store-result-hash','proof-accept-result-hash','proof-yard-result-hash','proof-terms-result-hash','proof-record-result-hash'
+      ].forEach(id=>{ const el=doc.getElementById(id); if(el) el.textContent=resultHash || 'UNRESOLVED'; });
 
       if(materialValue)materialValue.textContent=Number.isFinite(Number(materialAmount))
         ? '$'+Number(materialAmount).toFixed(2)
