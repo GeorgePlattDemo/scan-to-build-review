@@ -421,6 +421,8 @@
     var parts=Array.isArray(input.parts)?input.parts:[];
     var ops=Array.isArray(input.requiredOps)?input.requiredOps.slice().sort():[];
     var expectedOps=d.requiredOps.slice().sort();
+    if(String(input.configurationId||'')!==d.configurationId) return false;
+    if(String(input.configurationVersion||'')!==d.configurationVersion) return false;
     if(Number(input.definedWorkpieceLengthIn)!==d.definedWorkpieceLengthIn) return false;
     if(Number(input.sawAngleDeg)!==d.sawAngleDeg) return false;
     if(String(input.cutPlane||'')!==d.cutPlane) return false;
