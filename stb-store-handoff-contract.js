@@ -307,6 +307,13 @@
     note:'No pricing mathematics are maintained in this handoff contract.'
   });
 
+  // Shared numeric helper retained for non-pricing sequence arithmetic.
+  // Store economics remain delegated to the generated exact-pin Store runtime.
+  function roundN(value, places){
+    var p=Math.pow(10, places == null ? 2 : places);
+    return Math.round(Number(value)*p)/p;
+  }
+
   function quoteStartOwnBoardSequence(input){
     input=input || {};
     var runtime=root.STBStoreZeroUser1;
