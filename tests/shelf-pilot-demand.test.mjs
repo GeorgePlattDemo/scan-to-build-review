@@ -19,7 +19,7 @@ assert.match(alcove,/toolDiameterIn:0\.1875/);
 assert.match(alcove,/basis:'DERIVED_FROM_SHELF_ELEVATION'/);
 assert.match(alcove,/id="p-pilot"/);
 assert.match(alcove,/id="r-pilot"/);
-assert.match(alcove,/pilotFeatures\.length+' × 3\/16 in SPOT_ON_LOCATION/);
+assert.match(alcove,/pilotFeatures\.length\+' × 3\/16 in SPOT_ON_LOCATION/);
 assert.match(alcove,/<circle cx="'\+\(x0\+1\.75\)/);
 assert.match(alcove,/<circle cx="'\+\(x1-1\.75\)/);
 
