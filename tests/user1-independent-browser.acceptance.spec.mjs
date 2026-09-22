@@ -70,10 +70,10 @@ test('actual User 1 journey carries one authoritative Store answer through confi
   await expect(answer).toHaveAttribute('data-store-authoritative','true');
   await expect(answer).toHaveAttribute('data-store-disposition','UNRESOLVED');
   await expect(answer).toHaveAttribute('data-store-pin',STORE_PIN);
-  await expect(project.locator('#stb-price-total')).toHaveText('$54.29 · PARTIAL');
+  await expect(project.locator('#stb-price-total'),'FAULT_TARGET_VISIBLE_STORE_VALUE_MISMATCH').toHaveText('$54.29 · PARTIAL');
 
   let retained=await app.locator('body').evaluate(() => JSON.parse(localStorage.getItem('stb-start-own-user1-definition')||'null'));
-  expect(retained.versionId).toBe(retained.storeReference.answerVersionId);
+  expect(retained.versionId,'FAULT_TARGET_STORE_ANSWER_VERSION_MISMATCH').toBe(retained.storeReference.answerVersionId);
   expect(retained.storeReference.storePin).toBe(STORE_PIN);
   expect(retained.storeReference.authoritativeRequest.definedWorkpieceLengthIn).toBe(60);
   expect(retained.storeReference.authoritativeRequest.sawAngleDeg).toBe(30);
