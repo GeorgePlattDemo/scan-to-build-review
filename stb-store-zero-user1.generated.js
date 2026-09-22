@@ -861,8 +861,20 @@ function evaluateUser1Reference(input){
       status:(materialResolution&&materialResolution.status)||null,
       reason:(materialResolution&&materialResolution.reason)||null,
       unresolvedConditions:Object.freeze(materialUnresolved.slice()),
+      storeSku:(materialResolution&&materialResolution.pricingReferenceSku)||null,
+      stockLengthIn:(materialResolution&&materialResolution.pricingReferenceStockLengthIn)||null,
       pricingReferenceSku:(materialResolution&&materialResolution.pricingReferenceSku)||null,
       pricingReferenceStockLengthIn:(materialResolution&&materialResolution.pricingReferenceStockLengthIn)||null,
+      quantity:1,
+      unitPrice:item&&Number.isFinite(Number(item.sellingPrice))?Number(item.sellingPrice):null,
+      materialTotal:rawEstimate&&rawEstimate.totals?rawEstimate.totals.material:null,
+      cellFamily:Object.freeze(item&&Array.isArray(item.cellFamily)?item.cellFamily.slice():[]),
+      supportedOps:Object.freeze(item&&Array.isArray(item.supportedOps)?item.supportedOps.slice():[]),
+      source:Object.freeze({
+        repository:"GeorgePlattDemo/scan-to-build-store",
+        pin:STORE_PIN,
+        clock:CATALOG.clock||null
+      }),
       allocationClaimed:false,
       workpieceLengthIn:workpiece
     }),
