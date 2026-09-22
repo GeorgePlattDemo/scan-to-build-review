@@ -70,8 +70,16 @@ const completeBrowser=browserStore.evaluate(complete);
 const completeDirect=direct(complete);
 assert.equal(completeBrowser.rawEvaluation.status,completeDirect.evaluation.status,'S-001 depth-complete browser/Store disposition drift');
 assert.equal(completeBrowser.rawEvaluation.status,'SUPPORTABLE');
-assert.equal(completeBrowser.rawEvaluation.line.capability.retention.requestedTabs,4);
-assert.equal(completeBrowser.rawEvaluation.line.capability.retention.plannedTabs,5);
+assert.equal(
+  completeBrowser.rawEvaluation.line.capability.retention.requestedTabCount,
+  completeDirect.evaluation.line.capability.retention.requestedTabCount
+);
+assert.equal(
+  completeBrowser.rawEvaluation.line.capability.retention.plannedTabCount,
+  completeDirect.evaluation.line.capability.retention.plannedTabCount
+);
+assert.equal(completeBrowser.rawEvaluation.line.capability.retention.requestedTabCount,4);
+assert.equal(completeBrowser.rawEvaluation.line.capability.retention.plannedTabCount,5);
 assert.equal(completeBrowser.rawEstimate.Q,26.55);
 
 console.log('PASS · generated S-001 browser Store matches exact pinned Store behavior');
