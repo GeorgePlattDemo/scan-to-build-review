@@ -1,0 +1,55 @@
+name: User 1 Travel Standard
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  visible-user1-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.23.2"
+
+      - name: Shared Store contract syntax
+        run: node --check stb-store-handoff-contract.js
+
+      - name: User 1 travel-standard acceptance
+        run: node tests/user1-travel-standard.test.mjs
+
+      - name: Existing Start Own regression
+        run: node tests/start-own-live-store-origin.test.mjs
+
+      - name: Current Store convergence regression
+        run: node tests/store-convergence-current-surface.test.mjs
+
+      - name: Common Store handoff regression
+        run: node tests/proof-store-handoff.test.mjs
+
+      - name: Project proof ladder regression
+        run: node tests/project-proof-ladder.test.mjs
+
+      - name: Proof navigation preservation
+        run: node tests/proof-navigation-housekeeping.test.mjs
+
+      - name: Bounded project preservation
+        run: node tests/bounded-project-conformance.test.mjs
+
+      - name: Outdoor preservation
+        run: node tests/outdoor-build-p1-wire.test.mjs
+
+      - name: Alcove preservation
+        run: node tests/alcove-actor-handoff-final.test.mjs
+
+      - name: Window Seat actor preservation
+        run: node tests/window-seat-actor-handoff-mirror.test.mjs
+
+      - name: Window Seat journey preservation
+        run: node tests/window-seat-gold-standard-journey.test.mjs
