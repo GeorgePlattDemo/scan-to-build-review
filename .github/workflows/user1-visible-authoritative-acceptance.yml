@@ -36,6 +36,20 @@ jobs:
           test "$(git -C "$STB_STORE_ZERO_ROOT" rev-parse HEAD)" = "$STORE_PIN"
           test -z "$(git -C "$STB_STORE_ZERO_ROOT" status --porcelain)"
 
+      - name: Checkout exact S-001 Store authority
+        uses: actions/checkout@v4
+        with:
+          repository: GeorgePlattDemo/scan-to-build-store
+          ref: 4402abeb6b0299a5b6db2eec85ed04c3b0236bcc
+          path: store-zero-s001
+
+      - name: Verify exact S-001 Store identity
+        env:
+          STB_STORE_ZERO_S001_ROOT: ${{ github.workspace }}/store-zero-s001
+        run: |
+          test "$(git -C "$STB_STORE_ZERO_S001_ROOT" rev-parse HEAD)" = "4402abeb6b0299a5b6db2eec85ed04c3b0236bcc"
+          test -z "$(git -C "$STB_STORE_ZERO_S001_ROOT" status --porcelain)"
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -52,6 +66,16 @@ jobs:
 
       - name: Prove generated browser Store behavioral parity with exact Store
         run: node tests/user1-generated-store-parity.test.mjs
+
+      - name: Reproduce generated S-001 browser Store package from exact pin
+        env:
+          STB_STORE_ZERO_S001_ROOT: ${{ github.workspace }}/store-zero-s001
+        run: node tools/generate-s001-store-browser-bundle.mjs --check stb-store-zero-s001.generated.js
+
+      - name: Prove generated S-001 browser Store behavioral parity with exact Store
+        env:
+          STB_STORE_ZERO_S001_ROOT: ${{ github.workspace }}/store-zero-s001
+        run: node tests/s001-generated-store-parity.test.mjs
 
       - name: Start candidate static application
         run: |
