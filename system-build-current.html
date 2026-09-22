@@ -886,7 +886,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                     win.localStorage.setItem('stb-proof-handoff-job1',JSON.stringify(proofHandoff));
                   } catch (_) {}
                   confirmButton.dataset.stbLastConfirmed = confirmationKey;
+                  initializeJob1Fulfillment(true);
                   syncProofHandoff();
+                  renderJob1FulfillmentState();
                   originalShow.call(win,'proof-store');
                   syncJourneyNav('store');
                 });
@@ -1090,7 +1092,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             };
             retainComparisonStoreHandoff('start-own',storeHandoff);
             try { win.localStorage.setItem('stb-proof-handoff-job1', JSON.stringify(proofHandoff)); } catch (_) {}
+            initializeJob1Fulfillment(true);
             syncProofHandoff();
+            renderJob1FulfillmentState();
             originalShow.call(win, 'proof-store');
           } else if (type === 'STB_OUTDOOR_CONFIRMED' && event.data?.payload) {
             if (activeJourneyProject !== 'outdoor') return;
@@ -2078,6 +2082,10 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         : storeReference?.source?.storePin
           ? 'Store Zero · tested reference '+String(storeReference.source.storePin).slice(0,12)+'…'
           : 'Store Zero catalog · exact project material mapping not carried here';
+      if(isStartOwn){
+        initializeJob1Fulfillment(false);
+        renderJob1FulfillmentState();
+      }
     }
 
     doc.addEventListener('click', function(event){
@@ -2102,22 +2110,44 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         }
         return;
       }
+      const actionButton=event.target.closest?.('[data-job1-action]');
+      if(actionButton && proofHandoff?.source==='start-own'){
+        event.preventDefault();
+        const action=actionButton.dataset.job1Action;
+        runJob1Action(action);
+        return;
+      }
+      const yardActionButton=event.target.closest?.('[data-job1-yard-next]');
+      if(yardActionButton && proofHandoff?.source==='start-own'){
+        event.preventDefault();
+        const action=job1Fulfillment?.nextYardAction(job1FulfillmentState);
+        if(action) runJob1Action(action);
+        return;
+      }
       const go=event.target.closest?.('[data-proof-go]');
       if(go){
         event.preventDefault();
         const expectedSource = activeJourneyProject === 'start-own' ? 'start-own' : (activeJourneyProject === 'outdoor' ? 'outdoor' : null);
         if(!expectedSource || proofHandoff?.source !== expectedSource) return;
         syncProofHandoff();
-        let target=go.dataset.proofGo;
-        if(proofHandoff?.source==='start-own' && target==='proof-record' && go.closest('#proof-yard')) target='proof-terms';
-        originalShow.call(win,target);
+        const target=go.dataset.proofGo;
         if(proofHandoff?.source==='start-own'){
-          const stageByTarget={proofStore:'store'};
-          const proofStage = {
+          const stateStage = {
             'proof-store':'store',
+            'proof-terms':'terms',
             'proof-accept':'request',
             'proof-yard':'yard',
-            'proof-terms':'terms',
+            'proof-record':'record'
+          }[target] || null;
+          if(stateStage && !job1Fulfillment?.canVisit(job1FulfillmentState,stateStage)) return;
+        }
+        originalShow.call(win,target);
+        if(proofHandoff?.source==='start-own'){
+          const proofStage = {
+            'proof-store':'store',
+            'proof-terms':'review',
+            'proof-accept':'request',
+            'proof-yard':'yard',
             'proof-record':'record'
           }[target] || null;
           if(proofStage) syncJourneyNav(proofStage);
@@ -2513,6 +2543,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         // Duplicate legacy stages have the same Job 1 destination. Keep one button only.
         if (stage === 'terms' || stage === 'recap') button.hidden = true;
       });
+      syncJob1NavAvailability();
     }
 
     function selectJourneyProject(projectId) {
@@ -2630,6 +2661,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     }
 
     function showMappedProjectStage(projectId, stage) {
+      if (projectId === 'start-own' && !job1StageAllowed(stage)) return false;
       if (projectId === 'start-own' && (stage === 'scan' || stage === 'configure')) {
         originalShow.call(win,'start-own-live');
         setTimeout(() => showStartOwnStage(stage === 'configure' ? 'bench' : 'intent'),0);
