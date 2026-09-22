@@ -11,8 +11,10 @@ vm.runInNewContext(contractSource,sandbox,{filename:'stb-store-handoff-contract.
 const contract = sandbox.window.STBStoreHandoffContract;
 
 assert.ok(contract,'Store handoff contract did not load');
-assert.equal(contract.version,'0.8');
+assert.equal(contract.version,'0.9');
 assert.equal(typeof contract.resolveUser1StoreReference,'function');
+assert.equal(typeof contract.requestUser1StoreEvaluation,'function');
+assert.equal(typeof contract.sameUser1StoreAnswerIdentity,'function');
 assert.equal(typeof contract.quoteStartOwnBoardSequence,'undefined');
 
 const exactDemand = {
@@ -45,11 +47,55 @@ assert.equal(exact.estimate.cycle.T_job_min,1.4128);
 assert.equal(exact.estimate.travel.derivedSawCuts,3);
 assert.equal(exact.estimate.travel.derivedSpotCount,2);
 assert.equal(exact.estimate.travel.finalRemainderIn,27.625);
-assert.equal(exact.source.storePin,'95c639a1d0d4812df097ad1eb628594b38f921de');
-assert.equal(exact.source.workflowRun,'35757052553');
+assert.equal(exact.source.storePin,'f88ccaf9a2624899e255e66b51111e2b02309dad');
+assert.equal(exact.source.workflowRun,'35768861705');
 assert.equal(exact.source.systemIntegrationPin,'900dbd13f079f8a5f8d76d49c723fd35279164e8');
-assert.equal(exact.calculationIdentity.inputHash,'5de0367b62087cb0174ef5f1e101e22ded3728ba71906868628a985afafa078b');
-assert.equal(exact.calculationIdentity.resultHash,'9ad8d16a7c211d420b83e46ed8a8d224bd289e26a48764ff8d0389b6db698604');
+assert.equal(exact.calculationIdentity.inputHash,'e186df5ead47f0c3c233477b18d00206643d8e5e1adf03fdd6dabdc95a0a5168');
+assert.equal(exact.calculationIdentity.resultHash,'425af5de05fb614b87ca308696d0d19af0b2701ce2f3fd51c8a6c3ca84042f4f');
+assert.equal(exact.freshEvaluation,false);
+assert.equal(exact.evaluationReceipt,null);
+
+const formalA = contract.requestUser1StoreEvaluation(exactDemand,{
+  requestId:'JOB1-FRESH-A',
+  currentStorePin:'f88ccaf9a2624899e255e66b51111e2b02309dad',
+  checkedAt:'2026-09-22T18:45:00.000Z'
+});
+const formalB = contract.requestUser1StoreEvaluation(exactDemand,{
+  requestId:'JOB1-FRESH-B',
+  currentStorePin:'f88ccaf9a2624899e255e66b51111e2b02309dad',
+  checkedAt:'2026-09-22T18:46:00.000Z'
+});
+assert.equal(formalA.status,'CURRENT_STORE_REFERENCE_REVALIDATED');
+assert.equal(formalA.complete,true);
+assert.equal(formalA.freshEvaluation,true);
+assert.equal(formalA.evaluationReceipt.requestId,'JOB1-FRESH-A');
+assert.equal(formalB.evaluationReceipt.requestId,'JOB1-FRESH-B');
+assert.notEqual(formalA.evaluationReceipt.requestId,formalB.evaluationReceipt.requestId);
+assert.equal(formalA.evaluationReceipt.currentStorePin,'f88ccaf9a2624899e255e66b51111e2b02309dad');
+assert.equal(formalA.evaluationReceipt.currentStoreMatchesReference,true);
+assert.equal(formalA.evaluationReceipt.machineEnvelopeId,'D001-STAGE2-ENVELOPE-0.3');
+assert.equal(formalA.evaluationReceipt.travelStandardId,'STB-D001-DIMENSIONAL-TRAVEL-0.1');
+assert.equal(formalA.evaluationReceipt.economicsId,'STB-D001-STORE-ECONOMICS-S2-0.1');
+assert.equal(formalA.calculationIdentity.inputHash,formalB.calculationIdentity.inputHash);
+assert.equal(formalA.calculationIdentity.resultHash,formalB.calculationIdentity.resultHash);
+assert.equal(contract.sameUser1StoreAnswerIdentity(exact,formalA),true);
+
+const movedStore = contract.requestUser1StoreEvaluation(exactDemand,{
+  requestId:'JOB1-STORE-MOVED',
+  currentStorePin:'0000000000000000000000000000000000000000',
+  checkedAt:'2026-09-22T18:47:00.000Z'
+});
+assert.equal(movedStore.status,'STORE_AUTHORITY_CHANGED');
+assert.equal(movedStore.complete,false);
+assert.equal(movedStore.freshEvaluation,false);
+assert.deepEqual(Array.from(movedStore.unresolvedConditions),['STORE_REFRESH_REQUIRED','STORE_AUTHORITY_CHANGED']);
+
+const noCurrentAuthority = contract.requestUser1StoreEvaluation(exactDemand,{
+  requestId:'JOB1-NO-CURRENT-STORE',
+  checkedAt:'2026-09-22T18:48:00.000Z'
+});
+assert.equal(noCurrentAuthority.status,'CURRENT_STORE_AUTHORITY_REQUIRED');
+assert.equal(noCurrentAuthority.complete,false);
 
 for (const changed of [
   {...exactDemand, configurationVersion:'0.2'},
@@ -108,6 +154,14 @@ for (const forbidden of [
 }
 
 assert.match(shell,/definition\.storeReference\?\.complete !== true/);
+assert.match(shell,/currentStoreAuthorityUrl = 'https:\/\/api\.github\.com\/repos\/GeorgePlattDemo\/scan-to-build-store\/commits\/main'/);
+assert.match(shell,/cache:'no-store'/);
+assert.match(shell,/nextStoreRequestId/);
+assert.match(shell,/requestUser1StoreEvaluation/);
+assert.match(shell,/freshStoreAnswer\?\.evaluationReceipt\?\.requestId !== requestId/);
+assert.match(shell,/sameUser1StoreAnswerIdentity/);
+assert.match(shell,/STORE_ANSWER_CHANGED_RECONFIRM_REQUIRED/);
+assert.equal(shell.includes('stbLastConfirmed'),false,'Store-send control regressed to one-use behavior');
 assert.match(shell,/STORE_REFRESH_REQUIRED · confirmation is blocked until Store evaluates this exact revision/);
 assert.match(shell,/MODELED MACHINE SERVICE/);
 assert.match(shell,/machine_service/);
