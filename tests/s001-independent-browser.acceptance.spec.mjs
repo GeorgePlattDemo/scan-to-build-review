@@ -22,7 +22,7 @@ test('actual S-001 project route carries one exact Store answer through review a
   await tile.click();
 
   await expect(app.locator('#playhouse-s001.on')).toBeVisible();
-  await app.locator('[data-canonical-go="playhouse-machine"]').click();
+  await app.locator('#playhouse-s001 [data-canonical-go="playhouse-machine"]').click();
   await expect(app.locator('#playhouse-machine.on')).toBeVisible();
 
   await expect(app.locator('#s001-live-store-disposition')).toHaveText('SUPPORTABLE · REFERENCE');
@@ -41,7 +41,7 @@ test('actual S-001 project route carries one exact Store answer through review a
   expect(current.additionalRequests.straightCuts.status).toBe('RETAINED_SEPARATE');
   expect(current.physicalExecutionAuthorized).toBe(false);
 
-  await app.locator('[data-canonical-go="playhouse-store"]').click();
+  await app.locator('#playhouse-machine [data-canonical-go="playhouse-store"]').click();
   await expect(app.locator('#playhouse-store.on')).toBeVisible();
   await expect(app.locator('#s001-store-disposition')).toHaveText('SUPPORTABLE · REFERENCE');
   await expect(app.locator('#s001-store-reference-amount')).toHaveText('$26.55 material-only');
