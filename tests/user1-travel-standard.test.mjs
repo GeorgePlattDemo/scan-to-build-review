@@ -171,9 +171,15 @@ assert.match(shell,/proof-accept/);
 assert.match(shell,/proof-yard/);
 assert.match(shell,/proof-terms/);
 assert.match(shell,/proof-record/);
-assert.match(shell,/PAYMENT<\/b><span>NOT AVAILABLE \/ NOT RECORDED/);
-assert.match(shell,/CYCLE START<\/b><span>NOT AUTHORIZED/);
-assert.match(shell,/PHYSICAL FABRICATION<\/b><span>NOT RECORDED/);
+// Store authority remains real-to-the-model while downstream commerce/fulfillment is explicitly simulated.
+assert.match(shell,/data-proof-sim-action="pay"/);
+assert.match(shell,/SIMULATED_PAYMENT/);
+assert.match(shell,/no money moved/);
+assert.match(shell,/does not send controller code, command a machine, establish commissioned readiness, or create a live Cycle Start/);
+assert.match(shell,/PHYSICAL FABRICATION<\/b><span>NOT CLAIMED · SIMULATION ONLY/);
+assert.match(shell,/no live inventory reserved/);
+assert.match(shell,/no physical production authority created/);
+assert.match(shell,/no live motion or controller command/);
 
 assert.match(frame,/Modeled machine service/);
 assert.match(frame,/id="stb-config-length"[^>]*value="16"/);
