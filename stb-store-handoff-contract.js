@@ -156,7 +156,7 @@
   var START_OWN_STORE_CATALOG = Object.freeze({
     repository:'GeorgePlattDemo/scan-to-build-store',
     file:'store-zero-catalog.json',
-    pin:'ab8a4c5d470c310f27fef82683611622ab976168',
+    pin:'bc1a77297df752e32fb3687acc883a629c0b5b13',
     clock:"2026-09-10"
   });
 
@@ -301,7 +301,7 @@
   var START_OWN_STORE_PRICING_REFERENCE = Object.freeze({
     source:Object.freeze({
       repository:'GeorgePlattDemo/scan-to-build-store',
-      pin:'ab8a4c5d470c310f27fef82683611622ab976168',
+      pin:'bc1a77297df752e32fb3687acc883a629c0b5b13',
       generatedArtifact:'stb-store-zero-user1.generated.js'
     }),
     authority:'GENERATED_FROM_PINNED_STORE_SOURCE',
@@ -329,20 +329,23 @@
         total:null,
         cycle:null,
         operationBasis:null,
+        plan:null,
         engine:null,
         source:START_OWN_STORE_PRICING_REFERENCE.source,
         notClaimed:Object.freeze(['commercial quote','physical fabrication','physical stock allocation'])
       });
     }
     var angle=Number(input.sawAngleDeg || 0);
+    var finishedPartLengthIn=Number(input.finishedPartLengthIn);
+    var quantity=Number(input.quantity);
     var answer=runtime.evaluate({
       definitionVersionId:input.definitionVersionId || null,
       materialDemand:input.materialDemand || {species:'spf',form:'board',nominalT:2,nominalW:4},
-      definedWorkpieceLengthIn:Number(input.definedWorkpieceLengthIn),
-      sawCuts:Number(input.sawCuts || 0),
+      finishedPartLengthIn:finishedPartLengthIn,
+      quantity:quantity,
       sawAngleDeg:angle,
-      drillCycles:Number(input.drillCycles || 0),
-      drillDepthIn:input.drillReferenceDepthIn == null ? null : Number(input.drillReferenceDepthIn),
+      drillCycles:0,
+      drillDepthIn:null,
       requiredOps:Array.isArray(input.requiredOps)
         ? input.requiredOps.slice()
         : (angle === 0 ? ['CROSSCUT'] : ['MITER_LIMITED']),
@@ -354,15 +357,9 @@
       unresolvedConditions:Array.isArray(input.unresolvedConditions) ? input.unresolvedConditions.slice() : []
     });
     var estimate=answer.rawEstimate || null;
-    var mappedDefinition=answer.mappedCallInputs && answer.mappedCallInputs.definition
-      ? answer.mappedCallInputs.definition
+    var plan=answer.materialResolution && answer.materialResolution.plan
+      ? answer.materialResolution.plan
       : null;
-    var mappedEstimate=answer.mappedCallInputs && answer.mappedCallInputs.estimate
-      ? answer.mappedCallInputs.estimate
-      : null;
-    var returnedSpot=mappedDefinition && mappedDefinition.spotOperation
-      ? mappedDefinition.spotOperation
-      : (answer.attributedBasis && answer.attributedBasis.envelope ? answer.attributedBasis.envelope.spot : null);
     return Object.freeze({
       status:estimate ? estimate.status : (answer.rawEvaluation && answer.rawEvaluation.status) || 'UNAVAILABLE',
       complete:!!estimate && answer.priceCompleteness && answer.priceCompleteness.status==='COMPLETE_FOR_ENCODED_DEMAND',
@@ -376,26 +373,17 @@
       cellRecovery:estimate && estimate.totals ? estimate.totals.cell_recovery : null,
       total:estimate && estimate.totals ? estimate.totals.Q : null,
       cycle:estimate ? estimate.cycle : null,
-      operationBasis:mappedDefinition ? Object.freeze({
-        definedWorkpieceLengthIn:mappedDefinition.definedWorkpieceLengthIn,
-        productionSawCuts:mappedDefinition.productionSawCuts,
-        totalModeledSawCuts:mappedDefinition.totalModeledSawCuts,
-        sawAngleDeg:mappedDefinition.sawAngleDeg,
-        sawTraverseIn:mappedEstimate && mappedEstimate.sawTraverseIn != null ? mappedEstimate.sawTraverseIn : null,
-        drillCycles:mappedDefinition.drillCycles,
-        drillReferenceDepthIn:mappedDefinition.drillDepthIn,
-        spotCycles:estimate && estimate.operationEconomics && estimate.operationEconomics.spot
-          ? Math.max(0, Number(estimate.operationEconomics.spot.requestedCycles || 0) - Number(estimate.operationEconomics.spot.requestedCycles || 0))
-          : 0,
-        requestedSpotCycles:estimate && estimate.operationEconomics && estimate.operationEconomics.spot
-          ? Number(estimate.operationEconomics.spot.requestedCycles || 0)
-          : 0,
-        spotOperation:returnedSpot ? freezeCopy(returnedSpot) : null,
-        spotToolDiameterIn:returnedSpot && returnedSpot.toolDiameterIn != null ? Number(returnedSpot.toolDiameterIn) : null,
-        spotFullDiameterPenetrationIn:returnedSpot && returnedSpot.fullDiameterPenetrationIn != null ? Number(returnedSpot.fullDiameterPenetrationIn) : null,
-        spotDepthReference:returnedSpot ? returnedSpot.depthReference || null : null,
-        spotPointGeometryStatus:returnedSpot ? returnedSpot.pointGeometryStatus || null : null,
-        spotTotalTipPenetrationIn:returnedSpot && returnedSpot.totalTipPenetrationIn != null ? Number(returnedSpot.totalTipPenetrationIn) : null
+      plan:plan,
+      operationBasis:plan ? Object.freeze({
+        finishedPartLengthIn:finishedPartLengthIn,
+        quantity:quantity,
+        selectedParentSku:plan.selected && plan.selected.storeSku || null,
+        selectedParentLengthIn:plan.selected && plan.selected.parentStockLengthIn || null,
+        parentCount:plan.selected && plan.selected.parentCount || null,
+        productionSawCuts:plan.accounting && plan.accounting.productionSawCuts || 0,
+        preparationSawCuts:plan.accounting && plan.accounting.preparationSawCuts || 0,
+        totalModeledSawCuts:plan.accounting && plan.accounting.totalModeledSawCuts || 0,
+        sawAngleDeg:angle
       }) : null,
       engine:answer.attributedBasis ? answer.attributedBasis.pricingEngine : null,
       source:Object.freeze({
