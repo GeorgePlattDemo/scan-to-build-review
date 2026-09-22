@@ -74,6 +74,9 @@ assert.equal(shell.includes('machineHourRate'),false,'visible User 1 reintroduce
 assert.equal(shell.includes('setupCharge'),false,'visible User 1 reintroduced Store setup-charge logic');
 assert.match(shell,/STORE_REFRESH_REQUIRED/);
 assert.match(shell,/definition\.storeReference\?\.complete !== true/);
+assert.match(shell,/requestUser1StoreEvaluation/);
+assert.match(shell,/cache:'no-store'/);
+assert.equal(shell.includes('stbLastConfirmed'),false,'Store-send button regressed to one-use behavior');
 assert.match(shell,/const spotDemand =/);
 assert.match(shell,/physicalDemand\.spotDemand = spotDemand/);
 assert.match(shell,/formula:'finishedLengthIn \/ 2'/);
@@ -97,9 +100,10 @@ assert.equal(shell.includes('parentLengthIn = 72'),false);
 const sandbox = {window:{}};
 vm.runInNewContext(contractSource,sandbox,{filename:'stb-store-handoff-contract.js'});
 const contract = sandbox.window.STBStoreHandoffContract;
-assert.equal(contract.version,'0.8');
+assert.equal(contract.version,'0.9');
 assert.equal(typeof contract.quoteStartOwnBoardSequence,'undefined');
 assert.equal(typeof contract.resolveUser1StoreReference,'function');
+assert.equal(typeof contract.requestUser1StoreEvaluation,'function');
 assert.equal(typeof contract.sequenceDefinedWorkpiece,'function');
 
 const lineage = contract.sequenceDefinedWorkpiece({
@@ -147,9 +151,34 @@ assert.equal(exactStoreAnswer.estimate.travel.derivedSawCuts,3);
 assert.equal(exactStoreAnswer.estimate.travel.derivedSpotCount,2);
 assert.equal(exactStoreAnswer.estimate.travel.finalRemainderIn,27.625);
 assert.equal(exactStoreAnswer.estimate.engine.version,'0.3.0');
-assert.equal(exactStoreAnswer.source.storePin,'95c639a1d0d4812df097ad1eb628594b38f921de');
-assert.equal(exactStoreAnswer.calculationIdentity.inputHash,'5de0367b62087cb0174ef5f1e101e22ded3728ba71906868628a985afafa078b');
-assert.equal(exactStoreAnswer.calculationIdentity.resultHash,'9ad8d16a7c211d420b83e46ed8a8d224bd289e26a48764ff8d0389b6db698604');
+assert.equal(exactStoreAnswer.source.storePin,'f88ccaf9a2624899e255e66b51111e2b02309dad');
+assert.equal(exactStoreAnswer.calculationIdentity.inputHash,'e186df5ead47f0c3c233477b18d00206643d8e5e1adf03fdd6dabdc95a0a5168');
+assert.equal(exactStoreAnswer.calculationIdentity.resultHash,'425af5de05fb614b87ca308696d0d19af0b2701ce2f3fd51c8a6c3ca84042f4f');
+const freshStoreAnswer = contract.requestUser1StoreEvaluation({
+  configurationId:'SYO-USER1-XBRACE',
+  configurationVersion:'0.1',
+  definedWorkpieceLengthIn:60,
+  sawAngleDeg:30,
+  cutPlane:'miter-face',
+  endIdentity:'both',
+  endRelation:'parallel',
+  lengthDatum:'long-long-outer-edge',
+  datumCMethod:'REFERENCE_CUT',
+  requiredOps:['MITER_LIMITED','SPOT_ON_LOCATION'],
+  declaredSawCuts:3,
+  declaredSpotCount:2,
+  parts:[
+    {partId:'PART-1',lengthIn:16,features:[{featureId:'SPOT-1',kind:'SPOT_ON_LOCATION',xIn:8,locationRule:'CENTERED_ON_PART',acrossWidthRule:'CENTERED_ON_WIDE_FACE'}]},
+    {partId:'PART-2',lengthIn:16,features:[{featureId:'SPOT-2',kind:'SPOT_ON_LOCATION',xIn:8,locationRule:'CENTERED_ON_PART',acrossWidthRule:'CENTERED_ON_WIDE_FACE'}]}
+  ]
+},{
+  requestId:'START-OWN-RECHECK',
+  currentStorePin:'f88ccaf9a2624899e255e66b51111e2b02309dad',
+  checkedAt:'2026-09-22T18:55:00.000Z'
+});
+assert.equal(freshStoreAnswer.complete,true);
+assert.equal(freshStoreAnswer.freshEvaluation,true);
+assert.equal(freshStoreAnswer.evaluationReceipt.requestId,'START-OWN-RECHECK');
 
 const changedRevision = contract.resolveUser1StoreReference({
   configurationId:'SYO-USER1-XBRACE',
