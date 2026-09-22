@@ -22,6 +22,11 @@ test('actual S-001 project route carries one exact Store answer through review a
   await tile.click();
 
   await expect(app.locator('#playhouse-s001.on')).toBeVisible();
+  // Library projects are intentionally read-only until the customer explicitly chooses
+  // MAKE CHANGES. Enter the working-copy path before exercising the S-001 controls.
+  const makeChanges=app.locator('#playhouse-s001 [data-canonical-preview-action="edit"]');
+  await expect(makeChanges,'S001_EDIT_ENTRY_CONTROL_MISSING').toBeVisible();
+  await makeChanges.click();
   await app.locator('#playhouse-s001 [data-canonical-go="playhouse-machine"]').click();
   await expect(app.locator('#playhouse-machine.on')).toBeVisible();
 
