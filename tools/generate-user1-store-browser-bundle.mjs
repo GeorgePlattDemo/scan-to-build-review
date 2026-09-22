@@ -3,6 +3,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 const EXPECTED_PIN="ab8a4c5d470c310f27fef82683611622ab976168";
+const pin=EXPECTED_PIN;
 const root=resolve(process.env.STB_STORE_ZERO_ROOT||"");
 if(!process.env.STB_STORE_ZERO_ROOT) throw new Error("STB_STORE_ZERO_ROOT is required");
 const actualPin=execFileSync("git",["-C",root,"rev-parse","HEAD"],{encoding:"utf8"}).trim();
