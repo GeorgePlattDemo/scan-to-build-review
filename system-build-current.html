@@ -163,7 +163,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   id="start-own-proof-frame"
                   class="start-own-shell-frame"
                   title="Start Your Own · User 1 · definition to doing"
-                  src="three-frames.html?v=e7321f0e"
+                  src="three-frames.html?v=8fbe4542"
                 ></iframe>
               </div>
             `;
@@ -172,7 +172,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
           const liveFrame = startOwnPage.querySelector('#start-own-proof-frame');
           if (liveFrame && !String(liveFrame.getAttribute('src')||'').includes('three-frames.html')) {
-            liveFrame.src = 'three-frames.html?v=e7321f0e';
+            liveFrame.src = 'three-frames.html?v=8fbe4542';
           }
           const banner = startOwnPage.querySelector('[data-proof-job="1"]');
           if (banner && /generic floor/.test(banner.textContent||'')) {
@@ -770,6 +770,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 setText('stb-bench-length-spec',Number(demand.finishedLength).toFixed(3)+' in');
                 setText('stb-bench-angle-spec',Number(demand.angleDegrees).toFixed(3)+'°');
                 setText('stb-bench-parts-spec',String(demand.quantity));
+                setText('stb-def-workpiece',formatInches(demand.definedWorkpieceLengthIn));
                 setText('stb-def-parts',String(demand.quantity));
                 setText('stb-def-length',demand.finishedLength+' in each');
                 setText('stb-def-angle',Number(demand.angleDegrees).toFixed(3)+'° · derived to preserve 8.000 in span · both · parallel');

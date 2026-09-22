@@ -50,6 +50,8 @@ assert.equal(surface.includes('id="stb-config-angle"'),false,'customer angle con
 assert.equal(surface.includes('data-parts='),false,'quantity choices returned');
 assert.equal(surface.includes('data-spot='),false,'spot choices returned');
 assert.match(surface,/RESULTING DEFINITION \/ REFERENCE ORDER — USER 1/);
+assert.match(surface,/<span>Store-selected workpiece<\/span><span id="stb-def-workpiece">60 in<\/span>/);
+assert.match(shell,/setText\('stb-def-workpiece',formatInches\(demand\.definedWorkpieceLengthIn\)\)/);
 assert.match(surface,/MATERIAL REQUIRED/);
 assert.match(surface,/REFERENCE CALCULATED PRICE/);
 assert.match(surface,/STORE \/ PRICE BASIS/);
@@ -61,7 +63,7 @@ assert.match(surface,/CONFIRM &amp; SEND TO STORE ZERO →/);
 assert.match(surface,/id="stb-bench-dynamic-geometry"/);
 
 // Host carries one definition through intent, bench, Store, Terms and record.
-assert.match(shell,/three-frames\.html\?v=e7321f0e/);
+assert.match(shell,/three-frames\.html\?v=8fbe4542/);
 assert.match(shell,/const definedWorkpieceLengthIn = 60;/);
 assert.match(shell,/DEMO_HORIZONTAL_SPAN_IN = 8/);
 assert.match(shell,/Math\.asin\(spanRatio\)/);
