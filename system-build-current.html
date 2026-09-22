@@ -789,7 +789,10 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                       ? 'the 60-in defined workpiece passes the current retained-control sequence; material selection remains a separate Store fact'
                       : 'the same 60-in defined workpiece is unresolved for this changed part demand')
                     +(estimate
-                      ? ' · modeled value 
+                      ? ' · modeled value $'+Number(estimate.total).toFixed(2)+(estimate.complete?'':' for resolved operations; partial')
+                      : ' · budgetary estimate unavailable')
+                    +' · answer '+String(definition.storeReference.answerVersionId || 'UNIDENTIFIED')+'.';
+                }
                 activate('#stb-config-parts [data-parts]','data-parts',partQty);
                 activate('[data-length]','data-length',demand.finishedLength);
                 activate('[data-angle]','data-angle',demand.angleDegrees);
