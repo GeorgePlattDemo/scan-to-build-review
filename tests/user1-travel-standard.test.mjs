@@ -123,8 +123,7 @@ assert.match(shell,/data-job1-action="RECORD_PICKUP"/);
 assert.match(shell,/NO REAL PAYMENT/);
 assert.match(shell,/NO BLOOD ON WOOD/);
 assert.match(shell,/SIMULATED PHYSICAL COMPLETION/);
-assert.match(shell,/liveCommerce:false/);
-assert.match(shell,/liveMotion:false/);
+assert.match(shell,/stb-job1-simulated-fulfillment\.js/);
 
 assert.match(frame,/Modeled machine service/);
 assert.match(frame,/id="stb-config-length"[^>]*value="16"/);
