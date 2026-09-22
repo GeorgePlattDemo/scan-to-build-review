@@ -627,6 +627,9 @@
     var currentStorePin=String(request.currentStorePin || '').trim();
     var checkedAt=String(request.checkedAt || new Date().toISOString());
 
+    var reference=user1StoreReferenceForDemand(input);
+    var expectedStorePin=reference?.source?.storePin || USER1_STORE_REFERENCE.source.storePin;
+
     if(!requestId){
       return unresolvedUser1StoreAnswer(
         'STORE_EVALUATION_REQUEST_ID_REQUIRED',
@@ -647,7 +650,7 @@
           requestId:requestId,
           checkedAt:checkedAt,
           currentStorePin:null,
-          referenceStorePin:answer.source?.storePin || USER1_STORE_REFERENCE.source.storePin,
+          referenceStorePin:expectedStorePin,
           currentStoreMatchesReference:false
         })
       );
