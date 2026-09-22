@@ -37,13 +37,16 @@
     startOwn: Object.freeze({
       projectId:'start-own',
       projectClass:'USER_DEFINED_BOARD',
-      materialCatalogPin:'ab8a4c5d470c310f27fef82683611622ab976168',
-      capabilityBasis:'D001-STAGE2-ENVELOPE-0.3',
-      capabilityPin:'ab8a4c5d470c310f27fef82683611622ab976168',
+      materialCatalogPin:'f8373520a726090ed91eff82e5e720f4a9634615',
+      capabilityBasis:'STB-D001-DIMENSIONAL-TRAVEL-0.1',
+      capabilityPin:'f8373520a726090ed91eff82e5e720f4a9634615',
       economicsModel:'STB-STORE-ZERO-PRICE-1',
-      economicsVersion:'0.2.3',
-      economicsStatus:'BUDGETARY_ESTIMATE',
-      economicsPin:'ab8a4c5d470c310f27fef82683611622ab976168',
+      economicsVersion:'0.3.0',
+      economicsStatus:'PINNED_STORE_ISSUED_REFERENCE',
+      economicsPin:'f8373520a726090ed91eff82e5e720f4a9634615',
+      governingStandard:'DIMENSIONAL-STORE-TRAVEL-STANDARD-0.1.md',
+      acceptanceWorkflowRun:'35752240345',
+      systemIntegrationPin:'682ce2b2a60c88b5fb6543e2f4f1c9ebfe7b01b8',
       legacyGeneralRecoverySelected:false
     }),
     outdoor: Object.freeze({
@@ -97,50 +100,50 @@
    * Project UI data contains no material price authority of its own.
    */
   var START_OWN_CATALOG_ROWS = Object.freeze([
-    ["2x4","STB-ZERO-SPF-2X4-72-001","board",72,null,null,3.13,["CROSSCUT","MITER_LIMITED","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
-    ["2x4","STB-ZERO-SPF-2X4-96-001","board",96,null,null,4.18,["CROSSCUT","MITER_LIMITED","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
-    ["2x4","STB-ZERO-SPF-2X4-108-001","board",108,null,null,4.7,["CROSSCUT","MITER_LIMITED","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
-    ["2x4","STB-ZERO-SPF-2X4-120-001","board",120,null,null,5.69,["CROSSCUT","MITER_LIMITED","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
-    ["2x4","STB-ZERO-SPF-2X4-144-001","board",144,null,null,6.8,["CROSSCUT","MITER_LIMITED","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
-    ["2x4","STB-ZERO-SPF-2X4-168-001","board",168,null,null,7.31,["CROSSCUT","MITER_LIMITED","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
-    ["2x4","STB-ZERO-SPF-2X4-192-001","board",192,null,null,8.36,["CROSSCUT","MITER_LIMITED","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
-    ["2x6","STB-ZERO-SPF-2X6-72-001","board",72,null,null,5.66,["CROSSCUT","MITER_LIMITED","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
-    ["2x6","STB-ZERO-SPF-2X6-96-001","board",96,null,null,7.55,["CROSSCUT","MITER_LIMITED","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
-    ["2x6","STB-ZERO-SPF-2X6-120-001","board",120,null,null,9.44,["CROSSCUT","MITER_LIMITED","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
-    ["2x6","STB-ZERO-SPF-2X6-144-001","board",144,null,null,11.33,["CROSSCUT","MITER_LIMITED","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
-    ["2x6","STB-ZERO-SPF-2X6-192-001","board",192,null,null,15.1,["CROSSCUT","MITER_LIMITED","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
-    ["2x8","STB-ZERO-SPF-2X8-96-001","board",96,null,null,9.95,["CROSSCUT","MITER_LIMITED","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
-    ["2x8","STB-ZERO-SPF-2X8-120-001","board",120,null,null,12.44,["CROSSCUT","MITER_LIMITED","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
-    ["2x8","STB-ZERO-SPF-2X8-144-001","board",144,null,null,14.93,["CROSSCUT","MITER_LIMITED","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
-    ["2x8","STB-ZERO-SPF-2X8-192-001","board",192,null,null,19.91,["CROSSCUT","MITER_LIMITED","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
+    ["2x4","STB-ZERO-SPF-2X4-72-001","board",72,null,null,3.13,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
+    ["2x4","STB-ZERO-SPF-2X4-96-001","board",96,null,null,4.18,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
+    ["2x4","STB-ZERO-SPF-2X4-108-001","board",108,null,null,4.7,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
+    ["2x4","STB-ZERO-SPF-2X4-120-001","board",120,null,null,5.69,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
+    ["2x4","STB-ZERO-SPF-2X4-144-001","board",144,null,null,6.8,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
+    ["2x4","STB-ZERO-SPF-2X4-168-001","board",168,null,null,7.31,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
+    ["2x4","STB-ZERO-SPF-2X4-192-001","board",192,null,null,8.36,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
+    ["2x6","STB-ZERO-SPF-2X6-72-001","board",72,null,null,5.66,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
+    ["2x6","STB-ZERO-SPF-2X6-96-001","board",96,null,null,7.55,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
+    ["2x6","STB-ZERO-SPF-2X6-120-001","board",120,null,null,9.44,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
+    ["2x6","STB-ZERO-SPF-2X6-144-001","board",144,null,null,11.33,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
+    ["2x6","STB-ZERO-SPF-2X6-192-001","board",192,null,null,15.1,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
+    ["2x8","STB-ZERO-SPF-2X8-96-001","board",96,null,null,9.95,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
+    ["2x8","STB-ZERO-SPF-2X8-120-001","board",120,null,null,12.44,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
+    ["2x8","STB-ZERO-SPF-2X8-144-001","board",144,null,null,14.93,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
+    ["2x8","STB-ZERO-SPF-2X8-192-001","board",192,null,null,19.91,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
     ["4x4","STB-ZERO-SPF-4X4-96-001","board",96,null,null,9.2,["CROSSCUT","MITER_LIMITED"],["D-001"]],
     ["4x4","STB-ZERO-SPF-4X4-120-001","board",120,null,null,11.5,["CROSSCUT","MITER_LIMITED"],["D-001"]],
     ["4x4","STB-ZERO-SPF-4X4-144-001","board",144,null,null,13.79,["CROSSCUT","MITER_LIMITED"],["D-001"]],
-    ["1x4p","STB-ZERO-PINE-1X4-72-001","board",72,null,null,8.65,["CROSSCUT","MITER_LIMITED","DRILL","DADO","GROOVE","RABBET","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
-    ["1x4p","STB-ZERO-PINE-1X4-96-001","board",96,null,null,11.54,["CROSSCUT","MITER_LIMITED","DRILL","DADO","GROOVE","RABBET","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
-    ["1x4p","STB-ZERO-PINE-1X4-120-001","board",120,null,null,14.43,["CROSSCUT","MITER_LIMITED","DRILL","DADO","GROOVE","RABBET","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
-    ["1x4p","STB-ZERO-PINE-1X4-144-001","board",144,null,null,17.3,["CROSSCUT","MITER_LIMITED","DRILL","DADO","GROOVE","RABBET","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
-    ["1x6p","STB-ZERO-PINE-1X6-72-001","board",72,null,null,15.74,["CROSSCUT","MITER_LIMITED","DRILL","DADO","GROOVE","RABBET","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
-    ["1x6p","STB-ZERO-PINE-1X6-96-001","board",96,null,null,20.99,["CROSSCUT","MITER_LIMITED","DRILL","DADO","GROOVE","RABBET","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
-    ["1x6p","STB-ZERO-PINE-1X6-120-001","board",120,null,null,26.24,["CROSSCUT","MITER_LIMITED","DRILL","DADO","GROOVE","RABBET","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
-    ["1x6p","STB-ZERO-PINE-1X6-144-001","board",144,null,null,31.48,["CROSSCUT","MITER_LIMITED","DRILL","DADO","GROOVE","RABBET","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
-    ["1x4o","STB-ZERO-OAK-1X4-72-001","board",72,null,null,18.1,["CROSSCUT","MITER_LIMITED","DRILL","DADO","GROOVE","MILL_END_PROFILE"],["D-001"]],
-    ["1x4o","STB-ZERO-OAK-1X4-96-001","board",96,null,null,24.14,["CROSSCUT","MITER_LIMITED","DRILL","DADO","GROOVE","MILL_END_PROFILE"],["D-001"]],
-    ["1x4o","STB-ZERO-OAK-1X4-120-001","board",120,null,null,30.18,["CROSSCUT","MITER_LIMITED","DRILL","DADO","GROOVE","MILL_END_PROFILE"],["D-001"]],
-    ["1x6o","STB-ZERO-OAK-1X6-72-001","board",72,null,null,26.24,["CROSSCUT","MITER_LIMITED","DRILL","DADO","GROOVE","MILL_END_PROFILE"],["D-001"]],
-    ["1x6o","STB-ZERO-OAK-1X6-96-001","board",96,null,null,34.99,["CROSSCUT","MITER_LIMITED","DRILL","DADO","GROOVE","MILL_END_PROFILE"],["D-001"]],
-    ["1x6o","STB-ZERO-OAK-1X6-120-001","board",120,null,null,43.73,["CROSSCUT","MITER_LIMITED","DRILL","DADO","GROOVE","MILL_END_PROFILE"],["D-001"]],
-    ["1x8o","STB-ZERO-OAK-1X8-72-001","board",72,null,null,34.59,["CROSSCUT","MITER_LIMITED","DRILL","DADO","GROOVE","MILL_END_PROFILE"],["D-001"]],
-    ["1x8o","STB-ZERO-OAK-1X8-96-001","board",96,null,null,46.12,["CROSSCUT","MITER_LIMITED","DRILL","DADO","GROOVE","MILL_END_PROFILE"],["D-001"]],
-    ["1x8o","STB-ZERO-OAK-1X8-120-001","board",120,null,null,57.65,["CROSSCUT","MITER_LIMITED","DRILL","DADO","GROOVE","MILL_END_PROFILE"],["D-001"]],
-    ["1x4c","STB-ZERO-CHR-1X4-72-001","board",72,null,null,28.97,["CROSSCUT","MITER_LIMITED","DRILL","MILL_END_PROFILE"],["D-001"]],
-    ["1x4c","STB-ZERO-CHR-1X4-96-001","board",96,null,null,38.62,["CROSSCUT","MITER_LIMITED","DRILL","MILL_END_PROFILE"],["D-001"]],
-    ["1x6c","STB-ZERO-CHR-1X6-72-001","board",72,null,null,41.98,["CROSSCUT","MITER_LIMITED","DRILL","MILL_END_PROFILE"],["D-001"]],
-    ["1x6c","STB-ZERO-CHR-1X6-96-001","board",96,null,null,55.98,["CROSSCUT","MITER_LIMITED","DRILL","MILL_END_PROFILE"],["D-001"]],
-    ["1x6w","STB-ZERO-POP-1X6-72-001","board",72,null,null,24.14,["CROSSCUT","MITER_LIMITED","DRILL","DADO","GROOVE","RABBET","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
-    ["1x6w","STB-ZERO-POP-1X6-96-001","board",96,null,null,32.18,["CROSSCUT","MITER_LIMITED","DRILL","DADO","GROOVE","RABBET","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
-    ["1x6w","STB-ZERO-POP-1X6-120-001","board",120,null,null,40.24,["CROSSCUT","MITER_LIMITED","DRILL","DADO","GROOVE","RABBET","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
-    ["1x6w","STB-ZERO-POP-1X6-144-001","board",144,null,null,48.28,["CROSSCUT","MITER_LIMITED","DRILL","DADO","GROOVE","RABBET","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
+    ["1x4p","STB-ZERO-PINE-1X4-72-001","board",72,null,null,8.65,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","DADO","GROOVE","RABBET","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
+    ["1x4p","STB-ZERO-PINE-1X4-96-001","board",96,null,null,11.54,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","DADO","GROOVE","RABBET","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
+    ["1x4p","STB-ZERO-PINE-1X4-120-001","board",120,null,null,14.43,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","DADO","GROOVE","RABBET","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
+    ["1x4p","STB-ZERO-PINE-1X4-144-001","board",144,null,null,17.3,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","DADO","GROOVE","RABBET","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
+    ["1x6p","STB-ZERO-PINE-1X6-72-001","board",72,null,null,15.74,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","DADO","GROOVE","RABBET","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
+    ["1x6p","STB-ZERO-PINE-1X6-96-001","board",96,null,null,20.99,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","DADO","GROOVE","RABBET","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
+    ["1x6p","STB-ZERO-PINE-1X6-120-001","board",120,null,null,26.24,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","DADO","GROOVE","RABBET","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
+    ["1x6p","STB-ZERO-PINE-1X6-144-001","board",144,null,null,31.48,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","DADO","GROOVE","RABBET","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
+    ["1x4o","STB-ZERO-OAK-1X4-72-001","board",72,null,null,18.1,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","DADO","GROOVE","MILL_END_PROFILE"],["D-001"]],
+    ["1x4o","STB-ZERO-OAK-1X4-96-001","board",96,null,null,24.14,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","DADO","GROOVE","MILL_END_PROFILE"],["D-001"]],
+    ["1x4o","STB-ZERO-OAK-1X4-120-001","board",120,null,null,30.18,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","DADO","GROOVE","MILL_END_PROFILE"],["D-001"]],
+    ["1x6o","STB-ZERO-OAK-1X6-72-001","board",72,null,null,26.24,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","DADO","GROOVE","MILL_END_PROFILE"],["D-001"]],
+    ["1x6o","STB-ZERO-OAK-1X6-96-001","board",96,null,null,34.99,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","DADO","GROOVE","MILL_END_PROFILE"],["D-001"]],
+    ["1x6o","STB-ZERO-OAK-1X6-120-001","board",120,null,null,43.73,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","DADO","GROOVE","MILL_END_PROFILE"],["D-001"]],
+    ["1x8o","STB-ZERO-OAK-1X8-72-001","board",72,null,null,34.59,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","DADO","GROOVE","MILL_END_PROFILE"],["D-001"]],
+    ["1x8o","STB-ZERO-OAK-1X8-96-001","board",96,null,null,46.12,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","DADO","GROOVE","MILL_END_PROFILE"],["D-001"]],
+    ["1x8o","STB-ZERO-OAK-1X8-120-001","board",120,null,null,57.65,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","DADO","GROOVE","MILL_END_PROFILE"],["D-001"]],
+    ["1x4c","STB-ZERO-CHR-1X4-72-001","board",72,null,null,28.97,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","MILL_END_PROFILE"],["D-001"]],
+    ["1x4c","STB-ZERO-CHR-1X4-96-001","board",96,null,null,38.62,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","MILL_END_PROFILE"],["D-001"]],
+    ["1x6c","STB-ZERO-CHR-1X6-72-001","board",72,null,null,41.98,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","MILL_END_PROFILE"],["D-001"]],
+    ["1x6c","STB-ZERO-CHR-1X6-96-001","board",96,null,null,55.98,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","MILL_END_PROFILE"],["D-001"]],
+    ["1x6w","STB-ZERO-POP-1X6-72-001","board",72,null,null,24.14,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","DADO","GROOVE","RABBET","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
+    ["1x6w","STB-ZERO-POP-1X6-96-001","board",96,null,null,32.18,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","DADO","GROOVE","RABBET","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
+    ["1x6w","STB-ZERO-POP-1X6-120-001","board",120,null,null,40.24,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","DADO","GROOVE","RABBET","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
+    ["1x6w","STB-ZERO-POP-1X6-144-001","board",144,null,null,48.28,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","DADO","GROOVE","RABBET","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
     ["p25","STB-ZERO-PLY-025-48X48-001","sheet",null,48,48,8.47,["CROSSCUT","RIP"],["S-001"]],
     ["p25","STB-ZERO-PLY-025-48X96-001","sheet",null,48,96,14.61,["CROSSCUT","RIP","DADO"],["S-001"]],
     ["p38","STB-ZERO-PLY-038-48X48-001","sheet",null,48,48,11.09,["CROSSCUT","RIP"],["S-001"]],
@@ -155,7 +158,7 @@
   var START_OWN_STORE_CATALOG = Object.freeze({
     repository:'GeorgePlattDemo/scan-to-build-store',
     file:'store-zero-catalog.json',
-    pin:'ab8a4c5d470c310f27fef82683611622ab976168',
+    pin:'f8373520a726090ed91eff82e5e720f4a9634615',
     clock:"2026-09-10"
   });
 
@@ -297,41 +300,111 @@
   }
 
 
-  var START_OWN_STORE_PRICING = Object.freeze({
+  /*
+   * USER 1 STORE-ISSUED REFERENCE
+   *
+   * This static Review build does not execute the Store runtime. It may present
+   * only the exact Store answer already proven on the exact Store SHA below.
+   * Any changed governing demand must go back through Store. No browser-side
+   * pricing, capability, motion, cycle-time, or refusal calculation is allowed.
+   */
+  var USER1_STORE_REFERENCE = Object.freeze({
+    status:'STORE_ISSUED_REFERENCE',
     source:Object.freeze({
       repository:'GeorgePlattDemo/scan-to-build-store',
+      storePin:'f8373520a726090ed91eff82e5e720f4a9634615',
       pricingFile:'store-zero-pricing-engine.mjs',
-      envelopeFile:'d001-stage2-envelope.mjs',
-      pin:'ab8a4c5d470c310f27fef82683611622ab976168'
+      travelFile:'d001-travel-standard.mjs',
+      governingStandard:'DIMENSIONAL-STORE-TRAVEL-STANDARD-0.1.md',
+      workflowRun:'35752240345',
+      systemIntegrationPin:'682ce2b2a60c88b5fb6543e2f4f1c9ebfe7b01b8'
     }),
-    engine:Object.freeze({
-      id:'STB-STORE-ZERO-PRICE-1',
-      version:'0.2.3',
-      clock:'2026-09-10',
-      documentKind:'BudgetaryEstimate'
+    demand:Object.freeze({
+      configurationId:'SYO-USER1-XBRACE',
+      configurationVersion:'0.1',
+      definedWorkpieceLengthIn:60,
+      partQty:2,
+      partLengthIn:16,
+      sawAngleDeg:30,
+      cutPlane:'miter-face',
+      endIdentity:'both',
+      endRelation:'parallel',
+      lengthDatum:'long-long-outer-edge',
+      datumCMethod:'REFERENCE_CUT',
+      requiredOps:Object.freeze(['MITER_LIMITED','SPOT_ON_LOCATION']),
+      spotMode:'SPOT_ON_LOCATION',
+      spotLocationRule:'CENTERED_ON_PART',
+      spotAcrossWidthRule:'CENTERED_ON_WIDE_FACE',
+      spotXIn:8,
+      declaredSawCuts:3,
+      declaredSpotCount:2
     }),
-    cycleModel:Object.freeze({
-      id:'STB-D001-CYCLE-MODEL-S2-0.1',
-      basis:'CALCULATED',
-      measured:false,
-      commissioned:false
+    materialResolution:Object.freeze({
+      status:'MAPPED',
+      storeSku:'STB-ZERO-SPF-2X4-72-001',
+      pricingReferenceSku:'STB-ZERO-SPF-2X4-72-001',
+      pricingReferenceStockLengthIn:72,
+      workpieceLengthIn:60,
+      quantity:1,
+      unitPrice:3.13,
+      materialTotal:3.13,
+      allocationClaimed:false,
+      source:Object.freeze({
+        repository:'GeorgePlattDemo/scan-to-build-store',
+        file:'store-zero-catalog.json',
+        pin:'f8373520a726090ed91eff82e5e720f4a9634615',
+        clock:'2026-09-10'
+      })
     }),
-    recovery:Object.freeze({setupCharge:35,machineHourRate:100}),
-    saw:Object.freeze({
-      diameterIn:10,
-      rpm:3450,
-      teeth:60,
-      chipLoadCrossSoft:0.003,
-      finishFactor:0.5,
-      deployMin:0.08,
-      retractMin:0.08
-    }),
-    rapidInPerMin:480,
-    accelMin:0.05,
-    loadSeatMin:0.6,
-    releaseLabelMin:0.4,
-    drill:Object.freeze({rpm:3000,ipr:0.008,referenceDepthIn:0.75}),
-    spot:Object.freeze({diameterIn:0.1875,fixedCycleMin:0.16,basis:'DECLARED_FIXTURE'})
+    estimate:Object.freeze({
+      status:'BUDGETARY_ESTIMATE',
+      complete:true,
+      completeness:'COMPLETE_FOR_TRAVEL_STANDARD',
+      documentKind:'BudgetaryEstimate',
+      engine:Object.freeze({
+        id:'STB-STORE-ZERO-PRICE-1',
+        version:'0.3.0',
+        clock:'2026-09-22',
+        documentKind:'BudgetaryEstimate'
+      }),
+      cycle:Object.freeze({
+        model:'STB-D001-DIMENSIONAL-TRAVEL-0.1',
+        version:'0.1.0',
+        basis:'DECLARED_STAGE2_MODEL',
+        measured:false,
+        commissioned:false,
+        T_job_min:1.4128
+      }),
+      totals:Object.freeze({
+        material:3.13,
+        hardware:0,
+        machine_service:5.89,
+        Q:9.02,
+        Q_basis:'CALCULATED_FROM_DECLARED_STAGE2_MODEL'
+      }),
+      travel:Object.freeze({
+        derivedSawCuts:3,
+        derivedSpotCount:2,
+        finalRemainderIn:27.625
+      }),
+      economics:Object.freeze({
+        id:'STB-D001-STORE-ECONOMICS-S2-0.1',
+        version:'0.1.0',
+        basis:'DECLARED_STAGE2_MODEL',
+        measured:false,
+        forecastProductiveHours:600,
+        annualCostPoolUsd:120000,
+        targetGrossMargin:0.20,
+        breakEvenPerHour:200,
+        sellRatePerHour:250,
+        setupCharge:0,
+        setupTimeMin:0
+      }),
+      calculationIdentity:Object.freeze({
+        inputHash:'caa7c91f1296c243a5abb05ed35a0c55b5b1f5d4dab32efd64cd2656d75f3036',
+        resultHash:'15a8835dd50771136020190db7f5dbed1bd35b78930bf338be63bea8427353c2'
+      })
+    })
   });
 
   function roundN(value, places){
@@ -339,77 +412,74 @@
     return Math.round(Number(value)*p)/p;
   }
 
-  function quoteStartOwnBoardSequence(input){
+  function user1StoreDemandMatchesReference(input){
     input=input || {};
-    var P=START_OWN_STORE_PRICING;
-    var material=roundN(input.material || 0,2);
-    var workpiece=Math.abs(Number(input.definedWorkpieceLengthIn) || 0);
-    var productionSawCuts=Math.max(0, Number(input.sawCuts) || 0);
-    var totalSawCuts=productionSawCuts;
-    var angle=Math.max(0, Math.min(89, Number(input.sawAngleDeg) || 0));
-    var drillCycles=Math.max(0, Number(input.drillCycles) || 0);
-    var spotCycles=Math.max(0, Number(input.spotCycles) || 0);
-    var width=Number(input.widthIn) || 3.5;
-    var unresolved=Array.isArray(input.unresolvedConditions)
-      ? input.unresolvedConditions.filter(function(value){return typeof value==='string' && value.trim()!=='';})
-      : [];
-    var radians=angle*Math.PI/180;
-    var sawTraverse=angle>0 ? width/Math.cos(radians) : width;
-    var feedFpm=((P.saw.chipLoadCrossSoft*P.saw.teeth*P.saw.rpm)/12)*P.saw.finishFactor;
-    var sawCycle=P.saw.deployMin + sawTraverse/(feedFpm*12) + P.saw.retractMin;
-    var indexCycle=P.accelMin + workpiece/P.rapidInPerMin;
-    var drillDepth=Number(input.drillReferenceDepthIn);
-    if(drillCycles>0 && (!Number.isFinite(drillDepth) || drillDepth<=0)){
-      unresolved=unresolved.concat(['DRILL_DEPTH_UNRESOLVED']);
-      drillCycles=0;
+    var d=USER1_STORE_REFERENCE.demand;
+    var parts=Array.isArray(input.parts)?input.parts:[];
+    var ops=Array.isArray(input.requiredOps)?input.requiredOps.slice().sort():[];
+    var expectedOps=d.requiredOps.slice().sort();
+    if(Number(input.definedWorkpieceLengthIn)!==d.definedWorkpieceLengthIn) return false;
+    if(Number(input.sawAngleDeg)!==d.sawAngleDeg) return false;
+    if(String(input.cutPlane||'')!==d.cutPlane) return false;
+    if(String(input.endIdentity||'')!==d.endIdentity) return false;
+    if(String(input.endRelation||'')!==d.endRelation) return false;
+    if(String(input.lengthDatum||'')!==d.lengthDatum) return false;
+    if(String(input.datumCMethod||'')!==d.datumCMethod) return false;
+    if(Number(input.declaredSawCuts)!==d.declaredSawCuts) return false;
+    if(Number(input.declaredSpotCount)!==d.declaredSpotCount) return false;
+    if(ops.join('|')!==expectedOps.join('|')) return false;
+    if(parts.length!==2) return false;
+    for(var i=0;i<parts.length;i++){
+      var part=parts[i]||{};
+      var features=Array.isArray(part.features)?part.features:[];
+      if(String(part.partId||'')!=='PART-'+(i+1)) return false;
+      if(Number(part.lengthIn)!==d.partLengthIn) return false;
+      if(features.length!==1) return false;
+      var feature=features[0]||{};
+      if(String(feature.kind||'')!==d.spotMode) return false;
+      if(Number(feature.xIn)!==d.spotXIn) return false;
+      if(String(feature.locationRule||'')!==d.spotLocationRule) return false;
+      if(String(feature.acrossWidthRule||'')!==d.spotAcrossWidthRule) return false;
     }
-    if(!Number.isFinite(drillDepth) || drillDepth<=0) drillDepth=0;
-    var drillCycle=drillCycles>0
-      ? P.saw.deployMin + drillDepth/(P.drill.ipr*P.drill.rpm) + P.saw.retractMin
-      : 0;
-    var cycle=P.loadSeatMin + totalSawCuts*sawCycle + indexCycle +
-      drillCycles*drillCycle + spotCycles*P.spot.fixedCycleMin +
-      P.releaseLabelMin + 8;
-    var hours=cycle/60;
-    var cell=roundN(P.recovery.setupCharge + P.recovery.machineHourRate*hours,2);
+    return true;
+  }
+
+  function resolveUser1StoreReference(input){
+    if(!user1StoreDemandMatchesReference(input)){
+      return Object.freeze({
+        status:'STORE_REFRESH_REQUIRED',
+        complete:false,
+        capabilityStatus:'UNRESOLVED',
+        economicsStatus:'UNRESOLVED',
+        priceCompleteness:'UNAVAILABLE',
+        material:null,
+        machineService:null,
+        combinedValue:null,
+        estimate:null,
+        calculationIdentity:null,
+        materialResolution:null,
+        refusalConditions:Object.freeze([]),
+        unresolvedConditions:Object.freeze(['STORE_REFRESH_REQUIRED']),
+        source:USER1_STORE_REFERENCE.source,
+        reason:'This static Review build has no authority to recalculate Store capability, modeled time, economics, or Q for a changed definition.'
+      });
+    }
+    var estimate=USER1_STORE_REFERENCE.estimate;
     return Object.freeze({
-      status:'BUDGETARY_ESTIMATE',
-      complete:totalSawCuts>0 && workpiece>0 && unresolved.length===0,
-      completeness:unresolved.length ? 'PARTIAL' : 'COMPLETE_FOR_ENCODED_DEMAND',
-      unresolvedConditions:Object.freeze(unresolved.slice()),
-      material:material,
-      cellRecovery:cell,
-      total:roundN(material+cell,2),
-      cycle:Object.freeze({
-        model:P.cycleModel.id,
-        basis:P.cycleModel.basis,
-        measured:false,
-        commissioned:false,
-        T_job_min:roundN(cycle,3),
-        T_job_hr:roundN(hours,4),
-        SFM:roundN((Math.PI*P.saw.diameterIn*P.saw.rpm)/12,0),
-        feed_fpm:roundN(feedFpm,2)
-      }),
-      operationBasis:Object.freeze({
-        definedWorkpieceLengthIn:workpiece,
-        productionSawCuts:productionSawCuts,
-        totalModeledSawCuts:totalSawCuts,
-        sawAngleDeg:angle,
-        sawTraverseIn:roundN(sawTraverse,6),
-        drillCycles:drillCycles,
-        drillReferenceDepthIn:drillDepth,
-        spotCycles:spotCycles,
-        spotToolDiameterIn:P.spot.diameterIn
-      }),
-      engine:P.engine,
-      source:P.source,
-      notClaimed:Object.freeze([
-        'commercial quote',
-        'seller-of-record',
-        'physical fabrication',
-        'live motion',
-        'physical stock count'
-      ])
+      status:'MATCHED_STORE_REFERENCE',
+      complete:true,
+      capabilityStatus:'SUPPORTABLE',
+      economicsStatus:estimate.status,
+      priceCompleteness:estimate.completeness,
+      material:estimate.totals.material,
+      machineService:estimate.totals.machine_service,
+      combinedValue:estimate.totals.Q,
+      estimate:estimate,
+      calculationIdentity:estimate.calculationIdentity,
+      materialResolution:USER1_STORE_REFERENCE.materialResolution,
+      refusalConditions:Object.freeze([]),
+      unresolvedConditions:Object.freeze([]),
+      source:USER1_STORE_REFERENCE.source
     });
   }
 
@@ -788,7 +858,7 @@
   }
 
   root.STBStoreHandoffContract = Object.freeze({
-    version:'0.7',
+    version:'0.8',
     actorOrder:ACTOR_ORDER,
     currentArtifacts:CURRENT_ARTIFACTS,
     storeAuthorities:STORE_AUTHORITIES,
@@ -796,8 +866,9 @@
     startOwnStoreCatalog:START_OWN_STORE_CATALOG,
     startOwnOfferings:startOwnOfferings,
     resolveStartOwnMaterial:resolveStartOwnMaterial,
-    startOwnStorePricing:START_OWN_STORE_PRICING,
-    quoteStartOwnBoardSequence:quoteStartOwnBoardSequence,
+    user1StoreReference:USER1_STORE_REFERENCE,
+    user1StoreDemandMatchesReference:user1StoreDemandMatchesReference,
+    resolveUser1StoreReference:resolveUser1StoreReference,
     d001Cycle:D001_CYCLE,
     d001Envelope:D001_ENVELOPE,
     d001Hold:D001_HOLD,
