@@ -63,10 +63,17 @@ assert.match(shell,/three-frames\.html\?v=305b7484/);
 assert.match(shell,/const definedWorkpieceLengthIn = 60;/);
 assert.match(shell,/parentLengthIn:definedWorkpieceLengthIn/);
 assert.match(shell,/materialSource:'STORE_ZERO'/);
-assert.match(shell,/sequenceDefinedWorkpiece/);
+assert.equal(shell.includes('sequenceDefinedWorkpiece'),false,'visible User 1 still performs Store travel/control sequencing in the browser');
+assert.match(shell,/resolveUser1StoreReference/);
 assert.equal(shell.includes('preparationSawCuts'),false,'phantom Store preparation cut returned');
-assert.match(shell,/const drillCycles = 0/);
+assert.match(shell,/requiredOps\.push\('SPOT_ON_LOCATION'\)/);
+assert.match(shell,/parts = Array\.from/);
 assert.equal(shell.includes('previewFromDemand'),false,'active Start Own still invokes legacy Store preview authority');
+assert.equal(shell.includes('quoteStartOwnBoardSequence'),false,'visible User 1 reintroduced browser-side pricing');
+assert.equal(shell.includes('machineHourRate'),false,'visible User 1 reintroduced Store rate logic');
+assert.equal(shell.includes('setupCharge'),false,'visible User 1 reintroduced Store setup-charge logic');
+assert.match(shell,/STORE_REFRESH_REQUIRED/);
+assert.match(shell,/definition\.storeReference\?\.complete !== true/);
 assert.match(shell,/const spotDemand =/);
 assert.match(shell,/physicalDemand\.spotDemand = spotDemand/);
 assert.match(shell,/formula:'finishedLengthIn \/ 2'/);
@@ -90,8 +97,9 @@ assert.equal(shell.includes('parentLengthIn = 72'),false);
 const sandbox = {window:{}};
 vm.runInNewContext(contractSource,sandbox,{filename:'stb-store-handoff-contract.js'});
 const contract = sandbox.window.STBStoreHandoffContract;
-assert.equal(contract.version,'0.7');
-assert.equal(typeof contract.quoteStartOwnBoardSequence,'function');
+assert.equal(contract.version,'0.8');
+assert.equal(typeof contract.quoteStartOwnBoardSequence,'undefined');
+assert.equal(typeof contract.resolveUser1StoreReference,'function');
 assert.equal(typeof contract.sequenceDefinedWorkpiece,'function');
 
 const lineage = contract.sequenceDefinedWorkpiece({
@@ -109,32 +117,62 @@ assert.equal(lineage.finalRemainderIn,27.625);
 assert.equal(lineage.holdIn,24);
 assert.equal(lineage.finalRemainderIn-lineage.holdIn,3.625);
 
-const startQuote = contract.quoteStartOwnBoardSequence({
-  material:3.13,
+const exactStoreAnswer = contract.resolveUser1StoreReference({
+  configurationId:'SYO-USER1-XBRACE',
+  configurationVersion:'0.1',
   definedWorkpieceLengthIn:60,
-  sawCuts:3,
   sawAngleDeg:30,
-  drillCycles:0,
-  spotCycles:2,
-  unresolvedConditions:[],
-  widthIn:3.5
+  cutPlane:'miter-face',
+  endIdentity:'both',
+  endRelation:'parallel',
+  lengthDatum:'long-long-outer-edge',
+  datumCMethod:'REFERENCE_CUT',
+  requiredOps:['MITER_LIMITED','SPOT_ON_LOCATION'],
+  declaredSawCuts:3,
+  declaredSpotCount:2,
+  parts:[
+    {partId:'PART-1',lengthIn:16,features:[{featureId:'SPOT-1',kind:'SPOT_ON_LOCATION',xIn:8,locationRule:'CENTERED_ON_PART',acrossWidthRule:'CENTERED_ON_WIDE_FACE'}]},
+    {partId:'PART-2',lengthIn:16,features:[{featureId:'SPOT-2',kind:'SPOT_ON_LOCATION',xIn:8,locationRule:'CENTERED_ON_PART',acrossWidthRule:'CENTERED_ON_WIDE_FACE'}]}
+  ]
 });
-assert.equal(startQuote.status,'BUDGETARY_ESTIMATE');
-assert.equal(startQuote.complete,true);
-assert.equal(startQuote.completeness,'COMPLETE_FOR_ENCODED_DEMAND');
-assert.equal(startQuote.material,3.13);
-assert.equal(startQuote.cellRecovery,51.69);
-assert.equal(startQuote.total,54.82);
-assert.equal(startQuote.cycle.T_job_min,10.014);
-assert.equal(startQuote.operationBasis.preparationSawCuts,undefined);
-assert.equal(startQuote.operationBasis.productionSawCuts,3);
-assert.equal(startQuote.operationBasis.totalModeledSawCuts,3);
-assert.equal(startQuote.operationBasis.drillCycles,0);
-assert.equal(startQuote.operationBasis.spotCycles,2);
-assert.equal(startQuote.operationBasis.spotToolDiameterIn,0.1875);
-assert.equal(startQuote.engine.id,'STB-STORE-ZERO-PRICE-1');
-assert.equal(startQuote.engine.version,'0.2.3');
-assert.equal(startQuote.source.pin,'ab8a4c5d470c310f27fef82683611622ab976168');
+assert.equal(exactStoreAnswer.status,'MATCHED_STORE_REFERENCE');
+assert.equal(exactStoreAnswer.complete,true);
+assert.equal(exactStoreAnswer.capabilityStatus,'SUPPORTABLE');
+assert.equal(exactStoreAnswer.priceCompleteness,'COMPLETE_FOR_TRAVEL_STANDARD');
+assert.equal(exactStoreAnswer.material,3.13);
+assert.equal(exactStoreAnswer.machineService,5.89);
+assert.equal(exactStoreAnswer.combinedValue,9.02);
+assert.equal(exactStoreAnswer.estimate.cycle.T_job_min,1.4128);
+assert.equal(exactStoreAnswer.estimate.travel.derivedSawCuts,3);
+assert.equal(exactStoreAnswer.estimate.travel.derivedSpotCount,2);
+assert.equal(exactStoreAnswer.estimate.travel.finalRemainderIn,27.625);
+assert.equal(exactStoreAnswer.estimate.engine.version,'0.3.0');
+assert.equal(exactStoreAnswer.source.storePin,'f8373520a726090ed91eff82e5e720f4a9634615');
+assert.equal(exactStoreAnswer.calculationIdentity.inputHash,'caa7c91f1296c243a5abb05ed35a0c55b5b1f5d4dab32efd64cd2656d75f3036');
+assert.equal(exactStoreAnswer.calculationIdentity.resultHash,'15a8835dd50771136020190db7f5dbed1bd35b78930bf338be63bea8427353c2');
+
+const changedRevision = contract.resolveUser1StoreReference({
+  configurationId:'SYO-USER1-XBRACE',
+  configurationVersion:'review-revision-2',
+  definedWorkpieceLengthIn:60,
+  sawAngleDeg:30,
+  cutPlane:'miter-face',
+  endIdentity:'both',
+  endRelation:'parallel',
+  lengthDatum:'long-long-outer-edge',
+  datumCMethod:'REFERENCE_CUT',
+  requiredOps:['MITER_LIMITED','SPOT_ON_LOCATION'],
+  declaredSawCuts:3,
+  declaredSpotCount:2,
+  parts:[
+    {partId:'PART-1',lengthIn:16,features:[{featureId:'SPOT-1',kind:'SPOT_ON_LOCATION',xIn:8,locationRule:'CENTERED_ON_PART',acrossWidthRule:'CENTERED_ON_WIDE_FACE'}]},
+    {partId:'PART-2',lengthIn:16,features:[{featureId:'SPOT-2',kind:'SPOT_ON_LOCATION',xIn:8,locationRule:'CENTERED_ON_PART',acrossWidthRule:'CENTERED_ON_WIDE_FACE'}]}
+  ]
+});
+assert.equal(changedRevision.status,'STORE_REFRESH_REQUIRED');
+assert.equal(changedRevision.complete,false);
+assert.equal(changedRevision.estimate,null);
+assert.deepEqual(Array.from(changedRevision.unresolvedConditions),['STORE_REFRESH_REQUIRED']);
 
 const legacyPart = {
   stockClass:'2x4',finishedLength:15.5,quantity:8,endCondition:'angled',straightCut:true,
@@ -177,4 +215,4 @@ assert.equal(handoff.authority.physicalFabrication,false);
 
 
 
-console.log('PASS · Start Your Own intent → bench → Store → terms preserves one 60-in definition and resolved 3/16 spot meaning');
+console.log('PASS · Start Your Own intent → bench → Store-issued reference → terms preserves one 60-in definition without a second pricing engine');
