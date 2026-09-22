@@ -74,7 +74,7 @@ test('project switching preserves separate definitions, Store answers, prices, a
     user1:JSON.parse(localStorage.getItem('stb-start-own-user1-definition')||'null'),
     s001:JSON.parse(localStorage.getItem('stb-s001-current-definition')||'null')
   }));
-  expect(afterS001Exit.s001.versionId,'ISOLATION_S001_EXIT_VERSION_MISSING').toMatch(/^S001-SARAH-PLAYHOUSE-0\\.1-v\\d+$/);
+  expect(afterS001Exit.s001.versionId,'ISOLATION_S001_EXIT_VERSION_MISSING').toMatch(/^S001-SARAH-PLAYHOUSE-0\.1-v\d+$/);
   expect(afterS001Exit.s001.storeAnswer.definitionVersionId,'ISOLATION_S001_EXIT_ANSWER_VERSION_DRIFT').toBe(afterS001Exit.s001.versionId);
   expect(afterS001Exit.s001.storeAnswer.storePin,'ISOLATION_S001_EXIT_STORE_PIN_DRIFT').toBe(S001_STORE_PIN);
   expect(afterS001Exit.s001.storeAnswer.rawEstimate.Q,'ISOLATION_S001_EXIT_PRICE_DRIFT').toBe(26.55);
