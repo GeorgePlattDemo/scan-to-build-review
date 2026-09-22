@@ -101,11 +101,14 @@ assert.equal(shell.includes('stbLastConfirmed'),false,'Job 1 Store-send button b
 // Canonical downstream actor mapping for Job 1.
 assert.match(shell,/'start-own': Object\.freeze\(\{[\s\S]*?store:'proof-store'[\s\S]*?request:'proof-accept'[\s\S]*?yard:'proof-yard'[\s\S]*?terms:'proof-terms'[\s\S]*?record:'proof-record'/);
 
-// Gate navigation is one-way capable from Store answer to final record.
+// Gate navigation is sequential from Store answer to simulated owner record.
 assert.match(shell,/data-proof-go="proof-accept">CONTINUE → ACCEPT \/ PAY/);
-assert.match(shell,/data-proof-go="proof-yard">CONTINUE REFERENCE DEMONSTRATION/);
-assert.match(shell,/if\(proofHandoff\?\.source==='start-own' && target==='proof-record' && go\.closest\('#proof-yard'\)\) target='proof-terms'/);
-assert.match(shell,/data-proof-go="proof-record">CONTINUE → HANDOFF \/ RECORD/);
+assert.match(shell,/id="proof-accept-next"[^>]*data-proof-go="proof-yard" disabled>CONTINUE → STORE \/ YARD/);
+assert.match(shell,/id="proof-yard-next"[^>]*data-proof-go="proof-terms" disabled>CONTINUE → RECEIPTS/);
+assert.match(shell,/id="proof-terms-next"[^>]*data-proof-go="proof-record">CONTINUE → HANDOFF \/ RECORD/);
+assert.match(shell,/canOpenStartOwnSimulationStage/);
+assert.match(shell,/stage==='yard'[\s\S]*SIMULATED_PAYMENT/);
+assert.match(shell,/stage==='terms'\|\|stage==='record'[\s\S]*SIMULATED_READY_NOTICE/);
 
 // Each downstream gate exposes the same custody spine.
 for(const gate of ['store','accept','yard','terms','record']){
@@ -131,7 +134,7 @@ for(const gate of ['store','accept','yard','terms','record']){
   );
 }
 
-// Store answer is the only complete economics answer.
+// Store answer remains the only economics engine.
 assert.match(shell,/MODELED MACHINE SERVICE/);
 assert.match(shell,/STORE BUDGETARY Q/);
 assert.match(shell,/machine_service/);
@@ -140,29 +143,56 @@ assert.equal(shell.includes('quoteStartOwnBoardSequence'),false,'Job 1 has a sec
 assert.equal(shell.includes('machineHourRate'),false,'Job 1 browser contains a Store machine rate');
 assert.equal(shell.includes('setupCharge'),false,'Job 1 browser contains a Store setup charge');
 
-// ACCEPT/PAY: commercial events remain null.
-assert.match(shell,/COMMERCIAL OFFER<\/b><span>NOT ESTABLISHED/);
-assert.match(shell,/ACCEPTANCE<\/b><span>NOT ESTABLISHED/);
-assert.match(shell,/PAYMENT<\/b><span>NOT AVAILABLE \/ NOT RECORDED/);
+// ACCEPT/PAY: a simulated offer, acceptance, and payment are explicit separate events.
+assert.match(shell,/CREATE SIMULATED OFFER/);
+assert.match(shell,/ACCEPT SIMULATED OFFER/);
+assert.match(shell,/SIMULATE PAYMENT/);
+assert.match(shell,/SIMULATED_OFFER/);
+assert.match(shell,/SIMULATED_ACCEPTANCE/);
+assert.match(shell,/SIMULATED_PAYMENT/);
+assert.match(shell,/no money moved/);
+assert.match(shell,/modeled machine-service portion for this exact definition/);
+assert.match(shell,/proof-accept-service-copy/);
 
-// STORE/YARD: physical authority remains null.
-assert.match(shell,/ALLOCATION<\/b><span>NOT ESTABLISHED/);
-assert.match(shell,/PRODUCTION RELEASE<\/b><span>NOT ESTABLISHED/);
-assert.match(shell,/MACHINE READINESS<\/b><span>NOT ESTABLISHED/);
-assert.match(shell,/CYCLE START<\/b><span>NOT AUTHORIZED/);
-assert.match(shell,/READY<\/b><span>NOT RECORDED/);
+// STORE/YARD: simulated fulfillment advances one event at a time.
+for(const type of [
+  'SIMULATED_ALLOCATION',
+  'SIMULATED_PRODUCTION_RELEASE',
+  'SIMULATED_CELL_READINESS',
+  'SIMULATED_EXECUTION',
+  'SIMULATED_INSPECTION_STAGING',
+  'SIMULATED_READY_NOTICE',
+]){
+  assert.match(shell,new RegExp(type));
+}
+assert.match(shell,/1 · SIMULATE ALLOCATION/);
+assert.match(shell,/2 · SIMULATE RELEASE/);
+assert.match(shell,/3 · RUN CELL SIMULATION/);
+assert.match(shell,/4 · INSPECT \/ LABEL \/ STAGE/);
+assert.match(shell,/5 · ISSUE READY NOTICE/);
 assert.match(shell,/NO BLOOD ON WOOD/);
+assert.match(shell,/does not send controller code, command a machine, establish commissioned readiness, or create a live Cycle Start/);
 
-// TERMS cannot mutate the definition or manufacture a sale.
-assert.match(shell,/One version, one answer/);
-assert.match(shell,/Terms never rewrite the confirmed definition/);
-assert.match(shell,/OFFER VALIDITY<\/b><span>NOT ESTABLISHED/);
+// RECEIPTS are tied to the exact Store evaluation/result identity.
+assert.match(shell,/receiptIdentity=economics\.storeReceipt\?\.receiptHash\|\|economics\.storeReceipt\?\.requestId\|\|economics\.resultHash/);
+assert.match(shell,/receiptId:'SIM-'/);
+assert.match(shell,/EVERY SIMULATED STEP LEFT A RECEIPT/);
+assert.match(shell,/proof-receipt-ledger/);
+assert.match(shell,/Same Store answer/);
 
-// RECORD retains the same definition and Store answer, with no invented fabrication event.
-assert.match(shell,/KEEP THE DEFINITION AND THE STORE ANSWER/);
-assert.match(shell,/Owner-record consequence/);
-assert.match(shell,/PHYSICAL FABRICATION<\/b><span>NOT RECORDED/);
-assert.match(shell,/resultHash/);
+// RECORD closes only after a separate simulated custody transfer.
+assert.match(shell,/SIMULATE PICKUP \/ TRANSFER CUSTODY/);
+assert.match(shell,/SIMULATED_CUSTODY_TRANSFER/);
+assert.match(shell,/READY is not custody/);
+assert.match(shell,/CLOSED · SIMULATED OWNER RECORD/);
+assert.match(shell,/PHYSICAL FABRICATION<\/b><span>NOT CLAIMED · SIMULATION ONLY/);
+
+// The downstream simulation never claims live commerce, inventory, or motion.
+assert.match(shell,/No money moves/);
+assert.match(shell,/No physical stock is reserved/);
+assert.match(shell,/no live inventory reserved/);
+assert.match(shell,/no physical production authority created/);
+assert.match(shell,/no live motion or controller command/);
 
 // Template authority: Review points to the tested Store and System candidates.
 assert.equal(contract.storeAuthority('startOwn').economicsPin,STORE_SHA);
@@ -197,4 +227,4 @@ for(const changed of [
 // No live machine/control vocabulary crosses the browser boundary.
 assert.equal(/\bG0?\d\b|\bM0?3\b|G-code|remote Cycle Start/i.test(shell+frame),false);
 
-console.log('PASS · JOB 1 OPERABLE TEMPLATE · intent → definition → Store → confirm → accept/pay boundary → Store/yard → terms → handoff/record');
+console.log('PASS · JOB 1 OPERABLE TEMPLATE · intent → definition → Store → simulated accept/pay → simulated yard → receipts → simulated handoff/record');
