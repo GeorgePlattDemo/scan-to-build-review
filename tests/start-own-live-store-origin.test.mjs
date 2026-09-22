@@ -125,22 +125,24 @@ const startQuote = contract.quoteStartOwnBoardSequence({
   unresolvedConditions:[],
   widthIn:3.5
 });
-assert.equal(startQuote.status,'BUDGETARY_ESTIMATE');
-assert.equal(startQuote.complete,true);
-assert.equal(startQuote.completeness,'COMPLETE_FOR_ENCODED_DEMAND');
+assert.equal(startQuote.status,'PARTIAL_BUDGETARY_ESTIMATE');
+assert.equal(startQuote.complete,false);
+assert.equal(startQuote.completeness,'PARTIAL');
 assert.equal(startQuote.material,3.13);
-assert.equal(startQuote.cellRecovery,51.69);
-assert.equal(startQuote.total,54.82);
-assert.equal(startQuote.cycle.T_job_min,10.014);
+assert.equal(startQuote.cellRecovery,51.16);
+assert.equal(startQuote.total,54.29);
+assert.equal(startQuote.cycle.T_job_min,9.694);
 assert.equal(startQuote.operationBasis.preparationSawCuts,undefined);
 assert.equal(startQuote.operationBasis.productionSawCuts,3);
 assert.equal(startQuote.operationBasis.totalModeledSawCuts,3);
 assert.equal(startQuote.operationBasis.drillCycles,0);
-assert.equal(startQuote.operationBasis.spotCycles,2);
+assert.equal(startQuote.operationBasis.spotCycles,0);
 assert.equal(startQuote.operationBasis.spotToolDiameterIn,0.1875);
+assert.ok(startQuote.unresolvedConditions.includes('SPOT_TOOL_POINT_GEOMETRY_REQUIRED'));
+assert.ok(startQuote.unresolvedConditions.includes('SPOT_CYCLE_TIME_APPLICABILITY_UNRESOLVED'));
 assert.equal(startQuote.engine.id,'STB-STORE-ZERO-PRICE-1');
-assert.equal(startQuote.engine.version,'0.2.3');
-assert.equal(startQuote.source.pin,'ab8a4c5d470c310f27fef82683611622ab976168');
+assert.equal(startQuote.engine.version,'0.2.4');
+assert.equal(startQuote.source.pin,'7303793620d0ceda509810a661d11e6c31c7d59f');
 
 const legacyPart = {
   stockClass:'2x4',finishedLength:15.5,quantity:8,endCondition:'angled',straightCut:true,
@@ -183,4 +185,4 @@ assert.equal(handoff.authority.physicalFabrication,false);
 
 
 
-console.log('PASS · Start Your Own intent → bench → Store → terms preserves one 60-in definition and resolved 3/16 spot meaning');
+console.log('PASS · Start Your Own intent → bench → Store → terms preserves one 60-in definition and depth-defined 3/16 spot truth');
