@@ -915,7 +915,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                       artifact:'three-frames.html',
                       storeCatalog:definition.material.stockClassAuthority,
                       procurement:definition.material.procurement,
-                      finishedPartDemand:definition.lineage.finishedPartDemand
+                      finishedPartDemand:{lengthIn:definition.lineage.finishedPartLengthIn,quantity:definition.lineage.finishedPartQuantity}
                     },
                     storeReference:definition.storeReference
                   });
@@ -932,7 +932,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                         artifact:'three-frames.html',
                         storeCatalog:definition.material.stockClassAuthority,
                         procurement:definition.material.procurement,
-                        finishedPartDemand:definition.lineage.finishedPartDemand
+                        finishedPartDemand:{lengthIn:definition.lineage.finishedPartLengthIn,quantity:definition.lineage.finishedPartQuantity}
                       },
                       storeReference:definition.storeReference
                     },
