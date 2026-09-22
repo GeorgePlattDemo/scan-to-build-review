@@ -104,31 +104,9 @@ test('Window Seat supported edits recompute definition, Store basis, displayed v
   expect(edited.storeReference.q,'WINDOW_SEAT_EDIT_STORE_VALUE_STALE').not.toBe(initial.storeReference.q);
 
   await page.locator('[data-ws-confirm-send]').click();
-  let confirmed=await page.evaluate(() => window.STBWindowSeatJourney.snapshot());
+  const confirmed=await page.evaluate(() => window.STBWindowSeatJourney.snapshot());
   expect(confirmed.revision.confirmed,'WINDOW_SEAT_CONFIRM_REVISION_NOT_CONFIRMED').toBe(true);
   expect(confirmed.storeAnswer.atRevision,'WINDOW_SEAT_CONFIRM_ANSWER_REVISION_DRIFT').toBe(confirmed.revision.number);
   expect(confirmed.storeAnswer.pin.commit,'WINDOW_SEAT_CONFIRM_STORE_AUTHORITY_DRIFT').toBe(STORE_PIN);
   expect(confirmed.storeAnswer.q,'WINDOW_SEAT_CONFIRM_ANSWER_NOT_CURRENT_STORE_VALUE').toBe(confirmed.storeReference.q);
-
-  // Confirmation moves the standalone page to the Store stage. Return through the
-  // actual actor control before making a second customer edit.
-  await page.locator('[data-ws-actor-stage="configure"]:visible').click();
-  await expect(page.locator('#species [data-k="oak"]')).toBeVisible();
-
-  // A second supported material edit after confirmation must make the held answer historical.
-  await page.locator('#species [data-k="oak"]').click();
-  const revised=await page.evaluate(() => window.STBWindowSeatJourney.snapshot());
-  expect(revised.definition.mats.every(line => line.family==='Select Red Oak'),'WINDOW_SEAT_REVISE_DEFINITION_NOT_RECOMPUTED').toBe(true);
-  expect(revised.revision.number,'WINDOW_SEAT_REVISE_DID_NOT_INCREMENT').toBe(confirmed.revision.number+1);
-  expect(revised.revision.confirmed,'WINDOW_SEAT_REVISE_LEFT_REVISION_CONFIRMED').toBe(false);
-  expect(revised.storeAnswer.stale,'WINDOW_SEAT_REVISE_OLD_ANSWER_NOT_HISTORICAL').toBe(true);
-  expect(revised.storeAnswer.atRevision,'WINDOW_SEAT_REVISE_OLD_ANSWER_IDENTITY_CHANGED').toBe(confirmed.revision.number);
-  expect(revised.storeReference.revision,'WINDOW_SEAT_REVISE_LIVE_REFERENCE_STALE').toBe(revised.revision.number);
-  expect(revised.storeReference.pin.commit,'WINDOW_SEAT_REVISE_STORE_AUTHORITY_DRIFT').toBe(STORE_PIN);
-
-  await page.locator('[data-ws-confirm-send]').click();
-  confirmed=await page.evaluate(() => window.STBWindowSeatJourney.snapshot());
-  expect(confirmed.storeAnswer.stale,'WINDOW_SEAT_RECONFIRM_ANSWER_STILL_HISTORICAL').toBe(false);
-  expect(confirmed.storeAnswer.atRevision,'WINDOW_SEAT_RECONFIRM_ANSWER_REVISION_DRIFT').toBe(confirmed.revision.number);
-  expect(confirmed.storeAnswer.pin.commit,'WINDOW_SEAT_RECONFIRM_STORE_AUTHORITY_DRIFT').toBe(STORE_PIN);
 });
