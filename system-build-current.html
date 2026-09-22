@@ -13,7 +13,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 <body>
 <iframe id="stb-current" title="Scan-to-Build System" src="system-build-front-door-0.5.html?v=5ac9677b"></iframe>
 <script src="stb-canonical-journey.js?v=e0619841"></script>
-<script src="stb-store-handoff-contract.js?v=121e67b5"></script>
+<script src="stb-store-zero-user1.generated.js?v=1a470b8e"></script>
+<script src="stb-store-handoff-contract.js?v=0a8e5f5f"></script>
 <script src="stb-user-defined-board-store.js?v=1c99c380"></script>
 <script src="store-zero-canonical-doctrine.js?v=65366367"></script>
 <script>
@@ -320,6 +321,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
               const glossaryChoices = Array.from(childDoc.querySelectorAll('[data-store-size-key]'));
               const startOwnAuthority = storeHandoffContract?.storeAuthorities?.startOwn || null;
               const catalogSource = storeHandoffContract?.startOwnStoreCatalog || null;
+              const user1StoreRuntime = window.STBStoreZeroUser1 || null;
               let definitionRevision = 1;
               let partQty = 2;
               let spotMode = 'centered';
@@ -343,26 +345,40 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   button.classList.toggle('on',String(button.getAttribute(attr))===String(value));
                 });
               };
+              const storeOfferingsForSize = sizeKey => {
+                if (!user1StoreRuntime || !Array.isArray(user1StoreRuntime.offerings)) return [];
+                const match = String(sizeKey || '').match(/^(\d+)x(\d+)$/);
+                if (!match) return [];
+                const nominalT = Number(match[1]);
+                const nominalW = Number(match[2]);
+                return user1StoreRuntime.offerings.filter(item =>
+                  item &&
+                  item.offered === true &&
+                  item.form === 'board' &&
+                  Number(item.nominalT) === nominalT &&
+                  Number(item.nominalW) === nominalW
+                );
+              };
               const syncStoreGlossary = () => {
-                if (!storeHandoffContract || typeof storeHandoffContract.startOwnOfferings !== 'function') {
-                  if (glossaryStatus) glossaryStatus.textContent = 'Current Store material truth is unavailable. No material choice is being promoted.';
+                if (!user1StoreRuntime || typeof user1StoreRuntime.evaluate !== 'function') {
+                  if (glossaryStatus) glossaryStatus.textContent = 'Current Store reference runtime is unavailable. No material choice is being promoted.';
                   if (benchButton) benchButton.disabled = true;
                   return false;
                 }
                 let backed = 0;
                 glossaryChoices.forEach(choice => {
                   const sizeKey = String(choice.dataset.storeSizeKey || '');
-                  const offerings = storeHandoffContract.startOwnOfferings(sizeKey);
-                  const available = Array.isArray(offerings) && offerings.length > 0;
+                  const offerings = storeOfferingsForSize(sizeKey);
+                  const available = offerings.length > 0;
                   choice.dataset.storeBacked = available ? 'true' : 'false';
-                  choice.dataset.storeCatalogPin = String(catalogSource?.pin || '');
-                  choice.dataset.storeOfferingCount = String(offerings?.length || 0);
+                  choice.dataset.storeCatalogPin = String(user1StoreRuntime.storePin || '');
+                  choice.dataset.storeOfferingCount = String(offerings.length);
                   choice.hidden = !available;
                   if (available) backed += 1;
                 });
                 if (glossaryStatus) {
                   glossaryStatus.textContent = backed === glossaryChoices.length
-                    ? 'These material choices come from the current Store catalog.'
+                    ? 'These material choices come from the current pinned Store reference.'
                     : backed+' current Store material choices are available here.';
                 }
                 return true;
@@ -396,27 +412,25 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 if (
                   !storeHandoffContract ||
                   typeof storeHandoffContract.sequenceDefinedWorkpiece !== 'function' ||
+                  !user1StoreRuntime ||
+                  typeof user1StoreRuntime.evaluate !== 'function' ||
                   !Number.isFinite(finishedLengthIn) ||
                   finishedLengthIn <= 0 ||
                   !Number.isFinite(angleDeg) ||
-                  angleDeg < 0
+                  angleDeg < 0 ||
+                  angleDeg >= 90
                 ) {
                   currentUser1Definition = null;
                   return null;
                 }
 
-                const offerings = storeHandoffContract.startOwnOfferings('2x4');
-                if (!Array.isArray(offerings) || !offerings.length) {
+                const offerings = storeOfferingsForSize('2x4');
+                if (!offerings.length) {
                   currentUser1Definition = null;
                   return null;
                 }
 
                 const centerSpotIn = Number((finishedLengthIn / 2).toFixed(6));
-                const storeMaterialResolution = storeHandoffContract.resolveStartOwnMaterial({
-                  sizeKey:'2x4',
-                  sequence:'CROSSCUT_HOLD',
-                  parts:[{name:'x-brace',len:finishedLengthIn,wid:3.5,qty:partQty}]
-                });
                 const spotDemand = spotMode === 'centered' ? {
                   required:true,
                   mode:'SPOT_ON_LOCATION',
@@ -451,75 +465,121 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 };
                 if (spotDemand) physicalDemand.spotDemand = spotDemand;
 
+                // Project-side arithmetic only. This describes the identified 60-in
+                // workpiece and does not manufacture Store capability or economics.
                 const workpieceSequence = storeHandoffContract.sequenceDefinedWorkpiece({
                   definedWorkpieceLengthIn:definedWorkpieceLengthIn,
                   parts:Array.from({length:partQty}, () => finishedLengthIn),
                   establishAngledEnd:angleDeg !== 0
                 });
-
-                const unresolved = [];
-                const refusals = [];
-                if (angleDeg > 45) {
-                  refusals.push('MITER_ANGLE_OUTSIDE_D001_STAGE2_ENVELOPE');
-                }
+                const definitionUnresolved = [];
                 if (workpieceSequence.status !== 'SEQUENCED') {
-                  unresolved.push(workpieceSequence.code || 'DEFINED_60_IN_WORKPIECE_SEQUENCE_UNRESOLVED');
+                  definitionUnresolved.push(workpieceSequence.code || 'DEFINED_60_IN_WORKPIECE_SEQUENCE_UNRESOLVED');
                 }
 
                 const productionSawCuts = angleDeg !== 0 ? partQty + 1 : partQty;
                 const drillCycles = 0;
-                const spotCycles = spotDemand ? partQty : 0;
                 const requiredOps = [];
                 if (productionSawCuts > 0 && angleDeg === 0) requiredOps.push('CROSSCUT');
                 if (angleDeg !== 0) requiredOps.push('MITER_LIMITED');
 
-                const storeEstimate =
-                  refusals.length === 0 &&
-                  storeMaterialResolution?.status === 'MAPPED' &&
-                  typeof storeHandoffContract.quoteStartOwnBoardSequence === 'function'
-                    ? storeHandoffContract.quoteStartOwnBoardSequence({
-                        material:storeMaterialResolution.materialTotal,
-                        definedWorkpieceLengthIn:definedWorkpieceLengthIn,
-                        sawCuts:productionSawCuts,
-                        sawAngleDeg:angleDeg,
-                        drillCycles:drillCycles,
-                        spotCycles:spotCycles,
-                        unresolvedConditions:unresolved,
-                        widthIn:3.5
-                      })
-                    : null;
-
-                if (!storeEstimate && refusals.length === 0) {
-                  unresolved.push('STORE_ZERO_BUDGETARY_ESTIMATE_UNAVAILABLE');
+                const versionId = 'SYO-USER1-XBRACE-0.1-v'+definitionRevision;
+                const authoritativeRequest = {
+                  definitionVersionId:versionId,
+                  materialDemand:{species:'spf',form:'board',nominalT:2,nominalW:4},
+                  definedWorkpieceLengthIn:definedWorkpieceLengthIn,
+                  sawCuts:productionSawCuts,
+                  sawAngleDeg:angleDeg,
+                  drillCycles:drillCycles,
+                  drillDepthIn:null,
+                  requiredOps:requiredOps,
+                  cutPlane:'miter-face',
+                  endIdentity:'both',
+                  endRelation:'parallel',
+                  lengthDatum:'long-long-outer-edge',
+                  spotDemand:spotDemand,
+                  unresolvedConditions:definitionUnresolved
+                };
+                const storeAnswer = user1StoreRuntime.evaluate(authoritativeRequest);
+                if (!storeAnswer || storeAnswer.definitionVersionId !== versionId) {
+                  currentUser1Definition = null;
+                  return null;
                 }
 
+                const materialResolution = storeAnswer.materialResolution || {
+                  status:'UNRESOLVED',
+                  unresolvedConditions:['STORE_MATERIAL_RESPONSE_MISSING']
+                };
+                const storeUnresolved = Array.isArray(storeAnswer.priceCompleteness?.unresolvedConditions)
+                  ? storeAnswer.priceCompleteness.unresolvedConditions.slice()
+                  : [];
+                const storeRefusals = Array.isArray(storeAnswer.refusalConditions)
+                  ? storeAnswer.refusalConditions.slice()
+                  : [];
+                const capabilityStatus =
+                  storeAnswer.rawEvaluation?.status ||
+                  materialResolution.status ||
+                  'UNRESOLVED';
+                const estimateRaw = storeAnswer.rawEstimate || null;
+                const estimatePiece = storeAnswer.mappedCallInputs?.estimate?.pieces?.[0] || null;
+                const storeEstimate = estimateRaw ? {
+                  status:estimateRaw.status,
+                  complete:storeAnswer.priceCompleteness?.status === 'COMPLETE_FOR_ENCODED_DEMAND',
+                  completeness:storeAnswer.priceCompleteness?.status || 'UNAVAILABLE',
+                  unresolvedConditions:storeUnresolved.slice(),
+                  material:estimateRaw.totals?.material ?? null,
+                  cellRecovery:estimateRaw.totals?.cell_recovery ?? null,
+                  total:estimateRaw.totals?.Q ?? null,
+                  cycle:estimateRaw.cycle || null,
+                  operationBasis:estimatePiece ? {
+                    definedWorkpieceLengthIn:definedWorkpieceLengthIn,
+                    productionSawCuts:productionSawCuts,
+                    totalModeledSawCuts:productionSawCuts,
+                    sawAngleDeg:angleDeg,
+                    sawTraverseIn:estimatePiece.sawTraverseIn ?? null,
+                    drillCycles:estimatePiece.holes ?? 0,
+                    drillReferenceDepthIn:estimatePiece.depthIn ?? null,
+                    spotCycles:estimatePiece.spots ?? 0,
+                    spotToolDiameterIn:storeAnswer.attributedBasis?.envelope?.spotToolDiameterIn ?? null
+                  } : null,
+                  engine:storeAnswer.attributedBasis?.pricingEngine || null,
+                  source:{
+                    repository:'GeorgePlattDemo/scan-to-build-store',
+                    pin:storeAnswer.storePin || user1StoreRuntime.storePin || null,
+                    generatedArtifact:'stb-store-zero-user1.generated.js',
+                    sourceBlobs:storeAnswer.sourceBlobs || user1StoreRuntime.sourceBlobs || null
+                  },
+                  notClaimed:['commercial quote','seller-of-record','physical fabrication','live motion','physical stock allocation']
+                } : null;
+
                 const capability = {
-                  status:refusals.length ? 'REFUSED' : (unresolved.length ? 'UNRESOLVED' : 'SUPPORTABLE'),
-                  basis:startOwnAuthority?.capabilityBasis || 'D001-STAGE2-ENVELOPE-0.3',
-                  storePin:startOwnAuthority?.capabilityPin || catalogSource?.pin || null,
-                  requiredOps:requiredOps,
-                  refusalConditions:Array.from(new Set(refusals)),
-                  unresolvedConditions:Array.from(new Set(unresolved))
+                  status:capabilityStatus,
+                  basis:storeAnswer.attributedBasis?.envelope?.id || 'STORE_RETURNED',
+                  storePin:storeAnswer.storePin || user1StoreRuntime.storePin || null,
+                  requiredOps:requiredOps.slice(),
+                  refusalConditions:storeRefusals,
+                  unresolvedConditions:storeUnresolved,
+                  authority:'STORE_RETURNED'
                 };
 
                 currentUser1Definition = {
                   definitionId:'SYO-USER1-XBRACE-0.1',
-                  versionId:'SYO-USER1-XBRACE-0.1-v'+definitionRevision,
+                  versionId:versionId,
                   material:{
                     origin:'STORE_ZERO',
                     stockClass:'2x4',
                     stockClassAuthority:{
-                      repository:catalogSource?.repository || null,
-                      file:catalogSource?.file || null,
-                      pin:catalogSource?.pin || null,
-                      clock:catalogSource?.clock || null
+                      repository:'GeorgePlattDemo/scan-to-build-store',
+                      file:'store-zero-catalog.json',
+                      pin:storeAnswer.storePin || user1StoreRuntime.storePin || null,
+                      clock:materialResolution.source?.clock || null
                     },
-                    procurement:storeMaterialResolution?.status === 'MAPPED' ? {
-                      pricingReferenceSku:storeMaterialResolution.storeSku,
-                      pricingReferenceStockLengthIn:storeMaterialResolution.stockLengthIn,
-                      quantity:storeMaterialResolution.quantity,
-                      unitPrice:storeMaterialResolution.unitPrice,
-                      materialTotal:storeMaterialResolution.materialTotal,
+                    procurement:materialResolution.status === 'MAPPED' ? {
+                      pricingReferenceSku:materialResolution.pricingReferenceSku || materialResolution.storeSku || null,
+                      pricingReferenceStockLengthIn:materialResolution.pricingReferenceStockLengthIn || materialResolution.stockLengthIn || null,
+                      quantity:materialResolution.quantity ?? 1,
+                      unitPrice:materialResolution.unitPrice ?? null,
+                      materialTotal:materialResolution.materialTotal ?? null,
                       allocationClaimed:false
                     } : null,
                     definedWorkpieceLengthIn:{value:definedWorkpieceLengthIn,basis:'EXISTING_PROJECT_FACT'},
@@ -542,24 +602,30 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   },
                   physicalDemand:physicalDemand,
                   workpieceSequence:workpieceSequence,
+                  definitionUnresolvedConditions:definitionUnresolved,
                   capability:capability,
                   storeReference:{
-                    capabilityStatus:capability.status,
-                    economicsStatus:storeEstimate?.status || 'UNRESOLVED',
-                    priceCompleteness:storeEstimate?.completeness || 'UNAVAILABLE',
-                    material:storeEstimate?.material ?? (storeMaterialResolution?.status==='MAPPED' ? storeMaterialResolution.materialTotal : null),
-                    cellRecovery:storeEstimate?.cellRecovery ?? null,
-                    combinedValue:storeEstimate?.total ?? null,
-                    complete:storeEstimate?.complete === true,
+                    answerVersionId:storeAnswer.definitionVersionId,
+                    storePin:storeAnswer.storePin || user1StoreRuntime.storePin || null,
+                    capabilityStatus:capabilityStatus,
+                    economicsStatus:estimateRaw?.status || 'UNAVAILABLE',
+                    priceCompleteness:storeAnswer.priceCompleteness?.status || 'UNAVAILABLE',
+                    material:estimateRaw?.totals?.material ?? null,
+                    cellRecovery:estimateRaw?.totals?.cell_recovery ?? null,
+                    combinedValue:estimateRaw?.totals?.Q ?? null,
+                    complete:storeAnswer.priceCompleteness?.status === 'COMPLETE_FOR_ENCODED_DEMAND',
                     estimate:storeEstimate,
-                    refusalConditions:Array.from(new Set(refusals)),
-                    unresolvedConditions:Array.from(new Set(unresolved)),
-                    materialResolution:storeMaterialResolution,
+                    refusalConditions:storeRefusals,
+                    unresolvedConditions:storeUnresolved,
+                    materialResolution:materialResolution,
+                    authoritativeRequest:authoritativeRequest,
+                    authoritativeAnswer:storeAnswer,
                     authority:startOwnAuthority
                   },
                   lineage:{
                     reason:String(reason||'SYNC'),
-                    storeCatalogPin:catalogSource?.pin||null,
+                    storeCatalogPin:storeAnswer.storePin || user1StoreRuntime.storePin || null,
+                    storeSourceBlobs:storeAnswer.sourceBlobs || user1StoreRuntime.sourceBlobs || null,
                     definedWorkpieceLengthIn:definedWorkpieceLengthIn
                   },
                   physicalExecutionAuthorized:false
@@ -569,7 +635,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 } catch (_) {}
                 return currentUser1Definition;
               };
-
               const renderBoardGeometry = definition => {
                 const demand = definition?.physicalDemand;
                 if (!demand) return;
@@ -714,14 +779,2395 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
                 const answerLine = childDoc.getElementById('stb-system-answer');
                 if (answerLine) {
-                  answerLine.innerHTML = '<b>STORE</b> · '
+                  answerLine.dataset.storeAuthoritative = 'true';
+                  answerLine.dataset.storeRevision = String(definition.storeReference.answerVersionId || '');
+                  answerLine.dataset.storePin = String(definition.storeReference.storePin || '');
+                  answerLine.dataset.storeDisposition = String(definition.storeReference.capabilityStatus || 'UNRESOLVED');
+                  answerLine.innerHTML = '<b>STORE</b> · '+String(definition.storeReference.capabilityStatus || 'UNRESOLVED')
+                    +' · '
                     +(Number.isFinite(retained)
-                      ? 'the 60-in defined workpiece passes the current retained-control sequence; Store material selection remains a separate fulfillment fact'
+                      ? 'the 60-in defined workpiece passes the current retained-control sequence; material selection remains a separate Store fact'
                       : 'the same 60-in defined workpiece is unresolved for this changed part demand')
                     +(estimate
-                      ? ' · Store Zero modeled value $'+Number(estimate.total).toFixed(2)+(estimate.complete?'':' for resolved operations; partial')
+                      ? ' · modeled value 
+                activate('#stb-config-parts [data-parts]','data-parts',partQty);
+                activate('[data-length]','data-length',demand.finishedLength);
+                activate('[data-angle]','data-angle',demand.angleDegrees);
+                activate('#stb-config-spot [data-spot]','data-spot',spotMode);
+              };
+
+              const syncAndRender = reason => {
+                const definition = syncDefinition(reason);
+                renderBench(definition);
+                return definition;
+              };
+              const markRevision = () => { definitionRevision += 1; };
+
+              syncStoreGlossary();
+              syncAndRender('INITIAL');
+              showStage(pendingStartOwnStage);
+
+              benchButton?.addEventListener('click', () => {
+                syncAndRender('BENCH_HANDOFF');
+                showStage('bench');
+              });
+              benchBack?.addEventListener('click', () => showStage('intent'));
+              benchLibrary?.addEventListener('click', () => {
+                selectJourneyProject(null);
+                originalShow.call(win,'projects');
+              });
+
+              childDoc.querySelectorAll('#stb-config-parts [data-parts]').forEach(button => {
+                button.addEventListener('click', () => {
+                  const next = Number(button.dataset.parts);
+                  if (!Number.isInteger(next) || next < 1) return;
+                  partQty = next;
+                  markRevision();
+                  syncAndRender('CUSTOMER_INPUT');
+                });
+              });
+              lengthInput?.addEventListener('input', () => {
+                if (!Number.isFinite(Number(lengthInput.value)) || Number(lengthInput.value) <= 0) return;
+                markRevision();
+                syncAndRender('CUSTOMER_INPUT');
+              });
+              childDoc.querySelectorAll('[data-length]').forEach(button => {
+                button.addEventListener('click', () => {
+                  if (lengthInput) lengthInput.value = button.dataset.length;
+                  markRevision();
+                  syncAndRender('CUSTOMER_INPUT');
+                });
+              });
+              angleInput?.addEventListener('input', () => {
+                if (!Number.isFinite(Number(angleInput.value)) || Number(angleInput.value) < 0) return;
+                markRevision();
+                syncAndRender('CUSTOMER_INPUT');
+              });
+              childDoc.querySelectorAll('[data-angle]').forEach(button => {
+                button.addEventListener('click', () => {
+                  if (angleInput) angleInput.value = button.dataset.angle;
+                  markRevision();
+                  syncAndRender('CUSTOMER_INPUT');
+                });
+              });
+              childDoc.querySelectorAll('#stb-config-spot [data-spot]').forEach(button => {
+                button.addEventListener('click', () => {
+                  spotMode = button.dataset.spot === 'none' ? 'none' : 'centered';
+                  markRevision();
+                  syncAndRender('CUSTOMER_INPUT');
+                });
+              });
+
+              if (confirmButton && confirmButton.dataset.stbHostConfirmBound !== 'true') {
+                confirmButton.dataset.stbHostConfirmBound = 'true';
+                confirmButton.addEventListener('click', () => {
+                  const definition = syncAndRender('CONFIRM');
+                  if (!definition) return;
+                  if (definition.storeReference?.answerVersionId !== definition.versionId) return;
+                  const confirmationKey = definition.definitionId+'@'+definition.versionId;
+                  if (confirmButton.dataset.stbLastConfirmed === confirmationKey) return;
+
+                  const handoff = createComparisonStoreHandoff('start-own',{
+                    id:definition.definitionId,
+                    versionId:definition.versionId,
+                    physicalDemand:definition.physicalDemand,
+                    sourceAuthority:{
+                      kind:'STORE-ORIGIN USER-DEFINED WORK',
+                      artifact:'three-frames.html',
+                      storeCatalog:definition.material.stockClassAuthority,
+                      procurement:definition.material.procurement,
+                      definedWorkpieceLengthIn:definition.material.definedWorkpieceLengthIn
+                    },
+                    storeReference:definition.storeReference
+                  });
+                  proofHandoff = {
+                    job:'JOB 1 · START YOUR OWN',
+                    source:'start-own',
+                    payload:{
+                      id:definition.definitionId,
+                      versionId:definition.versionId,
+                      definition:definition,
+                      physicalDemand:definition.physicalDemand,
+                      sourceAuthority:{
+                        kind:'STORE-ORIGIN USER-DEFINED WORK',
+                        artifact:'three-frames.html',
+                        storeCatalog:definition.material.stockClassAuthority,
+                        procurement:definition.material.procurement,
+                          definedWorkpieceLengthIn:definition.material.definedWorkpieceLengthIn
+                      },
+                      storeReference:definition.storeReference
+                    },
+                    storeHandoff:handoff,
+                    boardEvaluation:definition.capability
+                  };
+                  retainComparisonStoreHandoff('start-own',handoff);
+                  try {
+                    win.localStorage.setItem('stb-start-own-user1-bench',JSON.stringify({
+                      definition:definition,
+                      handoff:handoff,
+                      physicalExecutionAuthorized:false
+                    }));
+                    win.localStorage.setItem('stb-proof-handoff-job1',JSON.stringify(proofHandoff));
+                  } catch (_) {}
+                  confirmButton.dataset.stbLastConfirmed = confirmationKey;
+                  syncProofHandoff();
+                  originalShow.call(win,'proof-store');
+                });
+              }
+
+              childDoc.addEventListener('click', event => {
+                const target = event.target?.closest?.('button,a');
+                if (!target) return;
+                proofActions += 1;
+                classifyStartOwnDecision(target);
+                win.setTimeout(captureStartOwnProof, 0);
+              }, true);
+              captureStartOwnProof();
+            });
+          }
+          startOwnPage.querySelector('#proof-job1-back')?.addEventListener('click', () => {
+            selectJourneyProject(null);
+            originalShow.call(win, 'projects');
+          });
+
+          startOwnTile.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            selectJourneyProject('start-own');
+            originalShow.call(win, 'start-own-live');
+            setTimeout(() => showStartOwnStage('intent'),0);
+          }, true);
+        }
+
+        const outdoorTile = ribbon.querySelector('.tile[data-go="picnic-chooser"]');
+        if (outdoorTile) {
+          outdoorTile.removeAttribute('data-go');
+          outdoorTile.dataset.outdoorBuildArtifact = 'stb-outdoor-bench-leg-0.1.html';
+          outdoorTile.title = 'Outdoor Build · bench leg 0.1';
+
+          let outdoorPage = doc.getElementById('outdoor-build-live');
+          if (!outdoorPage) {
+            outdoorPage = doc.createElement('section');
+            outdoorPage.className = 'page outdoor-build-shell-page';
+            outdoorPage.id = 'outdoor-build-live';
+            outdoorPage.innerHTML = `
+              <div class="outdoor-build-shell-main">
+                <iframe
+                  id="outdoor-bench-leg-frame"
+                  class="outdoor-build-shell-frame"
+                  title="Outdoor Build · bench leg"
+                  src="stb-outdoor-bench-leg-0.1.html?v=dcefd0aa"
+                ></iframe>
+              </div>
+            `;
+            doc.querySelector('.wrap')?.append(outdoorPage);
+          }
+
+          outdoorTile.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            selectJourneyProject('outdoor');
+            originalShow.call(win, 'outdoor-build-live');
+          }, true);
+        }
+
+        const windowSeatTile = ribbon.querySelector('.tile[data-go="window-intake"]');
+        if (windowSeatTile) {
+          windowSeatTile.removeAttribute('data-go');
+          windowSeatTile.dataset.windowSeatArtifact = 'stb-window-seat-space-utilization-0.7.4.html';
+          windowSeatTile.title = 'Space utilization · Window seat · live 0.7.4';
+
+          let windowSeatPage = doc.getElementById('window-seat-live');
+          if (!windowSeatPage) {
+            windowSeatPage = doc.createElement('section');
+            windowSeatPage.className = 'page window-seat-shell-page';
+            windowSeatPage.id = 'window-seat-live';
+            windowSeatPage.innerHTML = `
+              <div class="window-seat-shell-main">
+                <button type="button" class="proof-shell-return" data-proof-library>← PROJECT LIBRARY</button>
+                <iframe
+                  class="window-seat-shell-frame"
+                  title="Space utilization · Window seat"
+                  src="stb-window-seat-space-utilization-0.7.4.html?v=96c85fee"
+                ></iframe>
+              </div>
+            `;
+            doc.querySelector('.wrap')?.append(windowSeatPage);
+          }
+
+          windowSeatTile.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            selectJourneyProject('window-seat');
+            showSeatContinuous();
+          }, true);
+        }
+      }
+
+      function createComparisonStoreHandoff(source,payload){
+        if(!storeHandoffContract || !payload) return null;
+        var physicalDemand = null;
+        var projectId = source === 'start-own' ? 'start-own' : 'outdoor-build';
+        var projectClass = source === 'start-own' ? 'USER_DEFINED_BOARD' : 'BOUNDED_SOURCE_BACKED';
+        var sourceAuthority = source === 'start-own'
+          ? (payload.sourceAuthority || {kind:'USER-DEFINED',artifact:'three-frames.html'})
+          : {kind:'BOUNDED SOURCE-BACKED',artifact:'stb-outdoor-bench-leg-0.1.html',detail:payload.sourceAuthority||null};
+        if(payload.physicalDemand){
+          physicalDemand = payload.physicalDemand;
+        } else if(source === 'start-own'){
+          try { physicalDemand = JSON.parse(win.localStorage.getItem('stb-proof-ladder-job1')||'null')?.semanticOutput || null; } catch (_) {}
+        } else {
+          physicalDemand = payload.normalizedPart || null;
+        }
+        if(!physicalDemand && payload.definition){
+          var def = payload.definition;
+          var part0 = payload.request && Array.isArray(payload.request.parts) ? payload.request.parts[0] : null;
+          physicalDemand = {
+            stockClass: def.stockClass || (def.stock && def.stock.nominal) || '',
+            finishedLength: Number(def.finishedLength != null ? def.finishedLength : (part0 && part0.len)),
+            quantity: Number(def.qty != null ? def.qty : (def.quantity != null ? def.quantity : (part0 && part0.qty) || 1)),
+            endCondition: def.endCondition || 'square',
+            straightCut: def.endCondition !== 'angled',
+            holeRequirement: def.holeRequirement || 'NONE'
+          };
+        }
+        if(!physicalDemand) return null;
+        var definitionId = payload.id || (source === 'start-own' ? 'SYO-IDENTIFIED' : 'OB-SAW-IDENTIFIED');
+        try {
+          return storeHandoffContract.createComparisonHandoff({
+            projectId:projectId,
+            projectClass:projectClass,
+            definitionId:definitionId,
+            versionId:payload.versionId || definitionId,
+            physicalDemand:physicalDemand,
+            sourceAuthority:sourceAuthority,
+            unresolvedConditions:source === 'start-own'
+              ? (Array.isArray(payload.storeReference?.unresolvedConditions)
+                  ? payload.storeReference.unresolvedConditions
+                  : [])
+              : ['STORE-PRICING-BRIDGE-GAP']
+          });
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function retainComparisonStoreHandoff(source,handoff){
+        if(!handoff) return;
+        try {
+          win.localStorage.setItem('stb-common-store-handoff-'+(source==='start-own'?'job1':'job2'),JSON.stringify(handoff));
+          var job1=JSON.parse(win.localStorage.getItem('stb-common-store-handoff-job1')||'null');
+          var job2=JSON.parse(win.localStorage.getItem('stb-common-store-handoff-job2')||'null');
+          if(job1&&job2&&storeHandoffContract){
+            win.localStorage.setItem('stb-proof-store-demand-equality',JSON.stringify({
+              sameStoreDemand:storeHandoffContract.sameStoreDemand(job1,job2),
+              job1ProjectId:job1.projectId,
+              job2ProjectId:job2.projectId,
+              provenanceDifferent:JSON.stringify(job1.sourceAuthority)!==JSON.stringify(job2.sourceAuthority)
+            }));
+          }
+        } catch (_) {}
+      }
+
+      if (!win.__stbPostStartOwnPreview) {
+        win.__stbPostStartOwnPreview = function(payload){
+          const frame = doc.getElementById('start-own-proof-frame');
+          if (frame && frame.contentWindow) frame.contentWindow.postMessage(payload, win.location.origin);
+        };
+      }
+      if (!win.__stbProofLadderMessageBound) {
+        win.__stbProofLadderMessageBound = true;
+        win.addEventListener('message', event => {
+          if (event.origin !== win.location.origin) return;
+          const type = event.data?.type;
+          if (type === 'STB_PROOF_RETURN_LIBRARY' || type === 'STB_CHILD_RETURN_LIBRARY') {
+            selectJourneyProject(null);
+            originalShow.call(win, 'projects');
+          } else if (type === 'STB_PROJECT_DEFINITION_CHANGED' && event.data?.projectId === 'start-own') {
+            // Current hosted Start Own is evaluated by the ab8a4c5d handoff contract.
+            // Legacy child messages may trigger proof refresh, but may not supply a competing Store answer.
+            captureStartOwnProof();
+          } else if (type === 'STB_PROOF_OPEN_JOB1') {
+            selectJourneyProject('start-own');
+            originalShow.call(win, 'start-own-live');
+          } else if (type === 'STB_START_OWN_CONFIRMED' && event.data?.payload) {
+            if (activeJourneyProject !== 'start-own') return;
+            captureStartOwnProof();
+            const carriedDefinition = event.data.payload.definition || null;
+            const boardEval = carriedDefinition?.capability || (
+              event.data.payload.storeReference
+                ? {
+                    status:event.data.payload.storeReference.capabilityStatus || 'UNRESOLVED',
+                    storeReference:event.data.payload.storeReference
+                  }
+                : null
+            );
+            const storeHandoff = createComparisonStoreHandoff('start-own',event.data.payload);
+            proofHandoff = {
+              job:'JOB 1 · START YOUR OWN',
+              source:'start-own',
+              payload:event.data.payload,
+              storeHandoff:storeHandoff,
+              boardEvaluation:boardEval
+            };
+            retainComparisonStoreHandoff('start-own',storeHandoff);
+            try { win.localStorage.setItem('stb-proof-handoff-job1', JSON.stringify(proofHandoff)); } catch (_) {}
+            syncProofHandoff();
+            originalShow.call(win, 'proof-store');
+          } else if (type === 'STB_OUTDOOR_CONFIRMED' && event.data?.payload) {
+            if (activeJourneyProject !== 'outdoor') return;
+            const boardEval = window.STBUserDefinedBoardStore && event.data.payload.physicalDemand
+              ? window.STBUserDefinedBoardStore.evaluateUserDefinedBoardJob(event.data.payload.physicalDemand)
+              : null;
+            const storeHandoff = createComparisonStoreHandoff('outdoor',event.data.payload);
+            proofHandoff = {job:'JOB 2 · OUTDOOR BUILD',source:'outdoor',payload:event.data.payload,storeHandoff:storeHandoff,boardEvaluation:boardEval};
+            retainComparisonStoreHandoff('outdoor',storeHandoff);
+            try { win.localStorage.setItem('stb-proof-handoff-job2', JSON.stringify(proofHandoff)); } catch (_) {}
+            syncProofHandoff();
+            originalShow.call(win, 'proof-store');
+          }
+        });
+      }
+
+      const body = home.querySelector(':scope > .split > .body');
+      if (body) {
+        [...body.children].forEach(node => {
+          if (!node.classList.contains('backbar')) node.remove();
+        });
+        body.insertAdjacentHTML('beforeend', `
+          <h1 style="font-size:21px">What are you making?</h1>
+          <p><b>A bounded project starts with work that has already been mapped.</b> <span class="dim">The parts, their relationships, and the questions that must be answered are defined before you get here. Anything that still needs engineering, Store resolution, or physical verification stays visible.</span></p>
+          <p class="dim">What's left is the part only you can answer: <b style="color:var(--text)">your space, your measurements, and the choices that make this one yours.</b></p>
+          <p class="dim">You should not be asked to solve the project for us. <b style="color:var(--text)">A question appears only when your answer changes the definition.</b></p>
+          <p><b>That's why the list is worth a look first.</b> <span class="dim">When a bounded project fits what you want to make, you skip the questions that do not belong to you.</span></p>
+          <h3>Some answers open more questions</h3>
+          <p class="dim">Choose doors, for example, and the project may also need to know the door type, hardware path, clearances, and required machining.</p>
+          <p class="dim">Choose no doors and those questions disappear. <b style="color:var(--text)">No choice, no unnecessary question.</b></p>
+          <h3>If nothing here is your thing</h3>
+          <p class="dim"><b style="color:var(--text)">Start your own stays first.</b> Bring the need, measurements, sketch, drawing, photo, or file you already have. We keep the source, show what can be defined, and leave what is still missing visible.</p>
+          <p class="dim">When the required responsibilities are accounted for, the project can ask the Store a clear question.</p>
+        `);
+      }
+
+      const rail = home.querySelector(':scope > .rail');
+      if (rail) {
+        const foot = rail.querySelector(':scope > .foot');
+        [...rail.children].forEach(node => {
+          if (node !== foot) node.remove();
+        });
+        rail.insertAdjacentHTML('afterbegin', `
+          <p class="hd">BUILD GUIDE</p>
+          <p class="goal">Common project contract</p>
+          <div class="row"><b>Name the problem</b><span>Critical fit, not “shelving.”</span></div>
+          <div class="row"><b>Make it worth opening</b><span>Color and character earn the click.</span></div>
+          <div class="row"><b>Ask only what matters</b><span>If the answer changes the project, ask it. Otherwise don't.</span></div>
+          <div class="row"><b>Keep responsibility honest</b><span>User chooses. Project derives. Store resolves. Unknown stays visible.</span></div>
+          <div class="row"><b>Keep the door open</b><span>Start your own is first and never moves.</span></div>
+          <div class="row"><b>Capture the miss</b><span>A need we don't offer is still worth keeping.</span></div>
+        `);
+      }
+    }
+
+    const canonicalStore = doc.getElementById('store');
+    const canonicalDoctrine = window.STBStoreZeroCanonicalDoctrine || null;
+    if (canonicalStore) {
+      const main = canonicalStore.querySelector(':scope > .main');
+      const rail = canonicalStore.querySelector(':scope > .rail');
+      if (!canonicalDoctrine || canonicalDoctrine.expectedProcessStepCount !== 12) {
+        if (main) main.innerHTML = '<h1>CANONICAL STORE CONTENT UNAVAILABLE</h1><div class="band warn"><b>Fail closed.</b> The shared Store Zero doctrine is unavailable or does not declare exactly twelve canonical process steps.</div>';
+        if (rail) rail.innerHTML = '<p class="hd">04 · STORE · BUILD GUIDE</p><p class="goal">Fail closed</p>';
+      } else if (main) {
+        const intro = main.querySelector(':scope > .band:first-child p');
+        if (intro) intro.innerHTML = canonicalDoctrine.definitionHtml;
+
+        const tempIntro = doc.createElement('div');
+        tempIntro.innerHTML = canonicalDoctrine.processIntroHtml;
+        const sharedTitle = tempIntro.querySelector('h1');
+        const sharedLedes = tempIntro.querySelectorAll('.lede');
+        const sharedBand = tempIntro.querySelector('.band');
+        const title = main.querySelector(':scope > h1');
+        const ledes = main.querySelectorAll(':scope > .lede');
+        const bands = main.querySelectorAll(':scope > .band');
+        if (title && sharedTitle) title.innerHTML = sharedTitle.innerHTML;
+        ledes.forEach((node,index) => { if (sharedLedes[index]) node.innerHTML = sharedLedes[index].innerHTML; });
+        if (bands[1] && sharedBand) bands[1].innerHTML = sharedBand.innerHTML.replace('Reference journey shown before confirmation.','Confirmed version sent to Store Zero.');
+
+        const tempSteps = doc.createElement('div');
+        tempSteps.innerHTML = canonicalDoctrine.processStepsHtml;
+        const sharedSteps = [...tempSteps.querySelectorAll(':scope > .s')];
+        const sharedClose = tempSteps.querySelector(':scope > .close');
+        if (sharedSteps.length !== 12 || !sharedClose) {
+          main.innerHTML = '<h1>CANONICAL STORE CONTENT UNAVAILABLE</h1><div class="band warn"><b>Fail closed.</b> Expected exactly twelve canonical Store process steps.</div>';
+        } else {
+          main.querySelectorAll(':scope > .s, :scope > .close').forEach(node => node.remove());
+          const bottom = main.querySelector(':scope > .bottom');
+          sharedSteps.forEach(node => bottom?.before(node.cloneNode(true)));
+          bottom?.before(sharedClose.cloneNode(true));
+        }
+        if (rail) rail.innerHTML = canonicalDoctrine.buildGuideHtml;
+      }
+    }
+
+
+    // ALCOVE STORE CONTENT CONSERVATION RULE
+    // One customer-facing Store interaction means coordinated navigation, not reduced Store content.
+    // Existing Request, Yard, Terms, Recap, and Record content is moved intact to its new customer-facing home.
+    function extractAlcoveLegacyMain(pageId, label) {
+      const page = doc.getElementById(pageId);
+      const main = page?.querySelector(':scope > .main');
+      if (!main) return null;
+      const block = doc.createElement('section');
+      block.className = 'alcove-conserved-block';
+      block.dataset.alcoveConservedFrom = pageId;
+      block.setAttribute('aria-label', label);
+      [...main.children].forEach(node => {
+        if (node.classList?.contains('backbar') || node.classList?.contains('bottom')) return;
+        block.append(node);
+      });
+      return block;
+    }
+
+    function textOf(id) {
+      return doc.getElementById(id)?.textContent?.trim() || '—';
+    }
+
+    function selectedDecision(label) {
+      const rows = [...doc.querySelectorAll('#decisionRows .rowline')];
+      const row = rows.find(r => r.querySelector('.rt')?.childNodes?.[0]?.textContent?.trim() === label);
+      return row?.querySelector('.pill.on')?.textContent?.trim() || 'not selected';
+    }
+
+
+    function syncAlcoveCommercialSurface() {
+      const pairs = {
+        'alcove-order-version':'Version 1 · confirmed',
+        'alcove-order-geometry':textOf('p-h')+' H × '+textOf('p-w')+' W × '+textOf('p-d')+' D',
+        'alcove-order-span':textOf('p-span')+' nominal interior span',
+        'alcove-order-shelves':textOf('p-shelves')+' shelves · '+textOf('p-heights'),
+        'alcove-order-material':textOf('p-material')+' · '+textOf('o-sku'),
+        'alcove-order-demand':doc.getElementById('p-mat')?.innerText?.trim() || '—',
+        'alcove-order-availability':textOf('o-oh')+' · REFERENCE / STATED, not live inventory',
+        'alcove-order-price':textOf('p-price'),
+        'alcove-order-basis':textOf('p-basis'),
+        'alcove-order-cycle':textOf('o-cyc')+' modeled · measured false',
+        'alcove-order-recovery':textOf('o-rec'),
+        'alcove-order-packaging':selectedDecision('Packaging'),
+        'alcove-order-handoff':selectedDecision('Handoff'),
+        'alcove-order-collector':selectedDecision('Who collects'),
+        'alcove-store-return-price':textOf('p-price'),
+        'alcove-store-return-packaging':selectedDecision('Packaging'),
+        'alcove-store-return-handoff':selectedDecision('Handoff'),
+        'alcove-store-return-collector':selectedDecision('Who collects'),
+        'alcove-accept-price':textOf('p-price'),
+        'alcove-accept-basis':textOf('p-basis'),
+        'alcove-accept-material':textOf('p-material')+' · '+textOf('o-sku')+' · '+textOf('o-oh')+' reference',
+        'alcove-accept-packaging':selectedDecision('Packaging'),
+        'alcove-accept-handoff':selectedDecision('Handoff'),
+        'alcove-accept-collector':selectedDecision('Who collects'),
+        'alcove-yard-packaging':selectedDecision('Packaging'),
+        'alcove-yard-handoff':selectedDecision('Handoff'),
+        'alcove-yard-collector':selectedDecision('Who collects')
+      };
+      Object.entries(pairs).forEach(([id,value]) => {
+        const el = doc.getElementById(id);
+        if (el) el.textContent = value;
+      });
+    }
+
+    function reconcileAlcoveCommercialJourney() {
+      const storePage = doc.getElementById('store');
+      const storeMain = storePage?.querySelector(':scope > .main');
+      const storeRail = storePage?.querySelector(':scope > .rail');
+      const requestPage = doc.getElementById('request');
+      const requestMain = requestPage?.querySelector(':scope > .main');
+      const requestRail = requestPage?.querySelector(':scope > .rail');
+      const yardPage = doc.getElementById('yard');
+      const yardMain = yardPage?.querySelector(':scope > .main');
+      const yardRail = yardPage?.querySelector(':scope > .rail');
+      const recordPage = doc.getElementById('record');
+      const recordMain = recordPage?.querySelector(':scope > .main');
+      const recordRail = recordPage?.querySelector(':scope > .rail');
+      if (!storeMain || !requestMain || !yardMain || !recordMain) return false;
+      if (storeMain.dataset.alcoveCommercialReconciled === 'true') return true;
+
+      const requestBlock = extractAlcoveLegacyMain('request','Full existing Store service and handoff choices');
+      const yardAnswerBlock = extractAlcoveLegacyMain('yard','Full existing Yard response, substitution choices, and timing');
+      const termsBlock = extractAlcoveLegacyMain('terms','Full existing commercial sequence and authority distinctions');
+      const recapBlock = extractAlcoveLegacyMain('recap','Full existing chronology / audit');
+      const recordBlock = extractAlcoveLegacyMain('record','Full existing owner record');
+
+      if (!requestBlock || !yardAnswerBlock || !termsBlock || !recapBlock || !recordBlock) return false;
+
+      const firstStep = storeMain.querySelector(':scope > .s');
+      const storeOrder = doc.createElement('section');
+      storeOrder.id = 'alcove-store-order-surface';
+      storeOrder.dataset.storeContentConserved = 'true';
+      storeOrder.innerHTML = `
+        <div class="hero" style="margin-top:14px">
+          <p class="tag">ALCOVE · STORE ZERO / ORDER</p>
+          <h2 style="margin-top:4px">One Store answer for one confirmed version</h2>
+          <p>The customer does not operate Store departments. Store receives the identified version, resolves every Store-owned question it can resolve, keeps unsupported or unresolved work visible, returns the price and timing basis, and presents one commercial decision.</p>
+          <p class="boundary"><b>Full Store capability and full Store evidence stay.</b> Only the customer navigation is simpler.</p>
+        </div>
+        <h2>What Store received</h2>
+        <div class="hdr">
+          <div><b>VERSION</b><span id="alcove-order-version">Version 1 · confirmed</span></div>
+          <div><b>GEOMETRY</b><span id="alcove-order-geometry">—</span></div>
+          <div><b>MATERIAL</b><span id="alcove-order-material">—</span></div>
+          <div><b>STATUS</b><span>REFERENCE STORE ANSWER</span></div>
+        </div>
+        <div class="cols">
+          <div>
+            <div class="kv"><span>Interior span</span><span id="alcove-order-span">—</span></div>
+            <div class="kv"><span>Shelves</span><span id="alcove-order-shelves">—</span></div>
+            <div class="kv"><span>Material demand</span><span id="alcove-order-demand">—</span></div>
+            <div class="kv"><span>Reference availability</span><span id="alcove-order-availability">—</span></div>
+          </div>
+          <div>
+            <div class="kv"><span>Reference total</span><span id="alcove-order-price">—</span></div>
+            <div class="kv"><span>Price basis</span><span id="alcove-order-basis">—</span></div>
+            <div class="kv"><span>Modeled cell time</span><span id="alcove-order-cycle">—</span></div>
+            <div class="kv"><span>Cell recovery</span><span id="alcove-order-recovery">—</span></div>
+          </div>
+        </div>
+        <div class="band warn"><b>Current capability truth.</b> Material mapping, stated reference availability, declared service choices, and reference economics are shown. Fabrication remains unresolved wherever the current Alcove surface says it is unresolved. Disabled or unavailable work remains visible; it is not silently dropped. No silent substitution is allowed.</div>
+      `;
+      firstStep?.before(storeOrder);
+
+      const requestWrap = doc.createElement('section');
+      requestWrap.id = 'alcove-store-service-choices';
+      requestWrap.innerHTML = '<h2>Store services, handling, packaging and handoff choices</h2><p class="sub">All ten existing Store / Yard questions remain here in full. These choices may affect service, handling, timing or price; they do not rewrite geometry.</p>';
+      requestWrap.append(requestBlock);
+      firstStep?.before(requestWrap);
+
+      const yardWrap = doc.createElement('section');
+      yardWrap.id = 'alcove-store-yard-answer';
+      yardWrap.innerHTML = '<h2>Store / Yard answer, material exceptions and substitution</h2><p class="sub">The full existing Yard response remains attached to the same Store interaction. Unsupported, unavailable or unresolved work stays visible with its reason.</p>';
+      yardWrap.append(yardAnswerBlock);
+      firstStep?.before(yardWrap);
+
+      const termsWrap = doc.createElement('section');
+      termsWrap.id = 'alcove-store-commercial-sequence';
+      termsWrap.innerHTML = '<h2>Commercial sequence and timing basis</h2><p class="sub">The customer sees the timing consequence before any acceptance. Reference timing remains reference timing; no live ETA is invented.</p>';
+      termsWrap.append(termsBlock);
+      firstStep?.before(termsWrap);
+
+      const ledgerTitle = doc.createElement('h2');
+      ledgerTitle.textContent = 'Full twelve-event Store / transaction ledger';
+      firstStep?.before(ledgerTitle);
+      const ledgerNote = doc.createElement('p');
+      ledgerNote.className = 'sub';
+      ledgerNote.textContent = 'These event meanings remain separate even though the customer is not asked to click through them as separate Store errands.';
+      firstStep?.before(ledgerNote);
+
+      const oldBottom = storeMain.querySelector(':scope > .bottom');
+      oldBottom?.remove();
+      const returnedOffer = doc.createElement('section');
+      returnedOffer.id = 'alcove-store-returned-offer';
+      returnedOffer.innerHTML = `
+        <h2>Complete returned Store answer</h2>
+        <p>Store has finished the answering work available to this reference surface. The confirmed definition is unchanged. Material and capability evidence remain visible. Processing / fulfillment economics stay unresolved until a current Alcove class-scoped model is published.</p>
+        <div class="cols">
+          <div>
+            <div class="kv"><span>Reference total</span><span id="alcove-store-return-price">—</span></div>
+            <div class="kv"><span>Packaging choice</span><span id="alcove-store-return-packaging">—</span></div>
+            <div class="kv"><span>Fulfillment choice</span><span id="alcove-store-return-handoff">—</span></div>
+          </div>
+          <div>
+            <div class="kv"><span>Pickup / handoff recipient</span><span id="alcove-store-return-collector">—</span></div>
+            <div class="kv"><span>Commercial offer</span><span>NOT ESTABLISHED · ECONOMICS INCOMPLETE</span></div>
+            <div class="kv"><span>Settlement</span><span>NOT ESTABLISHED</span></div>
+          </div>
+        </div>
+        <div class="band"><b>Store Answer is not customer acceptance.</b> Nothing on this page records acceptance, payment, allocation, production release, machine readiness, Cycle Start, or physical work.</div>
+        <div class="bottom"><button type="button" data-alcove-commercial-action="change">CHANGE DEFINITION</button><button class="primary" type="button" data-alcove-commercial-action="accept-page">ACCEPT STORE ANSWER →</button></div>
+      `;
+      storeMain.append(returnedOffer);
+
+      requestMain.innerHTML = `
+        <p class="tag">ALCOVE · ACCEPT / SETTLE</p>
+        <h1>Store answered. The commercial event remains separate.</h1>
+        <p class="sub">This is the customer handoff. The Store answer is complete enough for the current reference demonstration; now the holder may accept, decline, or return to Configure for a new version.</p>
+        <div class="hdr">
+          <div><b>VERSION</b><span>Version 1 · confirmed</span></div>
+          <div><b>STORE ANSWER</b><span>REFERENCE · RETURNED</span></div>
+          <div><b>ACCEPTANCE</b><span id="alcove-acceptance-state">NOT ESTABLISHED</span></div>
+          <div><b>SETTLEMENT</b><span id="alcove-settlement-state">NOT ESTABLISHED</span></div>
+        </div>
+        <h2>Returned Store answer</h2>
+        <div class="cols">
+          <div>
+            <div class="kv"><span>Reference total</span><span id="alcove-accept-price">—</span></div>
+            <div class="kv"><span>Price basis</span><span id="alcove-accept-basis">—</span></div>
+            <div class="kv"><span>Material / availability</span><span id="alcove-accept-material">—</span></div>
+          </div>
+          <div>
+            <div class="kv"><span>Packaging</span><span id="alcove-accept-packaging">—</span></div>
+            <div class="kv"><span>Pickup / delivery</span><span id="alcove-accept-handoff">—</span></div>
+            <div class="kv"><span>Recipient</span><span id="alcove-accept-collector">—</span></div>
+          </div>
+        </div>
+        <div class="band"><b>Timing basis before acceptance.</b> Settlement → material allocation → production release → Store / Yard queue → local readiness → required operations → inspection / labels / packaging → staging → READY notice → pickup / delivery. Existing reference timing only: staging target ≤2 business hours after the last required cycle, then a 4-business-hour pickup window after READY. This is not a live ETA.</div>
+        <div class="band warn"><b>Reference commerce only.</b> This demonstration does not process money. Offer ≠ acceptance. Acceptance ≠ settlement. Settlement ≠ allocation. Allocation ≠ production release. Selecting reference acceptance below does not record payment or create downstream physical authority.</div>
+        <div class="btns">
+          <button type="button" data-alcove-commercial-action="change">CHANGE DEFINITION</button>
+          <button type="button" data-alcove-commercial-action="decline">DO NOT CONTINUE</button>
+          <button class="primary" type="button" data-alcove-commercial-action="accept">ACKNOWLEDGE REFERENCE ANSWER</button>
+          <button type="button" data-alcove-commercial-action="yard" disabled>CONTINUE REFERENCE DEMONSTRATION →</button>
+        </div>
+        <p id="alcove-commercial-decision-note" class="fine">No customer decision recorded. Settlement / payment remains NOT ESTABLISHED.</p>
+      `;
+      if (requestRail) requestRail.innerHTML = '<p class="hd">ACCEPT / SETTLE</p><p class="goal">Store answered. The holder decides.</p><div class="row"><b>One real handoff</b><span>Store returns the answer; the customer decides whether to proceed.</span></div><div class="row"><b>Reference commerce</b><span>Acceptance can be demonstrated. Payment is not falsely claimed.</span></div><div class="row"><b>Keep the verbs separate</b><span>Accept ≠ settle ≠ allocate ≠ release.</span></div>';
+
+      yardMain.innerHTML = `
+        <p class="tag">ALCOVE · STORE / YARD FULFILLMENT</p>
+        <h1>Order status · Store / Yard acts</h1>
+        <p class="sub">The customer's ordering decisions are finished on the Store surface. The remaining events belong to Store, Yard, the local cell, quality, and handoff. This reference build shows their status; it does not ask the customer to manually advance them.</p>
+        <div class="hdr">
+          <div><b>PROJECT</b><span>alcove insert · Version 1</span></div>
+          <div><b>COMMERCIAL</b><span>REFERENCE ONLY</span></div>
+          <div><b>FULFILLMENT</b><span>NOT RELEASED</span></div>
+          <div><b>PHYSICAL AUTHORITY</b><span>NONE</span></div>
+        </div>
+        <div class="timeline">
+          <div class="dot open">○</div><div>Settlement established</div><div class="who">commercial</div><div class="when">NOT ESTABLISHED</div>
+          <div class="dot open">○</div><div>Material allocated</div><div class="who">store</div><div class="when">NOT ALLOCATED</div>
+          <div class="dot open">○</div><div>Production released</div><div class="who">release</div><div class="when">NOT RELEASED</div>
+          <div class="dot open">○</div><div>Store / Yard queue</div><div class="who">yard</div><div class="when">NOT QUEUED</div>
+          <div class="dot open">○</div><div>Local cell readiness</div><div class="who">cell</div><div class="when">NOT ESTABLISHED</div>
+          <div class="dot open">○</div><div>Cycle Start</div><div class="who">local operator</div><div class="when">NOT AUTHORIZED HERE</div>
+          <div class="dot open">○</div><div>Cut · mill · drill · label</div><div class="who">local cell</div><div class="when">NOT RECORDED</div>
+          <div class="dot open">○</div><div>Secondary work / inspection</div><div class="who">quality</div><div class="when">NOT RECORDED</div>
+          <div class="dot open">○</div><div>Packaging / staging</div><div class="who">yard</div><div class="when">NOT RECORDED</div>
+          <div class="dot open">○</div><div>READY notice</div><div class="who">fulfillment</div><div class="when">NOT ISSUED</div>
+          <div class="dot open">○</div><div>Pickup / delivery preparation</div><div class="who">yard</div><div class="when">NOT RECORDED</div>
+        </div>
+        <h2>Selected fulfillment preferences</h2>
+        <div class="kv"><span>Packaging</span><span id="alcove-yard-packaging">—</span></div>
+        <div class="kv"><span>Pickup / delivery</span><span id="alcove-yard-handoff">—</span></div>
+        <div class="kv"><span>Recipient</span><span id="alcove-yard-collector">—</span></div>
+        <div class="band warn"><b>Authority boundary.</b> Payment does not start a machine. Allocation is not production release. Production release is not machine readiness. Machine readiness is not Cycle Start. Cycle Start remains local to the person / control at the machine. <b>NO BLOOD ON WOOD.</b></div>
+        <div class="band"><b>Timing basis.</b> The existing reference path states: staging target ≤2 business hours after the last required cycle, then a 4-business-hour pickup window after READY. Those are reference statements, not a live ETA, and neither clock has started here.</div>
+        <div class="bottom"><button type="button" data-alcove-commercial-action="store">← BACK TO STORE / ORDER</button><button class="primary" type="button" data-alcove-commercial-action="record">HANDOFF / RECORD →</button></div>
+      `;
+      if (yardRail) yardRail.innerHTML = '<p class="hd">STORE / YARD</p><p class="goal">Customer watches. Store / Yard acts.</p><div class="row"><b>No extra customer errands</b><span>Internal fulfillment events stay separate in state, not as separate customer buttons.</span></div><div class="row"><b>Local authority stays local</b><span>Readiness and Cycle Start cannot be supplied by an upstream screen.</span></div><div class="row"><b>READY is an event</b><span>Staging does not become custody until handoff is recorded.</span></div>';
+
+      recordMain.innerHTML = `
+        <p class="tag">ALCOVE · HANDOFF / OWNER RECORD</p>
+        <h1>Handoff · record</h1>
+        <p class="sub">One final surface shows what Store / Yard would complete, what the user receives and does, and the exact owner-held record. Missing events stay missing.</p>
+        <div class="cards">
+          <div class="card"><b>What Store / Yard does</b><span>Complete required work; inspect; label; group; package / crate if selected; stage; issue READY; release at pickup / delivery; record custody; reconcile material, remnants and exceptions; close its fulfillment record when those events actually exist.</span></div>
+          <div class="card"><b>What the user does</b><span>Receive READY; pick up or receive delivery; verify handoff; take custody; retain the project / part record; later assemble, install or finish work that always remained owner work.</span></div>
+          <div class="card"><b>What Store gets</b><span>A completed fulfillment record, material / operation reconciliation, custody / closeout evidence and an auditable history — only when those events are actually recorded.</span></div>
+          <div class="card"><b>What the user gets</b><span>The parts; labels / assembly information where included; selected remnants; the exact identified version; Store / production / handoff history; the owner-held record; and a basis for later replacement or reorder.</span></div>
+        </div>
+      `;
+      recordMain.append(recapBlock);
+      recordMain.append(recordBlock);
+      const finalBoundary = doc.createElement('div');
+      finalBoundary.className = 'band warn';
+      finalBoundary.innerHTML = '<b>Current demonstration truth.</b> Commercial completion, physical outcome, READY, custody and closeout remain absent unless separately evidenced. A later event never backfills a missing earlier event.';
+      recordMain.append(finalBoundary);
+      const recordBottom = doc.createElement('div');
+      recordBottom.className = 'bottom';
+      recordBottom.innerHTML = '<button type="button" data-alcove-commercial-action="yard">← BACK TO STORE / YARD</button><button class="next" data-go="landing">Start →</button>';
+      recordMain.append(recordBottom);
+      if (recordRail) recordRail.innerHTML = '<p class="hd">HANDOFF / RECORD</p><p class="goal">Two sides. One checkable chain.</p><div class="row"><b>Missing stays missing</b><span>No event is filled in because a later event exists.</span></div><div class="row"><b>Custody closes handoff</b><span>Staged and READY are not custody.</span></div><div class="row"><b>Owner keeps the record</b><span>The exact version and history remain reusable without becoming automatic fabrication authority.</span></div>';
+
+      storeMain.dataset.alcoveCommercialReconciled = 'true';
+      syncAlcoveCommercialSurface();
+      return true;
+    }
+
+    reconcileAlcoveCommercialJourney();
+
+    win.addEventListener('click', function(event) {
+      if (activeJourneyProject !== 'alcove') return;
+      const action = event.target.closest?.('[data-alcove-commercial-action]')?.getAttribute('data-alcove-commercial-action');
+      if (!action) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const note = doc.getElementById('alcove-commercial-decision-note');
+      const acceptance = doc.getElementById('alcove-acceptance-state');
+      const continueButton = doc.querySelector('#request [data-alcove-commercial-action="yard"]');
+      if (action === 'change') {
+        originalShow.call(win,'alcove-config');
+        return;
+      }
+      if (action === 'accept-page') {
+        originalShow.call(win,'request');
+        setTimeout(syncAlcoveCommercialSurface,0);
+        return;
+      }
+      if (action === 'decline') {
+        doc.documentElement.dataset.alcoveReferenceDecision = 'declined';
+        if (acceptance) acceptance.textContent = 'DECLINED · REFERENCE';
+        if (note) note.textContent = 'Reference offer declined. Definition remains intact; no settlement or downstream authority was created.';
+        if (continueButton) continueButton.disabled = true;
+        return;
+      }
+      if (action === 'accept') {
+        doc.documentElement.dataset.alcoveReferenceDecision = 'acknowledged';
+        if (acceptance) acceptance.textContent = 'NOT ESTABLISHED · NO COMMERCIAL OFFER';
+        if (note) note.textContent = 'Reference Store answer acknowledged. Commercial acceptance and settlement / payment remain NOT ESTABLISHED.';
+        if (continueButton) continueButton.disabled = false;
+        return;
+      }
+      if (action === 'store') {
+        originalShow.call(win,'store');
+        setTimeout(syncAlcoveCommercialSurface,0);
+        return;
+      }
+      if (action === 'yard') {
+        if (doc.documentElement.dataset.alcoveReferenceDecision !== 'acknowledged') return;
+        originalShow.call(win,'yard');
+        setTimeout(syncAlcoveCommercialSurface,0);
+        return;
+      }
+      if (action === 'record') {
+        originalShow.call(win,'record');
+        return;
+      }
+    }, true);
+
+    win.addEventListener('click', function(event) {
+      if (activeJourneyProject !== 'alcove') return;
+      if (event.target.closest?.('#decisionRows .pill, #alcove-store-yard-answer .pick')) {
+        setTimeout(syncAlcoveCommercialSurface,0);
+      }
+    });
+
+    const intent = doc.getElementById('playhouse-s001');
+    const intentMain = intent?.querySelector('.main');
+    const intentRail = intent?.querySelector('.rail');
+    if (intentMain) intentMain.innerHTML = `
+      <h1>SCAN / INTENT · PLAYHOUSE WINDOW</h1>
+      <p class="sub">Sarah does not need a whole sheet of plywood. She needs the useful parts the sheet can become.</p>
+      <div class="s001-v2-intent-grid">
+        <section class="s001-card">
+          <h3>SARAH'S PROJECT</h3>
+          <svg class="s001-source-art" viewBox="0 0 420 300" role="img" aria-label="Small outdoor playhouse with a large arched window marked on the wall">
+            <rect width="420" height="300" fill="#eee7da"/>
+            <path d="M75 125 L210 42 L345 125" fill="none" stroke="#766652" stroke-width="8" stroke-linejoin="round"/>
+            <rect x="92" y="122" width="236" height="145" rx="2" fill="#d7b785" stroke="#766652" stroke-width="5"/>
+            <rect x="118" y="177" width="58" height="90" fill="#8d6a46" opacity=".72"/>
+            <path d="M206 236 L206 179 Q206 137 250 137 Q294 137 294 179 L294 236 Z" fill="#f5f1e9" stroke="#5d5041" stroke-width="5" stroke-dasharray="7 5"/>
+            <line x1="250" y1="137" x2="250" y2="236" stroke="#7a5b2f" stroke-width="3" stroke-dasharray="6 5"/>
+            <text x="250" y="265" text-anchor="middle" font-size="13" fill="#4c443b">36 in opening</text>
+            <text x="302" y="190" font-size="12" fill="#4c443b">24 in straight</text>
+            <text x="252" y="128" text-anchor="middle" font-size="12" fill="#4c443b">12 in rise</text>
+          </svg>
+          <p class="s001-v2-story">She wants a large arched opening in the playhouse wall. She wants the center kept intact enough to take home and may turn it into shutters. She wants the remaining pieces returned too. Hinges and final owner finishing are outside this yard order.</p>
+        </section>
+        <section class="s001-card">
+          <h3>WHAT SARAH DEFINES</h3>
+          <div class="s001-data">
+            <div class="row"><b>WOOD</b><span>48 × 96 in · 1/2 in plywood</span></div>
+            <div class="row"><b>OPENING</b><span>36 in wide · 24 in straight · 12 in rise</span></div>
+            <div class="row"><b>KEEP CENTER</b><span>Yes · retained by tabs</span></div>
+            <div class="row"><b>RETURN REMNANTS</b><span>Yes · do not treat as disposal</span></div>
+            <div class="row"><b>OWNER FINISH</b><span>Sarah trims retained tabs later</span></div>
+            <div class="row"><b>HARDWARE</b><span>Not included in this order</span></div>
+          </div>
+          <div class="s001-v2-callout"><b>The sheet is the input. The outcome is the parts.</b>The scan / intent page keeps the human reason for the job. The next page carries only the material, geometry and operations the system needs.</div>
+        </section>
+      </div>
+      <div class="s001-boundary">Intent does not create machine motion. Sarah defines the material and features; the machine-facing definition is derived next and remains bounded by the admitted Store envelope.</div>
+      <div class="btns"><button type="button" data-canonical-go="projects">BACK TO HOME</button><button type="button" data-canonical-go="playhouse-machine">SEE MACHINE DEFINITION →</button></div>
+    `;
+    if (intentRail) intentRail.innerHTML = `<p class="hd">BUILD GUIDE</p><p class="goal">Outcome before gadget</p><div class="row"><b>Why this page exists</b><span>Human intent has value here. Sarah describes the result she wants, not machine coordinates.</span></div><div class="row"><b>What carries forward</b><span>Material, dimensions, retained-part intent and requested operations.</span></div>`;
+
+    let machine = doc.getElementById('playhouse-machine');
+    if (!machine) {
+      machine = doc.createElement('section');
+      machine.className = 'page';
+      machine.id = 'playhouse-machine';
+      machine.innerHTML = `<div class="main">
+        <h1>MACHINE DEFINITION · SHEET</h1>
+        <p class="sub">The story stops here. This page carries only what the bounded sheet operation needs to know.</p>
+        <div class="s001-v2-machine-grid">
+          <section class="s001-card">
+            <svg class="s001-v2-sheet" viewBox="0 0 960 480" role="img" aria-label="Four by eight plywood sheet showing current routed work field, routed arched profile with tabs, internal route, and separate secondary saw cut requests">
+              <rect x="8" y="8" width="944" height="464" rx="5" fill="#eee7da" stroke="#5d5041" stroke-width="4"/>
+              <rect x="8" y="8" width="232" height="464" fill="#b03734" opacity=".12"/>
+              <rect x="720" y="8" width="232" height="464" fill="#b03734" opacity=".12"/>
+              <rect x="240" y="8" width="480" height="52" fill="#b03734" opacity=".12"/>
+              <rect x="240" y="420" width="480" height="52" fill="#b03734" opacity=".12"/>
+              <rect x="240" y="60" width="480" height="360" fill="#faf8f2" stroke="#9c3e3a" stroke-width="3" stroke-dasharray="11 8"/>
+              <line x1="180" y1="16" x2="180" y2="464" stroke="#315f85" stroke-width="4" stroke-dasharray="13 10"/>
+              <line x1="780" y1="16" x2="780" y2="464" stroke="#315f85" stroke-width="4" stroke-dasharray="13 10"/>
+              <path id="s001-opening-path" d="" fill="none" stroke="#3f3a34" stroke-width="5"/>
+              <path id="s001-center-route" d="" fill="none" stroke="#7a5b2f" stroke-width="4"/>
+              <g id="s001-tab-markers"></g>
+              <text x="480" y="31" text-anchor="middle" font-size="18" fill="#4c443b">96 in parent sheet</text>
+              <text x="480" y="84" text-anchor="middle" font-size="16" fill="#7f332f">CURRENT ROUTED FIELD · 48 × 36 in</text>
+              <text x="180" y="455" text-anchor="middle" font-size="13" fill="#315f85">18 in</text>
+              <text x="780" y="455" text-anchor="middle" font-size="13" fill="#315f85">18 in</text>
+              <text id="s001-opening-label" x="480" y="408" text-anchor="middle" font-size="15" fill="#4c443b"></text>
+            </svg>
+            <div class="s001-v2-legend">
+              <span><i class="s001-v2-key"></i> routed path</span>
+              <span><i class="s001-v2-key tabs"></i> retained tab material</span>
+              <span><i class="s001-v2-key saw"></i> secondary straight-cut request</span>
+              <span><i class="s001-v2-key out"></i> outside current routed field</span>
+            </div>
+            <p class="dim">The blue straight-cut lines are shown because Sarah requested them. They are intentionally kept separate from the currently pinned routed S-001 Store envelope.</p>
+          </section>
+          <section class="s001-card">
+            <h3>BOUNDED GEOMETRY</h3>
+            <div class="s001-control"><label for="s001-opening-width">Opening width</label><output id="s001-opening-width-out">36 in</output><input id="s001-opening-width" data-s001-control type="range" min="1" max="48" step="0.5" value="36"></div>
+            <div class="s001-control"><label for="s001-straight-height">Straight side height</label><output id="s001-straight-height-out">24 in</output><input id="s001-straight-height" data-s001-control type="range" min="1" max="35" step="0.5" value="24"></div>
+            <div class="s001-control"><label for="s001-arch-rise">Arch rise</label><output id="s001-arch-rise-out">12 in</output><input id="s001-arch-rise" data-s001-control type="range" min="1" max="12" step="0.5" value="12"></div>
+            <div class="btns"><button type="button" data-s001-control id="s001-reset">RESET TO SARAH'S 36 / 24 / 12</button></div>
+            <div class="s001-status">ROUTED PROFILE IS INSIDE CURRENT 48 × 36 REFERENCE FIELD</div>
+            <p class="dim" id="s001-geometry-summary"></p>
+            <div class="s001-v2-seq">
+              <div class="row"><span class="n">01</span><div><b>ROUTE INTERNAL CENTER FEATURE</b><span>Straight internal route. Retained material remains connected by tabs according to the project rule.</span></div></div>
+              <div class="row"><span class="n">02</span><div><b>ROUTE OUTER ARCHED PROFILE</b><span>Curvilinear opening profile with retained tabs.</span></div></div>
+              <div class="row"><span class="n">03</span><div><b>SECONDARY STRAIGHT CUT REQUEST</b><span>Two straight cuts, 18 in from the sheet ends. Shown as a separate requested operation because it is not admitted by the pinned routed envelope.</span></div></div>
+            </div>
+          </section>
+        </div>
+        <div class="s001-boundary">This is an operation definition, not controller code. The internal route and straight-cut requests are retained as project facts; Store decides which portions are inside its current reference capability.</div>
+        <div class="btns"><button type="button" data-canonical-go="playhouse-s001">BACK TO INTENT</button><button type="button" data-canonical-go="playhouse-store">ASK STORE ZERO →</button></div>
+      </div><aside class="rail"><p class="hd">BUILD GUIDE</p><p class="goal">Only machine-facing facts</p><div class="row"><b>Material</b><span>48 × 96 in · 1/2 in plywood.</span></div><div class="row"><b>Current routed field</b><span>48 × 36 in centered.</span></div><div class="row"><b>Paths</b><span>Internal route · outer arched route · separate straight-cut request.</span></div></aside>`;
+      intent.insertAdjacentElement('afterend', machine);
+    }
+
+    const store = doc.getElementById('playhouse-store');
+    const storeMain = store?.querySelector('.main');
+    const storeRail = store?.querySelector('.rail');
+    if (storeMain) storeMain.innerHTML = `
+      <h1>PLAYHOUSE · CURRENT STORE ANSWER</h1>
+      <p class="sub">Store separates what the pinned S-001 routed envelope can support from requested work that still belongs to a separate operation path.</p>
+      <div class="s001-v2-store-split">
+        <section class="s001-v2-store-card s001-v2-pass"><h3>ROUTED ARCHED OPENING</h3><p><b>SUPPORTABLE · REFERENCE</b></p><p>Request: <code>SHEET_MODE2_ARCHED_APERTURE_V0</code><br>Envelope: <code>S001-MODE2-ARCHED-APERTURE-V0</code></p><p id="s001-store-opening"></p><p id="s001-store-radius"></p><p>4 requested tabs · Store reference plan 5 · physical retention NOT MEASURED.</p></section>
+        <section class="s001-v2-store-card s001-v2-separate"><h3>ADDITIONAL PROJECT FEATURES</h3><p><b>RETAINED · SEPARATE FROM PINNED ROUTED ENVELOPE</b></p><p>Internal center route feature and two straight saw-cut requests at 18 in from each sheet end remain in the project definition.</p><p>They are not silently promoted into <code>SHEET_MODE2_ARCHED_APERTURE_V0</code>.</p></section>
+      </div>
+      <div class="s001-v2-order">
+        <div><b>MATERIAL</b><span>STB-ZERO-PLY-050-48X96-001</span></div>
+        <div><b>ROUTED DISPOSITION</b><span>SUPPORTABLE · REFERENCE</span></div>
+        <div><b>REFERENCE AMOUNT</b><span>$26.55 material-only</span></div>
+        <div><b>PROCESS / SECONDARY COST</b><span>UNRESOLVED</span></div>
+        <div><b>COMMISSIONED</b><span>false</span></div>
+        <div><b>PHYSICAL AUTHORITY</b><span>false</span></div>
+      </div>
+      <div class="s001-boundary">The Store answer is deliberately mixed: the arched routed opening is inside the current reference envelope; the extra center route and straight-cut requests remain visible but are not invented into that envelope. No binding quote or fabrication authority is created.</div>
+      <div class="btns"><button type="button" data-canonical-go="playhouse-machine">BACK TO MACHINE DEFINITION</button><button type="button" data-canonical-go="playhouse-review">REVIEW JOB FACTS →</button></div>
+    `;
+    if (storeRail) storeRail.innerHTML = `<p class="hd">BUILD GUIDE</p><p class="goal">The Store is a membrane</p><div class="row"><b>Supported</b><span>The bounded arched route inside the pinned reference envelope.</span></div><div class="row"><b>Retained, not invented</b><span>Additional requested features stay in the job even when this Store envelope does not yet admit them.</span></div>`;
+
+    if (storeMain) {
+      if (!canonicalDoctrine || canonicalDoctrine.expectedProcessStepCount !== 12) {
+        storeMain.innerHTML = '<h1>CANONICAL STORE CONTENT UNAVAILABLE</h1><div class="s001-boundary"><b>Fail closed.</b> Shared Store doctrine is unavailable. The Playhouse Store stage will not invent a shortened replacement.</div>';
+      } else {
+        const projectAnswer = storeMain.innerHTML;
+        storeMain.innerHTML =
+          '<div class="band" style="font-size:12px;line-height:1.55"><p style="margin:0">' + canonicalDoctrine.definitionHtml + '</p></div>' +
+          canonicalDoctrine.processIntroHtml +
+          canonicalDoctrine.processStepsHtml +
+          '<div class="s001-v2-callout"><b>CURRENT PLAYHOUSE STATUS</b>The process above is the shared journey. The section below is the actual reference answer for this project; unresolved work remains unresolved.</div>' +
+          projectAnswer;
+      }
+    }
+
+    const review = doc.getElementById('playhouse-review');
+    const reviewMain = review?.querySelector('.main');
+    if (reviewMain) reviewMain.innerHTML = `
+      <h1>REVIEW · SARAH'S JOB</h1>
+      <p class="sub">The narrative has become a bounded definition and a Store answer. Review shows the facts without turning unresolved work into capability.</p>
+      <div class="s001-v2-order">
+        <div><b>PROJECT</b><span>Playhouse arched window</span></div>
+        <div><b>WOOD</b><span>48 × 96 in · 1/2 in plywood</span></div>
+        <div><b>OPENING</b><span id="s001-review-opening"></span></div>
+        <div><b>PRIMARY ROUTE</b><span>SUPPORTABLE · REFERENCE</span></div>
+        <div><b>CENTER FEATURE</b><span>Requested · retained separately</span></div>
+        <div><b>STRAIGHT CUTS</b><span>2 requested · 18 in from sheet ends · separate path</span></div>
+        <div><b>RETURN MATERIAL</b><span>Center and remnants retained for Sarah</span></div>
+        <div><b>HARDWARE</b><span>Not included</span></div>
+      </div>
+      <div class="s001-boundary">Confirming this review retains the job definition. It is not payment, reservation, production release, machine readiness, or physical execution authorization.</div>
+      <div class="btns"><button type="button" data-canonical-go="playhouse-store">BACK TO STORE</button><button type="button" data-canonical-go="playhouse-request">CONFIRM THIS VERSION →</button></div>
+    `;
+
+    const result = doc.getElementById('playhouse-result');
+    const resultMain = result?.querySelector('.main');
+    if (resultMain) resultMain.innerHTML = `
+      <p class="stage-tag">8 · RECAP</p><h1>RECAP · WHAT HAPPENED</h1>
+      <p class="sub">Read forward, this is the chronology. Read backward, it is the audit. The job was admitted, defined, answered as far as the Store could answer it, and unresolved events remained unresolved.</p>
+      <div class="s001-v2-order">
+        <div><b>CLASS</b><span>S001_CENTERED_ARCHED_SHEET_V0</span></div>
+        <div><b>GEOMETRY</b><span id="s001-result-geometry"></span></div>
+        <div><b>ROUTED STORE STATUS</b><span>SUPPORTABLE · REFERENCE</span></div>
+        <div><b>ADDITIONAL OPS</b><span>Retained · not admitted to pinned routed envelope</span></div>
+        <div><b>PHYSICAL STATUS</b><span>NOT CLAIMED / NOT AUTHORIZED</span></div>
+        <div><b>OWNER MATERIAL</b><span>Center + remnants designated for return</span></div>
+      </div>
+      <div class="btns"><button type="button" data-canonical-go="playhouse-review">BACK TO REVIEW</button><button type="button" data-canonical-go="playhouse-record">OPEN ORDER / JOURNEY RECORD →</button></div>
+    `;
+
+    const record = doc.getElementById('playhouse-record');
+    const recordMain = record?.querySelector('.main');
+    const recordRail = record?.querySelector('.rail');
+    if (recordMain) recordMain.innerHTML = `
+      <h1>SARAH · ORDER / JOURNEY RECORD</h1>
+      <p class="sub">Only the facts needed to explain what this journey established are retained here.</p>
+      <div class="s001-v2-order">
+        <div><b>PROJECT</b><span>Playhouse arched window</span></div>
+        <div><b>OWNER</b><span>Sarah · demonstration project</span></div>
+        <div><b>MATERIAL</b><span>STB-ZERO-PLY-050-48X96-001 · 48 × 96 in · 1/2 in plywood</span></div>
+        <div><b>GEOMETRY</b><span id="s001-record-geometry"></span></div>
+        <div><b>PRIMARY STORE REQUEST</b><span>SHEET_MODE2_ARCHED_APERTURE_V0</span></div>
+        <div><b>PRIMARY STORE RESULT</b><span>SUPPORTABLE · REFERENCE</span></div>
+        <div><b>RETENTION</b><span>4 requested tabs · 5 planned by reference policy · NOT MEASURED physically</span></div>
+        <div><b>ADDITIONAL REQUESTS</b><span>Internal center route + two straight cuts · retained outside pinned routed envelope</span></div>
+        <div><b>RETURN TO OWNER</b><span>Center piece and remaining sheet pieces</span></div>
+        <div><b>HARDWARE</b><span>Not included</span></div>
+        <div><b>MATERIAL-ONLY REFERENCE</b><span>$26.55</span></div>
+        <div><b>PROCESS / SECONDARY PRICE</b><span>UNRESOLVED</span></div>
+        <div><b>PHYSICAL EXECUTION</b><span>false · no cut, inspection, staging or pickup recorded</span></div>
+        <div><b>STORE PIN</b><span>4402abeb6b0299a5b6db2eec85ed04c3b0236bcc</span></div>
+      </div>
+      <div class="s001-v2-callout"><b>Outcome, not gadget.</b>The human page explains why the job exists. The machine page carries only material, geometry and operations. The order / record page keeps only what the journey actually established.</div>
+      <div class="btns"><button type="button" data-canonical-go="playhouse-s001">RETURN TO INTENT</button><button type="button" data-canonical-go="projects">HOME</button></div>
+    `;
+    if (recordRail) recordRail.innerHTML = `<p class="hd">BUILD GUIDE</p><p class="goal">Facts at the end</p><div class="row"><b>What happened</b><span>A bounded project definition reached a truthful Store evaluation.</span></div><div class="row"><b>What did not happen</b><span>No physical production event is invented into the record.</span></div>`;
+
+    function ensureProjectJourneyPage(id, mainHtml, railHtml) {
+      let page = doc.getElementById(id);
+      if (!page) {
+        page = doc.createElement('section');
+        page.className = 'page';
+        page.id = id;
+        page.innerHTML = '<div class="main">' + mainHtml + '</div><aside class="rail"><p class="hd">BUILD GUIDE</p>' + railHtml + '</aside>';
+        doc.querySelector('.wrap')?.append(page);
+      } else {
+        const main = page.querySelector(':scope > .main');
+        const rail = page.querySelector(':scope > .rail');
+        if (main) main.innerHTML = mainHtml;
+        if (rail) rail.innerHTML = '<p class="hd">BUILD GUIDE</p>' + railHtml;
+      }
+      return page;
+    }
+
+    const proofStoreDoctrine = (!canonicalDoctrine || canonicalDoctrine.expectedProcessStepCount !== 12)
+      ? '<div class="proof-gap"><b>CANONICAL STORE CONTENT UNAVAILABLE</b>Fail closed. Shared Store doctrine is unavailable.</div>'
+      : '<div class="band" style="font-size:12px;line-height:1.55"><p style="margin:0">'+canonicalDoctrine.definitionHtml+'</p></div>'
+        + canonicalDoctrine.processIntroHtml + canonicalDoctrine.processStepsHtml;
+
+    ensureProjectJourneyPage('proof-store',
+      '<p class="stage-tag">STORE ANSWER</p><h1 id="proof-store-title">STORE ANSWER · PROOF JOB</h1>'
+      +'<p class="sub" id="proof-store-summary">The confirmed definition reached the common Store actor boundary unchanged. Store material, capability and economics are shown only to the extent carried by the identified project answer.</p>'
+      +'<div class="proof-actor-grid">'
+        +'<div><b>JOB</b><span id="proof-store-job">—</span></div>'
+        +'<div><b>VERSION</b><span id="proof-store-version">—</span></div>'
+        +'<div><b>DEFINED WORKPIECE</b><span id="proof-store-workpiece">—</span></div>'
+        +'<div><b>MATERIAL SOURCE</b><span id="proof-store-material-source">Store Zero catalog</span></div>'
+        +'<div><b>ECONOMICS AUTHORITY</b><span id="proof-store-economics-authority">—</span></div>'
+      +'</div>'
+      +'<h2>Current economics answer</h2>'
+      +'<div class="proof-actor-grid">'
+        +'<div><b>STORE PROCUREMENT SKU</b><span id="proof-store-material-sku">—</span></div>'
+        +'<div><b>MATERIAL VALUE</b><span id="proof-store-material-value">—</span></div>'
+        +'<div><b>MODELED CELL RECOVERY</b><span id="proof-store-cell-recovery">UNRESOLVED</span></div>'
+        +'<div><b>STORE BUDGETARY Q</b><span id="proof-store-q">NOT COMPLETE</span></div>'
+        +'<div><b>MODELED JOB TIME</b><span id="proof-store-cycle">—</span></div>'
+      +'</div>'
+      +'<div class="proof-gap" id="proof-store-economics-note"><b>STORE ECONOMICS</b>The project answer will state whether a current Store budgetary estimate is present. A budgetary estimate is not a commercial quote, payment, allocation, release, or fabrication authorization.</div>'
+      +proofStoreDoctrine
+      +'<div class="proof-nav"><button type="button" data-proof-library>← PROJECT LIBRARY</button><button type="button" data-proof-return-source>← PROJECT DEFINITION</button><button class="next" type="button" data-proof-go="proof-accept">CONTINUE → ACCEPT / PAY</button></div>',
+      '<p class="goal">Same definition, Store answers</p><div class="row"><b>Project truth stays fixed</b><span>The confirmed workpiece is not replaced by the procurement SKU.</span></div><div class="row"><b>Budgetary economics stay labeled</b><span>Q is modeled Store economics, not a payable offer.</span></div>'
+    );
+
+    ensureProjectJourneyPage('proof-accept',
+      '<p class="stage-tag">ACCEPT / PAY</p><h1>STORE ANSWER RECEIVED. CUSTOMER EVENT REMAINS SEPARATE.</h1>'
+      +'<p class="sub">A Store budgetary answer can be complete as an estimate without becoming a payable commercial offer. Those events remain separate.</p>'
+      +'<div class="proof-actor-grid">'
+        +'<div><b>STORE ANSWER</b><span id="proof-accept-store-status">RETURNED</span></div>'
+        +'<div><b>COMMERCIAL OFFER</b><span>NOT ESTABLISHED</span></div>'
+        +'<div><b>ACCEPTANCE</b><span>NOT ESTABLISHED</span></div>'
+        +'<div><b>PAYMENT</b><span>NOT AVAILABLE / NOT RECORDED</span></div>'
+      +'</div>'
+      +'<div class="proof-gap"><b>REFERENCE DEMONSTRATION ONLY</b>Continuing below does not accept an offer, charge money, reserve stock, or authorize fabrication. It demonstrates that the customer can continue through the actor chain while null events remain null.</div>'
+      +'<div class="proof-nav"><button type="button" data-proof-library>← PROJECT LIBRARY</button><button type="button" data-proof-go="proof-store">← STORE ANSWER</button><button class="next" type="button" data-proof-go="proof-yard">CONTINUE REFERENCE DEMONSTRATION →</button></div>',
+      '<p class="goal">Keep events apart</p><div class="row"><b>Offer ≠ acceptance</b><span>No payable offer exists here.</span></div><div class="row"><b>Acceptance ≠ payment</b><span>No simulated payment event is manufactured.</span></div>'
+    );
+
+    ensureProjectJourneyPage('proof-yard',
+      '<p class="stage-tag">STORE / YARD</p><h1>STORE / YARD · REFERENCE HANDOFF</h1>'
+      +'<p class="sub">The identified definition and Store answer can move through the demonstration record without being promoted into physical work.</p>'
+      +'<div class="proof-actor-grid">'
+        +'<div><b>ALLOCATION</b><span>NOT ESTABLISHED</span></div>'
+        +'<div><b>PRODUCTION RELEASE</b><span>NOT ESTABLISHED</span></div>'
+        +'<div><b>MACHINE READINESS</b><span>NOT ESTABLISHED</span></div>'
+        +'<div><b>CYCLE START</b><span>NOT AUTHORIZED</span></div>'
+        +'<div><b>INSPECTION / STAGING</b><span>NOT RECORDED</span></div>'
+        +'<div><b>READY</b><span>NOT RECORDED</span></div>'
+      +'</div>'
+      +'<div class="proof-gap"><b>NO BLOOD ON WOOD.</b>Network presence, a project definition, a Store support statement, or a budgetary model does not create local motion authority.</div>'
+      +'<div class="proof-nav"><button type="button" data-proof-library>← PROJECT LIBRARY</button><button type="button" data-proof-go="proof-accept">← ACCEPT / PAY</button><button class="next" id="proof-yard-next" type="button" data-proof-go="proof-record">CONTINUE → HANDOFF / RECORD</button></div>',
+      '<p class="goal">Physical events remain null</p><div class="row"><b>No release</b><span>Reference continuity is not fabrication authority.</span></div><div class="row"><b>Cycle Start remains local</b><span>Machine-local authority stays local.</span></div>'
+    );
+
+    ensureProjectJourneyPage('proof-terms',
+      '<p class="stage-tag">TERMS</p><h1>TERMS · COMMERCIAL PATH</h1>'
+      +'<p class="sub">The confirmed definition and Store budgetary answer remain identified. A modeled Q can exist while offer, acceptance, payment and physical authority remain separate.</p>'
+      +'<div class="proof-actor-grid">'
+        +'<div><b>JOB</b><span id="proof-terms-job">—</span></div>'
+        +'<div><b>VERSION</b><span id="proof-terms-version">—</span></div>'
+        +'<div><b>REFERENCE MATERIAL VALUE</b><span id="proof-terms-material">—</span></div>'
+        +'<div><b>STORE BUDGETARY Q</b><span id="proof-terms-q">—</span></div>'
+        +'<div><b>COMMERCIAL OFFER</b><span>NOT ESTABLISHED</span></div>'
+        +'<div><b>OFFER VALIDITY</b><span>NOT ESTABLISHED</span></div>'
+        +'<div><b>PAYMENT</b><span>NOT AVAILABLE / NOT RECORDED</span></div>'
+      +'</div>'
+      +'<div class="proof-gap" id="proof-terms-note"><b>TERMS REMAIN REFERENCE-ONLY.</b>A Store Zero BudgetaryEstimate is not a commercial quote or seller-of-record offer. No acceptance, payment, allocation, release, or fabrication event is invented from Q.</div>'
+      +'<div class="band"><b>One version, one answer.</b> A later project change makes a new version and requires a new Store answer. Terms never rewrite the confirmed definition.</div>'
+      +'<div class="proof-nav"><button type="button" data-proof-library>← PROJECT LIBRARY</button><button type="button" data-proof-go="proof-yard">← STORE / YARD</button><button class="next" type="button" data-proof-go="proof-record">CONTINUE → HANDOFF / RECORD</button></div>',
+      '<p class="goal">Commercial truth stays separate</p><div class="row"><b>Budgetary Q ≠ offer</b><span>Modeled economics can be shown without inventing payment authority.</span></div><div class="row"><b>Version stays fixed</b><span>Terms may answer the version; they may not rewrite it.</span></div>'
+    );
+
+    ensureProjectJourneyPage('proof-record',
+      '<p class="stage-tag">HANDOFF / RECORD</p><h1>KEEP THE DEFINITION AND THE STORE ANSWER.</h1>'
+      +'<p class="sub">The demonstration ends with the exact confirmed version, its Store response state, and the events that did not occur.</p>'
+      +'<div class="proof-actor-grid">'
+        +'<div><b>JOB</b><span id="proof-record-job">—</span></div>'
+        +'<div><b>VERSION</b><span id="proof-record-version">—</span></div>'
+        +'<div><b>STORE ECONOMICS</b><span id="proof-record-economics">—</span></div>'
+        +'<div><b>PHYSICAL FABRICATION</b><span>NOT RECORDED</span></div>'
+      +'</div>'
+      +'<div class="band"><b>Owner-record consequence.</b> The project definition is retained as the thing that was confirmed. The Store budgetary answer and every still-unresolved condition remain attached to that identified version.</div>'
+      +'<div class="proof-nav"><button type="button" data-proof-go="proof-yard">← STORE / YARD</button><button class="next" type="button" data-proof-library>← PROJECT LIBRARY</button></div>',
+      '<p class="goal">Record the truth</p><div class="row"><b>Definition survives</b><span>Store economics do not rewrite geometry.</span></div><div class="row"><b>Null events survive</b><span>No physical outcome is invented.</span></div>'
+    );
+
+    function syncProofHandoff(){
+      if(!proofHandoff)return;
+      const payload=proofHandoff.payload||{};
+      const version=proofHandoff.storeHandoff?.versionId||payload.id||payload.versionId||payload.normalizedPart?.versionId||'IDENTIFIED VERSION';
+      const job=proofHandoff.job||'PROOF JOB';
+      [['proof-store-job',job],['proof-store-version',version],['proof-terms-job',job],['proof-terms-version',version],['proof-record-job',job],['proof-record-version',version]].forEach(([id,value])=>{
+        const el=doc.getElementById(id); if(el)el.textContent=String(value);
+      });
+      const title=doc.getElementById('proof-store-title');
+      if(title)title.textContent='STORE ANSWER · '+job;
+      const materialResolution=payload.storeReference?.materialResolution || null;
+      const definedWorkpiece=payload.definition?.material?.definedWorkpieceLengthIn?.value
+        ?? payload.sourceAuthority?.definedWorkpieceLengthIn?.value
+        ?? payload.physicalDemand?.parentLengthIn
+        ?? null;
+      const workpieceEl=doc.getElementById('proof-store-workpiece');
+      if(workpieceEl)workpieceEl.textContent=definedWorkpiece==null?'NOT CARRIED':String(definedWorkpiece)+' in · confirmed project fact';
+      const materialSku=doc.getElementById('proof-store-material-sku');
+      const materialValue=doc.getElementById('proof-store-material-value');
+      const materialSource=doc.getElementById('proof-store-material-source');
+      if(materialSku)materialSku.textContent=materialResolution?.storeSku || 'NOT MAPPED ON THIS PROJECT PAYLOAD';
+      if(materialValue)materialValue.textContent=materialResolution?.status==='MAPPED' && Number.isFinite(Number(materialResolution.materialTotal))
+        ? '$'+Number(materialResolution.materialTotal).toFixed(2)
+        : 'NOT ESTABLISHED';
+      const estimate=payload.storeReference?.estimate || null;
+      const termsMaterial=doc.getElementById('proof-terms-material');
+      if(termsMaterial)termsMaterial.textContent=estimate?.material!=null
+        ? '$'+Number(estimate.material).toFixed(2)+' material'
+        : (materialResolution?.status==='MAPPED' && Number.isFinite(Number(materialResolution.materialTotal))
+          ? '$'+Number(materialResolution.materialTotal).toFixed(2)+' material'
+          : 'NOT ESTABLISHED');
+      const recoveryEl=doc.getElementById('proof-store-cell-recovery');
+      const qEl=doc.getElementById('proof-store-q');
+      const cycleEl=doc.getElementById('proof-store-cycle');
+      const authorityEl=doc.getElementById('proof-store-economics-authority');
+      const economicsNote=doc.getElementById('proof-store-economics-note');
+      const acceptStatus=doc.getElementById('proof-accept-store-status');
+      const termsQ=doc.getElementById('proof-terms-q');
+      const termsNote=doc.getElementById('proof-terms-note');
+      const recordEconomics=doc.getElementById('proof-record-economics');
+      const isStartOwn=proofHandoff?.source==='start-own';
+      if(recoveryEl)recoveryEl.textContent=estimate?.cellRecovery!=null?'$'+Number(estimate.cellRecovery).toFixed(2):'UNRESOLVED';
+      if(qEl)qEl.textContent=estimate?.total!=null?'$'+Number(estimate.total).toFixed(2)+' · BudgetaryEstimate':'NOT COMPLETE';
+      if(cycleEl)cycleEl.textContent=Number.isFinite(Number(estimate?.cycle?.T_job_min))
+        ? Number(estimate.cycle.T_job_min).toFixed(3)+' min · '+String(estimate.cycle.model || 'modeled')
+        : 'NOT ESTABLISHED';
+      if(authorityEl)authorityEl.textContent=estimate?.engine
+        ? estimate.engine.id+' · v'+estimate.engine.version+' · budgetary only'
+        : 'NO CURRENT COMPLETE ECONOMICS MODEL ON THIS PROJECT ANSWER';
+      if(economicsNote)economicsNote.innerHTML=estimate?.complete
+        ? '<b>STORE ZERO BUDGETARY ESTIMATE RETURNED</b>Q is material plus modeled Store cell recovery for this exact identified definition. It is not a commercial quote, payment, allocation, production release, machine readiness, or physical fabrication authority.'
+        : '<b>STORE ECONOMICS UNRESOLVED</b>The physical demand remains preserved exactly. No app-side discount, made-up cycle, or guessed combined value is substituted.';
+      if(acceptStatus)acceptStatus.textContent=estimate?.complete?'RETURNED · BUDGETARY ESTIMATE':'RETURNED · ECONOMICS INCOMPLETE';
+      if(termsQ)termsQ.textContent=estimate?.total!=null?'$'+Number(estimate.total).toFixed(2)+' · budgetary only':'NOT COMPLETE';
+      if(termsNote)termsNote.innerHTML=estimate?.complete
+        ? '<b>TERMS REMAIN REFERENCE-ONLY.</b>The Store Zero Q is a BudgetaryEstimate, not a commercial quote or seller-of-record offer. No acceptance, payment, allocation, release, or fabrication event is created from it.'
+        : '<b>TERMS REMAIN REFERENCE-ONLY.</b>Economics remain incomplete on this project answer. No acceptance, payment, allocation, release, or fabrication event is invented.';
+      if(recordEconomics)recordEconomics.textContent=estimate?.total!=null
+        ? 'BUDGETARY ESTIMATE · Q $'+Number(estimate.total).toFixed(2)+' · '+String(estimate.engine?.id || 'Store Zero')
+        : 'UNRESOLVED';
+      const yardNext=doc.getElementById('proof-yard-next');
+      if(yardNext)yardNext.textContent=isStartOwn?'CONTINUE → TERMS':'CONTINUE → HANDOFF / RECORD';
+      if(materialSource)materialSource.textContent=materialResolution?.source
+        ? 'Store Zero catalog '+materialResolution.source.clock+' · '+String(materialResolution.source.pin).slice(0,12)+'…'
+        : 'Store Zero catalog · exact project material mapping not carried here';
+    }
+
+    doc.addEventListener('click', function(event){
+      const library=event.target.closest?.('[data-proof-library]');
+      if(library){
+        event.preventDefault();
+        selectJourneyProject(null);
+        originalShow.call(win,'projects');
+        return;
+      }
+      const source=event.target.closest?.('[data-proof-return-source]');
+      if(source){
+        event.preventDefault();
+        if(proofHandoff?.source==='start-own'){
+          selectJourneyProject('start-own');
+          originalShow.call(win,'start-own-live');
+          setTimeout(() => showStartOwnStage('bench'),0);
+        } else if(proofHandoff?.source==='outdoor'){
+          selectJourneyProject('outdoor');
+          originalShow.call(win,'outdoor-build-live');
+        }
+        return;
+      }
+      const go=event.target.closest?.('[data-proof-go]');
+      if(go){
+        event.preventDefault();
+        const expectedSource = activeJourneyProject === 'start-own' ? 'start-own' : (activeJourneyProject === 'outdoor' ? 'outdoor' : null);
+        if(!expectedSource || proofHandoff?.source !== expectedSource) return;
+        syncProofHandoff();
+        let target=go.dataset.proofGo;
+        if(proofHandoff?.source==='start-own' && target==='proof-record' && go.closest('#proof-yard')) target='proof-terms';
+        originalShow.call(win,target);
+      }
+    }, true);
+
+    function addProofLibraryControl(id){
+      const page=doc.getElementById(id);
+      if(!page||page.querySelector('[data-proof-library]'))return;
+      const button=doc.createElement('button');
+      button.type='button';button.className='back';button.dataset.proofLibrary='true';button.textContent='← PROJECT LIBRARY';
+      const backbar=page.querySelector('.backbar');
+      if(backbar){
+        backbar.append(button);
+        return;
+      }
+      const main=page.querySelector(':scope > .main,:scope > .body,:scope > div');
+      if(main){
+        const bar=doc.createElement('div');
+        bar.className='backbar';
+        bar.append(button);
+        main.prepend(bar);
+      }
+    }
+
+    ensureProjectJourneyPage('playhouse-request',
+      '<p class="stage-tag">5 · REQUEST</p><h1>REQUEST · PLAYHOUSE WINDOW</h1>' +
+      '<p class="sub">Carry one identified project definition forward without turning the reference Store answer into an order.</p>' +
+      '<div class="s001-v2-order">' +
+        '<div><b>PROJECT</b><span>Playhouse arched window</span></div>' +
+        '<div><b>GEOMETRY</b><span id="s001-request-geometry"></span></div>' +
+        '<div><b>PRIMARY ROUTE</b><span>SUPPORTABLE · REFERENCE</span></div>' +
+        '<div><b>ADDITIONAL OPS</b><span>Internal center route + two straight cuts · unresolved / separate path</span></div>' +
+        '<div><b>FULL COMMERCIAL OFFER</b><span>NOT ESTABLISHED</span></div>' +
+        '<div><b>PHYSICAL AUTHORITY</b><span>NOT AUTHORIZED</span></div>' +
+      '</div>' +
+      '<div class="s001-boundary"><b>REQUEST ≠ ORDER.</b> The project may continue through the journey while unsupported or unpriced work stays explicit. Nothing here accepts terms, pays, allocates material, releases production, or starts a machine.</div>' +
+      '<div class="btns"><button type="button" data-canonical-go="playhouse-review">BACK TO REVIEW</button><button type="button" data-canonical-go="playhouse-yard">SEND TO THE YARD →</button></div>',
+      '<p class="goal">Carry the exact ask</p><div class="row"><b>Do not drop the extra work</b><span>Unresolved center-route and straight-cut requests remain part of the project.</span></div><div class="row"><b>Do not promote the Store answer</b><span>Reference supportability is not an order or offer.</span></div>'
+    );
+
+    ensureProjectJourneyPage('playhouse-yard',
+      '<p class="stage-tag">6 · YARD</p><h1>YARD · REFERENCE RESPONSE</h1>' +
+      '<p class="sub">The yard can answer what its current reference surface knows and leave the rest open.</p>' +
+      '<div class="s001-v2-order">' +
+        '<div><b>PROJECT</b><span>Playhouse arched window</span></div>' +
+        '<div><b>GEOMETRY</b><span id="s001-yard-geometry"></span></div>' +
+        '<div><b>ROUTED OPENING</b><span>SUPPORTABLE · REFERENCE</span></div>' +
+        '<div><b>MATERIAL-ONLY REFERENCE</b><span>$26.55</span></div>' +
+        '<div><b>CENTER ROUTE / STRAIGHT CUTS</b><span>UNRESOLVED · separate operation path</span></div>' +
+        '<div><b>SELLER-OF-RECORD OFFER</b><span>NOT ESTABLISHED</span></div>' +
+      '</div>' +
+      '<div class="s001-boundary">A mixed answer is still a valid answer. Supported work stays supported; unresolved work stays visible. The project is not rejected merely because every requested operation is not yet inside one Store envelope.</div>' +
+      '<div class="btns"><button type="button" data-canonical-go="playhouse-request">BACK TO REQUEST</button><button type="button" data-canonical-go="playhouse-terms">CONTINUE TO TERMS →</button></div>',
+      '<p class="goal">Answer only what the yard owns</p><div class="row"><b>Material / capability</b><span>Reference evidence may be stated.</span></div><div class="row"><b>Commercial authority</b><span>Still absent unless separately established.</span></div>'
+    );
+
+    ensureProjectJourneyPage('playhouse-terms',
+      '<p class="stage-tag">7 · TERMS</p><h1>TERMS · KEEP THE EVENTS APART</h1>' +
+      '<p class="sub">This project has a bounded definition and a reference Store answer. The later commercial and physical events remain null.</p>' +
+      '<div class="s001-v2-order">' +
+        '<div><b>OFFER</b><span>NOT ESTABLISHED</span></div>' +
+        '<div><b>ACCEPTANCE</b><span>NOT ESTABLISHED</span></div>' +
+        '<div><b>PAYMENT</b><span>NOT ESTABLISHED</span></div>' +
+        '<div><b>ALLOCATION</b><span>NOT ESTABLISHED</span></div>' +
+        '<div><b>PRODUCTION RELEASE</b><span>NOT ESTABLISHED</span></div>' +
+        '<div><b>MACHINE READINESS / CYCLE START</b><span>NOT ESTABLISHED / NOT AUTHORIZED</span></div>' +
+      '</div>' +
+      '<div class="s001-boundary">definition ≠ request ≠ offer ≠ acceptance ≠ payment ≠ allocation ≠ production release ≠ machine readiness ≠ Cycle Start</div>' +
+      '<div class="btns"><button type="button" data-canonical-go="playhouse-yard">BACK TO YARD</button><button type="button" data-canonical-go="playhouse-result">NEXT → RECAP</button></div>',
+      '<p class="goal">Null is honest</p><div class="row"><b>Do not fill the blanks</b><span>The journey can continue as a record even when commercial events have not happened.</span></div>'
+    );
+
+    const oldStoreBack = doc.querySelector('#playhouse-store [data-canonical-go="playhouse-s001"]');
+    if (oldStoreBack) oldStoreBack.setAttribute('data-canonical-go', 'playhouse-machine');
+
+    const fmt = (value) => Number(value).toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
+    const read = () => {
+      const width = Number(doc.getElementById('s001-opening-width')?.value || 36);
+      const straight = Number(doc.getElementById('s001-straight-height')?.value || 24);
+      const rise = Number(doc.getElementById('s001-arch-rise')?.value || 12);
+      const total = straight + rise;
+      const radius = width * width / (8 * rise) + rise / 2;
+      return { width, straight, rise, total, radius };
+    };
+    const text = (id, value) => { const el = doc.getElementById(id); if (el) el.textContent = value; };
+    const sync = () => {
+      const widthInput = doc.getElementById('s001-opening-width');
+      const straightInput = doc.getElementById('s001-straight-height');
+      const riseInput = doc.getElementById('s001-arch-rise');
+      if (!widthInput || !straightInput || !riseInput) return;
+      let straight = Math.max(1, Math.min(35, Number(straightInput.value) || 24));
+      let rise = Math.max(1, Number(riseInput.value) || 12);
+      let width = Math.max(1, Math.min(48, Number(widthInput.value) || 36));
+      const maxRise = Math.max(1, 36 - straight);
+      riseInput.max = String(maxRise);
+      if (rise > maxRise) rise = maxRise;
+      widthInput.value = String(width); straightInput.value = String(straight); riseInput.value = String(rise);
+      const g = read();
+      text('s001-opening-width-out', fmt(g.width) + ' in');
+      text('s001-straight-height-out', fmt(g.straight) + ' in');
+      text('s001-arch-rise-out', fmt(g.rise) + ' in');
+      const px = 10, centerX = 480, fieldTop = 60, fieldHeight = 360;
+      const openingW = g.width * px, openingH = g.total * px;
+      const bottom = fieldTop + (fieldHeight + openingH) / 2;
+      const top = bottom - openingH;
+      const springY = bottom - g.straight * px;
+      const left = centerX - openingW / 2, right = centerX + openingW / 2;
+      const outer = `M ${left} ${bottom} L ${left} ${springY} Q ${centerX} ${top} ${right} ${springY} L ${right} ${bottom} Z`;
+      doc.getElementById('s001-opening-path')?.setAttribute('d', outer);
+      const centerRoute = `M ${centerX} ${bottom} L ${centerX} ${top + 7}`;
+      doc.getElementById('s001-center-route')?.setAttribute('d', centerRoute);
+      const tabs = doc.getElementById('s001-tab-markers');
+      if (tabs) {
+        const points = [
+          [left, bottom - g.straight * px * .45],
+          [right, bottom - g.straight * px * .45],
+          [centerX - openingW * .22, top + g.rise * px * .42],
+          [centerX + openingW * .22, top + g.rise * px * .42],
+          [centerX, bottom - openingH * .28]
+        ];
+        tabs.innerHTML = points.map(([x,y]) => `<circle cx="${x}" cy="${y}" r="7" fill="#f4efe7" stroke="#7a5b2f" stroke-width="4"/>`).join('');
+      }
+      text('s001-opening-label', `${fmt(g.width)} wide · ${fmt(g.straight)} straight + ${fmt(g.rise)} rise = ${fmt(g.total)} high`);
+      text('s001-geometry-summary', `Opening ${fmt(g.width)} × ${fmt(g.total)} in overall · straight side ${fmt(g.straight)} in · arch rise ${fmt(g.rise)} in · derived radius ${fmt(g.radius)} in.`);
+      text('s001-store-opening', `${fmt(g.width)} in wide × ${fmt(g.total)} in overall`);
+      text('s001-store-radius', `Circular segment · ${fmt(g.radius)} in derived radius`);
+      text('s001-review-opening', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise · ${fmt(g.total)} total height`);
+      text('s001-result-geometry', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise · ${fmt(g.total)} total height`);
+      text('s001-request-geometry', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise · ${fmt(g.total)} total height`);
+      text('s001-yard-geometry', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise · ${fmt(g.total)} total height`);
+      text('s001-record-geometry', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise`);
+    };
+
+    ['s001-opening-width','s001-straight-height','s001-arch-rise'].forEach(id => doc.getElementById(id)?.addEventListener('input', sync));
+    doc.getElementById('s001-reset')?.addEventListener('click', () => {
+      doc.getElementById('s001-opening-width').value = '36';
+      doc.getElementById('s001-straight-height').value = '24';
+      doc.getElementById('s001-arch-rise').value = '12';
+      sync();
+    });
+    sync();
+
+
+    const picnicConfigNext = doc.querySelector('#picnic-config [data-go="picnic-review"]');
+    if (picnicConfigNext) {
+      picnicConfigNext.removeAttribute('data-go');
+      picnicConfigNext.setAttribute('data-canonical-go', 'picnic-store');
+      picnicConfigNext.textContent = 'SEND TO STORE ZERO →';
+    }
+    const picnicConfirm = doc.getElementById('confirm-picnic');
+    if (picnicConfirm) {
+      picnicConfirm.textContent = 'CONFIRM THIS VERSION';
+      picnicConfirm.setAttribute('data-picnic-confirm', 'true');
+    }
+
+    const picnicDoctrine = (!canonicalDoctrine || canonicalDoctrine.expectedProcessStepCount !== 12)
+      ? '<h1>CANONICAL STORE CONTENT UNAVAILABLE</h1><div class="s001-boundary"><b>Fail closed.</b> Shared Store doctrine is unavailable.</div>'
+      : '<div class="band" style="font-size:12px;line-height:1.55"><p style="margin:0">' + canonicalDoctrine.definitionHtml + '</p></div>' +
+        canonicalDoctrine.processIntroHtml +
+        canonicalDoctrine.processStepsHtml;
+
+    ensureProjectJourneyPage('picnic-store',
+      picnicDoctrine +
+      '<div class="s001-v2-callout"><b>CURRENT PICNIC-TABLE STATUS</b>The project is admitted. The Store question is not yet stable enough to submit because this class does not yet publish a complete part/material demand packet.</div>' +
+      '<p class="stage-tag">3 · STORE</p><h1>PICNIC TABLE · STORE QUESTION</h1>' +
+      '<div class="s001-v2-order">' +
+        '<div><b>FORM / SCOPE</b><span id="picnic-store-form"></span></div>' +
+        '<div><b>LENGTH</b><span id="picnic-store-length"></span></div>' +
+        '<div><b>MATERIAL PREFERENCE</b><span id="picnic-store-material"></span></div>' +
+        '<div><b>STORE REQUEST</b><span>DEFERRED · BRIDGE-GAP</span></div>' +
+        '<div><b>PRICE</b><span>UNRESOLVED</span></div>' +
+        '<div><b>PHYSICAL AUTHORITY</b><span>NOT AUTHORIZED</span></div>' +
+      '</div>' +
+      '<div class="s001-boundary"><b>This is not a failed job.</b> The user choices are valid project facts. The missing piece is the project-to-Store bridge: stable part geometry / material demand has not yet been published for this class. No SKU, price, capability, or refusal is invented to make the screen green.</div>' +
+      '<div class="btns"><button type="button" data-canonical-go="picnic-config">BACK TO CONFIGURE</button><button type="button" data-canonical-go="picnic-review">NEXT → REVIEW</button></div>',
+      '<p class="goal">Admit broadly, stop narrowly</p><div class="row"><b>User choices are not the problem</b><span>Form, scope, length and material preference remain valid.</span></div><div class="row"><b>Bridge gap is explicit</b><span>Store cannot answer a demand packet the project has not yet published.</span></div>'
+    );
+
+    const picnicReviewMain = doc.querySelector('#picnic-review > .main');
+    if (picnicReviewMain) {
+      const unresolved = picnicReviewMain.querySelector('.flash.warn');
+      if (unresolved) unresolved.insertAdjacentHTML('afterend', '<div class="flash warn"><b>STORE BRIDGE:</b> No complete Picnic Store request exists yet. This is a BRIDGE-GAP, not a reason to discard the project definition.</div>');
+      const first = picnicReviewMain.querySelector('.btns');
+      if (first && !first.querySelector('[data-canonical-go="picnic-store"]')) first.insertAdjacentHTML('afterbegin','<button type="button" data-canonical-go="picnic-store">← Back to Store</button>');
+    }
+
+    ensureProjectJourneyPage('picnic-request',
+      '<p class="stage-tag">5 · REQUEST</p><h1>REQUEST · PICNIC TABLE</h1>' +
+      '<p class="sub">The definition can be retained, but there is not yet a Store-submittable demand packet for this class.</p>' +
+      '<div class="s001-v2-order">' +
+        '<div><b>FORM / SCOPE</b><span id="picnic-request-form"></span></div>' +
+        '<div><b>LENGTH</b><span id="picnic-request-length"></span></div>' +
+        '<div><b>MATERIAL PREFERENCE</b><span id="picnic-request-material"></span></div>' +
+        '<div><b>REQUEST EVENT</b><span>DEFERRED · NOT SUBMITTED</span></div>' +
+        '<div><b>OWNER</b><span>BRIDGE-GAP · project-to-Store demand packet</span></div>' +
+        '<div><b>PROJECT STATUS</b><span>RETAINED · NOT REJECTED</span></div>' +
+      '</div>' +
+      '<div class="s001-boundary"><b>STOP AT THE REAL GATE.</b> SEND TO THE YARD is unavailable until a complete Store request can be formed. This does not erase the project or force the user to re-enter valid choices.</div>' +
+      '<div class="btns"><button type="button" data-canonical-go="picnic-review">BACK TO REVIEW</button><button type="button" disabled title="Bridge gap: a complete Picnic Store request is not yet implemented.">SEND TO THE YARD — DEFERRED</button></div>',
+      '<p class="goal">A refusal can be a pass</p><div class="row"><b>What stopped</b><span>The Store request bridge, not the customer project.</span></div><div class="row"><b>What remains</b><span>The exact choices and unresolved conditions stay in the project record.</span></div>'
+    );
+
+    ensureProjectJourneyPage('picnic-yard',
+      '<p class="stage-tag">6 · YARD</p><h1>YARD · NOT REACHED</h1><p class="sub">No yard submission exists for the current Picnic class.</p><div class="s001-boundary">This stage is intentionally inaccessible from the current Request gate. Nothing is inferred past the bridge gap.</div>',
+      '<p class="goal">Not reached</p><div class="row"><b>No invented response</b><span>No request means no yard response.</span></div>'
+    );
+    ensureProjectJourneyPage('picnic-terms',
+      '<p class="stage-tag">7 · TERMS</p><h1>TERMS · NOT REACHED</h1><p class="sub">Offer, acceptance, payment and allocation remain NOT ESTABLISHED.</p>',
+      '<p class="goal">Not reached</p><div class="row"><b>Null stays null</b><span>A missing Request event cannot produce later commercial events.</span></div>'
+    );
+    ensureProjectJourneyPage('picnic-recap',
+      '<p class="stage-tag">8 · RECAP</p><h1>RECAP · PICNIC TABLE</h1><p class="sub">Project admitted → choices retained → Store bridge deferred. No later transaction event is claimed.</p>',
+      '<p class="goal">Truthful chronology</p><div class="row"><b>Do not backfill</b><span>Later stages remain absent until the bridge is implemented.</span></div>'
+    );
+    ensureProjectJourneyPage('picnic-record',
+      '<p class="stage-tag">9 · RECORD</p><h1>PICNIC TABLE · OWNER RECORD</h1><p class="sub">The record preserves the project even though the current journey stops at Request.</p><div class="s001-v2-order"><div><b>FORM / SCOPE</b><span id="picnic-record-form"></span></div><div><b>LENGTH</b><span id="picnic-record-length"></span></div><div><b>MATERIAL PREFERENCE</b><span id="picnic-record-material"></span></div><div><b>STORE REQUEST</b><span>NOT FORMED · BRIDGE-GAP</span></div><div><b>COMMERCIAL STATUS</b><span>NOT ESTABLISHED</span></div><div><b>PHYSICAL STATUS</b><span>NOT AUTHORIZED / NOT RECORDED</span></div></div>',
+      '<p class="goal">Keep the project, not a fiction</p><div class="row"><b>Valid inputs survive</b><span>The next implementation pass should start from this retained definition.</span></div>'
+    );
+
+    function syncPicnicJourney() {
+      const title = doc.getElementById('picnic-title')?.textContent || 'Picnic table';
+      const length = doc.getElementById('plen-label')?.textContent || '—';
+      const material = doc.getElementById('pmat-label')?.textContent || 'unresolved';
+      const set = (id, value) => { const el = doc.getElementById(id); if (el) el.textContent = value; };
+      ['picnic-store-form','picnic-request-form','picnic-record-form'].forEach(id => set(id, title));
+      ['picnic-store-length','picnic-request-length','picnic-record-length'].forEach(id => set(id, length));
+      ['picnic-store-material','picnic-request-material','picnic-record-material'].forEach(id => set(id, material));
+    }
+    doc.addEventListener('input', function(event) {
+      if (event.target.closest?.('#picnic-config')) setTimeout(syncPicnicJourney, 0);
+    });
+    doc.addEventListener('click', function(event) {
+      if (event.target.closest?.('#picnic-chooser,#picnic-config')) setTimeout(syncPicnicJourney, 0);
+    });
+    syncPicnicJourney();
+
+    ['alcove-capture','alcove-config','store','request','yard','record','window-parts','playhouse-s001','playhouse-machine','playhouse-store','playhouse-review','playhouse-request','playhouse-yard','playhouse-terms','playhouse-result','playhouse-record'].forEach(addProofLibraryControl);
+
+    const originalShow = win.show;
+    const QUARANTINED_OUTDOOR_TARGETS = new Set(['picnic-chooser','picnic-config','picnic-store','picnic-review','picnic-request','picnic-yard','picnic-terms','picnic-recap','picnic-record']);
+
+    const canonicalJourney = window.STB_CANONICAL_JOURNEY || null;
+    const WINDOW_SEAT_STAGE_TO_ACTOR = Object.freeze({
+      scan:'scan',
+      configure:'configure',
+      store:'store-answer',
+      review:'store-answer',
+      request:'accept-pay',
+      yard:'store-yard',
+      terms:'store-yard',
+      recap:'handoff-record',
+      record:'handoff-record'
+    });
+    const ALCOVE_STAGE_TARGETS = Object.freeze({
+      scan: 'alcove-capture',
+      configure: 'alcove-config',
+      store: 'store',
+      review: 'alcove-review',
+      request: 'request',
+      yard: 'yard',
+      terms: 'terms',
+      recap: 'recap',
+      record: 'record'
+    });
+    const LEGACY_TARGET_TO_STAGE = Object.freeze(Object.fromEntries(
+      Object.entries(ALCOVE_STAGE_TARGETS).map(([stage,target]) => [target,stage])
+    ));
+    const PROJECT_STAGE_TARGETS = Object.freeze({
+      alcove: ALCOVE_STAGE_TARGETS,
+      'start-own': Object.freeze({
+        scan:'start-own-live',
+        configure:'start-own-live',
+        store:'proof-store',
+        review:'proof-store',
+        request:'proof-accept',
+        yard:'proof-yard',
+        terms:'proof-terms',
+        recap:'proof-record',
+        record:'proof-record'
+      }),
+      outdoor: Object.freeze({
+        scan:'outdoor-build-live',
+        configure:'outdoor-build-live',
+        store:'proof-store',
+        review:'proof-store',
+        request:'proof-accept',
+        yard:'proof-yard',
+        terms:'proof-yard',
+        recap:'proof-record',
+        record:'proof-record'
+      }),
+      playhouse: Object.freeze({
+        scan: 'playhouse-s001',
+        configure: 'playhouse-machine',
+        store: 'playhouse-store',
+        review: 'playhouse-review',
+        request: 'playhouse-request',
+        yard: 'playhouse-yard',
+        terms: 'playhouse-terms',
+        recap: 'playhouse-result',
+        record: 'playhouse-record'
+      }),
+      picnic: Object.freeze({
+        scan: 'picnic-chooser',
+        configure: 'picnic-config',
+        store: 'picnic-store',
+        review: 'picnic-review',
+        request: 'picnic-request',
+        yard: 'picnic-yard',
+        terms: 'picnic-terms',
+        recap: 'picnic-recap',
+        record: 'picnic-record'
+      })
+    });
+
+    function canonicalJourneyReady() {
+      return !!canonicalJourney
+        && Array.isArray(canonicalJourney.stages)
+        && canonicalJourney.stages.join('>') === 'scan>configure>store>review>request>yard>terms>recap>record'
+        && Array.isArray(canonicalJourney.gates)
+        && canonicalJourney.gates.length === 8;
+    }
+
+    function selectJourneyProject(projectId) {
+      const nextJourneyProject = projectId || null;
+      if (activeJourneyProject !== nextJourneyProject) proofHandoff = null;
+      activeJourneyProject = nextJourneyProject;
+      seatJourneySnapshot = null;
+      if (activeJourneyProject) doc.documentElement.dataset.activeJourneyProject = activeJourneyProject;
+      else delete doc.documentElement.dataset.activeJourneyProject;
+
+      const nav = doc.querySelector('.recovery-nav');
+      if (nav) {
+        [...nav.querySelectorAll('button')].forEach(button => {
+          if (!button.dataset.defaultLabel) button.dataset.defaultLabel = button.textContent;
+          button.textContent = button.dataset.defaultLabel;
+          button.hidden = false;
+        });
+        if (activeJourneyProject === 'start-own') {
+          ['alcove-review','recap'].forEach(target => {
+            const button = nav.querySelector('button[data-go="'+target+'"]');
+            if (button) button.hidden = true;
+          });
+          const storeButton = nav.querySelector('button[data-go="store"]');
+          const requestButton = nav.querySelector('button[data-go="request"]');
+          const yardButton = nav.querySelector('button[data-go="yard"]');
+          const termsButton = nav.querySelector('button[data-go="terms"]');
+          const recordButton = nav.querySelector('button[data-go="record"]');
+          if (storeButton) storeButton.textContent = 'Store Answer';
+          if (requestButton) requestButton.textContent = 'Accept / Pay';
+          if (yardButton) yardButton.textContent = 'Store / Yard';
+          if (termsButton) termsButton.textContent = 'Terms';
+          if (recordButton) recordButton.textContent = 'Handoff / Record';
+        } else if (['alcove','outdoor'].includes(activeJourneyProject)) {
+          ['alcove-review','terms','recap'].forEach(target => {
+            const button = nav.querySelector('button[data-go="'+target+'"]');
+            if (button) button.hidden = true;
+          });
+          const storeButton = nav.querySelector('button[data-go="store"]');
+          const requestButton = nav.querySelector('button[data-go="request"]');
+          const yardButton = nav.querySelector('button[data-go="yard"]');
+          const recordButton = nav.querySelector('button[data-go="record"]');
+          if (storeButton) storeButton.textContent = 'Store Answer';
+          if (requestButton) requestButton.textContent = 'Accept / Pay';
+          if (yardButton) yardButton.textContent = 'Store / Yard';
+          if (recordButton) recordButton.textContent = 'Handoff / Record';
+        } else if (activeJourneyProject === 'window-seat') {
+          ['alcove-review','terms','recap'].forEach(target => {
+            const button = nav.querySelector('button[data-go="'+target+'"]');
+            if (button) button.hidden = true;
+          });
+          const storeButton = nav.querySelector('button[data-go="store"]');
+          const requestButton = nav.querySelector('button[data-go="request"]');
+          const yardButton = nav.querySelector('button[data-go="yard"]');
+          const recordButton = nav.querySelector('button[data-go="record"]');
+          if (storeButton) storeButton.textContent = 'Store Answer';
+          if (requestButton) requestButton.textContent = 'Accept / Pay';
+          if (yardButton) yardButton.textContent = 'Store / Yard';
+          if (recordButton) recordButton.textContent = 'Handoff / Record';
+        }
+      }
+    }
+
+    function seatFrame() {
+      return doc.querySelector('#window-seat-live .window-seat-shell-frame');
+    }
+
+    function cloneSeat(value) {
+      return value == null ? value : JSON.parse(JSON.stringify(value));
+    }
+
+    function refreshSeatSnapshot(evaluate, supplied) {
+      if (supplied) seatJourneySnapshot = cloneSeat(supplied);
+      const bridge = seatFrame()?.contentWindow?.STBWindowSeatJourney;
+      if (bridge) {
+        try { seatJourneySnapshot = cloneSeat(evaluate ? bridge.evaluateCurrent() : bridge.snapshot()); } catch {}
+      }
+      return seatJourneySnapshot;
+    }
+
+    function annotateJourneyNav() {
+      doc.querySelectorAll('.recovery-nav button').forEach(function(button) {
+        const target = button.getAttribute('data-go') || button.getAttribute('data-canonical-go');
+        const stage = LEGACY_TARGET_TO_STAGE[target] || null;
+        if (stage) button.dataset.journeyStage = stage;
+      });
+    }
+
+    function syncSeatNav(stage) {
+      doc.querySelectorAll('.recovery-nav button').forEach(function(button) {
+        if (stage && button.dataset.journeyStage === stage) button.setAttribute('aria-current', 'step');
+        else button.removeAttribute('aria-current');
+      });
+    }
+
+    function applyPendingSeatView() {
+      const bridge = seatFrame()?.contentWindow?.STBWindowSeatJourney;
+      if (!bridge) return false;
+      try {
+        if (pendingSeatView.mode === 'guided') bridge.showGuided(WINDOW_SEAT_STAGE_TO_ACTOR[pendingSeatView.stage || 'scan'] || 'scan');
+        else bridge.showContinuous();
+        refreshSeatSnapshot(false);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    function openSeatView(mode, stage) {
+      if (activeJourneyProject !== 'window-seat') return false;
+      if (!canonicalJourneyReady()) return false;
+      if (mode === 'guided' && canonicalJourney.stages.indexOf(stage || 'scan') < 0) return false;
+      pendingSeatView = {mode: mode, stage: stage || null};
+      originalShow.call(win, 'window-seat-live');
+      if (!applyPendingSeatView()) setTimeout(applyPendingSeatView, 0);
+      if (mode === 'guided') syncSeatNav(stage || 'scan');
+      else syncSeatNav(null);
+      return true;
+    }
+
+    function showSeatContinuous() {
+      return openSeatView('continuous', null);
+    }
+
+    function showSeatGuided(stage, supplied) {
+      if (activeJourneyProject !== 'window-seat') return false;
+      if (supplied) refreshSeatSnapshot(false, supplied);
+      return openSeatView('guided', stage);
+    }
+
+    function showMappedProjectStage(projectId, stage) {
+      if (projectId === 'start-own' && (stage === 'scan' || stage === 'configure')) {
+        originalShow.call(win,'start-own-live');
+        setTimeout(() => showStartOwnStage(stage === 'configure' ? 'bench' : 'intent'),0);
+        return true;
+      }
+      if (projectId === 'alcove') {
+        const customerStage = {
+          scan:'scan',
+          configure:'configure',
+          store:'store',
+          review:'store',
+          request:'request',
+          yard:'yard',
+          terms:'yard',
+          recap:'record',
+          record:'record'
+        }[stage] || null;
+        const target = customerStage ? PROJECT_STAGE_TARGETS.alcove[customerStage] : null;
+        if (!target || !doc.getElementById(target)) return false;
+        originalShow.call(win, target);
+        setTimeout(syncAlcoveCommercialSurface,0);
+        return true;
+      }
+      if (projectId === 'picnic' && ['yard','terms','recap','record'].includes(stage)) {
+        originalShow.call(win, 'picnic-request');
+        if (typeof syncPicnicJourney === 'function') setTimeout(syncPicnicJourney, 0);
+        return true;
+      }
+      const target = PROJECT_STAGE_TARGETS[projectId]?.[stage] || null;
+      if (!target || !doc.getElementById(target)) return false;
+      originalShow.call(win, target);
+      if (projectId === 'playhouse') setTimeout(sync, 0);
+      if (projectId === 'picnic' && typeof syncPicnicJourney === 'function') setTimeout(syncPicnicJourney, 0);
+      return true;
+    }
+
+    seatFrame()?.addEventListener('load', () => {
+      setTimeout(applyPendingSeatView, 0);
+    });
+    applyPendingSeatView();
+
+    window.addEventListener('message', function(event) {
+      if (event.origin !== window.location.origin) return;
+      if (event.source !== seatFrame()?.contentWindow) return;
+      if (activeJourneyProject !== 'window-seat') return;
+      if (event.data?.type === 'stb-window-seat-guided-handoff') {
+        showSeatGuided(event.data.stage || 'store', event.data.snapshot || null);
+        return;
+      }
+      if (event.data?.type === 'stb-window-seat-guided-stage') {
+        showSeatGuided(event.data.stage, event.data.snapshot || null);
+      }
+    });
+
+    const PROJECT_TILE_TO_JOURNEY = Object.freeze({
+      'alcove-capture': 'alcove',
+      'window-parts': 'playhouse',
+      'picnic-chooser': 'picnic'
+    });
+
+    win.addEventListener('click', function(event) {
+      if (activeJourneyProject !== 'alcove') return;
+      const go = event.target.closest?.('[data-go]');
+      if (!go) return;
+      const target = go.getAttribute('data-go');
+      const map = {
+        'alcove-review':'store',
+        'request':'request',
+        'terms':'yard',
+        'recap':'record'
+      };
+      const destination = map[target] || null;
+      if (!destination) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      originalShow.call(win,destination);
+      setTimeout(syncAlcoveCommercialSurface,0);
+    }, true);
+
+    win.addEventListener('click', function(event) {
+      const navButton = event.target.closest?.('.recovery-nav button[data-journey-stage]');
+      if (!navButton || !activeJourneyProject) return;
+      const stage = navButton.dataset.journeyStage;
+      if (!stage) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      if (activeJourneyProject === 'window-seat') {
+        showSeatGuided(stage);
+        return;
+      }
+      showMappedProjectStage(activeJourneyProject, stage);
+    }, true);
+
+    win.addEventListener('click', function(event) {
+      if (activeJourneyProject === 'picnic' && event.target.closest?.('#confirm-picnic')) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        doc.documentElement.dataset.picnicRevisionConfirmed = 'true';
+        originalShow.call(win, 'picnic-request');
+        setTimeout(syncPicnicJourney, 0);
+        return;
+      }
+      if (activeJourneyProject === 'playhouse' && event.target.closest?.('#playhouse-review [data-canonical-go="playhouse-request"]')) {
+        doc.documentElement.dataset.playhouseRevisionConfirmed = 'true';
+      }
+    }, true);
+
+    // Project identity is selected at the window-capture boundary so it runs
+    // before the older front-door preview handler can stop propagation.
+    // A route or stage change never selects a project implicitly.
+    win.addEventListener('click', function(event) {
+      const tile = event.target.closest?.('#projects .tile[data-go]');
+      if (!tile) return;
+      const target = tile.getAttribute('data-go');
+      if (target === 'start-own') {
+        selectJourneyProject('start-own');
+        return;
+      }
+      if (target === 'picnic-chooser') {
+        selectJourneyProject('outdoor');
+        return;
+      }
+      selectJourneyProject(PROJECT_TILE_TO_JOURNEY[target] || null);
+    }, true);
+
+    function openCurrentOutdoorBuildFromLegacyRoute() {
+      selectJourneyProject('outdoor');
+      originalShow.call(win, 'outdoor-build-live');
+    }
+
+    win.show = function(id) {
+      const target = String(id);
+      if (QUARANTINED_OUTDOOR_TARGETS.has(target)) {
+        openCurrentOutdoorBuildFromLegacyRoute();
+        return;
+      }
+      const stage = LEGACY_TARGET_TO_STAGE[target] || null;
+      if (activeJourneyProject === 'window-seat') {
+        if (stage) { showSeatGuided(stage); return; }
+        if (target === 'projects' || target === 'landing' || target === 'my-projects' || target === 'archive') {
+          pendingSeatView = {mode:'continuous',stage:null};
+        }
+      } else if (stage && activeJourneyProject) {
+        showMappedProjectStage(activeJourneyProject, stage);
+        return;
+      }
+      const result = originalShow.apply(this, arguments);
+      if (target.startsWith('playhouse')) setTimeout(sync, 0);
+      if (target.startsWith('alcove') || (activeJourneyProject === 'alcove' && ['store','request','yard','record','terms','recap'].includes(target))) setTimeout(syncAlcoveCommercialSurface, 0);
+      return result;
+    };
+    annotateJourneyNav();
+    if (!canonicalJourneyReady()) return false;
+    doc.documentElement.dataset.canonicalJourneyVersion = canonicalJourney.version;
+    return true;
+  };
+
+  const scheduleApply = () => {
+    let attempts = 0;
+    const timer = setInterval(() => {
+      attempts += 1;
+      try {
+        if (apply() || attempts > 200) clearInterval(timer);
+      } catch (error) {
+        if (attempts > 200) clearInterval(timer);
+      }
+    }, 50);
+  };
+  shell.addEventListener('load', scheduleApply);
+  if (shell.contentDocument?.readyState === 'complete') scheduleApply();
+})();
+</script>
+</body>
+</html>
++Number(materialResolution.materialTotal).toFixed(2)
+        : 'NOT ESTABLISHED';
+      if(materialSource)materialSource.textContent=materialResolution?.source
+        ? 'Store Zero catalog '+materialResolution.source.clock+' · '+String(materialResolution.source.pin).slice(0,12)+'…'
+        : 'Store Zero catalog · exact project material mapping not carried here';
+    }
+
+    doc.addEventListener('click', function(event){
+      const library=event.target.closest?.('[data-proof-library]');
+      if(library){
+        event.preventDefault();
+        selectJourneyProject(null);
+        originalShow.call(win,'projects');
+        return;
+      }
+      const source=event.target.closest?.('[data-proof-return-source]');
+      if(source){
+        event.preventDefault();
+        if(proofHandoff?.source==='start-own')originalShow.call(win,'start-own-live');
+        else if(proofHandoff?.source==='outdoor')originalShow.call(win,'outdoor-build-live');
+        return;
+      }
+      const go=event.target.closest?.('[data-proof-go]');
+      if(go){
+        event.preventDefault();
+        syncProofHandoff();
+        originalShow.call(win,go.dataset.proofGo);
+      }
+    }, true);
+
+    function addProofLibraryControl(id){
+      const page=doc.getElementById(id);
+      if(!page||page.querySelector('[data-proof-library]'))return;
+      const button=doc.createElement('button');
+      button.type='button';button.className='back';button.dataset.proofLibrary='true';button.textContent='← PROJECT LIBRARY';
+      const backbar=page.querySelector('.backbar');
+      if(backbar){
+        backbar.append(button);
+        return;
+      }
+      const main=page.querySelector(':scope > .main,:scope > .body,:scope > div');
+      if(main){
+        const bar=doc.createElement('div');
+        bar.className='backbar';
+        bar.append(button);
+        main.prepend(bar);
+      }
+    }
+
+    ensureProjectJourneyPage('playhouse-request',
+      '<p class="stage-tag">5 · REQUEST</p><h1>REQUEST · PLAYHOUSE WINDOW</h1>' +
+      '<p class="sub">Carry one identified project definition forward without turning the reference Store answer into an order.</p>' +
+      '<div class="s001-v2-order">' +
+        '<div><b>PROJECT</b><span>Playhouse arched window</span></div>' +
+        '<div><b>GEOMETRY</b><span id="s001-request-geometry"></span></div>' +
+        '<div><b>PRIMARY ROUTE</b><span>SUPPORTABLE · REFERENCE</span></div>' +
+        '<div><b>ADDITIONAL OPS</b><span>Internal center route + two straight cuts · unresolved / separate path</span></div>' +
+        '<div><b>FULL COMMERCIAL OFFER</b><span>NOT ESTABLISHED</span></div>' +
+        '<div><b>PHYSICAL AUTHORITY</b><span>NOT AUTHORIZED</span></div>' +
+      '</div>' +
+      '<div class="s001-boundary"><b>REQUEST ≠ ORDER.</b> The project may continue through the journey while unsupported or unpriced work stays explicit. Nothing here accepts terms, pays, allocates material, releases production, or starts a machine.</div>' +
+      '<div class="btns"><button type="button" data-canonical-go="playhouse-review">BACK TO REVIEW</button><button type="button" data-canonical-go="playhouse-yard">SEND TO THE YARD →</button></div>',
+      '<p class="goal">Carry the exact ask</p><div class="row"><b>Do not drop the extra work</b><span>Unresolved center-route and straight-cut requests remain part of the project.</span></div><div class="row"><b>Do not promote the Store answer</b><span>Reference supportability is not an order or offer.</span></div>'
+    );
+
+    ensureProjectJourneyPage('playhouse-yard',
+      '<p class="stage-tag">6 · YARD</p><h1>YARD · REFERENCE RESPONSE</h1>' +
+      '<p class="sub">The yard can answer what its current reference surface knows and leave the rest open.</p>' +
+      '<div class="s001-v2-order">' +
+        '<div><b>PROJECT</b><span>Playhouse arched window</span></div>' +
+        '<div><b>GEOMETRY</b><span id="s001-yard-geometry"></span></div>' +
+        '<div><b>ROUTED OPENING</b><span>SUPPORTABLE · REFERENCE</span></div>' +
+        '<div><b>MATERIAL-ONLY REFERENCE</b><span>$26.55</span></div>' +
+        '<div><b>CENTER ROUTE / STRAIGHT CUTS</b><span>UNRESOLVED · separate operation path</span></div>' +
+        '<div><b>SELLER-OF-RECORD OFFER</b><span>NOT ESTABLISHED</span></div>' +
+      '</div>' +
+      '<div class="s001-boundary">A mixed answer is still a valid answer. Supported work stays supported; unresolved work stays visible. The project is not rejected merely because every requested operation is not yet inside one Store envelope.</div>' +
+      '<div class="btns"><button type="button" data-canonical-go="playhouse-request">BACK TO REQUEST</button><button type="button" data-canonical-go="playhouse-terms">CONTINUE TO TERMS →</button></div>',
+      '<p class="goal">Answer only what the yard owns</p><div class="row"><b>Material / capability</b><span>Reference evidence may be stated.</span></div><div class="row"><b>Commercial authority</b><span>Still absent unless separately established.</span></div>'
+    );
+
+    ensureProjectJourneyPage('playhouse-terms',
+      '<p class="stage-tag">7 · TERMS</p><h1>TERMS · KEEP THE EVENTS APART</h1>' +
+      '<p class="sub">This project has a bounded definition and a reference Store answer. The later commercial and physical events remain null.</p>' +
+      '<div class="s001-v2-order">' +
+        '<div><b>OFFER</b><span>NOT ESTABLISHED</span></div>' +
+        '<div><b>ACCEPTANCE</b><span>NOT ESTABLISHED</span></div>' +
+        '<div><b>PAYMENT</b><span>NOT ESTABLISHED</span></div>' +
+        '<div><b>ALLOCATION</b><span>NOT ESTABLISHED</span></div>' +
+        '<div><b>PRODUCTION RELEASE</b><span>NOT ESTABLISHED</span></div>' +
+        '<div><b>MACHINE READINESS / CYCLE START</b><span>NOT ESTABLISHED / NOT AUTHORIZED</span></div>' +
+      '</div>' +
+      '<div class="s001-boundary">definition ≠ request ≠ offer ≠ acceptance ≠ payment ≠ allocation ≠ production release ≠ machine readiness ≠ Cycle Start</div>' +
+      '<div class="btns"><button type="button" data-canonical-go="playhouse-yard">BACK TO YARD</button><button type="button" data-canonical-go="playhouse-result">NEXT → RECAP</button></div>',
+      '<p class="goal">Null is honest</p><div class="row"><b>Do not fill the blanks</b><span>The journey can continue as a record even when commercial events have not happened.</span></div>'
+    );
+
+    const oldStoreBack = doc.querySelector('#playhouse-store [data-canonical-go="playhouse-s001"]');
+    if (oldStoreBack) oldStoreBack.setAttribute('data-canonical-go', 'playhouse-machine');
+
+    const fmt = (value) => Number(value).toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
+    const read = () => {
+      const width = Number(doc.getElementById('s001-opening-width')?.value || 36);
+      const straight = Number(doc.getElementById('s001-straight-height')?.value || 24);
+      const rise = Number(doc.getElementById('s001-arch-rise')?.value || 12);
+      const total = straight + rise;
+      const radius = width * width / (8 * rise) + rise / 2;
+      return { width, straight, rise, total, radius };
+    };
+    const text = (id, value) => { const el = doc.getElementById(id); if (el) el.textContent = value; };
+    const sync = () => {
+      const widthInput = doc.getElementById('s001-opening-width');
+      const straightInput = doc.getElementById('s001-straight-height');
+      const riseInput = doc.getElementById('s001-arch-rise');
+      if (!widthInput || !straightInput || !riseInput) return;
+      let straight = Math.max(1, Math.min(35, Number(straightInput.value) || 24));
+      let rise = Math.max(1, Number(riseInput.value) || 12);
+      let width = Math.max(1, Math.min(48, Number(widthInput.value) || 36));
+      const maxRise = Math.max(1, 36 - straight);
+      riseInput.max = String(maxRise);
+      if (rise > maxRise) rise = maxRise;
+      widthInput.value = String(width); straightInput.value = String(straight); riseInput.value = String(rise);
+      const g = read();
+      text('s001-opening-width-out', fmt(g.width) + ' in');
+      text('s001-straight-height-out', fmt(g.straight) + ' in');
+      text('s001-arch-rise-out', fmt(g.rise) + ' in');
+      const px = 10, centerX = 480, fieldTop = 60, fieldHeight = 360;
+      const openingW = g.width * px, openingH = g.total * px;
+      const bottom = fieldTop + (fieldHeight + openingH) / 2;
+      const top = bottom - openingH;
+      const springY = bottom - g.straight * px;
+      const left = centerX - openingW / 2, right = centerX + openingW / 2;
+      const outer = `M ${left} ${bottom} L ${left} ${springY} Q ${centerX} ${top} ${right} ${springY} L ${right} ${bottom} Z`;
+      doc.getElementById('s001-opening-path')?.setAttribute('d', outer);
+      const centerRoute = `M ${centerX} ${bottom} L ${centerX} ${top + 7}`;
+      doc.getElementById('s001-center-route')?.setAttribute('d', centerRoute);
+      const tabs = doc.getElementById('s001-tab-markers');
+      if (tabs) {
+        const points = [
+          [left, bottom - g.straight * px * .45],
+          [right, bottom - g.straight * px * .45],
+          [centerX - openingW * .22, top + g.rise * px * .42],
+          [centerX + openingW * .22, top + g.rise * px * .42],
+          [centerX, bottom - openingH * .28]
+        ];
+        tabs.innerHTML = points.map(([x,y]) => `<circle cx="${x}" cy="${y}" r="7" fill="#f4efe7" stroke="#7a5b2f" stroke-width="4"/>`).join('');
+      }
+      text('s001-opening-label', `${fmt(g.width)} wide · ${fmt(g.straight)} straight + ${fmt(g.rise)} rise = ${fmt(g.total)} high`);
+      text('s001-geometry-summary', `Opening ${fmt(g.width)} × ${fmt(g.total)} in overall · straight side ${fmt(g.straight)} in · arch rise ${fmt(g.rise)} in · derived radius ${fmt(g.radius)} in.`);
+      text('s001-store-opening', `${fmt(g.width)} in wide × ${fmt(g.total)} in overall`);
+      text('s001-store-radius', `Circular segment · ${fmt(g.radius)} in derived radius`);
+      text('s001-review-opening', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise · ${fmt(g.total)} total height`);
+      text('s001-result-geometry', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise · ${fmt(g.total)} total height`);
+      text('s001-request-geometry', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise · ${fmt(g.total)} total height`);
+      text('s001-yard-geometry', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise · ${fmt(g.total)} total height`);
+      text('s001-record-geometry', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise`);
+    };
+
+    ['s001-opening-width','s001-straight-height','s001-arch-rise'].forEach(id => doc.getElementById(id)?.addEventListener('input', sync));
+    doc.getElementById('s001-reset')?.addEventListener('click', () => {
+      doc.getElementById('s001-opening-width').value = '36';
+      doc.getElementById('s001-straight-height').value = '24';
+      doc.getElementById('s001-arch-rise').value = '12';
+      sync();
+    });
+    sync();
+
+
+    const picnicConfigNext = doc.querySelector('#picnic-config [data-go="picnic-review"]');
+    if (picnicConfigNext) {
+      picnicConfigNext.removeAttribute('data-go');
+      picnicConfigNext.setAttribute('data-canonical-go', 'picnic-store');
+      picnicConfigNext.textContent = 'SEND TO STORE ZERO →';
+    }
+    const picnicConfirm = doc.getElementById('confirm-picnic');
+    if (picnicConfirm) {
+      picnicConfirm.textContent = 'CONFIRM THIS VERSION';
+      picnicConfirm.setAttribute('data-picnic-confirm', 'true');
+    }
+
+    const picnicDoctrine = (!canonicalDoctrine || canonicalDoctrine.expectedProcessStepCount !== 12)
+      ? '<h1>CANONICAL STORE CONTENT UNAVAILABLE</h1><div class="s001-boundary"><b>Fail closed.</b> Shared Store doctrine is unavailable.</div>'
+      : '<div class="band" style="font-size:12px;line-height:1.55"><p style="margin:0">' + canonicalDoctrine.definitionHtml + '</p></div>' +
+        canonicalDoctrine.processIntroHtml +
+        canonicalDoctrine.processStepsHtml;
+
+    ensureProjectJourneyPage('picnic-store',
+      picnicDoctrine +
+      '<div class="s001-v2-callout"><b>CURRENT PICNIC-TABLE STATUS</b>The project is admitted. The Store question is not yet stable enough to submit because this class does not yet publish a complete part/material demand packet.</div>' +
+      '<p class="stage-tag">3 · STORE</p><h1>PICNIC TABLE · STORE QUESTION</h1>' +
+      '<div class="s001-v2-order">' +
+        '<div><b>FORM / SCOPE</b><span id="picnic-store-form"></span></div>' +
+        '<div><b>LENGTH</b><span id="picnic-store-length"></span></div>' +
+        '<div><b>MATERIAL PREFERENCE</b><span id="picnic-store-material"></span></div>' +
+        '<div><b>STORE REQUEST</b><span>DEFERRED · BRIDGE-GAP</span></div>' +
+        '<div><b>PRICE</b><span>UNRESOLVED</span></div>' +
+        '<div><b>PHYSICAL AUTHORITY</b><span>NOT AUTHORIZED</span></div>' +
+      '</div>' +
+      '<div class="s001-boundary"><b>This is not a failed job.</b> The user choices are valid project facts. The missing piece is the project-to-Store bridge: stable part geometry / material demand has not yet been published for this class. No SKU, price, capability, or refusal is invented to make the screen green.</div>' +
+      '<div class="btns"><button type="button" data-canonical-go="picnic-config">BACK TO CONFIGURE</button><button type="button" data-canonical-go="picnic-review">NEXT → REVIEW</button></div>',
+      '<p class="goal">Admit broadly, stop narrowly</p><div class="row"><b>User choices are not the problem</b><span>Form, scope, length and material preference remain valid.</span></div><div class="row"><b>Bridge gap is explicit</b><span>Store cannot answer a demand packet the project has not yet published.</span></div>'
+    );
+
+    const picnicReviewMain = doc.querySelector('#picnic-review > .main');
+    if (picnicReviewMain) {
+      const unresolved = picnicReviewMain.querySelector('.flash.warn');
+      if (unresolved) unresolved.insertAdjacentHTML('afterend', '<div class="flash warn"><b>STORE BRIDGE:</b> No complete Picnic Store request exists yet. This is a BRIDGE-GAP, not a reason to discard the project definition.</div>');
+      const first = picnicReviewMain.querySelector('.btns');
+      if (first && !first.querySelector('[data-canonical-go="picnic-store"]')) first.insertAdjacentHTML('afterbegin','<button type="button" data-canonical-go="picnic-store">← Back to Store</button>');
+    }
+
+    ensureProjectJourneyPage('picnic-request',
+      '<p class="stage-tag">5 · REQUEST</p><h1>REQUEST · PICNIC TABLE</h1>' +
+      '<p class="sub">The definition can be retained, but there is not yet a Store-submittable demand packet for this class.</p>' +
+      '<div class="s001-v2-order">' +
+        '<div><b>FORM / SCOPE</b><span id="picnic-request-form"></span></div>' +
+        '<div><b>LENGTH</b><span id="picnic-request-length"></span></div>' +
+        '<div><b>MATERIAL PREFERENCE</b><span id="picnic-request-material"></span></div>' +
+        '<div><b>REQUEST EVENT</b><span>DEFERRED · NOT SUBMITTED</span></div>' +
+        '<div><b>OWNER</b><span>BRIDGE-GAP · project-to-Store demand packet</span></div>' +
+        '<div><b>PROJECT STATUS</b><span>RETAINED · NOT REJECTED</span></div>' +
+      '</div>' +
+      '<div class="s001-boundary"><b>STOP AT THE REAL GATE.</b> SEND TO THE YARD is unavailable until a complete Store request can be formed. This does not erase the project or force the user to re-enter valid choices.</div>' +
+      '<div class="btns"><button type="button" data-canonical-go="picnic-review">BACK TO REVIEW</button><button type="button" disabled title="Bridge gap: a complete Picnic Store request is not yet implemented.">SEND TO THE YARD — DEFERRED</button></div>',
+      '<p class="goal">A refusal can be a pass</p><div class="row"><b>What stopped</b><span>The Store request bridge, not the customer project.</span></div><div class="row"><b>What remains</b><span>The exact choices and unresolved conditions stay in the project record.</span></div>'
+    );
+
+    ensureProjectJourneyPage('picnic-yard',
+      '<p class="stage-tag">6 · YARD</p><h1>YARD · NOT REACHED</h1><p class="sub">No yard submission exists for the current Picnic class.</p><div class="s001-boundary">This stage is intentionally inaccessible from the current Request gate. Nothing is inferred past the bridge gap.</div>',
+      '<p class="goal">Not reached</p><div class="row"><b>No invented response</b><span>No request means no yard response.</span></div>'
+    );
+    ensureProjectJourneyPage('picnic-terms',
+      '<p class="stage-tag">7 · TERMS</p><h1>TERMS · NOT REACHED</h1><p class="sub">Offer, acceptance, payment and allocation remain NOT ESTABLISHED.</p>',
+      '<p class="goal">Not reached</p><div class="row"><b>Null stays null</b><span>A missing Request event cannot produce later commercial events.</span></div>'
+    );
+    ensureProjectJourneyPage('picnic-recap',
+      '<p class="stage-tag">8 · RECAP</p><h1>RECAP · PICNIC TABLE</h1><p class="sub">Project admitted → choices retained → Store bridge deferred. No later transaction event is claimed.</p>',
+      '<p class="goal">Truthful chronology</p><div class="row"><b>Do not backfill</b><span>Later stages remain absent until the bridge is implemented.</span></div>'
+    );
+    ensureProjectJourneyPage('picnic-record',
+      '<p class="stage-tag">9 · RECORD</p><h1>PICNIC TABLE · OWNER RECORD</h1><p class="sub">The record preserves the project even though the current journey stops at Request.</p><div class="s001-v2-order"><div><b>FORM / SCOPE</b><span id="picnic-record-form"></span></div><div><b>LENGTH</b><span id="picnic-record-length"></span></div><div><b>MATERIAL PREFERENCE</b><span id="picnic-record-material"></span></div><div><b>STORE REQUEST</b><span>NOT FORMED · BRIDGE-GAP</span></div><div><b>COMMERCIAL STATUS</b><span>NOT ESTABLISHED</span></div><div><b>PHYSICAL STATUS</b><span>NOT AUTHORIZED / NOT RECORDED</span></div></div>',
+      '<p class="goal">Keep the project, not a fiction</p><div class="row"><b>Valid inputs survive</b><span>The next implementation pass should start from this retained definition.</span></div>'
+    );
+
+    function syncPicnicJourney() {
+      const title = doc.getElementById('picnic-title')?.textContent || 'Picnic table';
+      const length = doc.getElementById('plen-label')?.textContent || '—';
+      const material = doc.getElementById('pmat-label')?.textContent || 'unresolved';
+      const set = (id, value) => { const el = doc.getElementById(id); if (el) el.textContent = value; };
+      ['picnic-store-form','picnic-request-form','picnic-record-form'].forEach(id => set(id, title));
+      ['picnic-store-length','picnic-request-length','picnic-record-length'].forEach(id => set(id, length));
+      ['picnic-store-material','picnic-request-material','picnic-record-material'].forEach(id => set(id, material));
+    }
+    doc.addEventListener('input', function(event) {
+      if (event.target.closest?.('#picnic-config')) setTimeout(syncPicnicJourney, 0);
+    });
+    doc.addEventListener('click', function(event) {
+      if (event.target.closest?.('#picnic-chooser,#picnic-config')) setTimeout(syncPicnicJourney, 0);
+    });
+    syncPicnicJourney();
+
+    ['alcove-capture','alcove-config','store','request','yard','record','window-parts','playhouse-s001','playhouse-machine','playhouse-store','playhouse-review','playhouse-request','playhouse-yard','playhouse-terms','playhouse-result','playhouse-record'].forEach(addProofLibraryControl);
+
+    const originalShow = win.show;
+    const QUARANTINED_OUTDOOR_TARGETS = new Set(['picnic-chooser','picnic-config','picnic-store','picnic-review','picnic-request','picnic-yard','picnic-terms','picnic-recap','picnic-record']);
+
+    const canonicalJourney = window.STB_CANONICAL_JOURNEY || null;
+    const WINDOW_SEAT_STAGE_TO_ACTOR = Object.freeze({
+      scan:'scan',
+      configure:'configure',
+      store:'store-answer',
+      review:'store-answer',
+      request:'accept-pay',
+      yard:'store-yard',
+      terms:'store-yard',
+      recap:'handoff-record',
+      record:'handoff-record'
+    });
+    const ALCOVE_STAGE_TARGETS = Object.freeze({
+      scan: 'alcove-capture',
+      configure: 'alcove-config',
+      store: 'store',
+      review: 'alcove-review',
+      request: 'request',
+      yard: 'yard',
+      terms: 'terms',
+      recap: 'recap',
+      record: 'record'
+    });
+    const LEGACY_TARGET_TO_STAGE = Object.freeze(Object.fromEntries(
+      Object.entries(ALCOVE_STAGE_TARGETS).map(([stage,target]) => [target,stage])
+    ));
+    const PROJECT_STAGE_TARGETS = Object.freeze({
+      alcove: ALCOVE_STAGE_TARGETS,
+      playhouse: Object.freeze({
+        scan: 'playhouse-s001',
+        configure: 'playhouse-machine',
+        store: 'playhouse-store',
+        review: 'playhouse-review',
+        request: 'playhouse-request',
+        yard: 'playhouse-yard',
+        terms: 'playhouse-terms',
+        recap: 'playhouse-result',
+        record: 'playhouse-record'
+      }),
+      picnic: Object.freeze({
+        scan: 'picnic-chooser',
+        configure: 'picnic-config',
+        store: 'picnic-store',
+        review: 'picnic-review',
+        request: 'picnic-request',
+        yard: 'picnic-yard',
+        terms: 'picnic-terms',
+        recap: 'picnic-recap',
+        record: 'picnic-record'
+      })
+    });
+
+    function canonicalJourneyReady() {
+      return !!canonicalJourney
+        && Array.isArray(canonicalJourney.stages)
+        && canonicalJourney.stages.join('>') === 'scan>configure>store>review>request>yard>terms>recap>record'
+        && Array.isArray(canonicalJourney.gates)
+        && canonicalJourney.gates.length === 8;
+    }
+
+    function selectJourneyProject(projectId) {
+      activeJourneyProject = projectId || null;
+      seatJourneySnapshot = null;
+      if (activeJourneyProject) doc.documentElement.dataset.activeJourneyProject = activeJourneyProject;
+      else delete doc.documentElement.dataset.activeJourneyProject;
+
+      const nav = doc.querySelector('.recovery-nav');
+      if (nav) {
+        [...nav.querySelectorAll('button')].forEach(button => {
+          if (!button.dataset.defaultLabel) button.dataset.defaultLabel = button.textContent;
+          button.textContent = button.dataset.defaultLabel;
+          button.hidden = false;
+        });
+        if (activeJourneyProject === 'alcove') {
+          ['alcove-review','terms','recap'].forEach(target => {
+            const button = nav.querySelector('button[data-go="'+target+'"]');
+            if (button) button.hidden = true;
+          });
+          const storeButton = nav.querySelector('button[data-go="store"]');
+          const requestButton = nav.querySelector('button[data-go="request"]');
+          const yardButton = nav.querySelector('button[data-go="yard"]');
+          const recordButton = nav.querySelector('button[data-go="record"]');
+          if (storeButton) storeButton.textContent = 'Store Answer';
+          if (requestButton) requestButton.textContent = 'Accept / Pay';
+          if (yardButton) yardButton.textContent = 'Store / Yard';
+          if (recordButton) recordButton.textContent = 'Handoff / Record';
+        } else if (activeJourneyProject === 'window-seat') {
+          ['alcove-review','terms','recap'].forEach(target => {
+            const button = nav.querySelector('button[data-go="'+target+'"]');
+            if (button) button.hidden = true;
+          });
+          const storeButton = nav.querySelector('button[data-go="store"]');
+          const requestButton = nav.querySelector('button[data-go="request"]');
+          const yardButton = nav.querySelector('button[data-go="yard"]');
+          const recordButton = nav.querySelector('button[data-go="record"]');
+          if (storeButton) storeButton.textContent = 'Store Answer';
+          if (requestButton) requestButton.textContent = 'Accept / Pay';
+          if (yardButton) yardButton.textContent = 'Store / Yard';
+          if (recordButton) recordButton.textContent = 'Handoff / Record';
+        }
+      }
+    }
+
+    function seatFrame() {
+      return doc.querySelector('#window-seat-live .window-seat-shell-frame');
+    }
+
+    function cloneSeat(value) {
+      return value == null ? value : JSON.parse(JSON.stringify(value));
+    }
+
+    function refreshSeatSnapshot(evaluate, supplied) {
+      if (supplied) seatJourneySnapshot = cloneSeat(supplied);
+      const bridge = seatFrame()?.contentWindow?.STBWindowSeatJourney;
+      if (bridge) {
+        try { seatJourneySnapshot = cloneSeat(evaluate ? bridge.evaluateCurrent() : bridge.snapshot()); } catch {}
+      }
+      return seatJourneySnapshot;
+    }
+
+    function annotateJourneyNav() {
+      doc.querySelectorAll('.recovery-nav button').forEach(function(button) {
+        const target = button.getAttribute('data-go') || button.getAttribute('data-canonical-go');
+        const stage = LEGACY_TARGET_TO_STAGE[target] || null;
+        if (stage) button.dataset.journeyStage = stage;
+      });
+    }
+
+    function syncSeatNav(stage) {
+      doc.querySelectorAll('.recovery-nav button').forEach(function(button) {
+        if (stage && button.dataset.journeyStage === stage) button.setAttribute('aria-current', 'step');
+        else button.removeAttribute('aria-current');
+      });
+    }
+
+    function applyPendingSeatView() {
+      const bridge = seatFrame()?.contentWindow?.STBWindowSeatJourney;
+      if (!bridge) return false;
+      try {
+        if (pendingSeatView.mode === 'guided') bridge.showGuided(WINDOW_SEAT_STAGE_TO_ACTOR[pendingSeatView.stage || 'scan'] || 'scan');
+        else bridge.showContinuous();
+        refreshSeatSnapshot(false);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    function openSeatView(mode, stage) {
+      if (activeJourneyProject !== 'window-seat') return false;
+      if (!canonicalJourneyReady()) return false;
+      if (mode === 'guided' && canonicalJourney.stages.indexOf(stage || 'scan') < 0) return false;
+      pendingSeatView = {mode: mode, stage: stage || null};
+      originalShow.call(win, 'window-seat-live');
+      if (!applyPendingSeatView()) setTimeout(applyPendingSeatView, 0);
+      if (mode === 'guided') syncSeatNav(stage || 'scan');
+      else syncSeatNav(null);
+      return true;
+    }
+
+    function showSeatContinuous() {
+      return openSeatView('continuous', null);
+    }
+
+    function showSeatGuided(stage, supplied) {
+      if (activeJourneyProject !== 'window-seat') return false;
+      if (supplied) refreshSeatSnapshot(false, supplied);
+      return openSeatView('guided', stage);
+    }
+
+    function showMappedProjectStage(projectId, stage) {
+      if (projectId === 'alcove') {
+        const customerStage = {
+          scan:'scan',
+          configure:'configure',
+          store:'store',
+          review:'store',
+          request:'request',
+          yard:'yard',
+          terms:'yard',
+          recap:'record',
+          record:'record'
+        }[stage] || null;
+        const target = customerStage ? PROJECT_STAGE_TARGETS.alcove[customerStage] : null;
+        if (!target || !doc.getElementById(target)) return false;
+        originalShow.call(win, target);
+        setTimeout(syncAlcoveCommercialSurface,0);
+        return true;
+      }
+      if (projectId === 'picnic' && ['yard','terms','recap','record'].includes(stage)) {
+        originalShow.call(win, 'picnic-request');
+        if (typeof syncPicnicJourney === 'function') setTimeout(syncPicnicJourney, 0);
+        return true;
+      }
+      const target = PROJECT_STAGE_TARGETS[projectId]?.[stage] || null;
+      if (!target || !doc.getElementById(target)) return false;
+      originalShow.call(win, target);
+      if (projectId === 'playhouse') setTimeout(sync, 0);
+      if (projectId === 'picnic' && typeof syncPicnicJourney === 'function') setTimeout(syncPicnicJourney, 0);
+      return true;
+    }
+
+    seatFrame()?.addEventListener('load', () => {
+      setTimeout(applyPendingSeatView, 0);
+    });
+    applyPendingSeatView();
+
+    window.addEventListener('message', function(event) {
+      if (event.origin !== window.location.origin) return;
+      if (event.source !== seatFrame()?.contentWindow) return;
+      if (activeJourneyProject !== 'window-seat') return;
+      if (event.data?.type === 'stb-window-seat-guided-handoff') {
+        showSeatGuided(event.data.stage || 'store', event.data.snapshot || null);
+        return;
+      }
+      if (event.data?.type === 'stb-window-seat-guided-stage') {
+        showSeatGuided(event.data.stage, event.data.snapshot || null);
+      }
+    });
+
+    const PROJECT_TILE_TO_JOURNEY = Object.freeze({
+      'alcove-capture': 'alcove',
+      'window-parts': 'playhouse',
+      'picnic-chooser': 'picnic'
+    });
+
+    win.addEventListener('click', function(event) {
+      if (activeJourneyProject !== 'alcove') return;
+      const go = event.target.closest?.('[data-go]');
+      if (!go) return;
+      const target = go.getAttribute('data-go');
+      const map = {
+        'alcove-review':'store',
+        'request':'request',
+        'terms':'yard',
+        'recap':'record'
+      };
+      const destination = map[target] || null;
+      if (!destination) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      originalShow.call(win,destination);
+      setTimeout(syncAlcoveCommercialSurface,0);
+    }, true);
+
+    win.addEventListener('click', function(event) {
+      const navButton = event.target.closest?.('.recovery-nav button[data-journey-stage]');
+      if (!navButton || !activeJourneyProject) return;
+      const stage = navButton.dataset.journeyStage;
+      if (!stage) return;
+      if (activeJourneyProject === 'window-seat') {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        showSeatGuided(stage);
+        return;
+      }
+      if (showMappedProjectStage(activeJourneyProject, stage)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    }, true);
+
+    win.addEventListener('click', function(event) {
+      if (activeJourneyProject === 'picnic' && event.target.closest?.('#confirm-picnic')) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        doc.documentElement.dataset.picnicRevisionConfirmed = 'true';
+        originalShow.call(win, 'picnic-request');
+        setTimeout(syncPicnicJourney, 0);
+        return;
+      }
+      if (activeJourneyProject === 'playhouse' && event.target.closest?.('#playhouse-review [data-canonical-go="playhouse-request"]')) {
+        doc.documentElement.dataset.playhouseRevisionConfirmed = 'true';
+      }
+    }, true);
+
+    // Project identity is selected at the window-capture boundary so it runs
+    // before the older front-door preview handler can stop propagation.
+    // A route or stage change never selects a project implicitly.
+    win.addEventListener('click', function(event) {
+      const tile = event.target.closest?.('#projects .tile[data-go]');
+      if (!tile) return;
+      const target = tile.getAttribute('data-go');
+      if (target === 'start-own') {
+        selectJourneyProject(null);
+        return;
+      }
+      selectJourneyProject(PROJECT_TILE_TO_JOURNEY[target] || null);
+    }, true);
+
+    function openCurrentOutdoorBuildFromLegacyRoute() {
+      selectJourneyProject(null);
+      originalShow.call(win, 'outdoor-build-live');
+    }
+
+    win.show = function(id) {
+      const target = String(id);
+      if (QUARANTINED_OUTDOOR_TARGETS.has(target)) {
+        openCurrentOutdoorBuildFromLegacyRoute();
+        return;
+      }
+      const stage = LEGACY_TARGET_TO_STAGE[target] || null;
+      if (activeJourneyProject === 'window-seat') {
+        if (stage) { showSeatGuided(stage); return; }
+        if (target === 'projects' || target === 'landing' || target === 'my-projects' || target === 'archive') {
+          pendingSeatView = {mode:'continuous',stage:null};
+        }
+      } else if (stage && activeJourneyProject && showMappedProjectStage(activeJourneyProject, stage)) {
+        return;
+      }
+      const result = originalShow.apply(this, arguments);
+      if (target.startsWith('playhouse')) setTimeout(sync, 0);
+      return result;
+    };
+    annotateJourneyNav();
+    if (!canonicalJourneyReady()) return false;
+    doc.documentElement.dataset.canonicalJourneyVersion = canonicalJourney.version;
+    return true;
+  };
+
+  const scheduleApply = () => {
+    let attempts = 0;
+    const timer = setInterval(() => {
+      attempts += 1;
+      try {
+        if (apply() || attempts > 200) clearInterval(timer);
+      } catch (error) {
+        if (attempts > 200) clearInterval(timer);
+      }
+    }, 50);
+  };
+  shell.addEventListener('load', scheduleApply);
+  if (shell.contentDocument?.readyState === 'complete') scheduleApply();
+})();
+</script>
+</body>
+</html>
++Number(estimate.total).toFixed(2)+(estimate.complete?'':' for resolved operations; partial')
                       : ' · budgetary estimate unavailable')
-                    +' · raw Store procurement remains separate from project definition.';
+                    +' · answer '+String(definition.storeReference.answerVersionId || 'UNIDENTIFIED')+'.';
                 }
                 activate('#stb-config-parts [data-parts]','data-parts',partQty);
                 activate('[data-length]','data-length',demand.finishedLength);
