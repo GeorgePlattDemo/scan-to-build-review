@@ -536,7 +536,7 @@
     if(String(input.configurationVersion||'')!==d.configurationVersion) return false;
     if(Number(input.definedWorkpieceLengthIn)!==d.definedWorkpieceLengthIn) return false;
     if(String(input.workpiecePolicy || 'PRESERVE_DEFINED')!==String(d.workpiecePolicy || 'PRESERVE_DEFINED')) return false;
-    if(Number(input.sawAngleDeg)!==d.sawAngleDeg) return false;
+    if(Math.abs(Number(input.sawAngleDeg)-Number(d.sawAngleDeg))>1e-9) return false;
     if(String(input.cutPlane||'')!==d.cutPlane) return false;
     if(String(input.endIdentity||'')!==d.endIdentity) return false;
     if(String(input.endRelation||'')!==d.endRelation) return false;
