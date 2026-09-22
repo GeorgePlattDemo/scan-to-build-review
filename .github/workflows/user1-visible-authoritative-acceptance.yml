@@ -72,7 +72,7 @@ jobs:
       - name: Install browser acceptance dependency
         run: |
           npm init -y >/dev/null
-          npm install --no-save @playwright/test >/dev/null
+          npm install --no-save @playwright/test@1.63.0 >/dev/null
           npx playwright install --with-deps chromium
 
       - name: Reproduce generated browser Store package from exact pin
@@ -111,6 +111,9 @@ jobs:
       - name: Window Seat exact-source browser parity
         run: npx playwright test tests/window-seat-store-source-parity.spec.mjs --workers=1
 
+      - name: Cross-project behavioral isolation in a real browser
+        run: npx playwright test tests/cross-project-behavioral-isolation.spec.mjs --workers=1
+
       - name: Prove browser acceptance fails on unrepaired Review checkpoint
         run: |
           git fetch origin 740b510a9688c60e20af93179979dc83fe6b602f --depth=1
@@ -134,7 +137,7 @@ jobs:
           test "$rc" -ne 0
           grep -q "User 1 host binding did not finish before bench interaction" "$RUNNER_TEMP/review-before-browser.log"
 
-      - name: Audit existing Review test files against baseline without hiding failures
+      - name: Audit Review failures by assertion/cause against the baseline
         run: |
           audit_dir () {
             dir="$1"
@@ -143,26 +146,36 @@ jobs:
             (
               cd "$dir"
               for test_file in tests/*.test.mjs; do
-                if node "$test_file" > "$RUNNER_TEMP/one-test.log" 2>&1; then
+                log="$RUNNER_TEMP/$(basename "$test_file").log"
+                if node "$test_file" > "$log" 2>&1; then
                   echo "PASS $test_file"
                 else
-                  echo "FAIL $test_file"
-                  echo "$test_file" >> "$out"
+                  signature="$(grep -E -m1 'AssertionError|ERR_ASSERTION|Error:|not ok ' "$log" | sed -E 's/[[:space:]]+/ /g' || true)"
+                  if [ -z "$signature" ]; then
+                    signature="NO_ASSERTION_OR_ERROR_SIGNATURE"
+                  fi
+                  echo "FAIL $test_file :: $signature"
+                  printf '%s|%s\n' "$test_file" "$signature" >> "$out"
                 fi
               done
             )
           }
           git fetch origin 740b510a9688c60e20af93179979dc83fe6b602f --depth=1
+          rm -rf "$RUNNER_TEMP/review-baseline"
           mkdir -p "$RUNNER_TEMP/review-baseline"
           git archive 740b510a9688c60e20af93179979dc83fe6b602f | tar -x -C "$RUNNER_TEMP/review-baseline"
           audit_dir "$RUNNER_TEMP/review-baseline" "$RUNNER_TEMP/baseline-failures.txt"
           audit_dir "$GITHUB_WORKSPACE" "$RUNNER_TEMP/candidate-failures.txt"
-          echo "BASELINE FAILURES"
+          echo "BASELINE FAILURE SIGNATURES"
           cat "$RUNNER_TEMP/baseline-failures.txt"
-          echo "CANDIDATE FAILURES"
+          echo "CANDIDATE FAILURE SIGNATURES"
           cat "$RUNNER_TEMP/candidate-failures.txt"
-          comm -13 <(sort "$RUNNER_TEMP/baseline-failures.txt") <(sort "$RUNNER_TEMP/candidate-failures.txt") > "$RUNNER_TEMP/new-failures.txt"
-          test ! -s "$RUNNER_TEMP/new-failures.txt"
+          comm -13 <(sort "$RUNNER_TEMP/baseline-failures.txt") <(sort "$RUNNER_TEMP/candidate-failures.txt") > "$RUNNER_TEMP/new-or-changed-failures.txt"
+          if [ -s "$RUNNER_TEMP/new-or-changed-failures.txt" ]; then
+            echo "NEW OR CHANGED FAILURE SIGNATURES"
+            cat "$RUNNER_TEMP/new-or-changed-failures.txt"
+            exit 1
+          fi
 
   fault-detection:
     runs-on: ubuntu-latest
@@ -186,27 +199,45 @@ jobs:
       - name: Install browser acceptance dependency
         run: |
           npm init -y >/dev/null
-          npm install --no-save @playwright/test >/dev/null
+          npm install --no-save @playwright/test@1.63.0 >/dev/null
           npx playwright install --with-deps chromium
 
-      - name: Fault check — incorrect 46-degree SUPPORTABLE is detected
+      - name: Clean unmodified control run
         run: |
-          cp stb-store-zero-user1.generated.js "$RUNNER_TEMP/store.bundle.original.js"
+          node tools/generate-user1-store-browser-bundle.mjs --check stb-store-zero-user1.generated.js
+          STB_STORE_ZERO_ROOT="$GITHUB_WORKSPACE/store-zero" node tests/user1-generated-store-parity.test.mjs
+          python3 -m http.server 4173 --bind 127.0.0.1 > "$RUNNER_TEMP/fault-control-server.log" 2>&1 &
+          control_server_pid=$!
+          trap 'kill $control_server_pid || true' EXIT
+          for i in {1..30}; do
+            curl -fsS http://127.0.0.1:4173/system-build-current.html >/dev/null && break
+            sleep 1
+          done
+          npx playwright test tests/user1-independent-browser.acceptance.spec.mjs --workers=1
+
+      - name: Fault check — incorrect 46-degree SUPPORTABLE is detected specifically
+        run: |
+          rm -rf "$RUNNER_TEMP/fault-46"
+          mkdir -p "$RUNNER_TEMP/fault-46"
+          git archive HEAD | tar -x -C "$RUNNER_TEMP/fault-46"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$RUNNER_TEMP/fault-46/node_modules"
           python3 - <<'PY'
           from pathlib import Path
-          p=Path("stb-store-zero-user1.generated.js")
+          import os
+          p=Path(os.environ["RUNNER_TEMP"])/"fault-46/stb-store-zero-user1.generated.js"
           s=p.read_text()
           old='maxDeg: 45,'
           assert old in s
           p.write_text(s.replace(old,'maxDeg: 89,',1))
           PY
+          cd "$RUNNER_TEMP/fault-46"
           set +e
           STB_STORE_ZERO_ROOT="$GITHUB_WORKSPACE/store-zero" node tests/user1-generated-store-parity.test.mjs > "$RUNNER_TEMP/fault-46.log" 2>&1
           rc=$?
           set -e
           cat "$RUNNER_TEMP/fault-46.log"
           test "$rc" -ne 0
-          cp "$RUNNER_TEMP/store.bundle.original.js" stb-store-zero-user1.generated.js
+          grep -Fq "FAULT_TARGET_46_DEGREE_MITER_REFUSAL" "$RUNNER_TEMP/fault-46.log"
 
       - name: Fault check — visible answer differing from Store answer is detected
         run: |
@@ -234,8 +265,10 @@ jobs:
           set -e
           cat "$RUNNER_TEMP/fault-visible.log"
           test "$rc" -ne 0
+          grep -Fq "FAULT_TARGET_VISIBLE_STORE_VALUE_MISMATCH" "$RUNNER_TEMP/fault-visible.log"
+          kill "$server_pid" || true
 
-      - name: Fault check — older Store response applied to current revision is detected
+      - name: Fault check — synchronous Store answer revision mismatch is detected specifically
         run: |
           rm -rf "$RUNNER_TEMP/fault-revision"
           mkdir -p "$RUNNER_TEMP/fault-revision"
@@ -261,3 +294,5 @@ jobs:
           set -e
           cat "$RUNNER_TEMP/fault-revision.log"
           test "$rc" -ne 0
+          grep -Fq "FAULT_TARGET_STORE_ANSWER_VERSION_MISMATCH" "$RUNNER_TEMP/fault-revision.log"
+          kill "$server_pid" || true
