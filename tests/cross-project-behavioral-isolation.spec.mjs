@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const USER1_STORE_PIN='bc1a77297df752e32fb3687acc883a629c0b5b13';
+const USER1_STORE_PIN='34d4c6e7a2cb7e4bce428e396c7d7cbf228d20b7';
 const S001_STORE_PIN='4402abeb6b0299a5b6db2eec85ed04c3b0236bcc';
 const WINDOW_SEAT_STORE_PIN='f88ec61c42446755d00259f88e7fd09f2702fd92';
 
