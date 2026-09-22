@@ -13,7 +13,11 @@ const envelopeDoc=readFileSync(join(root,'D001-BOARD-EDGE-MILL-REFERENCE-0.3.md'
 function numberAfter(re,source,label){
   const match=source.match(re);
   if(!match) throw new Error('Unable to parse '+label+' from exact Store source');
-  return Number(match[1].replace(/,/g,''));
+  const raw=match[1].replace(/,/g,'').trim();
+  const fraction=raw.match(/^([0-9]+(?:\.[0-9]+)?)\/([0-9]+(?:\.[0-9]+)?)$/);
+  const value=fraction ? Number(fraction[1])/Number(fraction[2]) : Number(raw);
+  if(!Number.isFinite(value)) throw new Error('Parsed non-numeric '+label+' from exact Store source: '+raw);
+  return value;
 }
 const source={
   fixedFulfillment:numberAfter(/fixed_reference_fulfillment\s*=\s*\$([0-9.]+)/,recoveryDoc,'fixed fulfillment'),
@@ -25,9 +29,13 @@ const source={
   maxEdgeRemoval:numberAfter(/maximum total edge removal: \*\*([0-9.]+) in\*\*/,envelopeDoc,'max edge removal'),
   passDepth:numberAfter(/mill depth per pass: \*\*([0-9.]+) in\*\*/,envelopeDoc,'pass depth'),
   spindleRpm:numberAfter(/spindle reference: \*\*([0-9,]+) RPM\*\*/,envelopeDoc,'spindle RPM'),
-  cutterDiameter:numberAfter(/cutter reference: \*\*([0-9/]+) in/,envelopeDoc,'cutter diameter fraction') // replaced below
+  cutterDiameter:numberAfter(/cutter reference: \*\*([0-9/]+) in/,envelopeDoc,'cutter diameter fraction'),
+  cuttingEdges:numberAfter(/cutter reference: \*\*[0-9/]+ in, ([0-9.]+) cutting edges\*\*/,envelopeDoc,'cutting edges'),
+  materialHandlingFabrication:numberAfter(/\| Material handling \/ fabrication \| \$([0-9.]+)/,recoveryDoc,'material handling / fabrication'),
+  inspectLabelBundleStage:numberAfter(/\| Inspect \/ label \/ bundle \/ stage \| \$([0-9.]+)/,recoveryDoc,'inspect / label / bundle / stage'),
+  facilityAdminRework:numberAfter(/\| Facility \/ admin \/ rework reserve \| \$([0-9.]+)/,recoveryDoc,'facility / admin / rework reserve'),
+  serviceCommercialReserve:numberAfter(/\| Service \/ commercial reserve \| \$([0-9.]+)/,recoveryDoc,'service / commercial reserve')
 };
-source.cutterDiameter=0.375;
 source.pineMaterial=numberAfter(/Select Pine \| \$([0-9,.]+) \| 56\.16 min/,recoveryDoc,'Pine material');
 source.pineRecovery=numberAfter(/Select Pine \| \$[0-9,.]+ \| 56\.16 min \| \$([0-9,.]+)/,recoveryDoc,'Pine recovery');
 source.pineQ=numberAfter(/Select Pine \| \$[0-9,.]+ \| 56\.16 min \| \$[0-9,.]+ \| \$([0-9,.]+)/,recoveryDoc,'Pine selling basis');
@@ -46,13 +54,13 @@ test('Window Seat browser Store reference matches its exact declared Store sourc
 
   expect(snap.storeReference.profile.feedInPerMin).toBe(source.pineFeed);
   expect(snap.storeReference.profile.cutterDiameterIn).toBe(source.cutterDiameter);
-  expect(snap.storeReference.profile.cuttingEdges).toBe(2);
+  expect(snap.storeReference.profile.cuttingEdges).toBe(source.cuttingEdges);
   expect(snap.storeReference.profile.spindleRpm).toBe(source.spindleRpm);
 
-  expect(snap.storeReference.recoveryBreakdown.materialHandlingFabrication).toBe(110);
-  expect(snap.storeReference.recoveryBreakdown.inspectLabelBundleStage).toBe(75);
-  expect(snap.storeReference.recoveryBreakdown.facilityAdminRework).toBe(70);
-  expect(snap.storeReference.recoveryBreakdown.serviceCommercialReserve).toBe(110);
+  expect(snap.storeReference.recoveryBreakdown.materialHandlingFabrication).toBe(source.materialHandlingFabrication);
+  expect(snap.storeReference.recoveryBreakdown.inspectLabelBundleStage).toBe(source.inspectLabelBundleStage);
+  expect(snap.storeReference.recoveryBreakdown.facilityAdminRework).toBe(source.facilityAdminRework);
+  expect(snap.storeReference.recoveryBreakdown.serviceCommercialReserve).toBe(source.serviceCommercialReserve);
   expect(source.fixedFulfillment).toBe(365);
   expect(source.cellBaseline).toBe(60);
   expect(source.pineCycleAnchor).toBe(56.159065);
@@ -67,4 +75,50 @@ test('Window Seat browser Store reference matches its exact declared Store sourc
   expect(snap.storeReference.minutes).toBeCloseTo(56.16,2);
   expect(snap.authority.physicalFabrication).toBe(false);
   expect(snap.authority.cycleStart).toBe(false);
+});
+
+test('Window Seat supported edits recompute definition, Store basis, displayed value, and retained revision coherently', async ({page}) => {
+  const base=process.env.STB_REVIEW_URL || 'http://127.0.0.1:4173';
+  await page.goto(base+'/stb-window-seat-space-utilization-0.7.4.html');
+  await page.waitForFunction(() => !!window.STBWindowSeatJourney);
+
+  const initial=await page.evaluate(() => window.STBWindowSeatJourney.snapshot());
+  const initialDisplayed=Number((await page.locator('#e-price').textContent()).replace(/[^0-9.]/g,''));
+  expect(initial.project.id,'WINDOW_SEAT_EDIT_WRONG_PROJECT').toBe('window-seat');
+  expect(initial.storeReference.pin.commit,'WINDOW_SEAT_EDIT_WRONG_STORE_AUTHORITY').toBe(STORE_PIN);
+  expect(initialDisplayed,'WINDOW_SEAT_EDIT_DISPLAY_NOT_STORE_VALUE').toBe(initial.storeReference.q);
+
+  await page.locator('#c-wC').fill('60');
+  await page.locator('#c-wC').dispatchEvent('input');
+  const edited=await page.evaluate(() => window.STBWindowSeatJourney.snapshot());
+  const editedDisplayed=Number((await page.locator('#e-price').textContent()).replace(/[^0-9.]/g,''));
+
+  expect(edited.definition.W,'WINDOW_SEAT_EDIT_DEFINITION_NOT_RECOMPUTED').toBe(initial.definition.W+5);
+  expect(edited.storeRequest.revision,'WINDOW_SEAT_EDIT_REQUEST_REVISION_DRIFT').toBe(edited.revision.number);
+  expect(edited.storeReference.revision,'WINDOW_SEAT_EDIT_STORE_REVISION_DRIFT').toBe(edited.revision.number);
+  expect(edited.storeReference.pin.commit,'WINDOW_SEAT_EDIT_STORE_AUTHORITY_DRIFT').toBe(STORE_PIN);
+  expect(editedDisplayed,'WINDOW_SEAT_EDIT_DISPLAY_NOT_RECOMPUTED_STORE_VALUE').toBe(edited.storeReference.q);
+  expect(edited.storeReference.q,'WINDOW_SEAT_EDIT_STORE_VALUE_STALE').not.toBe(initial.storeReference.q);
+
+  await page.locator('[data-ws-confirm-send]').click();
+  let confirmed=await page.evaluate(() => window.STBWindowSeatJourney.snapshot());
+  expect(confirmed.revision.confirmed,'WINDOW_SEAT_CONFIRM_REVISION_NOT_CONFIRMED').toBe(true);
+  expect(confirmed.storeAnswer.atRevision,'WINDOW_SEAT_CONFIRM_ANSWER_REVISION_DRIFT').toBe(confirmed.revision.number);
+  expect(confirmed.storeAnswer.pin.commit,'WINDOW_SEAT_CONFIRM_STORE_AUTHORITY_DRIFT').toBe(STORE_PIN);
+  expect(confirmed.storeAnswer.q,'WINDOW_SEAT_CONFIRM_ANSWER_NOT_CURRENT_STORE_VALUE').toBe(confirmed.storeReference.q);
+
+  await page.locator('#c-wC').fill('61');
+  await page.locator('#c-wC').dispatchEvent('input');
+  const revised=await page.evaluate(() => window.STBWindowSeatJourney.snapshot());
+  expect(revised.revision.number,'WINDOW_SEAT_REVISE_DID_NOT_INCREMENT').toBe(confirmed.revision.number+1);
+  expect(revised.revision.confirmed,'WINDOW_SEAT_REVISE_LEFT_REVISION_CONFIRMED').toBe(false);
+  expect(revised.storeAnswer.stale,'WINDOW_SEAT_REVISE_OLD_ANSWER_NOT_HISTORICAL').toBe(true);
+  expect(revised.storeAnswer.atRevision,'WINDOW_SEAT_REVISE_OLD_ANSWER_IDENTITY_CHANGED').toBe(confirmed.revision.number);
+  expect(revised.storeReference.revision,'WINDOW_SEAT_REVISE_LIVE_REFERENCE_STALE').toBe(revised.revision.number);
+
+  await page.locator('[data-ws-confirm-send]').click();
+  confirmed=await page.evaluate(() => window.STBWindowSeatJourney.snapshot());
+  expect(confirmed.storeAnswer.stale,'WINDOW_SEAT_RECONFIRM_ANSWER_STILL_HISTORICAL').toBe(false);
+  expect(confirmed.storeAnswer.atRevision,'WINDOW_SEAT_RECONFIRM_ANSWER_REVISION_DRIFT').toBe(confirmed.revision.number);
+  expect(confirmed.storeAnswer.pin.commit,'WINDOW_SEAT_RECONFIRM_STORE_AUTHORITY_DRIFT').toBe(STORE_PIN);
 });
