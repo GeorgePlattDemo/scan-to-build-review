@@ -10,10 +10,10 @@ const sandbox={window:{}};
 vm.runInNewContext(contractSource,sandbox,{filename:'stb-store-handoff-contract.js'});
 const contract=sandbox.window.STBStoreHandoffContract;
 
-const STORE_SHA='95c639a1d0d4812df097ad1eb628594b38f921de';
+const STORE_SHA='f88ccaf9a2624899e255e66b51111e2b02309dad';
 const SYSTEM_SHA='900dbd13f079f8a5f8d76d49c723fd35279164e8';
-const INPUT_HASH='5de0367b62087cb0174ef5f1e101e22ded3728ba71906868628a985afafa078b';
-const RESULT_HASH='9ad8d16a7c211d420b83e46ed8a8d224bd289e26a48764ff8d0389b6db698604';
+const INPUT_HASH='e186df5ead47f0c3c233477b18d00206643d8e5e1adf03fdd6dabdc95a0a5168';
+const RESULT_HASH='425af5de05fb614b87ca308696d0d19af0b2701ce2f3fd51c8a6c3ca84042f4f';
 
 const exactDemand={
   configurationId:'SYO-USER1-XBRACE',
@@ -46,6 +46,24 @@ assert.equal(storeAnswer.machineService,5.89);
 assert.equal(storeAnswer.combinedValue,9.02);
 assert.equal(storeAnswer.estimate.cycle.T_job_min,1.4128);
 
+const formalStoreAnswerA=contract.requestUser1StoreEvaluation(exactDemand,{
+  requestId:'JOB1-E2E-A',
+  currentStorePin:STORE_SHA,
+  checkedAt:'2026-09-22T18:50:00.000Z'
+});
+const formalStoreAnswerB=contract.requestUser1StoreEvaluation(exactDemand,{
+  requestId:'JOB1-E2E-B',
+  currentStorePin:STORE_SHA,
+  checkedAt:'2026-09-22T18:51:00.000Z'
+});
+assert.equal(formalStoreAnswerA.complete,true);
+assert.equal(formalStoreAnswerA.freshEvaluation,true);
+assert.equal(formalStoreAnswerB.complete,true);
+assert.notEqual(formalStoreAnswerA.evaluationReceipt.requestId,formalStoreAnswerB.evaluationReceipt.requestId);
+assert.equal(formalStoreAnswerA.calculationIdentity.inputHash,INPUT_HASH);
+assert.equal(formalStoreAnswerA.calculationIdentity.resultHash,RESULT_HASH);
+assert.equal(contract.sameUser1StoreAnswerIdentity(storeAnswer,formalStoreAnswerA),true);
+
 // ENTRY / DEFINE
 assert.match(frame,/Start your own project/);
 assert.match(frame,/2×4 · 60 in/);
@@ -64,12 +82,21 @@ assert.match(shell,/if \(definition\.storeReference\?\.complete !== true\)/);
 assert.match(shell,/STORE_REFRESH_REQUIRED · confirmation is blocked until Store evaluates this exact revision/);
 assert.match(shell,/confirmButton\.disabled = !storeComplete/);
 
-// CONFIRM creates one Job 1 handoff with the Store answer attached.
+// CONFIRM performs a fresh Store-authority check on every press, then creates the Job 1 handoff.
 assert.match(shell,/job:'JOB 1 · START YOUR OWN'/);
 assert.match(shell,/source:'start-own'/);
-assert.match(shell,/storeReference:definition\.storeReference/);
+assert.match(shell,/storeReference:freshStoreReference/);
 assert.match(shell,/stb-proof-handoff-job1/);
 assert.match(shell,/originalShow\.call\(win,'proof-store'\)/);
+assert.match(shell,/currentStoreAuthorityUrl = 'https:\/\/api\.github\.com\/repos\/GeorgePlattDemo\/scan-to-build-store\/commits\/main'/);
+assert.match(shell,/cache:'no-store'/);
+assert.match(shell,/const requestId = nextStoreRequestId\(definition\)/);
+assert.match(shell,/requestUser1StoreEvaluation/);
+assert.match(shell,/freshStoreAnswer\?\.freshEvaluation !== true/);
+assert.match(shell,/freshStoreAnswer\?\.evaluationReceipt\?\.requestId !== requestId/);
+assert.match(shell,/sameUser1StoreAnswerIdentity\(definition\.storeReference,freshStoreAnswer\)/);
+assert.match(shell,/STORE_ANSWER_CHANGED_RECONFIRM_REQUIRED/);
+assert.equal(shell.includes('stbLastConfirmed'),false,'Job 1 Store-send button became one-use again');
 
 // Canonical downstream actor mapping for Job 1.
 assert.match(shell,/'start-own': Object\.freeze\(\{[\s\S]*?store:'proof-store'[\s\S]*?request:'proof-accept'[\s\S]*?yard:'proof-yard'[\s\S]*?terms:'proof-terms'[\s\S]*?record:'proof-record'/);
@@ -143,6 +170,16 @@ assert.equal(contract.user1StoreReference.source.storePin,STORE_SHA);
 assert.equal(contract.user1StoreReference.source.systemIntegrationPin,SYSTEM_SHA);
 assert.equal(contract.user1StoreReference.estimate.calculationIdentity.inputHash,INPUT_HASH);
 assert.equal(contract.user1StoreReference.estimate.calculationIdentity.resultHash,RESULT_HASH);
+
+// A moved Store authority invalidates the displayed result even when the definition did not change.
+const staleStoreAnswer=contract.requestUser1StoreEvaluation(exactDemand,{
+  requestId:'JOB1-E2E-STALE',
+  currentStorePin:'0000000000000000000000000000000000000000',
+  checkedAt:'2026-09-22T18:52:00.000Z'
+});
+assert.equal(staleStoreAnswer.status,'STORE_AUTHORITY_CHANGED');
+assert.equal(staleStoreAnswer.complete,false);
+assert.equal(staleStoreAnswer.combinedValue,null);
 
 // Any changed governing input is not allowed to borrow Job 1's Store result.
 for(const changed of [
