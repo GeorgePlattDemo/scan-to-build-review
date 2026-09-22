@@ -7,10 +7,12 @@ const shell = read('system-build-current.html');
 const startOwn = read('stb-start-own-0.11.html');
 const outdoor = read('stb-outdoor-build.html');
 const windowSeat = read('stb-window-seat-space-utilization-0.7.4.html');
+const generatedStoreSource = read('stb-store-zero-user1.generated.js');
 const contractSource = read('stb-store-handoff-contract.js');
 const alcoveBase = read('system-build-base-8d8a9dd.html');
 
 const sandbox = {window:{}};
+vm.runInNewContext(generatedStoreSource,sandbox,{filename:'stb-store-zero-user1.generated.js'});
 vm.runInNewContext(contractSource,sandbox,{filename:'stb-store-handoff-contract.js'});
 const contract = sandbox.window.STBStoreHandoffContract;
 
@@ -40,6 +42,10 @@ const xBraceQ = contract.quoteStartOwnBoardSequence({
   sawAngleDeg:30,
   drillCycles:0,
   spotCycles:2,
+  spotDemand:{
+    required:true,mode:'SPOT_ON_LOCATION',countPerPart:1,totalCount:2,
+    locationRule:'CENTERED_ON_PART',locationAlongLengthIn:8,acrossWidthRule:'CENTERED_ON_WIDE_FACE'
+  },
   unresolvedConditions:[],
   widthIn:3.5
 });
