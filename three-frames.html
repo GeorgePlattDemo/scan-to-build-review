@@ -207,7 +207,7 @@
     <div class="frame-tab">THE SAME BOARD, ON THE BENCH</div>
     <div class="frame-in">
       <div class="stage">
-      <svg id="stb-user1-bench-svg" viewBox="0 0 900 320" role="img" aria-label="One five-foot two-by-four, marked left to right: three thirty-degree cuts make two sixteen-inch parts, leaving twenty-seven and five-eighths inches. The current retained-control minimum is twenty-four inches, leaving three and five-eighths inches spare.">
+      <svg id="stb-user1-bench-svg" viewBox="0 0 900 320" role="img" aria-label="Store-selected parent stock with the current finished-member definition. The Store answer supplies parent length, operation sequence, retained remainder, capability, and modeled economics.">
         <defs>
           <linearGradient id="obFace" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stop-color="#ece1cc"/><stop offset=".5" stop-color="#ddceb0"/><stop offset="1" stop-color="#cbb894"/>
@@ -224,7 +224,7 @@
           </filter>
         </defs>
         <g font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,Arial,sans-serif">
-          <text id="stb-bench-stock-line" x="40" y="34" font-size="12" font-weight="700" fill="#8a8580" letter-spacing="1">ONE 5-FOOT 2×4 · 60 IN · one board, marked left to right · schematic</text>
+          <text id="stb-bench-stock-line" x="40" y="34" font-size="12" font-weight="700" fill="#8a8580" letter-spacing="1">STORE-SELECTED 2×4 PARENT · LENGTH PENDING STORE ANSWER · SCHEMATIC</text>
 
           <g filter="url(#obShadow)">
             <path d="M86 100 L860 100 L860 180 L40 180 Z" fill="url(#obFace)" stroke="#9f895f" stroke-width="1.4"/>
@@ -238,9 +238,11 @@
             <path d="M305 101 L523 101 L477 179 L259 179 Z" fill="#2f6f9e" opacity=".05"/>
           </g>
 
-          <!-- control-surface band, last 24in = x532..860 -->
-          <rect x="532" y="101" width="328" height="78" fill="url(#obHatch)"/>
-          <rect x="532" y="101" width="328" height="78" fill="none" stroke="#2f6f9e" stroke-width="1.5" stroke-dasharray="6 4" opacity=".8"/>
+          <!-- retained-control band is redrawn from the Store-selected parent plan -->
+          <g id="stb-bench-static-control">
+            <rect x="532" y="101" width="328" height="78" fill="url(#obHatch)"/>
+            <rect x="532" y="101" width="328" height="78" fill="none" stroke="#2f6f9e" stroke-width="1.5" stroke-dasharray="6 4" opacity=".8"/>
+          </g>
 
           <!-- three 30deg cuts: x40, x259, x477 -->
           <g id="stb-bench-static-cuts" stroke="#a85a2a" stroke-width="5" stroke-linecap="round">
@@ -263,7 +265,7 @@
           <text id="stb-bench-static-part1-label" x="150" y="124" text-anchor="middle" font-size="11" font-weight="700" fill="#584533">PART 1</text>
           <text id="stb-bench-static-part2-label" x="368" y="124" text-anchor="middle" font-size="11" font-weight="700" fill="#584533">PART 2</text>
           <!-- true spare 32..36in = x477..532 (only 55px wide; small label above) -->
-          <text id="stb-bench-spare-label" x="504" y="96" text-anchor="middle" font-size="8.5" fill="#9a8a72">3⅝ in spare</text>
+          <text id="stb-bench-spare-label" x="504" y="96" text-anchor="middle" font-size="8.5" fill="#9a8a72">Store plan pending</text>
           <text x="696" y="136" text-anchor="middle" font-size="11" font-weight="700" fill="#2f6f9e">CONTROL SURFACE</text>
           <text x="696" y="151" text-anchor="middle" font-size="9.5" fill="#2f6f9e">machine grips this · 24 in</text>
 
@@ -275,7 +277,7 @@
           </g>
           <text id="stb-bench-part1-dim" x="149" y="217" text-anchor="middle" font-size="11" font-weight="700" fill="#7a4f22">16 in</text>
           <text id="stb-bench-part2-dim" x="368" y="217" text-anchor="middle" font-size="11" font-weight="700" fill="#7a4f22">16 in</text>
-          <text id="stb-bench-remain-label" x="668" y="217" text-anchor="middle" font-size="11" font-weight="600" fill="#9a8a72">27⅝ in remains · 24 in retained-control minimum · 3⅝ in spare</text>
+          <text id="stb-bench-remain-label" x="668" y="217" text-anchor="middle" font-size="11" font-weight="600" fill="#9a8a72">Store-selected remainder and retained-control check pending</text>
           <g id="stb-bench-dynamic-geometry"></g>
 
           <!-- capability line: within limits but tight -->
@@ -285,7 +287,7 @@
             <path d="M15 13 l2.2 2.4 l4-5" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
             <text x="34" y="17" font-size="11" font-weight="700" fill="#6e4818">WITHIN LIMITS — BUT TIGHT</text>
           </g>
-          <text id="stb-bench-control-copy" x="288" y="261" font-size="10.5" fill="#7b6a58">The 60-in workpiece leaves 27⅝ in after the three cut kerfs; 24 in is the current retained-control minimum.</text>
+          <text id="stb-bench-control-copy" x="288" y="261" font-size="10.5" fill="#7b6a58">The Store answer supplies the parent length and proves the retained-control remainder against the same cut plan.</text>
 
           <g transform="translate(40 286)" font-size="11">
             <line x1="2" y1="0" x2="16" y2="20" stroke="#a85a2a" stroke-width="5" stroke-linecap="round"/>
@@ -299,13 +301,13 @@
       </svg>
       </div>
       <div class="specrow">
-        <div class="spec"><b>STOCK</b><span>2×4 · 60 in</span></div>
+        <div class="spec"><b>STOCK</b><span id="stb-bench-stock-spec">2×4 · Store-selected</span></div>
         <div class="spec"><b>EACH PART</b><span id="stb-bench-length-spec">16 in</span></div>
         <div class="spec"><b>END CUTS</b><span id="stb-bench-angle-spec">30°</span></div>
         <div class="spec"><b>PARTS</b><span id="stb-bench-parts-spec">2</span></div>
         <div class="spec"><b>CONTROL</b><span>24 in min</span></div>
       </div>
-      <div class="stb-system-answer" id="stb-system-answer" aria-live="polite"><b>STORE</b> · this same 60-in definition will be checked against current Store and machine truth.</div>
+      <div class="stb-system-answer" id="stb-system-answer" aria-live="polite"><b>STORE</b> · finished-member demand will be resolved against current Store stock, sequence, capability, and modeled economics.</div>
       <ol class="steps">
         <li id="stb-bench-cut-step"><b>Cut it.</b> Three cuts along the one board — a 30° angle each — make the two parts.</li>
         <li id="stb-bench-drill-step"><b>Drill it.</b> One spot, on location, centered in each part.</li>
@@ -317,9 +319,9 @@
 
   <div class="bench-panel" id="stb-bench-controls">
     <h2>Change of plans?</h2>
-    <p class="lede">These controls make a new version of the same project. The 60-in Store-origin workpiece stays the workpiece unless that fact is explicitly changed in a later pass.</p>
+    <p class="lede">These controls make a new version of the same finished-member demand. Store selects the parent stock again for each revision; no display seed is a parent-length input.</p>
     <div class="control-grid">
-      <div class="control"><b>PARTS</b><span class="value" id="stb-config-parts-value">2 parts</span><div class="choice-row" id="stb-config-parts"><button type="button" data-parts="1">1</button><button type="button" class="on" data-parts="2">2</button></div></div>
+      <div class="control"><b>PARTS</b><span class="value" id="stb-config-parts-value">2 parts</span><div class="choice-row" id="stb-config-parts"><button type="button" data-parts="1">1</button><button type="button" class="on" data-parts="2">2</button><button type="button" data-parts="4">4</button></div></div>
       <div class="control"><b>EACH PART</b><span class="value" id="stb-config-length-value">16 in</span><input id="stb-config-length" type="number" min="1" max="35" step="0.125" value="16" inputmode="decimal"><div class="choice-row"><button type="button" data-length="12">12</button><button type="button" class="on" data-length="16">16</button><button type="button" data-length="18">18</button><button type="button" data-length="24">24</button></div></div>
       <div class="control"><b>END ANGLE</b><span class="value" id="stb-config-angle-value">30° · both ends · parallel</span><input id="stb-config-angle" type="number" min="0" max="45" step="0.5" value="30" inputmode="decimal"><div class="choice-row"><button type="button" data-angle="0">0°</button><button type="button" data-angle="15">15°</button><button type="button" class="on" data-angle="30">30°</button><button type="button" data-angle="45">45°</button></div></div>
       <div class="control"><b>SPOT</b><span class="value" id="stb-config-spot-value">1 centered spot / part</span><div class="choice-row" id="stb-config-spot"><button type="button" class="on" data-spot="centered">CENTERED</button><button type="button" data-spot="none">NONE</button></div></div>
@@ -331,7 +333,7 @@
     <div class="definition-grid">
       <div class="defrow"><span>Project</span><span>Outdoor X Brace repair</span></div>
       <div class="defrow"><span>Store-origin material</span><span>2×4 stud</span></div>
-      <div class="defrow"><span>Defined workpiece</span><span>60 in</span></div>
+      <div class="defrow"><span>Store-selected parent</span><span id="stb-def-parent">pending Store answer</span></div>
       <div class="defrow"><span>Parts</span><span id="stb-def-parts">2</span></div>
       <div class="defrow"><span>Finished length</span><span id="stb-def-length">16 in each</span></div>
       <div class="defrow"><span>Ends</span><span id="stb-def-angle">30° · both · parallel</span></div>
@@ -376,7 +378,7 @@
       <div class="basis-box"><b>CYCLE MODEL</b><span id="stb-basis-cycle-model">—</span></div>
       <div class="basis-box"><b>MODELED JOB TIME</b><span id="stb-basis-job-time">—</span></div>
     </div>
-    <p class="lede" style="margin-top:12px">The project remains one 60-in defined workpiece. Store procurement may identify a longer raw SKU behind that workpiece; procurement does not redefine the project.</p>
+    <p class="lede" style="margin-top:12px">Finished-member geometry is the project requirement. Parent SKU, parent length, parent count, sequence, and remainder are Store resolution results for this revision.</p>
   </div>
 
   <div class="bench-panel warn">
