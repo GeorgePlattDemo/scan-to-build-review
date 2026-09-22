@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 const read = path => fs.readFileSync(path,'utf8');
 const surface = read('three-frames.html');
 const shell = read('system-build-current.html');
+const generatedStoreSource = read('stb-store-zero-user1.generated.js');
 const contractSource = read('stb-store-handoff-contract.js');
 
 // Landing remains the simple Scan-to-Build entry / intent surface.
@@ -88,6 +89,7 @@ assert.equal(shell.includes('parentLengthIn = 72'),false);
 
 // Shared contract begins at the frozen 60-in workpiece and preserves the resolved 3/16 spot meaning.
 const sandbox = {window:{}};
+vm.runInNewContext(generatedStoreSource,sandbox,{filename:'stb-store-zero-user1.generated.js'});
 vm.runInNewContext(contractSource,sandbox,{filename:'stb-store-handoff-contract.js'});
 const contract = sandbox.window.STBStoreHandoffContract;
 assert.equal(contract.version,'0.7');
@@ -116,6 +118,10 @@ const startQuote = contract.quoteStartOwnBoardSequence({
   sawAngleDeg:30,
   drillCycles:0,
   spotCycles:2,
+  spotDemand:{
+    required:true,mode:'SPOT_ON_LOCATION',countPerPart:1,totalCount:2,
+    locationRule:'CENTERED_ON_PART',locationAlongLengthIn:8,acrossWidthRule:'CENTERED_ON_WIDE_FACE'
+  },
   unresolvedConditions:[],
   widthIn:3.5
 });
