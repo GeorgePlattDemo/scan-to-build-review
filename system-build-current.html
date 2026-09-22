@@ -832,6 +832,10 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 confirmButton.addEventListener('click', () => {
                   const definition = syncAndRender('CONFIRM');
                   if (!definition) return;
+                  if (definition.storeReference?.complete !== true) {
+                    setText('stb-before-send','STORE_REFRESH_REQUIRED · confirmation is blocked until Store evaluates this exact revision. The browser will not substitute a Store answer.');
+                    return;
+                  }
                   const confirmationKey = definition.definitionId+'@'+definition.versionId;
                   if (confirmButton.dataset.stbLastConfirmed === confirmationKey) return;
 
@@ -1738,7 +1742,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       +'<div class="proof-actor-grid">'
         +'<div><b>STORE PROCUREMENT SKU</b><span id="proof-store-material-sku">—</span></div>'
         +'<div><b>MATERIAL VALUE</b><span id="proof-store-material-value">—</span></div>'
-        +'<div><b>MODELED CELL RECOVERY</b><span id="proof-store-cell-recovery">UNRESOLVED</span></div>'
+        +'<div><b>MODELED MACHINE SERVICE</b><span id="proof-store-cell-recovery">UNRESOLVED</span></div>'
         +'<div><b>STORE BUDGETARY Q</b><span id="proof-store-q">NOT COMPLETE</span></div>'
         +'<div><b>MODELED JOB TIME</b><span id="proof-store-cycle">—</span></div>'
       +'</div>'
@@ -1820,7 +1824,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       });
       const title=doc.getElementById('proof-store-title');
       if(title)title.textContent='STORE ANSWER · '+job;
-      const materialResolution=payload.storeReference?.materialResolution || null;
+      const storeReference=payload.storeReference || null;
+      const materialResolution=storeReference?.materialResolution || null;
       const definedWorkpiece=payload.definition?.material?.definedWorkpieceLengthIn?.value
         ?? payload.sourceAuthority?.definedWorkpieceLengthIn?.value
         ?? payload.physicalDemand?.parentLengthIn
@@ -1830,17 +1835,23 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       const materialSku=doc.getElementById('proof-store-material-sku');
       const materialValue=doc.getElementById('proof-store-material-value');
       const materialSource=doc.getElementById('proof-store-material-source');
-      if(materialSku)materialSku.textContent=materialResolution?.storeSku || 'NOT MAPPED ON THIS PROJECT PAYLOAD';
-      if(materialValue)materialValue.textContent=materialResolution?.status==='MAPPED' && Number.isFinite(Number(materialResolution.materialTotal))
-        ? '$'+Number(materialResolution.materialTotal).toFixed(2)
+      if(materialSku)materialSku.textContent=materialResolution?.storeSku || materialResolution?.pricingReferenceSku || 'NOT MAPPED ON THIS PROJECT PAYLOAD';
+
+      const estimate=storeReference?.estimate || null;
+      const totals=estimate?.totals || null;
+      const materialAmount=totals?.material ?? estimate?.material ?? materialResolution?.materialTotal ?? null;
+      const machineService=totals?.machine_service ?? estimate?.cellRecovery ?? null;
+      const q=totals?.Q ?? estimate?.total ?? null;
+      const complete=storeReference?.complete === true || estimate?.complete === true;
+
+      if(materialValue)materialValue.textContent=Number.isFinite(Number(materialAmount))
+        ? '$'+Number(materialAmount).toFixed(2)
         : 'NOT ESTABLISHED';
-      const estimate=payload.storeReference?.estimate || null;
       const termsMaterial=doc.getElementById('proof-terms-material');
-      if(termsMaterial)termsMaterial.textContent=estimate?.material!=null
-        ? '$'+Number(estimate.material).toFixed(2)+' material'
-        : (materialResolution?.status==='MAPPED' && Number.isFinite(Number(materialResolution.materialTotal))
-          ? '$'+Number(materialResolution.materialTotal).toFixed(2)+' material'
-          : 'NOT ESTABLISHED');
+      if(termsMaterial)termsMaterial.textContent=Number.isFinite(Number(materialAmount))
+        ? '$'+Number(materialAmount).toFixed(2)+' material'
+        : 'NOT ESTABLISHED';
+
       const recoveryEl=doc.getElementById('proof-store-cell-recovery');
       const qEl=doc.getElementById('proof-store-q');
       const cycleEl=doc.getElementById('proof-store-cycle');
@@ -1851,30 +1862,40 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       const termsNote=doc.getElementById('proof-terms-note');
       const recordEconomics=doc.getElementById('proof-record-economics');
       const isStartOwn=proofHandoff?.source==='start-own';
-      if(recoveryEl)recoveryEl.textContent=estimate?.cellRecovery!=null?'$'+Number(estimate.cellRecovery).toFixed(2):'UNRESOLVED';
-      if(qEl)qEl.textContent=estimate?.total!=null?'$'+Number(estimate.total).toFixed(2)+' · BudgetaryEstimate':'NOT COMPLETE';
+
+      if(recoveryEl)recoveryEl.textContent=Number.isFinite(Number(machineService))
+        ? '$'+Number(machineService).toFixed(2)
+        : 'UNRESOLVED';
+      if(qEl)qEl.textContent=Number.isFinite(Number(q))
+        ? '$'+Number(q).toFixed(2)+' · BudgetaryEstimate'
+        : 'NOT COMPLETE';
       if(cycleEl)cycleEl.textContent=Number.isFinite(Number(estimate?.cycle?.T_job_min))
-        ? Number(estimate.cycle.T_job_min).toFixed(3)+' min · '+String(estimate.cycle.model || 'modeled')
+        ? Number(estimate.cycle.T_job_min).toFixed(4)+' min · '+String(estimate.cycle.model || 'modeled')
         : 'NOT ESTABLISHED';
       if(authorityEl)authorityEl.textContent=estimate?.engine
-        ? estimate.engine.id+' · v'+estimate.engine.version+' · budgetary only'
+        ? estimate.engine.id+' · v'+estimate.engine.version+' · '+String(storeReference?.source?.storePin || storeReference?.authority?.economicsPin || 'unpinned').slice(0,12)+'…'
         : 'NO CURRENT COMPLETE ECONOMICS MODEL ON THIS PROJECT ANSWER';
-      if(economicsNote)economicsNote.innerHTML=estimate?.complete
-        ? '<b>STORE ZERO BUDGETARY ESTIMATE RETURNED</b>Q is material plus modeled Store cell recovery for this exact identified definition. It is not a commercial quote, payment, allocation, production release, machine readiness, or physical fabrication authority.'
-        : '<b>STORE ECONOMICS UNRESOLVED</b>The physical demand remains preserved exactly. No app-side discount, made-up cycle, or guessed combined value is substituted.';
-      if(acceptStatus)acceptStatus.textContent=estimate?.complete?'RETURNED · BUDGETARY ESTIMATE':'RETURNED · ECONOMICS INCOMPLETE';
-      if(termsQ)termsQ.textContent=estimate?.total!=null?'$'+Number(estimate.total).toFixed(2)+' · budgetary only':'NOT COMPLETE';
-      if(termsNote)termsNote.innerHTML=estimate?.complete
+      if(economicsNote)economicsNote.innerHTML=complete
+        ? '<b>STORE ZERO BUDGETARY ESTIMATE RETURNED</b>Q is Store material plus Store-modeled machine service for this exact identified definition. The calculation identity is carried with the answer. It is not a commercial quote, payment, allocation, production release, machine readiness, or physical fabrication authority.'
+        : '<b>STORE ECONOMICS UNRESOLVED</b>The physical demand remains preserved exactly. No app-side capability decision, made-up cycle, guessed rate, or combined value is substituted.';
+      if(acceptStatus)acceptStatus.textContent=complete?'RETURNED · BUDGETARY ESTIMATE':'RETURNED · ECONOMICS INCOMPLETE';
+      if(termsQ)termsQ.textContent=Number.isFinite(Number(q))
+        ? '$'+Number(q).toFixed(2)+' · budgetary only'
+        : 'NOT COMPLETE';
+      if(termsNote)termsNote.innerHTML=complete
         ? '<b>TERMS REMAIN REFERENCE-ONLY.</b>The Store Zero Q is a BudgetaryEstimate, not a commercial quote or seller-of-record offer. No acceptance, payment, allocation, release, or fabrication event is created from it.'
         : '<b>TERMS REMAIN REFERENCE-ONLY.</b>Economics remain incomplete on this project answer. No acceptance, payment, allocation, release, or fabrication event is invented.';
-      if(recordEconomics)recordEconomics.textContent=estimate?.total!=null
-        ? 'BUDGETARY ESTIMATE · Q $'+Number(estimate.total).toFixed(2)+' · '+String(estimate.engine?.id || 'Store Zero')
+      if(recordEconomics)recordEconomics.textContent=Number.isFinite(Number(q))
+        ? 'BUDGETARY ESTIMATE · Q $'+Number(q).toFixed(2)+' · '+String(estimate?.engine?.id || 'Store Zero')+' · result '+String(estimate?.calculationIdentity?.resultHash || storeReference?.calculationIdentity?.resultHash || '').slice(0,12)+'…'
         : 'UNRESOLVED';
+
       const yardNext=doc.getElementById('proof-yard-next');
       if(yardNext)yardNext.textContent=isStartOwn?'CONTINUE → TERMS':'CONTINUE → HANDOFF / RECORD';
       if(materialSource)materialSource.textContent=materialResolution?.source
         ? 'Store Zero catalog '+materialResolution.source.clock+' · '+String(materialResolution.source.pin).slice(0,12)+'…'
-        : 'Store Zero catalog · exact project material mapping not carried here';
+        : storeReference?.source?.storePin
+          ? 'Store Zero · tested reference '+String(storeReference.source.storePin).slice(0,12)+'…'
+          : 'Store Zero catalog · exact project material mapping not carried here';
     }
 
     doc.addEventListener('click', function(event){
