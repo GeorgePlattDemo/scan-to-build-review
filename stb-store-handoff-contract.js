@@ -37,16 +37,16 @@
     startOwn: Object.freeze({
       projectId:'start-own',
       projectClass:'USER_DEFINED_BOARD',
-      materialCatalogPin:'f8373520a726090ed91eff82e5e720f4a9634615',
+      materialCatalogPin:'95c639a1d0d4812df097ad1eb628594b38f921de',
       capabilityBasis:'STB-D001-DIMENSIONAL-TRAVEL-0.1',
-      capabilityPin:'f8373520a726090ed91eff82e5e720f4a9634615',
+      capabilityPin:'95c639a1d0d4812df097ad1eb628594b38f921de',
       economicsModel:'STB-STORE-ZERO-PRICE-1',
       economicsVersion:'0.3.0',
       economicsStatus:'PINNED_STORE_ISSUED_REFERENCE',
-      economicsPin:'f8373520a726090ed91eff82e5e720f4a9634615',
+      economicsPin:'95c639a1d0d4812df097ad1eb628594b38f921de',
       governingStandard:'DIMENSIONAL-STORE-TRAVEL-STANDARD-0.1.md',
-      acceptanceWorkflowRun:'35752240345',
-      systemIntegrationPin:'682ce2b2a60c88b5fb6543e2f4f1c9ebfe7b01b8',
+      acceptanceWorkflowRun:'35757052553',
+      systemIntegrationPin:'900dbd13f079f8a5f8d76d49c723fd35279164e8',
       legacyGeneralRecoverySelected:false
     }),
     outdoor: Object.freeze({
@@ -158,7 +158,7 @@
   var START_OWN_STORE_CATALOG = Object.freeze({
     repository:'GeorgePlattDemo/scan-to-build-store',
     file:'store-zero-catalog.json',
-    pin:'f8373520a726090ed91eff82e5e720f4a9634615',
+    pin:'95c639a1d0d4812df097ad1eb628594b38f921de',
     clock:"2026-09-10"
   });
 
@@ -312,12 +312,12 @@
     status:'STORE_ISSUED_REFERENCE',
     source:Object.freeze({
       repository:'GeorgePlattDemo/scan-to-build-store',
-      storePin:'f8373520a726090ed91eff82e5e720f4a9634615',
+      storePin:'95c639a1d0d4812df097ad1eb628594b38f921de',
       pricingFile:'store-zero-pricing-engine.mjs',
       travelFile:'d001-travel-standard.mjs',
       governingStandard:'DIMENSIONAL-STORE-TRAVEL-STANDARD-0.1.md',
-      workflowRun:'35752240345',
-      systemIntegrationPin:'682ce2b2a60c88b5fb6543e2f4f1c9ebfe7b01b8'
+      workflowRun:'35757052553',
+      systemIntegrationPin:'900dbd13f079f8a5f8d76d49c723fd35279164e8'
     }),
     demand:Object.freeze({
       configurationId:'SYO-USER1-XBRACE',
@@ -355,7 +355,7 @@
       source:Object.freeze({
         repository:'GeorgePlattDemo/scan-to-build-store',
         file:'store-zero-catalog.json',
-        pin:'f8373520a726090ed91eff82e5e720f4a9634615',
+        pin:'95c639a1d0d4812df097ad1eb628594b38f921de',
         clock:'2026-09-10'
       })
     }),
@@ -404,8 +404,8 @@
         setupTimeMin:0
       }),
       calculationIdentity:Object.freeze({
-        inputHash:'caa7c91f1296c243a5abb05ed35a0c55b5b1f5d4dab32efd64cd2656d75f3036',
-        resultHash:'15a8835dd50771136020190db7f5dbed1bd35b78930bf338be63bea8427353c2'
+        inputHash:'5de0367b62087cb0174ef5f1e101e22ded3728ba71906868628a985afafa078b',
+        resultHash:'9ad8d16a7c211d420b83e46ed8a8d224bd289e26a48764ff8d0389b6db698604'
       })
     })
   });
