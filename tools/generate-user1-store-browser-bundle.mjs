@@ -2,24 +2,15 @@ import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
-const EXPECTED_PIN="ab8a4c5d470c310f27fef82683611622ab976168";
+const EXPECTED_PIN="7303793620d0ceda509810a661d11e6c31c7d59f";
 const pin=EXPECTED_PIN;
 const root=resolve(process.env.STB_STORE_ZERO_ROOT||"");
 if(!process.env.STB_STORE_ZERO_ROOT) throw new Error("STB_STORE_ZERO_ROOT is required");
 const actualPin=execFileSync("git",["-C",root,"rev-parse","HEAD"],{encoding:"utf8"}).trim();
 if(actualPin!==EXPECTED_PIN) throw new Error(`Store pin mismatch: expected ${EXPECTED_PIN}, got ${actualPin}`);
-
-const files={
-  envelope:"d001-stage2-envelope.mjs",
-  pricing:"store-zero-pricing-engine.mjs",
-  store:"store-zero-stage2-store.mjs",
-  catalog:"store-zero-catalog.json"
-};
+const files={"envelope":"d001-stage2-envelope.mjs","pricing":"store-zero-pricing-engine.mjs","store":"store-zero-stage2-store.mjs","catalog":"store-zero-catalog.json"};
 const src=Object.fromEntries(Object.entries(files).map(([k,name])=>[k,readFileSync(join(root,name),"utf8")]));
-const blobs=Object.fromEntries(Object.entries(files).map(([k,name])=>[
-  k,
-  execFileSync("git",["-C",root,"hash-object",name],{encoding:"utf8"}).trim()
-]));
+const blobs=Object.fromEntries(Object.entries(files).map(([k,name])=>[k,execFileSync("git",["-C",root,"hash-object",name],{encoding:"utf8"}).trim()]));
 
 function transformEnvelope(s){return s.replace(/^import .*;\s*$/gm,"").replace(/\bexport\s+/g,"");}
 function transformPricing(s){return s.replace(/^import .*;\s*$/gm,"").replace(/\bexport\s+/g,"");}
@@ -106,41 +97,55 @@ function evaluateUser1Reference(input){
   };
 
   let estimateInput=null,rawEstimate=null;
-  if(rawEvaluation.status==="SUPPORTABLE"&&item){
-    const radians=(sawAngleDeg*Math.PI)/180;
-    const sawTraverseIn=sawAngleDeg>0?item.actualW/Math.cos(radians):item.actualW;
+  if(item&&(rawEvaluation.status==="SUPPORTABLE"||rawEvaluation.status==="UNRESOLVED")){
     const spotCycles=spotDemand&&spotDemand.required!==false
       ? Number(spotDemand.totalCount!=null?spotDemand.totalCount:(spotDemand.countPerPart||0))
       : 0;
     estimateInput={
       title,
       classId:"app.user-defined-board.v1",
-      pieces:[{
-        storeSku:item.storeSku,
-        qty:1,
-        keptLengthIn:workpiece,
-        widthIn:item.actualW,
-        sawCuts,
-        sawTraverseIn,
-        holes:drillCycles,
-        spots:Number.isFinite(spotCycles)?Math.max(0,spotCycles):0,
-        depthIn:drillCycles>0?drillDepthIn:0
-      }]
+      storeSku:item.storeSku,
+      qty:1,
+      definedWorkpieceLengthIn:workpiece,
+      sawCuts,
+      sawAngleDeg,
+      drillCycles,
+      spotCycles:Number.isFinite(spotCycles)?Math.max(0,spotCycles):0,
+      drillReferenceDepthIn:drillCycles>0?drillDepthIn:0
     };
-    rawEstimate=estimateJob(CATALOG,estimateInput);
+    rawEstimate=estimateBoardSequence(CATALOG,estimateInput);
   }
 
   const capabilityUnresolved=(rawEvaluation.lines||[]).flatMap(entry=>
     entry&&entry.capability&&Array.isArray(entry.capability.unresolved)?entry.capability.unresolved:[]
   );
   const materialUnresolved=collectMaterialUnresolved(materialResolution);
-  const unresolvedConditions=Array.from(new Set([...(input.unresolvedConditions||[]),...materialUnresolved,...capabilityUnresolved]));
+  const estimateUnresolved=Array.isArray(rawEstimate&&rawEstimate.unresolved)?rawEstimate.unresolved:[];
+  const unresolvedConditions=Array.from(new Set([
+    ...(input.unresolvedConditions||[]),
+    ...materialUnresolved,
+    ...capabilityUnresolved,
+    ...estimateUnresolved
+  ]));
   const refusalConditions=(rawEvaluation.lines||[]).flatMap(entry=>
     entry&&entry.capability&&Array.isArray(entry.capability.missing)?entry.capability.missing:[]
   );
+  const spotOperation=spotDemand?Object.freeze({
+    operation:D001_STAGE2_ENVELOPE.spot.operation,
+    operationContract:D001_STAGE2_ENVELOPE.spot.operationContract,
+    toolDefinitionId:D001_STAGE2_ENVELOPE.spot.toolDefinitionId,
+    toolDiameterIn:D001_STAGE2_ENVELOPE.spot.toolDiameterIn,
+    fullDiameterPenetrationIn:D001_STAGE2_ENVELOPE.spot.fullDiameterPenetrationIn,
+    depthReference:D001_STAGE2_ENVELOPE.spot.depthReference,
+    pointAngleDeg:D001_STAGE2_ENVELOPE.spot.pointAngleDeg,
+    pointAxialLengthIn:D001_STAGE2_ENVELOPE.spot.pointAxialLengthIn,
+    pointGeometryStatus:D001_STAGE2_ENVELOPE.spot.pointGeometryStatus,
+    totalTipPenetrationIn:D001_STAGE2_ENVELOPE.spot.totalTipPenetrationIn,
+    customerDepthProgrammingRequired:D001_STAGE2_ENVELOPE.spot.customerDepthProgrammingRequired
+  }):null;
 
   return Object.freeze({
-    protocol:"stb.browser-store-reference/0.1",
+    protocol:"stb.browser-store-reference/0.2",
     storePin:STORE_PIN,
     sourceBlobs:SOURCE_BLOBS,
     definitionVersionId:input.definitionVersionId||null,
@@ -157,11 +162,7 @@ function evaluateUser1Reference(input){
       materialTotal:rawEstimate&&rawEstimate.totals?rawEstimate.totals.material:null,
       cellFamily:Object.freeze(item&&Array.isArray(item.cellFamily)?item.cellFamily.slice():[]),
       supportedOps:Object.freeze(item&&Array.isArray(item.supportedOps)?item.supportedOps.slice():[]),
-      source:Object.freeze({
-        repository:"GeorgePlattDemo/scan-to-build-store",
-        pin:STORE_PIN,
-        clock:CATALOG.clock||null
-      }),
+      source:Object.freeze({repository:"GeorgePlattDemo/scan-to-build-store",pin:STORE_PIN,clock:CATALOG.clock||null}),
       allocationClaimed:false,
       workpieceLengthIn:workpiece
     }),
@@ -188,6 +189,7 @@ function evaluateUser1Reference(input){
         endRelation:input.endRelation||null,
         lengthDatum:input.lengthDatum||null,
         spotDemand:spotDemand?Object.freeze(spotDemand):null,
+        spotOperation,
         unresolvedConditions:Object.freeze(unresolvedConditions.slice())
       })
     }),
@@ -199,7 +201,7 @@ function evaluateUser1Reference(input){
         basis:D001_STAGE2_ENVELOPE.basis,
         measured:D001_STAGE2_ENVELOPE.measured===true,
         commissioned:D001_STAGE2_ENVELOPE.commissioned===true,
-        spotToolDiameterIn:D001_STAGE2_ENVELOPE.spot.toolDiameterIn
+        spot:spotOperation
       })
     }),
     physicalExecutionAuthorized:false
@@ -207,7 +209,7 @@ function evaluateUser1Reference(input){
 }
 
 root.STBStoreZeroUser1=Object.freeze({
-  version:"0.1",
+  version:"0.2",
   storePin:STORE_PIN,
   sourceBlobs:SOURCE_BLOBS,
   envelopeId:D001_STAGE2_ENVELOPE.id,
@@ -218,6 +220,7 @@ root.STBStoreZeroUser1=Object.freeze({
 })(window);
 `;
 }
+
 const output=buildBundle(src,blobs);
 const outPath=resolve(process.argv.find(arg=>arg.endsWith(".js"))||"stb-store-zero-user1.generated.js");
 if(process.argv.includes("--check")){
