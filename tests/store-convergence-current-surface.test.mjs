@@ -15,7 +15,7 @@ vm.runInNewContext(contractSource,sandbox,{filename:'stb-store-handoff-contract.
 const contract = sandbox.window.STBStoreHandoffContract;
 
 assert.ok(contract,'shared Store handoff contract did not load');
-assert.equal(contract.version,'0.7');
+assert.equal(contract.version,'0.8');
 assert.equal(typeof contract.quoteAlcoveInsert,'undefined','shared Store contract must not reprice Alcove');
 assert.deepEqual(
   Array.from(contract.actorOrder),
@@ -28,27 +28,59 @@ assert.equal(contract.currentArtifacts.alcove.artifact,'system-build-current.htm
 assert.equal(contract.currentArtifacts.windowSeat.artifact,'stb-window-seat-space-utilization-0.7.4.html');
 assert.equal(contract.currentArtifacts.sheetS001.artifact,'system-build-current.html#playhouse-s001');
 
-assert.equal(contract.storeAuthority('startOwn').capabilityPin,'ab8a4c5d470c310f27fef82683611622ab976168');
-assert.equal(contract.storeAuthority('startOwn').materialCatalogPin,'ab8a4c5d470c310f27fef82683611622ab976168');
+assert.equal(contract.storeAuthority('startOwn').capabilityPin,'f8373520a726090ed91eff82e5e720f4a9634615');
+assert.equal(contract.storeAuthority('startOwn').materialCatalogPin,'f8373520a726090ed91eff82e5e720f4a9634615');
 assert.equal(contract.storeAuthority('startOwn').legacyGeneralRecoverySelected,false);
 assert.equal(contract.storeAuthority('startOwn').economicsModel,'STB-STORE-ZERO-PRICE-1');
-assert.equal(contract.storeAuthority('startOwn').economicsStatus,'BUDGETARY_ESTIMATE');
-const xBraceQ = contract.quoteStartOwnBoardSequence({
-  material:3.13,
+assert.equal(contract.storeAuthority('startOwn').economicsStatus,'PINNED_STORE_ISSUED_REFERENCE');
+assert.equal(contract.storeAuthority('startOwn').economicsVersion,'0.3.0');
+const xBraceQ = contract.resolveUser1StoreReference({
+  configurationId:'SYO-USER1-XBRACE',
+  configurationVersion:'0.1',
   definedWorkpieceLengthIn:60,
-  sawCuts:3,
   sawAngleDeg:30,
-  drillCycles:0,
-  spotCycles:2,
-  unresolvedConditions:[],
-  widthIn:3.5
+  cutPlane:'miter-face',
+  endIdentity:'both',
+  endRelation:'parallel',
+  lengthDatum:'long-long-outer-edge',
+  datumCMethod:'REFERENCE_CUT',
+  requiredOps:['MITER_LIMITED','SPOT_ON_LOCATION'],
+  declaredSawCuts:3,
+  declaredSpotCount:2,
+  parts:[
+    {partId:'PART-1',lengthIn:16,features:[{featureId:'SPOT-1',kind:'SPOT_ON_LOCATION',xIn:8,locationRule:'CENTERED_ON_PART',acrossWidthRule:'CENTERED_ON_WIDE_FACE'}]},
+    {partId:'PART-2',lengthIn:16,features:[{featureId:'SPOT-2',kind:'SPOT_ON_LOCATION',xIn:8,locationRule:'CENTERED_ON_PART',acrossWidthRule:'CENTERED_ON_WIDE_FACE'}]}
+  ]
 });
-assert.equal(xBraceQ.total,54.82);
-assert.equal(xBraceQ.cycle.T_job_min,10.014);
-assert.equal(xBraceQ.completeness,'COMPLETE_FOR_ENCODED_DEMAND');
-assert.equal(xBraceQ.operationBasis.totalModeledSawCuts,3);
-assert.equal(xBraceQ.operationBasis.drillCycles,0);
-assert.equal(xBraceQ.operationBasis.spotCycles,2);
+assert.equal(xBraceQ.combinedValue,9.02);
+assert.equal(xBraceQ.machineService,5.89);
+assert.equal(xBraceQ.estimate.cycle.T_job_min,1.4128);
+assert.equal(xBraceQ.priceCompleteness,'COMPLETE_FOR_TRAVEL_STANDARD');
+assert.equal(xBraceQ.estimate.travel.derivedSawCuts,3);
+assert.equal(xBraceQ.estimate.travel.derivedSpotCount,2);
+assert.equal(xBraceQ.estimate.travel.finalRemainderIn,27.625);
+assert.equal(xBraceQ.calculationIdentity.resultHash,'15a8835dd50771136020190db7f5dbed1bd35b78930bf338be63bea8427353c2');
+
+const changedXBrace = contract.resolveUser1StoreReference({
+  configurationId:'SYO-USER1-XBRACE',
+  configurationVersion:'0.2',
+  definedWorkpieceLengthIn:60,
+  sawAngleDeg:30,
+  cutPlane:'miter-face',
+  endIdentity:'both',
+  endRelation:'parallel',
+  lengthDatum:'long-long-outer-edge',
+  datumCMethod:'REFERENCE_CUT',
+  requiredOps:['MITER_LIMITED','SPOT_ON_LOCATION'],
+  declaredSawCuts:3,
+  declaredSpotCount:2,
+  parts:[
+    {partId:'PART-1',lengthIn:16,features:[{featureId:'SPOT-1',kind:'SPOT_ON_LOCATION',xIn:8,locationRule:'CENTERED_ON_PART',acrossWidthRule:'CENTERED_ON_WIDE_FACE'}]},
+    {partId:'PART-2',lengthIn:16,features:[{featureId:'SPOT-2',kind:'SPOT_ON_LOCATION',xIn:8,locationRule:'CENTERED_ON_PART',acrossWidthRule:'CENTERED_ON_WIDE_FACE'}]}
+  ]
+});
+assert.equal(changedXBrace.status,'STORE_REFRESH_REQUIRED');
+assert.equal(changedXBrace.combinedValue,null);
 
 assert.equal(contract.storeAuthority('windowSeat').economicsModel,'STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0.1');
 assert.equal(contract.storeAuthority('alcove').economicsModel,null);
@@ -63,7 +95,7 @@ assert.equal(shelfMaterial.status,'MAPPED');
 assert.equal(shelfMaterial.storeSku,'STB-ZERO-SPF-2X4-192-001');
 assert.equal(shelfMaterial.materialTotal,8.36);
 
-assert.match(shell,/stb-store-handoff-contract\.js\?v=121e67b5/);
+assert.match(shell,/stb-store-handoff-contract\.js\?v=/);
 assert.match(shell,/dataset\.startOwnArtifact = 'three-frames\.html'/);
 assert.match(shell,/dataset\.outdoorBuildArtifact = 'stb-outdoor-bench-leg-0\.1\.html'/);
 assert.match(shell,/dataset\.windowSeatArtifact = 'stb-window-seat-space-utilization-0\.7\.4\.html'/);
@@ -113,7 +145,9 @@ assert.match(outdoor,/STB_OUTDOOR_CONFIRMED/);
 assert.match(outdoor,/normalizedPart:normalized/);
 assert.match(shell,/createComparisonStoreHandoff\('start-own'/);
 assert.equal(shell.includes('previewFromDemand'),false,'Start Own still uses legacy preview authority');
-assert.match(shell,/const drillCycles = 0/,'spot was silently priced as a generic drill cycle');
+assert.match(shell,/requiredOps\.push\('SPOT_ON_LOCATION'\)/,'spot is not carried as an explicit Store operation');
+assert.equal(shell.includes('quoteStartOwnBoardSequence'),false,'visible Start Own still owns Store pricing');
+assert.match(shell,/resolveUser1StoreReference/);
 assert.match(shell,/stbHostConfirmBound/,'host confirmation idempotence guard is missing');
 assert.match(shell,/payload\.storeReference\?\.unresolvedConditions/);
 assert.match(shell,/createComparisonStoreHandoff\('outdoor'/);
