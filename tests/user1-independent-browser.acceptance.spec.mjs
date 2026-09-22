@@ -117,6 +117,10 @@ test('actual User 1 journey carries one authoritative Store answer through confi
   await app.locator('#proof-accept [data-proof-go="proof-yard"]').click();
   await expect(app.locator('#proof-yard.on')).toBeVisible();
   await app.locator('#proof-yard [data-proof-go="proof-record"]').click();
+  await expect(app.locator('#proof-terms.on')).toBeVisible();
+  await expect(app.locator('#proof-terms-version')).toHaveText(beforeConfirm.versionId);
+  await expect(app.locator('#proof-terms-q')).toContainText('$54.82');
+  await app.locator('#proof-terms [data-proof-go="proof-record"]').click();
   await expect(app.locator('#proof-record.on')).toBeVisible();
   await expect(app.locator('#proof-record-version')).toHaveText(beforeConfirm.versionId);
   await expect(app.locator('#proof-record-economics')).toContainText('$54.82');
