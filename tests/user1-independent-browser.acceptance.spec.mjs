@@ -93,10 +93,8 @@ test('actual User 1 journey carries one authoritative Store answer through confi
   expect(secondProof).toBe(firstProof);
 
   // Switch to another protected project; User 1's retained definition/answer must remain its own.
-  await app.locator('[data-proof-library]').first().click().catch(()=>{});
-  if(!(await app.locator('#projects.on').isVisible())) {
-    await app.locator('.proof-shell-return').first().click().catch(()=>{});
-  }
+  await project.locator('#stb-bench-library').click();
+  await expect(app.locator('#projects.on')).toBeVisible();
   await app.locator('.tile[data-window-seat-artifact="stb-window-seat-space-utilization-0.7.4.html"]').click();
   await expect(app.locator('#window-seat-live.on')).toBeVisible();
   const afterSwitch=await app.locator('body').evaluate(() => localStorage.getItem('stb-proof-handoff-job1'));
