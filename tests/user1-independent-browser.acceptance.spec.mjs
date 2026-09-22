@@ -14,7 +14,7 @@ test('actual User 1 journey carries one authoritative Store answer through confi
   await expect(app.locator('#landing.on')).toBeVisible();
   await app.getByRole('button',{name:'NEW USER'}).click();
   await expect(app.locator('#new-user.on')).toBeVisible();
-  await app.locator('button[data-demo-account="Sarah"][data-go="projects"]').click();
+  await app.locator('#new-user button[data-canonical-go="projects"]').click();
   await expect(app.locator('#projects.on')).toBeVisible();
 
   const startOwn=app.locator('.tile[data-start-own-artifact="three-frames.html"]');
