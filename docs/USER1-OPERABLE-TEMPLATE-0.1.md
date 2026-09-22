@@ -197,7 +197,29 @@ The System candidate at the exact tested SHA above enforces this reconciliation 
 
 The static Review surface does not run a second pricing engine. It presents only the Store-issued result tied to the tested Store/System authority. Any edited Review definition fails closed until a fresh Store answer exists.
 
-## 7. Anti-shortcut rules inherited by every later project
+## 7. Navigation integrity invariant
+
+Navigation is part of the job contract.
+
+While a job is active:
+
+1. the top journey bar must retain that job identity;
+2. each visible stage button must point directly to a target owned by that job;
+3. a button may not merely be relabeled while retaining another project's target;
+4. stage navigation must never select another project implicitly;
+5. the only cross-project navigation is an explicit exit such as **Project Library**;
+6. returning from Store/yard/terms must return to the same identified job/version;
+7. confirmation must land on that job's Store-review surface;
+8. downstream navigation may display an existing event/state but may not manufacture offer, acceptance, payment, allocation, release, readiness, Cycle Start, READY, custody, or closeout;
+9. every project added to acceptance must carry a navigation-regression test proving all visible nav targets stay inside that project's allowed route map or an explicit exit.
+
+For Job 1 the allowed journey targets are:
+
+`start-own-live → proof-store → proof-accept → proof-yard → proof-terms → proof-record`
+
+No active Job 1 stage button may target `alcove-capture`, `alcove-config`, `alcove-review`, or another project's page.
+
+## 8. Anti-shortcut rules inherited by every later project
 
 Every later dimensional project must inherit these rules unchanged:
 
@@ -217,7 +239,7 @@ Every later dimensional project must inherit these rules unchanged:
 14. **Calculation identity travels through completion and record.**
 15. **Commercial authority and physical authority remain separate from a budgetary Store answer.**
 
-## 8. Migration rule for Job 2 and later
+## 9. Migration rule for Job 2 and later
 
 Do **not** copy Job 1 geometry into another project.
 
@@ -238,7 +260,7 @@ A project that still uses stale local pricing, incomplete demand, a project-spec
 
 Its failure is a useful result. Do not weaken this template to make that project pass.
 
-## 9. Job 1 acceptance boundary
+## 10. Job 1 acceptance boundary
 
 The blocking Review workflow for this branch is intentionally Job-1-only:
 
