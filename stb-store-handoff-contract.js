@@ -37,14 +37,14 @@
     startOwn: Object.freeze({
       projectId:'start-own',
       projectClass:'USER_DEFINED_BOARD',
-      materialCatalogPin:'7303793620d0ceda509810a661d11e6c31c7d59f',
+      materialCatalogPin:'01f9c5580cea262bd898a9f2c1ac2cd89d02845f',
       capabilityBasis:'D001-STAGE2-ENVELOPE-0.4',
-      capabilityPin:'7303793620d0ceda509810a661d11e6c31c7d59f',
+      capabilityPin:'01f9c5580cea262bd898a9f2c1ac2cd89d02845f',
       economicsModel:'STB-STORE-ZERO-PRICE-1',
-      economicsVersion:'0.2.4',
+      economicsVersion:'0.3.0',
       economicsStatus:'BUDGETARY_ESTIMATE',
       depthDefinedSpotEconomicsStatus:'UNRESOLVED_FOR_DEPTH_DEFINED_SPOT',
-      economicsPin:'7303793620d0ceda509810a661d11e6c31c7d59f',
+      economicsPin:'01f9c5580cea262bd898a9f2c1ac2cd89d02845f',
       legacyGeneralRecoverySelected:false
     }),
     outdoor: Object.freeze({
