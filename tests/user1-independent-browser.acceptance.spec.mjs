@@ -7,7 +7,8 @@ function appFrame(page){
 }
 
 test('actual User 1 journey carries one authoritative Store answer through confirmation and record', async ({ page }) => {
-  await page.goto('http://127.0.0.1:4173/system-build-current.html');
+  const base=process.env.STB_REVIEW_URL || 'http://127.0.0.1:4173';
+  await page.goto(base+'/system-build-current.html');
   const app=appFrame(page);
 
   await expect(app.locator('#landing.on')).toBeVisible();
