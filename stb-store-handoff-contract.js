@@ -297,119 +297,91 @@
   }
 
 
-  var START_OWN_STORE_PRICING = Object.freeze({
+  var START_OWN_STORE_PRICING_REFERENCE = Object.freeze({
     source:Object.freeze({
       repository:'GeorgePlattDemo/scan-to-build-store',
-      pricingFile:'store-zero-pricing-engine.mjs',
-      envelopeFile:'d001-stage2-envelope.mjs',
-      pin:'ab8a4c5d470c310f27fef82683611622ab976168'
+      pin:'ab8a4c5d470c310f27fef82683611622ab976168',
+      generatedArtifact:'stb-store-zero-user1.generated.js'
     }),
-    engine:Object.freeze({
-      id:'STB-STORE-ZERO-PRICE-1',
-      version:'0.2.3',
-      clock:'2026-09-10',
-      documentKind:'BudgetaryEstimate'
-    }),
-    cycleModel:Object.freeze({
-      id:'STB-D001-CYCLE-MODEL-S2-0.1',
-      basis:'CALCULATED',
-      measured:false,
-      commissioned:false
-    }),
-    recovery:Object.freeze({setupCharge:35,machineHourRate:100}),
-    saw:Object.freeze({
-      diameterIn:10,
-      rpm:3450,
-      teeth:60,
-      chipLoadCrossSoft:0.003,
-      finishFactor:0.5,
-      deployMin:0.08,
-      retractMin:0.08
-    }),
-    rapidInPerMin:480,
-    accelMin:0.05,
-    loadSeatMin:0.6,
-    releaseLabelMin:0.4,
-    drill:Object.freeze({rpm:3000,ipr:0.008,referenceDepthIn:0.75}),
-    spot:Object.freeze({diameterIn:0.1875,fixedCycleMin:0.16,basis:'DECLARED_FIXTURE'})
+    authority:'GENERATED_FROM_PINNED_STORE_SOURCE',
+    note:'No pricing mathematics are maintained in this handoff contract.'
   });
-
-  function roundN(value, places){
-    var p=Math.pow(10, places == null ? 2 : places);
-    return Math.round(Number(value)*p)/p;
-  }
 
   function quoteStartOwnBoardSequence(input){
     input=input || {};
-    var P=START_OWN_STORE_PRICING;
-    var material=roundN(input.material || 0,2);
-    var workpiece=Math.abs(Number(input.definedWorkpieceLengthIn) || 0);
-    var productionSawCuts=Math.max(0, Number(input.sawCuts) || 0);
-    var totalSawCuts=productionSawCuts;
-    var angle=Math.max(0, Math.min(89, Number(input.sawAngleDeg) || 0));
-    var drillCycles=Math.max(0, Number(input.drillCycles) || 0);
-    var spotCycles=Math.max(0, Number(input.spotCycles) || 0);
-    var width=Number(input.widthIn) || 3.5;
-    var unresolved=Array.isArray(input.unresolvedConditions)
-      ? input.unresolvedConditions.filter(function(value){return typeof value==='string' && value.trim()!=='';})
-      : [];
-    var radians=angle*Math.PI/180;
-    var sawTraverse=angle>0 ? width/Math.cos(radians) : width;
-    var feedFpm=((P.saw.chipLoadCrossSoft*P.saw.teeth*P.saw.rpm)/12)*P.saw.finishFactor;
-    var sawCycle=P.saw.deployMin + sawTraverse/(feedFpm*12) + P.saw.retractMin;
-    var indexCycle=P.accelMin + workpiece/P.rapidInPerMin;
-    var drillDepth=Number(input.drillReferenceDepthIn);
-    if(drillCycles>0 && (!Number.isFinite(drillDepth) || drillDepth<=0)){
-      unresolved=unresolved.concat(['DRILL_DEPTH_UNRESOLVED']);
-      drillCycles=0;
+    var runtime=root.STBStoreZeroUser1;
+    if(!runtime || typeof runtime.evaluate!=='function'){
+      return Object.freeze({
+        status:'UNAVAILABLE',
+        complete:false,
+        completeness:'UNAVAILABLE',
+        unresolvedConditions:Object.freeze(['AUTHORITATIVE_BROWSER_STORE_UNAVAILABLE']),
+        material:null,
+        cellRecovery:null,
+        total:null,
+        cycle:null,
+        operationBasis:null,
+        engine:null,
+        source:START_OWN_STORE_PRICING_REFERENCE.source,
+        notClaimed:Object.freeze(['commercial quote','physical fabrication','physical stock allocation'])
+      });
     }
-    if(!Number.isFinite(drillDepth) || drillDepth<=0) drillDepth=0;
-    var drillCycle=drillCycles>0
-      ? P.saw.deployMin + drillDepth/(P.drill.ipr*P.drill.rpm) + P.saw.retractMin
-      : 0;
-    var cycle=P.loadSeatMin + totalSawCuts*sawCycle + indexCycle +
-      drillCycles*drillCycle + spotCycles*P.spot.fixedCycleMin +
-      P.releaseLabelMin + 8;
-    var hours=cycle/60;
-    var cell=roundN(P.recovery.setupCharge + P.recovery.machineHourRate*hours,2);
+    var angle=Number(input.sawAngleDeg || 0);
+    var answer=runtime.evaluate({
+      definitionVersionId:input.definitionVersionId || null,
+      materialDemand:input.materialDemand || {species:'spf',form:'board',nominalT:2,nominalW:4},
+      definedWorkpieceLengthIn:Number(input.definedWorkpieceLengthIn),
+      sawCuts:Number(input.sawCuts || 0),
+      sawAngleDeg:angle,
+      drillCycles:Number(input.drillCycles || 0),
+      drillDepthIn:input.drillReferenceDepthIn == null ? null : Number(input.drillReferenceDepthIn),
+      requiredOps:Array.isArray(input.requiredOps)
+        ? input.requiredOps.slice()
+        : (angle === 0 ? ['CROSSCUT'] : ['MITER_LIMITED']),
+      cutPlane:input.cutPlane || (angle === 0 ? null : 'miter-face'),
+      endIdentity:input.endIdentity || 'both',
+      endRelation:input.endRelation || 'parallel',
+      lengthDatum:input.lengthDatum || 'long-long-outer-edge',
+      spotDemand:input.spotDemand || null,
+      unresolvedConditions:Array.isArray(input.unresolvedConditions) ? input.unresolvedConditions.slice() : []
+    });
+    var estimate=answer.rawEstimate || null;
+    var piece=answer.mappedCallInputs && answer.mappedCallInputs.estimate
+      && answer.mappedCallInputs.estimate.pieces
+      ? answer.mappedCallInputs.estimate.pieces[0]
+      : null;
     return Object.freeze({
-      status:'BUDGETARY_ESTIMATE',
-      complete:totalSawCuts>0 && workpiece>0 && unresolved.length===0,
-      completeness:unresolved.length ? 'PARTIAL' : 'COMPLETE_FOR_ENCODED_DEMAND',
-      unresolvedConditions:Object.freeze(unresolved.slice()),
-      material:material,
-      cellRecovery:cell,
-      total:roundN(material+cell,2),
-      cycle:Object.freeze({
-        model:P.cycleModel.id,
-        basis:P.cycleModel.basis,
-        measured:false,
-        commissioned:false,
-        T_job_min:roundN(cycle,3),
-        T_job_hr:roundN(hours,4),
-        SFM:roundN((Math.PI*P.saw.diameterIn*P.saw.rpm)/12,0),
-        feed_fpm:roundN(feedFpm,2)
-      }),
-      operationBasis:Object.freeze({
-        definedWorkpieceLengthIn:workpiece,
-        productionSawCuts:productionSawCuts,
-        totalModeledSawCuts:totalSawCuts,
+      status:estimate ? estimate.status : (answer.rawEvaluation && answer.rawEvaluation.status) || 'UNAVAILABLE',
+      complete:!!estimate && answer.priceCompleteness && answer.priceCompleteness.status==='COMPLETE_FOR_ENCODED_DEMAND',
+      completeness:answer.priceCompleteness ? answer.priceCompleteness.status : 'UNAVAILABLE',
+      unresolvedConditions:Object.freeze(
+        answer.priceCompleteness && Array.isArray(answer.priceCompleteness.unresolvedConditions)
+          ? answer.priceCompleteness.unresolvedConditions.slice()
+          : []
+      ),
+      material:estimate && estimate.totals ? estimate.totals.material : null,
+      cellRecovery:estimate && estimate.totals ? estimate.totals.cell_recovery : null,
+      total:estimate && estimate.totals ? estimate.totals.Q : null,
+      cycle:estimate ? estimate.cycle : null,
+      operationBasis:piece ? Object.freeze({
+        definedWorkpieceLengthIn:Number(input.definedWorkpieceLengthIn),
+        productionSawCuts:Number(input.sawCuts || 0),
+        totalModeledSawCuts:Number(input.sawCuts || 0),
         sawAngleDeg:angle,
-        sawTraverseIn:roundN(sawTraverse,6),
-        drillCycles:drillCycles,
-        drillReferenceDepthIn:drillDepth,
-        spotCycles:spotCycles,
-        spotToolDiameterIn:P.spot.diameterIn
+        sawTraverseIn:piece.sawTraverseIn,
+        drillCycles:piece.holes,
+        drillReferenceDepthIn:piece.depthIn,
+        spotCycles:piece.spots,
+        spotToolDiameterIn:0.1875
+      }) : null,
+      engine:answer.attributedBasis ? answer.attributedBasis.pricingEngine : null,
+      source:Object.freeze({
+        repository:'GeorgePlattDemo/scan-to-build-store',
+        pin:answer.storePin || START_OWN_STORE_PRICING_REFERENCE.source.pin,
+        generatedArtifact:START_OWN_STORE_PRICING_REFERENCE.source.generatedArtifact,
+        sourceBlobs:answer.sourceBlobs || null
       }),
-      engine:P.engine,
-      source:P.source,
-      notClaimed:Object.freeze([
-        'commercial quote',
-        'seller-of-record',
-        'physical fabrication',
-        'live motion',
-        'physical stock count'
-      ])
+      notClaimed:Object.freeze(['commercial quote','seller-of-record','physical fabrication','live motion','physical stock allocation'])
     });
   }
 
@@ -788,7 +760,7 @@
   }
 
   root.STBStoreHandoffContract = Object.freeze({
-    version:'0.7',
+    version:'0.8',
     actorOrder:ACTOR_ORDER,
     currentArtifacts:CURRENT_ARTIFACTS,
     storeAuthorities:STORE_AUTHORITIES,
@@ -796,7 +768,7 @@
     startOwnStoreCatalog:START_OWN_STORE_CATALOG,
     startOwnOfferings:startOwnOfferings,
     resolveStartOwnMaterial:resolveStartOwnMaterial,
-    startOwnStorePricing:START_OWN_STORE_PRICING,
+    startOwnStorePricing:START_OWN_STORE_PRICING_REFERENCE,
     quoteStartOwnBoardSequence:quoteStartOwnBoardSequence,
     d001Cycle:D001_CYCLE,
     d001Envelope:D001_ENVELOPE,
