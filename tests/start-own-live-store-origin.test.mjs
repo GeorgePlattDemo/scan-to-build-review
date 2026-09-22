@@ -44,7 +44,7 @@ vm.runInNewContext(contractSource,sandbox,{filename:'stb-store-handoff-contract.
 const runtime=sandbox.window.STBStoreZeroUser1;
 const contract=sandbox.window.STBStoreHandoffContract;
 assert.ok(runtime);
-assert.equal(runtime.storePin,'34d4c6e7a2cb7e4bce428e396c7d7cbf228d20b7');
+assert.equal(runtime.storePin,'01f9c5580cea262bd898a9f2c1ac2cd89d02845f');
 assert.equal(contract.storeAuthority('startOwn').materialCatalogPin,runtime.storePin);
 assert.equal(contract.storeAuthority('startOwn').capabilityPin,runtime.storePin);
 assert.equal(contract.storeAuthority('startOwn').economicsPin,runtime.storePin);
