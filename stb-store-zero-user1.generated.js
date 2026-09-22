@@ -907,7 +907,13 @@ function evaluateUser1Reference(input){
     attributedBasis:Object.freeze({
       pricingEngine:Object.freeze({id:ENGINE.id,version:ENGINE.version,clock:ENGINE.clock||null}),
       cycleModel:Object.freeze({id:CYCLE_MODEL.id,basis:CYCLE_MODEL.basis,measured:CYCLE_MODEL.measured===true,commissioned:CYCLE_MODEL.commissioned===true}),
-      envelope:Object.freeze({id:D001_STAGE2_ENVELOPE.id,basis:D001_STAGE2_ENVELOPE.basis,measured:D001_STAGE2_ENVELOPE.measured===true,commissioned:D001_STAGE2_ENVELOPE.commissioned===true})
+      envelope:Object.freeze({
+        id:D001_STAGE2_ENVELOPE.id,
+        basis:D001_STAGE2_ENVELOPE.basis,
+        measured:D001_STAGE2_ENVELOPE.measured===true,
+        commissioned:D001_STAGE2_ENVELOPE.commissioned===true,
+        spotToolDiameterIn:D001_STAGE2_ENVELOPE.spot.toolDiameterIn
+      })
     }),
     physicalExecutionAuthorized:false
   });
