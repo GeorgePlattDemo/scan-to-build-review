@@ -11,7 +11,7 @@
   ]);
 
   var CURRENT_ARTIFACTS = Object.freeze({
-    startOwn: Object.freeze({projectId:'start-own', artifact:'stb-start-own-bench-leg-0.1.html', projectClass:'USER_DEFINED_BOARD'}),
+    startOwn: Object.freeze({projectId:'start-own', artifact:'three-frames.html', projectClass:'USER_DEFINED_BOARD'}),
     outdoor: Object.freeze({projectId:'outdoor-build', artifact:'stb-outdoor-bench-leg-0.1.html', projectClass:'BOUNDED_SOURCE_BACKED'}),
     alcove: Object.freeze({projectId:'alcove', artifact:'system-build-current.html#alcove-capture', projectClass:'ALCOVE_INSERT'}),
     windowSeat: Object.freeze({projectId:'window-seat', artifact:'stb-window-seat-space-utilization-0.7.4.html', projectClass:'SPACE_UTILIZATION'}),
