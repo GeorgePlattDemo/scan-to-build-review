@@ -70,7 +70,7 @@ test('actual User 1 journey carries one authoritative Store answer through confi
   await expect(answer).toHaveAttribute('data-store-authoritative','true');
   await expect(answer).toHaveAttribute('data-store-disposition','UNRESOLVED');
   await expect(answer).toHaveAttribute('data-store-pin',STORE_PIN);
-  await expect(project.locator('#stb-price-total')).toHaveText('$54.29');
+  await expect(project.locator('#stb-price-total')).toHaveText('$54.29 · PARTIAL');
 
   let retained=await app.locator('body').evaluate(() => JSON.parse(localStorage.getItem('stb-start-own-user1-definition')||'null'));
   expect(retained.versionId).toBe(retained.storeReference.answerVersionId);
@@ -104,7 +104,7 @@ test('actual User 1 journey carries one authoritative Store answer through confi
   await angle.dispatchEvent('input');
   await project.locator('#stb-config-spot [data-spot="centered"]').click();
   await expect(answer).toHaveAttribute('data-store-disposition','UNRESOLVED');
-  await expect(project.locator('#stb-price-total')).toHaveText('$54.29');
+  await expect(project.locator('#stb-price-total')).toHaveText('$54.29 · PARTIAL');
 
   const beforeConfirm=await app.locator('body').evaluate(() => JSON.parse(localStorage.getItem('stb-start-own-user1-definition')||'null'));
   await project.locator('#stb-confirm-store').click();
