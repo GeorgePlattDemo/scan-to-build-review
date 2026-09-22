@@ -10,10 +10,10 @@ const sandbox={window:{}};
 vm.runInNewContext(contractSource,sandbox,{filename:'stb-store-handoff-contract.js'});
 const contract=sandbox.window.STBStoreHandoffContract;
 
-const STORE_SHA='f88ccaf9a2624899e255e66b51111e2b02309dad';
-const SYSTEM_SHA='900dbd13f079f8a5f8d76d49c723fd35279164e8';
-const INPUT_HASH='e186df5ead47f0c3c233477b18d00206643d8e5e1adf03fdd6dabdc95a0a5168';
-const RESULT_HASH='425af5de05fb614b87ca308696d0d19af0b2701ce2f3fd51c8a6c3ca84042f4f';
+const STORE_SHA='140217b0aed64725d26b0d9332e3bf7b5d4396e0';
+const SYSTEM_SHA='59a9c0326c1afea7af3767e1ed89bf6465a4b809';
+const INPUT_HASH='f0918ff545e3d77d8d5ec33055d7279bb01dbe172bb4e6cc4d498469d66b2e82';
+const RESULT_HASH='2abe991dbd5331f7fa3762018fed9cc707b637d4512ba62f7fc8fe1e4e28587a';
 
 const exactDemand={
   configurationId:'SYO-USER1-XBRACE',
@@ -41,10 +41,13 @@ assert.equal(storeAnswer.source.storePin,STORE_SHA);
 assert.equal(storeAnswer.source.systemIntegrationPin,SYSTEM_SHA);
 assert.equal(storeAnswer.calculationIdentity.inputHash,INPUT_HASH);
 assert.equal(storeAnswer.calculationIdentity.resultHash,RESULT_HASH);
-assert.equal(storeAnswer.material,3.13);
+assert.equal(storeAnswer.material,2.61);
 assert.equal(storeAnswer.machineService,5.89);
-assert.equal(storeAnswer.combinedValue,9.02);
+assert.equal(storeAnswer.combinedValue,8.50);
 assert.equal(storeAnswer.estimate.cycle.T_job_min,1.4128);
+assert.equal(storeAnswer.materialResolution.pricingReferenceSku,'STB-ZERO-SPF-2X4-60-001');
+assert.equal(storeAnswer.materialResolution.pricingReferenceStockLengthIn,60);
+assert.equal(storeAnswer.materialResolution.selectionPolicy,'SHORTEST_COMPLETE_STORE_OFFERING');
 
 const formalStoreAnswerA=contract.requestUser1StoreEvaluation(exactDemand,{
   requestId:'JOB1-E2E-A',
@@ -80,7 +83,7 @@ assert.match(shell,/configurationId = 'SYO-USER1-XBRACE'/);
 assert.match(shell,/endpoint16[\s\S]*?endpoint18[\s\S]*?'0\.1'[\s\S]*?'0\.2'/);
 assert.match(shell,/DEMO_HORIZONTAL_SPAN_IN = 8/);
 assert.match(shell,/Math\.asin\(spanRatio\)/);
-assert.match(shell,/workpiecePolicy = finishedLengthIn > DEMO_MIN_LENGTH_IN/);
+assert.equal(shell.includes('GROW_TO_RETAINED_CONTROL'),false);
 assert.match(shell,/parts = Array\.from/);
 assert.match(shell,/requiredOps\.push\('SPOT_ON_LOCATION'\)/);
 assert.match(shell,/resolveUser1StoreReference\(storeDemand\)/);
@@ -88,7 +91,7 @@ assert.match(shell,/resolveUser1StoreReference\(storeDemand\)/);
 // CHANGED DEFINITIONS FAIL CLOSED BEFORE CONFIRM
 assert.match(shell,/if \(definition\.storeReference\?\.complete !== true\)/);
 assert.match(shell,/STORE_REFRESH_REQUIRED · confirmation is blocked until Store evaluates this exact revision/);
-assert.match(shell,/confirmButton\.disabled = !storeComplete \|\| candidateReference/);
+assert.match(shell,/confirmButton\.disabled = !storeComplete/);
 
 // CONFIRM performs a fresh Store-authority check on every press, then creates the Job 1 handoff.
 assert.match(shell,/job:'JOB 1 · START YOUR OWN'/);
@@ -214,7 +217,6 @@ const exactDemand18={
   configurationId:'SYO-USER1-XBRACE',
   configurationVersion:'0.2',
   definedWorkpieceLengthIn:60,
-  workpiecePolicy:'GROW_TO_RETAINED_CONTROL',
   sawAngleDeg:26.387799961243,
   cutPlane:'miter-face',
   endIdentity:'both',
@@ -231,18 +233,26 @@ const exactDemand18={
 };
 const storeAnswer18=contract.resolveUser1StoreReference(exactDemand18);
 assert.equal(storeAnswer18.complete,true);
-assert.equal(storeAnswer18.source.storePin,'87c4d2187d051a577ab301acfa12f2c12a6880ea');
-assert.equal(storeAnswer18.materialResolution.workpieceLengthIn,60.375);
+assert.equal(storeAnswer18.source.storePin,STORE_SHA);
+assert.equal(storeAnswer18.materialResolution.workpieceLengthIn,72);
 assert.equal(storeAnswer18.materialResolution.pricingReferenceStockLengthIn,72);
+assert.equal(storeAnswer18.materialResolution.selectionPolicy,'SHORTEST_COMPLETE_STORE_OFFERING');
+assert.deepEqual(
+  Array.from(storeAnswer18.materialResolution.consideredCandidates).map(entry=>[entry.storeSku,entry.stockLengthIn,entry.candidateStatus,entry.reason]),
+  [
+    ['STB-ZERO-SPF-2X4-60-001',60,'REFUSED','LAST_REMAIN_BELOW_TWO_ROLLER_CONTROL'],
+    ['STB-ZERO-SPF-2X4-72-001',72,'SUPPORTABLE',null]
+  ]
+);
 assert.equal(storeAnswer18.material,3.13);
 assert.equal(storeAnswer18.machineService,5.90);
 assert.equal(storeAnswer18.combinedValue,9.03);
 assert.equal(storeAnswer18.estimate.cycle.T_job_min,1.4151);
-assert.equal(storeAnswer18.estimate.travel.finalRemainderIn,24);
-assert.equal(storeAnswer18.calculationIdentity.inputHash,'f32ed01b11d7c2987f526eb154c36220b3f8361b38e394b91efd30c073f69f9d');
-assert.equal(storeAnswer18.calculationIdentity.resultHash,'5e8e73e3fb197eb4e0955a5c850e367b3542cbbdc31df7c18975b9b9146a2985');
-assert.match(shell,/candidateReference/);
-assert.match(shell,/CANDIDATE STORE PIN/);
+assert.equal(storeAnswer18.estimate.travel.finalRemainderIn,35.625);
+assert.equal(storeAnswer18.calculationIdentity.inputHash,'4b3b498d86177ed5a13c2662778f232b2c11cfafa7f626a689b3823b6872a4cc');
+assert.equal(storeAnswer18.calculationIdentity.resultHash,'59c9988c42ffd2520f6c1931d735a31e07848d72ac602182c510a17c20b89e88');
+assert.equal(shell.includes('candidateReference'),false);
+assert.equal(shell.includes('CANDIDATE STORE PIN'),false);
 
 // A moved Store authority invalidates the displayed result even when the definition did not change.
 const staleStoreAnswer=contract.requestUser1StoreEvaluation(exactDemand,{
