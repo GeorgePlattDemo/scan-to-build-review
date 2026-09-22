@@ -7,7 +7,7 @@ const pin=EXPECTED_PIN;
 const root=resolve(process.env.STB_STORE_ZERO_ROOT||"");
 if(!process.env.STB_STORE_ZERO_ROOT) throw new Error("STB_STORE_ZERO_ROOT is required");
 const actualPin=execFileSync("git",["-C",root,"rev-parse","HEAD"],{encoding:"utf8"}).trim();
-if(actualPin!==EXPECTED_PIN) throw new Error(\`Store pin mismatch: expected \${EXPECTED_PIN}, got \${actualPin}\`);
+if(actualPin!==EXPECTED_PIN) throw new Error(`Store pin mismatch: expected ${EXPECTED_PIN}, got ${actualPin}`);
 const files={"envelope":"d001-stage2-envelope.mjs","pricing":"store-zero-pricing-engine.mjs","store":"store-zero-stage2-store.mjs","catalog":"store-zero-catalog.json"};
 const src=Object.fromEntries(Object.entries(files).map(([k,name])=>[k,readFileSync(join(root,name),"utf8")]));
 const blobs=Object.fromEntries(Object.entries(files).map(([k,name])=>[k,execFileSync("git",["-C",root,"hash-object",name],{encoding:"utf8"}).trim()]));
@@ -19,30 +19,30 @@ function transformStore(s){
   const a=x.indexOf("const ROOT =");
   const b=x.indexOf("export function findSku");
   if(a<0||b<0) throw new Error("Store source layout changed");
-  x=x.slice(0,a)+\`function loadCatalog(){ return CATALOG; }
+  x=x.slice(0,a)+`function loadCatalog(){ return CATALOG; }
 function loadObservations(){ return { clock: CATALOG.clock || null, observations: [] }; }
 
-\`+x.slice(b);
+`+x.slice(b);
   return x.replace(/\bexport\s+/g,"");
 }
 function buildBundle(src,blobIds){
   const catalog=JSON.stringify(JSON.parse(src.catalog));
-  return \`/* GENERATED FILE — DO NOT HAND EDIT.
-Source: GeorgePlattDemo/scan-to-build-store@\${pin}
+  return `/* GENERATED FILE — DO NOT HAND EDIT.
+Source: GeorgePlattDemo/scan-to-build-store@${pin}
 Generator: tools/generate-user1-store-browser-bundle.mjs
 This browser package carries Store evaluation/economics only. It grants no physical authority.
 */
 (function(root){
 "use strict";
-const STORE_PIN=\${JSON.stringify(pin)};
-const SOURCE_BLOBS=Object.freeze(\${JSON.stringify(blobIds)});
-const CATALOG=Object.freeze(\${catalog});
+const STORE_PIN=${JSON.stringify(pin)};
+const SOURCE_BLOBS=Object.freeze(${JSON.stringify(blobIds)});
+const CATALOG=Object.freeze(${catalog});
 
-\${transformEnvelope(src.envelope)}
+${transformEnvelope(src.envelope)}
 
-\${transformPricing(src.pricing)}
+${transformPricing(src.pricing)}
 
-\${transformStore(src.store)}
+${transformStore(src.store)}
 
 function unique(values){ return Array.from(new Set(values.filter(value=>typeof value==="string"&&value))); }
 
@@ -232,7 +232,7 @@ root.STBStoreZeroUser1=Object.freeze({
   evaluate:evaluateUser1Reference
 });
 })(window);
-\`;
+`;
 }
 
 const output=buildBundle(src,blobs);
