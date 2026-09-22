@@ -51,6 +51,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       .proof-gap{margin:12px 0;padding:12px 14px;border-left:4px solid #9b7540;background:var(--tint);font-size:12px;line-height:1.55}
       .proof-gap b{display:block;margin-bottom:4px}
       .proof-nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.proof-nav button{font:inherit;font-size:11px;padding:7px 11px;border:1px solid var(--border);border-radius:7px;background:var(--surface);cursor:pointer}.proof-nav .next{margin-left:auto;color:var(--accent);font-weight:700}
+      .recovery-nav .job-nav-context{display:inline-flex;align-items:center;padding:5px 9px;border:1px solid var(--border-accent);border-radius:999px;background:var(--tint);color:var(--accent);font-size:9.5px;font-weight:800;letter-spacing:.06em;white-space:nowrap}
       .s001-v2-intent-grid{display:grid;grid-template-columns:minmax(0,.9fr) minmax(300px,1.1fr);gap:16px;align-items:start;margin:14px 0}
       .s001-v2-story{font-size:13px;line-height:1.55;margin:10px 0 0}
       .s001-v2-callout{margin:12px 0;padding:12px 14px;border-left:4px solid var(--accent);background:var(--tint);font-size:13px;line-height:1.5}
@@ -884,6 +885,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   confirmButton.dataset.stbLastConfirmed = confirmationKey;
                   syncProofHandoff();
                   originalShow.call(win,'proof-store');
+                  syncJourneyNav('store');
                 });
               }
 
@@ -908,6 +910,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             selectJourneyProject('start-own');
             originalShow.call(win, 'start-own-live');
             setTimeout(() => showStartOwnStage('intent'),0);
+            syncJourneyNav('scan');
           }, true);
         }
 
@@ -1950,6 +1953,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
           selectJourneyProject('start-own');
           originalShow.call(win,'start-own-live');
           setTimeout(() => showStartOwnStage('bench'),0);
+          syncJourneyNav('configure');
         } else if(proofHandoff?.source==='outdoor'){
           selectJourneyProject('outdoor');
           originalShow.call(win,'outdoor-build-live');
@@ -1965,6 +1969,17 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         let target=go.dataset.proofGo;
         if(proofHandoff?.source==='start-own' && target==='proof-record' && go.closest('#proof-yard')) target='proof-terms';
         originalShow.call(win,target);
+        if(proofHandoff?.source==='start-own'){
+          const stageByTarget={proofStore:'store'};
+          const proofStage = {
+            'proof-store':'store',
+            'proof-accept':'request',
+            'proof-yard':'yard',
+            'proof-terms':'terms',
+            'proof-record':'record'
+          }[target] || null;
+          if(proofStage) syncJourneyNav(proofStage);
+        }
       }
     }, true);
 
@@ -2286,6 +2301,78 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         && canonicalJourney.gates.length === 8;
     }
 
+    const START_OWN_NAV_LABELS = Object.freeze({
+      scan:'Start / Intent',
+      configure:'Define',
+      store:'Store Review',
+      review:'Store Review',
+      request:'Accept / Pay',
+      yard:'Store / Yard',
+      terms:'Terms',
+      recap:'Handoff / Record',
+      record:'Handoff / Record'
+    });
+
+    function restoreJourneyNav(nav) {
+      if (!nav) return;
+      nav.removeAttribute('data-active-project');
+      nav.querySelector('.job-nav-context')?.remove();
+      [...nav.querySelectorAll('button')].forEach(button => {
+        if (!button.dataset.defaultLabel) button.dataset.defaultLabel = button.textContent;
+        if (!Object.prototype.hasOwnProperty.call(button.dataset,'defaultGo')) {
+          button.dataset.defaultGo = button.getAttribute('data-go') || '';
+        }
+        button.textContent = button.dataset.defaultLabel;
+        button.hidden = false;
+        button.removeAttribute('aria-current');
+        if (button.dataset.defaultGo) button.setAttribute('data-go',button.dataset.defaultGo);
+        else button.removeAttribute('data-go');
+      });
+    }
+
+    function wireStartOwnJourneyNav(nav) {
+      if (!nav) return;
+      nav.dataset.activeProject = 'start-own';
+      let context = nav.querySelector('.job-nav-context');
+      if (!context) {
+        context = doc.createElement('span');
+        context.className = 'job-nav-context';
+        nav.prepend(context);
+      }
+      context.textContent = 'JOB 1 · START YOUR OWN';
+
+      [...nav.querySelectorAll('button')].forEach(button => {
+        const stage = button.dataset.journeyStage || null;
+        const defaultGo = button.dataset.defaultGo || '';
+        if (!stage) {
+          if (defaultGo === 'projects') {
+            button.hidden = false;
+            button.textContent = '← Project Library';
+            button.dataset.jobExit = 'project-library';
+            button.setAttribute('data-go','projects');
+          } else {
+            button.hidden = true;
+            delete button.dataset.jobExit;
+          }
+          return;
+        }
+
+        delete button.dataset.jobExit;
+        const directTarget = PROJECT_STAGE_TARGETS['start-own']?.[stage] || null;
+        if (!directTarget) {
+          button.hidden = true;
+          return;
+        }
+        button.setAttribute('data-go',directTarget);
+        button.dataset.jobProject = 'start-own';
+        button.dataset.jobTarget = directTarget;
+        button.textContent = START_OWN_NAV_LABELS[stage] || button.dataset.defaultLabel;
+
+        // Duplicate legacy stages have the same Job 1 destination. Keep one button only.
+        if (stage === 'review' || stage === 'recap') button.hidden = true;
+      });
+    }
+
     function selectJourneyProject(projectId) {
       const nextJourneyProject = projectId || null;
       if (activeJourneyProject !== nextJourneyProject) proofHandoff = null;
@@ -2296,26 +2383,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
       const nav = doc.querySelector('.recovery-nav');
       if (nav) {
-        [...nav.querySelectorAll('button')].forEach(button => {
-          if (!button.dataset.defaultLabel) button.dataset.defaultLabel = button.textContent;
-          button.textContent = button.dataset.defaultLabel;
-          button.hidden = false;
-        });
+        restoreJourneyNav(nav);
         if (activeJourneyProject === 'start-own') {
-          ['alcove-review','recap'].forEach(target => {
-            const button = nav.querySelector('button[data-go="'+target+'"]');
-            if (button) button.hidden = true;
-          });
-          const storeButton = nav.querySelector('button[data-go="store"]');
-          const requestButton = nav.querySelector('button[data-go="request"]');
-          const yardButton = nav.querySelector('button[data-go="yard"]');
-          const termsButton = nav.querySelector('button[data-go="terms"]');
-          const recordButton = nav.querySelector('button[data-go="record"]');
-          if (storeButton) storeButton.textContent = 'Store Answer';
-          if (requestButton) requestButton.textContent = 'Accept / Pay';
-          if (yardButton) yardButton.textContent = 'Store / Yard';
-          if (termsButton) termsButton.textContent = 'Terms';
-          if (recordButton) recordButton.textContent = 'Handoff / Record';
+          wireStartOwnJourneyNav(nav);
         } else if (['alcove','outdoor'].includes(activeJourneyProject)) {
           ['alcove-review','terms','recap'].forEach(target => {
             const button = nav.querySelector('button[data-go="'+target+'"]');
@@ -2371,11 +2441,15 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       });
     }
 
-    function syncSeatNav(stage) {
+    function syncJourneyNav(stage) {
       doc.querySelectorAll('.recovery-nav button').forEach(function(button) {
-        if (stage && button.dataset.journeyStage === stage) button.setAttribute('aria-current', 'step');
+        if (stage && button.dataset.journeyStage === stage && !button.hidden) button.setAttribute('aria-current', 'step');
         else button.removeAttribute('aria-current');
       });
+    }
+
+    function syncSeatNav(stage) {
+      syncJourneyNav(stage);
     }
 
     function applyPendingSeatView() {
@@ -2417,6 +2491,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       if (projectId === 'start-own' && (stage === 'scan' || stage === 'configure')) {
         originalShow.call(win,'start-own-live');
         setTimeout(() => showStartOwnStage(stage === 'configure' ? 'bench' : 'intent'),0);
+        syncJourneyNav(stage);
         return true;
       }
       if (projectId === 'alcove') {
@@ -2445,6 +2520,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       const target = PROJECT_STAGE_TARGETS[projectId]?.[stage] || null;
       if (!target || !doc.getElementById(target)) return false;
       originalShow.call(win, target);
+      if (projectId === 'start-own' || projectId === 'outdoor') syncJourneyNav(stage);
       if (projectId === 'playhouse') setTimeout(sync, 0);
       if (projectId === 'picnic' && typeof syncPicnicJourney === 'function') setTimeout(syncPicnicJourney, 0);
       return true;
@@ -2491,6 +2567,15 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       event.stopImmediatePropagation();
       originalShow.call(win,destination);
       setTimeout(syncAlcoveCommercialSurface,0);
+    }, true);
+
+    win.addEventListener('click', function(event) {
+      const exitButton = event.target.closest?.('.recovery-nav button[data-job-exit="project-library"]');
+      if (!exitButton || activeJourneyProject !== 'start-own') return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      selectJourneyProject(null);
+      originalShow.call(win,'projects');
     }, true);
 
     win.addEventListener('click', function(event) {
