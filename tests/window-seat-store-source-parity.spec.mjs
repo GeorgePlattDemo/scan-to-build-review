@@ -110,6 +110,11 @@ test('Window Seat supported edits recompute definition, Store basis, displayed v
   expect(confirmed.storeAnswer.pin.commit,'WINDOW_SEAT_CONFIRM_STORE_AUTHORITY_DRIFT').toBe(STORE_PIN);
   expect(confirmed.storeAnswer.q,'WINDOW_SEAT_CONFIRM_ANSWER_NOT_CURRENT_STORE_VALUE').toBe(confirmed.storeReference.q);
 
+  // Confirmation moves the standalone page to the Store stage. Return through the
+  // actual actor control before making a second customer edit.
+  await page.locator('[data-ws-guided-stage="configure"]:visible').click();
+  await expect(page.locator('#species [data-k="oak"]')).toBeVisible();
+
   // A second supported material edit after confirmation must make the held answer historical.
   await page.locator('#species [data-k="oak"]').click();
   const revised=await page.evaluate(() => window.STBWindowSeatJourney.snapshot());
