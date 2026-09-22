@@ -108,7 +108,7 @@ for(const gate of ['store','accept','yard','terms','record']){
 assert.match(shell,/MODELED MACHINE SERVICE/);
 assert.match(shell,/STORE BUDGETARY Q/);
 assert.match(shell,/machine_service/);
-assert.match(shell,/1\.4128/);
+assert.match(shell,/estimate\?\.cycle\?\.T_job_min/,'visible Job 1 must present Store-returned modeled time rather than hard-code a cycle value');
 assert.equal(shell.includes('quoteStartOwnBoardSequence'),false,'Job 1 has a second browser pricing engine');
 assert.equal(shell.includes('machineHourRate'),false,'Job 1 browser contains a Store machine rate');
 assert.equal(shell.includes('setupCharge'),false,'Job 1 browser contains a Store setup charge');
