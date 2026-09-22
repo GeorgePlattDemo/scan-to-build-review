@@ -6,6 +6,8 @@
 
 ## 1. First passing checkpoints
 
+The checkpoints in this section are historical provenance for the first passing Job 1 path. The current freshness-hardened Store authority is recorded in Section 3 and supersedes the historical Store pin for new Store requests.
+
 ### Store
 
 - Repository: `GeorgePlattDemo/scan-to-build-store`
@@ -76,8 +78,10 @@ The exact Store evaluator returns:
 - economics basis: `DECLARED_STAGE2_MODEL`
 - measured: `false`
 - commissioned: `false`
-- calculation input hash: `5de0367b62087cb0174ef5f1e101e22ded3728ba71906868628a985afafa078b`
-- calculation result hash: `9ad8d16a7c211d420b83e46ed8a8d224bd289e26a48764ff8d0389b6db698604`
+- current Store authority SHA: `f88ccaf9a2624899e255e66b51111e2b02309dad`
+- current Store acceptance run: `35768861705`
+- calculation input hash: `e186df5ead47f0c3c233477b18d00206643d8e5e1adf03fdd6dabdc95a0a5168`
+- calculation result hash: `425af5de05fb614b87ca308696d0d19af0b2701ce2f3fd51c8a6c3ca84042f4f`
 
 The 72 in SKU is a Store procurement/pricing reference. It does not redefine the 60 in project workpiece.
 
@@ -109,7 +113,9 @@ Store alone resolves:
 
 Confirmation is allowed only when the exact identified revision has a complete Store answer.
 
-A changed configuration/version must not borrow the prior Store result.
+Every press of the Store-submit control is a new Store request. The application must obtain current Store authority again and carry a new request/evaluation receipt. A prior Store answer may remain visible as history, but it may not authorize the new request.
+
+A changed configuration/version must not borrow the prior Store result. An unchanged definition also may not silently reuse a prior Store evaluation if Store authority has moved.
 
 Changed governing demand returns:
 
@@ -197,6 +203,8 @@ The System candidate at the exact tested SHA above enforces this reconciliation 
 
 The static Review surface does not run a second pricing engine. It presents only the Store-issued result tied to the tested Store/System authority. Any edited Review definition fails closed until a fresh Store answer exists.
 
+For an unchanged Job 1 definition, every Store-submit press still creates a new request identity and checks current Store authority. In this static Review build, current Store authority is revalidated against the Store repository head. If that authority no longer matches the Store-issued reference, the handoff stops with `STORE_AUTHORITY_CHANGED`; the browser does not calculate a replacement Q. A Store runtime/service may replace this static authority probe later, but it must preserve the same invariant: **new request → fresh Store evaluation → fresh receipt**.
+
 ## 7. Navigation integrity invariant
 
 Navigation is part of the job contract.
@@ -238,6 +246,9 @@ Every later dimensional project must inherit these rules unchanged:
 13. **PASS A and PASS B use the same evaluator.**
 14. **Calculation identity travels through completion and record.**
 15. **Commercial authority and physical authority remain separate from a budgetary Store answer.**
+16. **Every Store-submit action creates a new Store evaluation request and receipt.**
+17. **A prior Store answer or receipt is history, not authority for a later request.**
+18. **Current Store authority changes fail closed and are surfaced before downstream handoff.**
 
 ## 9. Migration rule for Job 2 and later
 
