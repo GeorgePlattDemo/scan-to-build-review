@@ -22,6 +22,12 @@ jobs:
       - name: Shared Store contract syntax
         run: node --check stb-store-handoff-contract.js
 
+      - name: Job 1 fulfillment engine syntax
+        run: node --check stb-job1-simulated-fulfillment.js
+
+      - name: Job 1 fulfillment gate engine
+        run: node tests/job1-full-gate-state-machine.test.mjs
+
       - name: Job 1 Store authority acceptance
         run: node tests/user1-travel-standard.test.mjs
 
