@@ -291,7 +291,7 @@
 
           <g transform="translate(40 286)" font-size="11">
             <line x1="2" y1="0" x2="16" y2="20" stroke="#a85a2a" stroke-width="5" stroke-linecap="round"/>
-            <text id="stb-bench-cut-copy" x="30" y="14" fill="#584533"><tspan font-weight="700" fill="#a85a2a">cut</tspan> — a 30° angle · three cuts make the two parts (cut 2 is shared)</text>
+            <text id="stb-bench-cut-copy" x="30" y="14" fill="#584533"><tspan font-weight="700" fill="#a85a2a">cut</tspan> — Store plan pending</text>
           </g>
           <g transform="translate(470 286)" font-size="11">
             <circle cx="10" cy="7" r="10" fill="none" stroke="#2f6f9e" stroke-width="2.4"/><circle cx="10" cy="7" r="3.4" fill="#2f6f9e"/>
@@ -309,11 +309,11 @@
       </div>
       <div class="stb-system-answer" id="stb-system-answer" aria-live="polite"><b>STORE</b> · finished-member demand will be resolved against current Store stock, sequence, capability, and modeled economics.</div>
       <ol class="steps">
-        <li id="stb-bench-cut-step"><b>Cut it.</b> Three cuts along the one board — a 30° angle each — make the two parts.</li>
+        <li id="stb-bench-cut-step"><b>Cut it.</b> Store will select the parent and return the cut sequence for these finished members.</li>
         <li id="stb-bench-drill-step"><b>Drill it.</b> One spot, on location, centered in each part.</li>
-        <li id="stb-bench-stub-step"><b>Keep the stub.</b> Two matching X-brace parts, and the rest of the board comes back to you.</li>
+        <li id="stb-bench-stub-step"><b>Keep the remainder.</b> Finished parts and parent remainder stay accounted for in the same Store plan.</li>
       </ol>
-      <div class="workline"><b id="stb-bench-workline">THAT’S THE WHOLE JOB · 3 CUTS · 2 SPOTS ON LOCATION · WITHIN LIMITS (TIGHT)</b><span>the picture up top is what you want · this is what the board does</span></div>
+      <div class="workline"><b id="stb-bench-workline">THAT’S THE WHOLE DEFINED JOB · STORE PLAN PENDING</b><span>the picture up top is what you want · this is what the board does</span></div>
     </div>
   </div>
 
@@ -323,7 +323,7 @@
     <div class="control-grid">
       <div class="control"><b>PARTS</b><span class="value" id="stb-config-parts-value">2 parts</span><div class="choice-row" id="stb-config-parts"><button type="button" data-parts="1">1</button><button type="button" class="on" data-parts="2">2</button><button type="button" data-parts="4">4</button></div></div>
       <div class="control"><b>EACH PART</b><span class="value" id="stb-config-length-value">16 in</span><input id="stb-config-length" type="number" min="1" max="35" step="0.125" value="16" inputmode="decimal"><div class="choice-row"><button type="button" data-length="12">12</button><button type="button" class="on" data-length="16">16</button><button type="button" data-length="18">18</button><button type="button" data-length="24">24</button></div></div>
-      <div class="control"><b>END ANGLE</b><span class="value" id="stb-config-angle-value">30° · both ends · parallel</span><input id="stb-config-angle" type="number" min="0" max="45" step="0.5" value="30" inputmode="decimal"><div class="choice-row"><button type="button" data-angle="0">0°</button><button type="button" data-angle="15">15°</button><button type="button" class="on" data-angle="30">30°</button><button type="button" data-angle="45">45°</button></div></div>
+      <div class="control"><b>END ANGLE</b><span class="value" id="stb-config-angle-value">30° · both ends · parallel</span><input id="stb-config-angle" type="number" min="0" max="89" step="0.5" value="30" inputmode="decimal"><div class="choice-row"><button type="button" data-angle="0">0°</button><button type="button" data-angle="15">15°</button><button type="button" class="on" data-angle="30">30°</button><button type="button" data-angle="45">45°</button><button type="button" data-angle="46">46° TEST</button></div></div>
       <div class="control"><b>SPOT</b><span class="value" id="stb-config-spot-value">1 centered spot / part</span><div class="choice-row" id="stb-config-spot"><button type="button" class="on" data-spot="centered">CENTERED</button><button type="button" data-spot="none">NONE</button></div></div>
     </div>
   </div>
@@ -341,7 +341,7 @@
       <div class="defrow"><span>Length datum</span><span>long-long outer edge</span></div>
       <div class="defrow"><span>Spot</span><span id="stb-def-spot">1 centered spot / part</span></div>
       <div class="defrow"><span>Spot location</span><span id="stb-def-spot-location">8 in · derived from 16 ÷ 2</span></div>
-      <div class="defrow"><span>Retained stock</span><span id="stb-def-retained">27⅝ in</span></div>
+      <div class="defrow"><span>Retained stock</span><span id="stb-def-retained">pending Store answer</span></div>
       <div class="defrow"><span>Physical execution</span><span>NOT AUTHORIZED</span></div>
     </div>
   </div>
