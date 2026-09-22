@@ -10,10 +10,10 @@ const sandbox={window:{}};
 vm.runInNewContext(contractSource,sandbox,{filename:'stb-store-handoff-contract.js'});
 const contract=sandbox.window.STBStoreHandoffContract;
 
-const STORE_SHA='f8373520a726090ed91eff82e5e720f4a9634615';
-const SYSTEM_SHA='682ce2b2a60c88b5fb6543e2f4f1c9ebfe7b01b8';
-const INPUT_HASH='caa7c91f1296c243a5abb05ed35a0c55b5b1f5d4dab32efd64cd2656d75f3036';
-const RESULT_HASH='15a8835dd50771136020190db7f5dbed1bd35b78930bf338be63bea8427353c2';
+const STORE_SHA='95c639a1d0d4812df097ad1eb628594b38f921de';
+const SYSTEM_SHA='900dbd13f079f8a5f8d76d49c723fd35279164e8';
+const INPUT_HASH='5de0367b62087cb0174ef5f1e101e22ded3728ba71906868628a985afafa078b';
+const RESULT_HASH='9ad8d16a7c211d420b83e46ed8a8d224bd289e26a48764ff8d0389b6db698604';
 
 const exactDemand={
   configurationId:'SYO-USER1-XBRACE',
