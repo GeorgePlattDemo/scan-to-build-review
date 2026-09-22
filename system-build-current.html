@@ -1628,6 +1628,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             <div class="btns"><button type="button" data-s001-control id="s001-reset">RESET TO SARAH'S 36 / 24 / 12</button></div>
             <div class="s001-status">ROUTED PROFILE IS INSIDE CURRENT 48 × 36 REFERENCE FIELD</div>
             <p class="dim" id="s001-geometry-summary"></p>
+            <div class="s001-v2-callout" id="s001-live-store-answer"><b>LIVE STORE ZERO</b><span id="s001-live-store-disposition">EVALUATING</span> · material <span id="s001-live-store-material">—</span><br><span id="s001-live-store-reasons">No Store answer yet.</span><br><small id="s001-live-store-version"></small></div>
             <div class="s001-v2-seq">
               <div class="row"><span class="n">01</span><div><b>ROUTE INTERNAL CENTER FEATURE</b><span>Straight internal route. Retained material remains connected by tabs according to the project rule.</span></div></div>
               <div class="row"><span class="n">02</span><div><b>ROUTE OUTER ARCHED PROFILE</b><span>Curvilinear opening profile with retained tabs.</span></div></div>
@@ -1648,16 +1649,16 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       <h1>PLAYHOUSE · CURRENT STORE ANSWER</h1>
       <p class="sub">Store separates what the pinned S-001 routed envelope can support from requested work that still belongs to a separate operation path.</p>
       <div class="s001-v2-store-split">
-        <section class="s001-v2-store-card s001-v2-pass"><h3>ROUTED ARCHED OPENING</h3><p><b>SUPPORTABLE · REFERENCE</b></p><p>Request: <code>SHEET_MODE2_ARCHED_APERTURE_V0</code><br>Envelope: <code>S001-MODE2-ARCHED-APERTURE-V0</code></p><p id="s001-store-opening"></p><p id="s001-store-radius"></p><p>4 requested tabs · Store reference plan 5 · physical retention NOT MEASURED.</p></section>
+        <section class="s001-v2-store-card s001-v2-pass"><h3>ROUTED ARCHED OPENING</h3><p><b id="s001-store-card-status">EVALUATING</b></p><p>Request: <code>SHEET_MODE2_ARCHED_APERTURE_V0</code><br>Envelope: <code>S001-MODE2-ARCHED-APERTURE-V0</code></p><p id="s001-store-opening"></p><p id="s001-store-radius"></p><p id="s001-store-reasons">Waiting for the current Store answer.</p><p>4 requested tabs · Store retention policy remains reference evidence · physical retention NOT MEASURED.</p></section>
         <section class="s001-v2-store-card s001-v2-separate"><h3>ADDITIONAL PROJECT FEATURES</h3><p><b>RETAINED · SEPARATE FROM PINNED ROUTED ENVELOPE</b></p><p>Internal center route feature and two straight saw-cut requests at 18 in from each sheet end remain in the project definition.</p><p>They are not silently promoted into <code>SHEET_MODE2_ARCHED_APERTURE_V0</code>.</p></section>
       </div>
       <div class="s001-v2-order">
         <div><b>MATERIAL</b><span>STB-ZERO-PLY-050-48X96-001</span></div>
-        <div><b>ROUTED DISPOSITION</b><span>SUPPORTABLE · REFERENCE</span></div>
-        <div><b>REFERENCE AMOUNT</b><span>$26.55 material-only</span></div>
-        <div><b>PROCESS / SECONDARY COST</b><span>UNRESOLVED</span></div>
+        <div><b>ROUTED DISPOSITION</b><span id="s001-store-disposition">EVALUATING</span></div>
+        <div><b>REFERENCE AMOUNT</b><span id="s001-store-reference-amount">—</span></div>
+        <div><b>PROCESS / SECONDARY COST</b><span id="s001-store-process-cost">UNRESOLVED</span></div>
         <div><b>COMMISSIONED</b><span>false</span></div>
-        <div><b>PHYSICAL AUTHORITY</b><span>false</span></div>
+        <div><b>PHYSICAL AUTHORITY</b><span>false</span></div><div><b>ANSWER VERSION</b><span id="s001-store-answer-version">—</span></div>
       </div>
       <div class="s001-boundary">The Store answer is deliberately mixed: the arched routed opening is inside the current reference envelope; the extra center route and straight-cut requests remain visible but are not invented into that envelope. No binding quote or fabrication authority is created.</div>
       <div class="btns"><button type="button" data-canonical-go="playhouse-machine">BACK TO MACHINE DEFINITION</button><button type="button" data-canonical-go="playhouse-review">REVIEW JOB FACTS →</button></div>
@@ -1687,7 +1688,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         <div><b>PROJECT</b><span>Playhouse arched window</span></div>
         <div><b>WOOD</b><span>48 × 96 in · 1/2 in plywood</span></div>
         <div><b>OPENING</b><span id="s001-review-opening"></span></div>
-        <div><b>PRIMARY ROUTE</b><span>SUPPORTABLE · REFERENCE</span></div>
+        <div><b>PRIMARY ROUTE</b><span id="s001-review-primary-route">EVALUATING</span></div><div><b>STORE ANSWER VERSION</b><span id="s001-review-store-version">—</span></div>
         <div><b>CENTER FEATURE</b><span>Requested · retained separately</span></div>
         <div><b>STRAIGHT CUTS</b><span>2 requested · 18 in from sheet ends · separate path</span></div>
         <div><b>RETURN MATERIAL</b><span>Center and remnants retained for Sarah</span></div>
@@ -1705,7 +1706,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       <div class="s001-v2-order">
         <div><b>CLASS</b><span>S001_CENTERED_ARCHED_SHEET_V0</span></div>
         <div><b>GEOMETRY</b><span id="s001-result-geometry"></span></div>
-        <div><b>ROUTED STORE STATUS</b><span>SUPPORTABLE · REFERENCE</span></div>
+        <div><b>ROUTED STORE STATUS</b><span id="s001-result-store-status">NOT CONFIRMED</span></div>
         <div><b>ADDITIONAL OPS</b><span>Retained · not admitted to pinned routed envelope</span></div>
         <div><b>PHYSICAL STATUS</b><span>NOT CLAIMED / NOT AUTHORIZED</span></div>
         <div><b>OWNER MATERIAL</b><span>Center + remnants designated for return</span></div>
@@ -1725,15 +1726,15 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         <div><b>MATERIAL</b><span>STB-ZERO-PLY-050-48X96-001 · 48 × 96 in · 1/2 in plywood</span></div>
         <div><b>GEOMETRY</b><span id="s001-record-geometry"></span></div>
         <div><b>PRIMARY STORE REQUEST</b><span>SHEET_MODE2_ARCHED_APERTURE_V0</span></div>
-        <div><b>PRIMARY STORE RESULT</b><span>SUPPORTABLE · REFERENCE</span></div>
+        <div><b>PRIMARY STORE RESULT</b><span id="s001-record-store-result">NOT CONFIRMED</span></div>
         <div><b>RETENTION</b><span>4 requested tabs · 5 planned by reference policy · NOT MEASURED physically</span></div>
         <div><b>ADDITIONAL REQUESTS</b><span>Internal center route + two straight cuts · retained outside pinned routed envelope</span></div>
         <div><b>RETURN TO OWNER</b><span>Center piece and remaining sheet pieces</span></div>
         <div><b>HARDWARE</b><span>Not included</span></div>
-        <div><b>MATERIAL-ONLY REFERENCE</b><span>$26.55</span></div>
+        <div><b>MATERIAL-ONLY REFERENCE</b><span id="s001-yard-material-reference">—</span></div>
         <div><b>PROCESS / SECONDARY PRICE</b><span>UNRESOLVED</span></div>
         <div><b>PHYSICAL EXECUTION</b><span>false · no cut, inspection, staging or pickup recorded</span></div>
-        <div><b>STORE PIN</b><span>4402abeb6b0299a5b6db2eec85ed04c3b0236bcc</span></div>
+        <div><b>STORE PIN</b><span id="s001-record-store-pin">—</span></div><div><b>CONFIRMED VERSION</b><span id="s001-record-store-version">—</span></div>
       </div>
       <div class="s001-v2-callout"><b>Outcome, not gadget.</b>The human page explains why the job exists. The machine page carries only material, geometry and operations. The order / record page keeps only what the journey actually established.</div>
       <div class="btns"><button type="button" data-canonical-go="playhouse-s001">RETURN TO INTENT</button><button type="button" data-canonical-go="projects">HOME</button></div>
@@ -1977,7 +1978,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       '<div class="s001-v2-order">' +
         '<div><b>PROJECT</b><span>Playhouse arched window</span></div>' +
         '<div><b>GEOMETRY</b><span id="s001-request-geometry"></span></div>' +
-        '<div><b>PRIMARY ROUTE</b><span>SUPPORTABLE · REFERENCE</span></div>' +
+        '<div><b>PRIMARY ROUTE</b><span id="s001-request-primary-route">NOT CONFIRMED</span></div><div><b>CONFIRMED STORE VERSION</b><span id="s001-request-store-version">—</span></div>' +
         '<div><b>ADDITIONAL OPS</b><span>Internal center route + two straight cuts · unresolved / separate path</span></div>' +
         '<div><b>FULL COMMERCIAL OFFER</b><span>NOT ESTABLISHED</span></div>' +
         '<div><b>PHYSICAL AUTHORITY</b><span>NOT AUTHORIZED</span></div>' +
@@ -1993,8 +1994,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       '<div class="s001-v2-order">' +
         '<div><b>PROJECT</b><span>Playhouse arched window</span></div>' +
         '<div><b>GEOMETRY</b><span id="s001-yard-geometry"></span></div>' +
-        '<div><b>ROUTED OPENING</b><span>SUPPORTABLE · REFERENCE</span></div>' +
-        '<div><b>MATERIAL-ONLY REFERENCE</b><span>$26.55</span></div>' +
+        '<div><b>ROUTED OPENING</b><span id="s001-yard-route">NOT CONFIRMED</span></div>' +
+        '<div><b>MATERIAL-ONLY REFERENCE</b><span id="s001-record-material-reference">—</span></div>' +
         '<div><b>CENTER ROUTE / STRAIGHT CUTS</b><span>UNRESOLVED · separate operation path</span></div>' +
         '<div><b>SELLER-OF-RECORD OFFER</b><span>NOT ESTABLISHED</span></div>' +
       '</div>' +
