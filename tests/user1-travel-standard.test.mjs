@@ -45,11 +45,11 @@ assert.equal(exact.estimate.cycle.T_job_min,1.4128);
 assert.equal(exact.estimate.travel.derivedSawCuts,3);
 assert.equal(exact.estimate.travel.derivedSpotCount,2);
 assert.equal(exact.estimate.travel.finalRemainderIn,27.625);
-assert.equal(exact.source.storePin,'f8373520a726090ed91eff82e5e720f4a9634615');
-assert.equal(exact.source.workflowRun,'35752240345');
-assert.equal(exact.source.systemIntegrationPin,'682ce2b2a60c88b5fb6543e2f4f1c9ebfe7b01b8');
-assert.equal(exact.calculationIdentity.inputHash,'caa7c91f1296c243a5abb05ed35a0c55b5b1f5d4dab32efd64cd2656d75f3036');
-assert.equal(exact.calculationIdentity.resultHash,'15a8835dd50771136020190db7f5dbed1bd35b78930bf338be63bea8427353c2');
+assert.equal(exact.source.storePin,'95c639a1d0d4812df097ad1eb628594b38f921de');
+assert.equal(exact.source.workflowRun,'35757052553');
+assert.equal(exact.source.systemIntegrationPin,'900dbd13f079f8a5f8d76d49c723fd35279164e8');
+assert.equal(exact.calculationIdentity.inputHash,'5de0367b62087cb0174ef5f1e101e22ded3728ba71906868628a985afafa078b');
+assert.equal(exact.calculationIdentity.resultHash,'9ad8d16a7c211d420b83e46ed8a8d224bd289e26a48764ff8d0389b6db698604');
 
 for (const changed of [
   {...exactDemand, configurationVersion:'0.2'},
