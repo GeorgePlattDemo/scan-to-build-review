@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const STORE_PIN='34d4c6e7a2cb7e4bce428e396c7d7cbf228d20b7';
+const STORE_PIN='01f9c5580cea262bd898a9f2c1ac2cd89d02845f';
 
 function appFrame(page){
   return page.frameLocator('#stb-current').frameLocator('#stb-current');
