@@ -30,8 +30,8 @@ assert.equal(contract.currentArtifacts.alcove.artifact,'system-build-current.htm
 assert.equal(contract.currentArtifacts.windowSeat.artifact,'stb-window-seat-space-utilization-0.7.4.html');
 assert.equal(contract.currentArtifacts.sheetS001.artifact,'system-build-current.html#playhouse-s001');
 
-assert.equal(contract.storeAuthority('startOwn').capabilityPin,'bc1a77297df752e32fb3687acc883a629c0b5b13');
-assert.equal(contract.storeAuthority('startOwn').materialCatalogPin,'bc1a77297df752e32fb3687acc883a629c0b5b13');
+assert.equal(contract.storeAuthority('startOwn').capabilityPin,'34d4c6e7a2cb7e4bce428e396c7d7cbf228d20b7');
+assert.equal(contract.storeAuthority('startOwn').materialCatalogPin,'34d4c6e7a2cb7e4bce428e396c7d7cbf228d20b7');
 assert.equal(contract.storeAuthority('startOwn').legacyGeneralRecoverySelected,false);
 assert.equal(contract.storeAuthority('startOwn').economicsModel,'STB-STORE-ZERO-PRICE-1');
 assert.equal(contract.storeAuthority('startOwn').economicsVersion,'0.3.0');
