@@ -41,12 +41,14 @@ assert.match(surface,/2×4 · 60 in/,'60-in defined workpiece changed');
 assert.match(surface,/27⅝ in remains/,'60-in retained math changed');
 assert.match(surface,/3⅝ in spare/,'60-in spare math changed');
 assert.match(surface,/id="stb-bench-controls"/);
-assert.match(surface,/Change of plans\?/);
-assert.match(surface,/id="stb-config-length"[^>]*value="16"/);
-assert.match(surface,/id="stb-config-angle"[^>]*value="30"/);
-assert.match(surface,/data-parts="1"/);
-assert.match(surface,/data-parts="2"/);
-assert.equal(surface.includes('data-parts="3"'),false,'quantity control escaped the bounded X-brace proof');
+assert.match(surface,/One change\. Same span\./);
+assert.match(surface,/id="stb-config-length"[^>]*min="16"[^>]*max="18"[^>]*value="16"/);
+assert.match(surface,/data-length="16">16 IN/);
+assert.match(surface,/data-length="18">18 IN/);
+assert.match(surface,/18\.000 in → 26\.388° end cuts/);
+assert.equal(surface.includes('id="stb-config-angle"'),false,'customer angle control returned');
+assert.equal(surface.includes('data-parts='),false,'quantity choices returned');
+assert.equal(surface.includes('data-spot='),false,'spot choices returned');
 assert.match(surface,/RESULTING DEFINITION \/ REFERENCE ORDER — USER 1/);
 assert.match(surface,/MATERIAL REQUIRED/);
 assert.match(surface,/REFERENCE CALCULATED PRICE/);
@@ -61,7 +63,10 @@ assert.match(surface,/id="stb-bench-dynamic-geometry"/);
 // Host carries one definition through intent, bench, Store, Terms and record.
 assert.match(shell,/three-frames\.html\?v=d176205b/);
 assert.match(shell,/const definedWorkpieceLengthIn = 60;/);
-assert.match(shell,/parentLengthIn:definedWorkpieceLengthIn/);
+assert.match(shell,/DEMO_HORIZONTAL_SPAN_IN = 8/);
+assert.match(shell,/Math\.asin\(spanRatio\)/);
+assert.match(shell,/parentLengthIn:effectiveWorkpieceLengthIn/);
+assert.match(shell,/workpiecePolicy:workpiecePolicy/);
 assert.match(shell,/materialSource:'STORE_ZERO'/);
 assert.equal(shell.includes('sequenceDefinedWorkpiece'),false,'visible User 1 still performs Store travel/control sequencing in the browser');
 assert.match(shell,/resolveUser1StoreReference/);
@@ -156,6 +161,36 @@ assert.equal(exactStoreAnswer.estimate.engine.version,'0.3.0');
 assert.equal(exactStoreAnswer.source.storePin,'f88ccaf9a2624899e255e66b51111e2b02309dad');
 assert.equal(exactStoreAnswer.calculationIdentity.inputHash,'e186df5ead47f0c3c233477b18d00206643d8e5e1adf03fdd6dabdc95a0a5168');
 assert.equal(exactStoreAnswer.calculationIdentity.resultHash,'425af5de05fb614b87ca308696d0d19af0b2701ce2f3fd51c8a6c3ca84042f4f');
+
+
+const exactStoreAnswer18 = contract.resolveUser1StoreReference({
+  configurationId:'SYO-USER1-XBRACE',
+  configurationVersion:'0.2',
+  definedWorkpieceLengthIn:60,
+  workpiecePolicy:'GROW_TO_RETAINED_CONTROL',
+  sawAngleDeg:26.387799961243,
+  cutPlane:'miter-face',
+  endIdentity:'both',
+  endRelation:'parallel',
+  lengthDatum:'long-long-outer-edge',
+  datumCMethod:'REFERENCE_CUT',
+  requiredOps:['MITER_LIMITED','SPOT_ON_LOCATION'],
+  declaredSawCuts:3,
+  declaredSpotCount:2,
+  parts:[
+    {partId:'PART-1',lengthIn:18,features:[{featureId:'SPOT-1',kind:'SPOT_ON_LOCATION',xIn:9,locationRule:'CENTERED_ON_PART',acrossWidthRule:'CENTERED_ON_WIDE_FACE'}]},
+    {partId:'PART-2',lengthIn:18,features:[{featureId:'SPOT-2',kind:'SPOT_ON_LOCATION',xIn:9,locationRule:'CENTERED_ON_PART',acrossWidthRule:'CENTERED_ON_WIDE_FACE'}]}
+  ]
+});
+assert.equal(exactStoreAnswer18.status,'MATCHED_STORE_REFERENCE');
+assert.equal(exactStoreAnswer18.complete,true);
+assert.equal(exactStoreAnswer18.materialResolution.workpieceLengthIn,60.375);
+assert.equal(exactStoreAnswer18.materialResolution.pricingReferenceStockLengthIn,72);
+assert.equal(exactStoreAnswer18.machineService,5.90);
+assert.equal(exactStoreAnswer18.combinedValue,9.03);
+assert.equal(exactStoreAnswer18.estimate.cycle.T_job_min,1.4151);
+assert.equal(exactStoreAnswer18.estimate.travel.finalRemainderIn,24);
+assert.equal(exactStoreAnswer18.source.storePin,'87c4d2187d051a577ab301acfa12f2c12a6880ea');
 const freshStoreAnswer = contract.requestUser1StoreEvaluation({
   configurationId:'SYO-USER1-XBRACE',
   configurationVersion:'0.1',
@@ -246,4 +281,4 @@ assert.equal(handoff.authority.physicalFabrication,false);
 
 
 
-console.log('PASS · Start Your Own intent → bench → Store-issued reference → terms preserves one 60-in definition without a second pricing engine');
+console.log('PASS · Start Your Own bounded 16–18 bench preserves rendering, derives geometry, and uses Store-issued references without a second pricing engine');
