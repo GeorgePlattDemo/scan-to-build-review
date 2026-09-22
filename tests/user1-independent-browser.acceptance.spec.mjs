@@ -59,15 +59,39 @@ test('actual User 1 journey is demand-driven from finished members through Store
   expect(retained.operationPlan.selected.parentStockLengthIn).toBe(72);
   expect(retained.operationPlan.intermediateBlank).toBe(null);
 
-  // 5–6. Drawing/ops/remainder/price are the same Store plan. Spots ON qualify but do not erase resolved work.
-  expect(retained.operationPlan.accounting.productionSawCuts,'FAULT_TARGET_PICTURE_PRICED_PLAN_MISMATCH').toBe(3);
+  // 5–6. Drawing/ops/remainder/price are one Store plan. Demonstrate spots OFF, then ON.
+  await project.locator('#stb-config-spot [data-spot="none"]').click();
+  await expect(answer).toHaveAttribute('data-store-disposition','SUPPORTABLE');
+  await expect(project.locator('#stb-price-total')).toHaveText('$54.27 · COMPLETE');
+  retained=await retainedDefinition(app);
+  expect(retained.operationPlan.selected.storeSku).toBe('STB-ZERO-SPF-2X4-72-001');
+  expect(retained.operationPlan.selected.parentStockLengthIn).toBe(72);
+  expect(retained.operationPlan.intermediateBlank,'FAULT_TARGET_UNJUSTIFIED_BLANK_INSERTED').toBe(null);
+  expect(retained.operationPlan.accounting.productionSawCuts).toBe(3);
   expect(retained.operationPlan.accounting.preparationSawCuts).toBe(0);
+  expect(
+    retained.storeReference.authoritativeAnswer.rawEstimate.operationAccounting.totalModeledSawCuts,
+    'FAULT_TARGET_PRICED_PLAN_OMITS_NECESSARY_OPERATION'
+  ).toBe(retained.operationPlan.accounting.totalModeledSawCuts);
   await expect(project.locator('#stb-bench-cut-copy'),'FAULT_TARGET_PICTURE_PRICED_PLAN_MISMATCH').toContainText('3 production saw cycles');
   expect(retained.operationPlan.parents[0].remainderIn).toBe(39.625);
   await expect(project.locator('#stb-bench-remain-label')).toContainText('39 5/8 in remains');
   await expect(project.locator('#stb-price-material')).toHaveText('$3.13');
   await expect(project.locator('#stb-price-processing')).toHaveText('$51.14');
+  expect(retained.storeReference.authoritativeAnswer.rawEstimate.status).toBe('BUDGETARY_ESTIMATE');
+  expect(retained.storeReference.authoritativeAnswer.rawEstimate.totals.Q).toBe(54.27);
+
+  const spotOffVersion=retained.versionId;
+  await project.locator('#stb-config-spot [data-spot="centered"]').click();
+  await expect(answer).toHaveAttribute('data-store-disposition','UNRESOLVED');
   await expect(project.locator('#stb-price-total'),'FAULT_TARGET_VISIBLE_STORE_VALUE_MISMATCH').toHaveText('$54.27 · PARTIAL');
+  retained=await retainedDefinition(app);
+  expect(retained.versionId,'FAULT_TARGET_STALE_ANSWER_ON_NEW_REVISION').not.toBe(spotOffVersion);
+  expect(retained.versionId).toBe(retained.storeReference.answerVersionId);
+  expect(retained.operationPlan.selected.storeSku).toBe('STB-ZERO-SPF-2X4-72-001');
+  expect(retained.operationPlan.selected.parentStockLengthIn).toBe(72);
+  expect(retained.operationPlan.accounting.productionSawCuts).toBe(3);
+  expect(retained.operationPlan.parents[0].remainderIn).toBe(39.625);
   expect(retained.storeReference.authoritativeAnswer.rawEstimate.status).toBe('PARTIAL_BUDGETARY_ESTIMATE');
   expect(retained.storeReference.authoritativeAnswer.rawEstimate.totals.material).toBe(3.13);
   expect(retained.storeReference.authoritativeAnswer.rawEstimate.totals.cell_recovery).toBe(51.14);
@@ -78,17 +102,10 @@ test('actual User 1 journey is demand-driven from finished members through Store
   expect(retained.storeReference.unresolvedConditions).toContain('SPOT_TOOL_POINT_GEOMETRY_REQUIRED');
   expect(retained.storeReference.unresolvedConditions).toContain('SPOT_CYCLE_TIME_APPLICABILITY_UNRESOLVED');
 
-  const spotOnVersion=retained.versionId;
+  // Return to spots OFF for the independent geometry/quantity edit cases.
   await project.locator('#stb-config-spot [data-spot="none"]').click();
   await expect(answer).toHaveAttribute('data-store-disposition','SUPPORTABLE');
-  await expect(project.locator('#stb-price-total')).toHaveText('$54.27 · COMPLETE');
   retained=await retainedDefinition(app);
-  expect(retained.versionId,'FAULT_TARGET_STALE_ANSWER_ON_NEW_REVISION').not.toBe(spotOnVersion);
-  expect(retained.versionId).toBe(retained.storeReference.answerVersionId);
-  expect(retained.storeReference.authoritativeRequest.spotDemand).toBe(null);
-  expect(retained.storeReference.authoritativeAnswer.rawEstimate.status).toBe('BUDGETARY_ESTIMATE');
-  expect(retained.operationPlan.selected.parentStockLengthIn).toBe(72);
-  expect(retained.operationPlan.parents[0].remainderIn).toBe(39.625);
 
   // 7. 16 -> 16.5 recomputes the same demand; qty 2 -> 4 changes Store parent/sequence.
   const length=project.locator('#stb-config-length');
@@ -106,7 +123,7 @@ test('actual User 1 journey is demand-driven from finished members through Store
   await project.locator('#stb-config-parts [data-parts="4"]').click();
   retained=await retainedDefinition(app);
   expect(retained.physicalDemand.quantity).toBe(4);
-  expect(retained.operationPlan.finishedPart.lengthIn).toBe(16.5);
+  expect(retained.operationPlan.finishedPart.lengthIn,'FAULT_TARGET_STOCK_LENGTH_OVERWRITES_FINISHED_GEOMETRY').toBe(16.5);
   expect(retained.operationPlan.finishedPart.quantity).toBe(4);
   expect(retained.operationPlan.selected.storeSku).toBe('STB-ZERO-SPF-2X4-96-001');
   expect(retained.operationPlan.selected.parentStockLengthIn).toBe(96);
