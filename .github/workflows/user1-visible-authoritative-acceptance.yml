@@ -15,6 +15,8 @@ permissions:
 env:
   STORE_PIN: 7303793620d0ceda509810a661d11e6c31c7d59f
   STB_STORE_ZERO_ROOT: ${{ github.workspace }}/store-zero
+  STB_STORE_ZERO_S001_ROOT: ${{ github.workspace }}/store-zero-s001
+  STB_STORE_ZERO_WINDOW_ROOT: ${{ github.workspace }}/store-zero-window
 
 jobs:
   acceptance:
@@ -49,6 +51,18 @@ jobs:
         run: |
           test "$(git -C "$STB_STORE_ZERO_S001_ROOT" rev-parse HEAD)" = "4402abeb6b0299a5b6db2eec85ed04c3b0236bcc"
           test -z "$(git -C "$STB_STORE_ZERO_S001_ROOT" status --porcelain)"
+
+      - name: Checkout exact Window Seat Store authority
+        uses: actions/checkout@v4
+        with:
+          repository: GeorgePlattDemo/scan-to-build-store
+          ref: f88ec61c42446755d00259f88e7fd09f2702fd92
+          path: store-zero-window
+
+      - name: Verify exact Window Seat Store identity
+        run: |
+          test "$(git -C "$STB_STORE_ZERO_WINDOW_ROOT" rev-parse HEAD)" = "f88ec61c42446755d00259f88e7fd09f2702fd92"
+          test -z "$(git -C "$STB_STORE_ZERO_WINDOW_ROOT" status --porcelain)"
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -88,8 +102,14 @@ jobs:
           cat "$RUNNER_TEMP/review-server.log"
           exit 1
 
-      - name: Actual promoted-structure browser acceptance
+      - name: Actual promoted-structure User 1 browser acceptance
         run: npx playwright test tests/user1-independent-browser.acceptance.spec.mjs --workers=1
+
+      - name: Actual S-001 browser-route acceptance
+        run: npx playwright test tests/s001-independent-browser.acceptance.spec.mjs --workers=1
+
+      - name: Window Seat exact-source browser parity
+        run: npx playwright test tests/window-seat-store-source-parity.spec.mjs --workers=1
 
       - name: Prove browser acceptance fails on unrepaired Review checkpoint
         run: |
