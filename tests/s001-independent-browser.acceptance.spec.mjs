@@ -28,7 +28,7 @@ test('actual S-001 project route carries one exact Store answer through review a
   await expect(app.locator('#s001-live-store-disposition')).toHaveText('SUPPORTABLE · REFERENCE');
   await expect(app.locator('#s001-live-store-material')).toHaveText('$26.55 material-only');
   const initial=await app.locator('body').evaluate(() => JSON.parse(localStorage.getItem('stb-s001-current-definition')||'null'));
-  const initialVersionMatch=String(initial.versionId||'').match(/^S001-SARAH-PLAYHOUSE-0\\.1-v(\\d+)$/);
+  const initialVersionMatch=String(initial.versionId||'').match(/^S001-SARAH-PLAYHOUSE-0\.1-v(\d+)$/);
   expect(initialVersionMatch,'S001_INITIAL_VERSION_ID_INVALID').not.toBeNull();
   const initialRevision=Number(initialVersionMatch[1]);
 
