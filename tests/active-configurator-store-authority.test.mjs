@@ -15,10 +15,10 @@ const contract=sandbox.window.STBStoreHandoffContract;
 assert.ok(contract);
 
 const start=contract.storeAuthority('startOwn');
-assert.equal(start.capabilityPin,'7303793620d0ceda509810a661d11e6c31c7d59f');
-assert.equal(start.materialCatalogPin,'7303793620d0ceda509810a661d11e6c31c7d59f');
+assert.equal(start.capabilityPin,'01f9c5580cea262bd898a9f2c1ac2cd89d02845f');
+assert.equal(start.materialCatalogPin,'01f9c5580cea262bd898a9f2c1ac2cd89d02845f');
 assert.equal(start.capabilityBasis,'D001-STAGE2-ENVELOPE-0.4');
-assert.equal(start.economicsVersion,'0.2.4');
+assert.equal(start.economicsVersion,'0.3.0');
 assert.equal(start.depthDefinedSpotEconomicsStatus,'UNRESOLVED_FOR_DEPTH_DEFINED_SPOT');
 
 const seat=contract.storeAuthority('windowSeat');
