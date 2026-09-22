@@ -62,6 +62,7 @@ test('actual User 1 journey is demand-driven from finished members through Store
   // 5–6. Drawing/ops/remainder/price are the same Store plan. Spots ON qualify but do not erase resolved work.
   expect(retained.operationPlan.accounting.productionSawCuts,'FAULT_TARGET_PICTURE_PRICED_PLAN_MISMATCH').toBe(3);
   expect(retained.operationPlan.accounting.preparationSawCuts).toBe(0);
+  await expect(project.locator('#stb-bench-cut-copy'),'FAULT_TARGET_PICTURE_PRICED_PLAN_MISMATCH').toContainText('3 production saw cycles');
   expect(retained.operationPlan.parents[0].remainderIn).toBe(39.625);
   await expect(project.locator('#stb-bench-remain-label')).toContainText('39 5/8 in remains');
   await expect(project.locator('#stb-price-material')).toHaveText('$3.13');
