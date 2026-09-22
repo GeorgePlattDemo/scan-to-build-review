@@ -11,9 +11,10 @@ const mapBlock=shell.slice(
 assert.match(mapBlock,/scan:'start-own-live'/);
 assert.match(mapBlock,/configure:'start-own-live'/);
 assert.match(mapBlock,/store:'proof-store'/);
+assert.match(mapBlock,/review:'proof-terms'/);
 assert.match(mapBlock,/request:'proof-accept'/);
 assert.match(mapBlock,/yard:'proof-yard'/);
-assert.match(mapBlock,/terms:'proof-terms'/);
+assert.match(mapBlock,/terms:'proof-yard'/);
 assert.match(mapBlock,/record:'proof-record'/);
 for(const forbidden of ['alcove-capture','alcove-config','alcove-review']) {
   assert.equal(mapBlock.includes(forbidden),false,'Job 1 route map leaks to Alcove: '+forbidden);
@@ -29,7 +30,7 @@ assert.match(shell,/button\.dataset\.jobExit = 'project-library'/);
 assert.match(shell,/button\.textContent = '← Project Library'/);
 
 // Legacy duplicate stage buttons are hidden while Job 1 is active.
-assert.match(shell,/stage === 'review' \|\| stage === 'recap'/);
+assert.match(shell,/stage === 'terms' \|\| stage === 'recap'/);
 
 // Clicking the project-library exit clears Job 1 identity before leaving.
 assert.match(shell,/data-job-exit="project-library"/);
@@ -57,7 +58,7 @@ assert.match(shell,/function syncJourneyNav\(stage\)/);
 assert.match(shell,/syncJourneyNav\('scan'\)/);
 assert.match(shell,/syncJourneyNav\('configure'\)/);
 
-// Navigation is a routing surface only; it cannot manufacture gate completion.
+// Navigation is a routing surface only; gate completion comes from the Job 1 state machine.
 for(const forbidden of [
   'payment=true',
   'allocation=true',
@@ -68,3 +69,6 @@ for(const forbidden of [
 }
 
 console.log('PASS · Job 1 navigation remains project-bound and direct-targeted from intent through record');
+
+assert.match(shell,/if \(projectId === 'start-own' && !job1StageAllowed\(stage\)\) return false/);
+assert.match(shell,/syncJob1NavAvailability/);
