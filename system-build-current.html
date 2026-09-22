@@ -230,7 +230,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
               if (storeLine) {
                 if (ref?.materialResolution?.status === 'MAPPED' && ref?.estimate) {
                   storeLine.textContent =
-                    'Store: current ab8a4c5d Stage-2 answer retained · 60-in project workpiece · '
+                    'Store: current '+String(ref.storePin || 'UNAVAILABLE').slice(0,12)+'… Stage-2 answer retained · 60-in project workpiece · '
                     +(ref.priceCompleteness === 'PARTIAL'
                       ? 'modeled value is partial while named conditions remain.'
                       : 'budgetary estimate available.');
