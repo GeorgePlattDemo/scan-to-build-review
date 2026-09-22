@@ -329,6 +329,31 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
               let partQty = 2;
               let spotMode = 'centered';
               let currentUser1Definition = null;
+              let storeRequestSequence = 0;
+              const currentStoreAuthorityUrl = 'https://api.github.com/repos/GeorgePlattDemo/scan-to-build-store/commits/main';
+
+              const nextStoreRequestId = definition => {
+                storeRequestSequence += 1;
+                return [
+                  definition?.definitionId || 'UNIDENTIFIED',
+                  definition?.versionId || 'UNVERSIONED',
+                  String(Date.now()),
+                  String(storeRequestSequence)
+                ].join('@');
+              };
+
+              const fetchCurrentStorePin = async () => {
+                const response = await win.fetch(currentStoreAuthorityUrl, {
+                  method:'GET',
+                  cache:'no-store',
+                  headers:{Accept:'application/vnd.github+json'}
+                });
+                if (!response.ok) throw new Error('CURRENT_STORE_AUTHORITY_UNAVAILABLE');
+                const data = await response.json();
+                const sha = String(data?.sha || '').trim();
+                if (!sha) throw new Error('CURRENT_STORE_AUTHORITY_UNAVAILABLE');
+                return sha;
+              };
 
               const setText = (id,value) => {
                 const el = childDoc.getElementById(id);
@@ -846,59 +871,133 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
               if (confirmButton && confirmButton.dataset.stbHostConfirmBound !== 'true') {
                 confirmButton.dataset.stbHostConfirmBound = 'true';
-                confirmButton.addEventListener('click', () => {
+                confirmButton.addEventListener('click', async () => {
                   const definition = syncAndRender('CONFIRM');
                   if (!definition) return;
                   if (definition.storeReference?.complete !== true) {
                     setText('stb-before-send','STORE_REFRESH_REQUIRED · confirmation is blocked until Store evaluates this exact revision. The browser will not substitute a Store answer.');
                     return;
                   }
-                  const confirmationKey = definition.definitionId+'@'+definition.versionId;
-                  if (confirmButton.dataset.stbLastConfirmed === confirmationKey) return;
+                  if (!storeHandoffContract || typeof storeHandoffContract.requestUser1StoreEvaluation !== 'function') {
+                    setText('stb-before-send','CURRENT_STORE_AUTHORITY_REQUIRED · the fresh Store-evaluation contract is unavailable. The previous answer remains history only.');
+                    return;
+                  }
+
+                  const requestId = nextStoreRequestId(definition);
+                  confirmButton.disabled = true;
+                  let currentStorePin = null;
+                  try {
+                    currentStorePin = await fetchCurrentStorePin();
+                  } catch (_) {
+                    setText('stb-before-send','CURRENT_STORE_AUTHORITY_REQUIRED · Store authority could not be checked. Nothing was sent and the previous Store answer was not reused.');
+                    confirmButton.disabled = false;
+                    return;
+                  }
+
+                  const freshStoreAnswer = storeHandoffContract.requestUser1StoreEvaluation(
+                    definition.storeDemand,
+                    {
+                      requestId:requestId,
+                      currentStorePin:currentStorePin,
+                      checkedAt:new Date().toISOString()
+                    }
+                  );
+
+                  if (
+                    freshStoreAnswer?.complete !== true ||
+                    freshStoreAnswer?.freshEvaluation !== true ||
+                    freshStoreAnswer?.evaluationReceipt?.requestId !== requestId
+                  ) {
+                    const codes = Array.isArray(freshStoreAnswer?.unresolvedConditions)
+                      ? freshStoreAnswer.unresolvedConditions.join(' · ')
+                      : String(freshStoreAnswer?.status || 'STORE_REFRESH_REQUIRED');
+                    setText('stb-before-send',codes+' · Store changed or could not revalidate this definition. The prior Store answer was not reused.');
+                    confirmButton.disabled = false;
+                    return;
+                  }
+
+                  if (
+                    typeof storeHandoffContract.sameUser1StoreAnswerIdentity !== 'function' ||
+                    !storeHandoffContract.sameUser1StoreAnswerIdentity(definition.storeReference,freshStoreAnswer)
+                  ) {
+                    setText('stb-before-send','STORE_ANSWER_CHANGED_RECONFIRM_REQUIRED · the Store answer changed after it was displayed. Review the current Store answer before confirming again.');
+                    confirmButton.disabled = false;
+                    return;
+                  }
+
+                  const freshStoreReference = Object.assign({}, definition.storeReference, {
+                    status:freshStoreAnswer.status,
+                    complete:true,
+                    freshEvaluation:true,
+                    capabilityStatus:freshStoreAnswer.capabilityStatus,
+                    economicsStatus:freshStoreAnswer.economicsStatus,
+                    priceCompleteness:freshStoreAnswer.priceCompleteness,
+                    material:freshStoreAnswer.material,
+                    machineService:freshStoreAnswer.machineService,
+                    combinedValue:freshStoreAnswer.combinedValue,
+                    estimate:freshStoreAnswer.estimate,
+                    calculationIdentity:freshStoreAnswer.calculationIdentity,
+                    materialResolution:freshStoreAnswer.materialResolution,
+                    refusalConditions:Array.from(freshStoreAnswer.refusalConditions || []),
+                    unresolvedConditions:Array.from(freshStoreAnswer.unresolvedConditions || []),
+                    source:freshStoreAnswer.source,
+                    evaluationReceipt:freshStoreAnswer.evaluationReceipt,
+                    authority:startOwnAuthority
+                  });
+                  const confirmedDefinition = Object.assign({}, definition, {
+                    storeReference:freshStoreReference,
+                    lineage:Object.assign({}, definition.lineage, {
+                      formalStoreRequestId:requestId,
+                      formalStoreCheckedAt:freshStoreAnswer.evaluationReceipt.checkedAt,
+                      formalStorePin:freshStoreAnswer.evaluationReceipt.currentStorePin
+                    })
+                  });
+                  currentUser1Definition = confirmedDefinition;
 
                   const handoff = createComparisonStoreHandoff('start-own',{
-                    id:definition.definitionId,
-                    versionId:definition.versionId,
-                    physicalDemand:definition.physicalDemand,
+                    id:confirmedDefinition.definitionId,
+                    versionId:confirmedDefinition.versionId,
+                    physicalDemand:confirmedDefinition.physicalDemand,
                     sourceAuthority:{
                       kind:'STORE-ORIGIN USER-DEFINED WORK',
                       artifact:'three-frames.html',
-                      storeCatalog:definition.material.stockClassAuthority,
-                      procurement:definition.material.procurement,
-                      definedWorkpieceLengthIn:definition.material.definedWorkpieceLengthIn
+                      storeCatalog:confirmedDefinition.material.stockClassAuthority,
+                      procurement:confirmedDefinition.material.procurement,
+                      definedWorkpieceLengthIn:confirmedDefinition.material.definedWorkpieceLengthIn
                     },
-                    storeReference:definition.storeReference
+                    storeReference:freshStoreReference
                   });
                   proofHandoff = {
                     job:'JOB 1 · START YOUR OWN',
                     source:'start-own',
                     payload:{
-                      id:definition.definitionId,
-                      versionId:definition.versionId,
-                      definition:definition,
-                      physicalDemand:definition.physicalDemand,
+                      id:confirmedDefinition.definitionId,
+                      versionId:confirmedDefinition.versionId,
+                      definition:confirmedDefinition,
+                      physicalDemand:confirmedDefinition.physicalDemand,
                       sourceAuthority:{
                         kind:'STORE-ORIGIN USER-DEFINED WORK',
                         artifact:'three-frames.html',
-                        storeCatalog:definition.material.stockClassAuthority,
-                        procurement:definition.material.procurement,
-                          definedWorkpieceLengthIn:definition.material.definedWorkpieceLengthIn
+                        storeCatalog:confirmedDefinition.material.stockClassAuthority,
+                        procurement:confirmedDefinition.material.procurement,
+                        definedWorkpieceLengthIn:confirmedDefinition.material.definedWorkpieceLengthIn
                       },
-                      storeReference:definition.storeReference
+                      storeReference:freshStoreReference
                     },
                     storeHandoff:handoff,
-                    boardEvaluation:definition.capability
+                    boardEvaluation:confirmedDefinition.capability
                   };
                   retainComparisonStoreHandoff('start-own',handoff);
                   try {
+                    win.localStorage.setItem('stb-start-own-user1-definition',JSON.stringify(confirmedDefinition));
                     win.localStorage.setItem('stb-start-own-user1-bench',JSON.stringify({
-                      definition:definition,
+                      definition:confirmedDefinition,
                       handoff:handoff,
                       physicalExecutionAuthorized:false
                     }));
                     win.localStorage.setItem('stb-proof-handoff-job1',JSON.stringify(proofHandoff));
                   } catch (_) {}
-                  confirmButton.dataset.stbLastConfirmed = confirmationKey;
+                  confirmButton.disabled = false;
                   syncProofHandoff();
                   originalShow.call(win,'proof-store');
                   syncJourneyNav('store');
