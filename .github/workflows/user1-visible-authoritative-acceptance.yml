@@ -88,7 +88,7 @@ jobs:
           set -e
           cat "$RUNNER_TEMP/review-before-browser.log"
           test "$rc" -ne 0
-          grep -q "data-store-authoritative" "$RUNNER_TEMP/review-before-browser.log"
+          grep -q "User 1 host binding did not finish before bench interaction" "$RUNNER_TEMP/review-before-browser.log"
 
       - name: Audit existing Review test files against baseline without hiding failures
         run: |
