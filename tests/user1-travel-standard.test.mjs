@@ -55,6 +55,67 @@ assert.equal(exact.calculationIdentity.resultHash,'425af5de05fb614b87ca308696d0d
 assert.equal(exact.freshEvaluation,false);
 assert.equal(exact.evaluationReceipt,null);
 
+
+const exactDemand18 = {
+  configurationId:'SYO-USER1-XBRACE',
+  configurationVersion:'0.2',
+  definedWorkpieceLengthIn:60,
+  workpiecePolicy:'GROW_TO_RETAINED_CONTROL',
+  sawAngleDeg:26.387799961243,
+  cutPlane:'miter-face',
+  endIdentity:'both',
+  endRelation:'parallel',
+  lengthDatum:'long-long-outer-edge',
+  datumCMethod:'REFERENCE_CUT',
+  requiredOps:['MITER_LIMITED','SPOT_ON_LOCATION'],
+  declaredSawCuts:3,
+  declaredSpotCount:2,
+  parts:[
+    {partId:'PART-1',lengthIn:18,features:[{featureId:'SPOT-1',kind:'SPOT_ON_LOCATION',xIn:9,locationRule:'CENTERED_ON_PART',acrossWidthRule:'CENTERED_ON_WIDE_FACE'}]},
+    {partId:'PART-2',lengthIn:18,features:[{featureId:'SPOT-2',kind:'SPOT_ON_LOCATION',xIn:9,locationRule:'CENTERED_ON_PART',acrossWidthRule:'CENTERED_ON_WIDE_FACE'}]}
+  ]
+};
+const exact18 = contract.resolveUser1StoreReference(exactDemand18);
+assert.equal(exact18.status,'MATCHED_STORE_REFERENCE');
+assert.equal(exact18.complete,true);
+assert.equal(exact18.material,3.13);
+assert.equal(exact18.machineService,5.90);
+assert.equal(exact18.combinedValue,9.03);
+assert.equal(exact18.estimate.cycle.T_job_min,1.4151);
+assert.equal(exact18.estimate.travel.finalRemainderIn,24);
+assert.equal(exact18.materialResolution.requestedDefinedWorkpieceLengthIn,60);
+assert.equal(exact18.materialResolution.requiredMinimumWorkpieceLengthIn,60.375);
+assert.equal(exact18.materialResolution.workpieceLengthIn,60.375);
+assert.equal(exact18.materialResolution.workpieceAdjusted,true);
+assert.equal(exact18.materialResolution.pricingReferenceStockLengthIn,72);
+assert.equal(exact18.source.storePin,'87c4d2187d051a577ab301acfa12f2c12a6880ea');
+assert.equal(exact18.source.systemIntegrationPin,'380517b3a8fefbfacb00a76d1287aedaed38d662');
+assert.equal(exact18.calculationIdentity.inputHash,'f32ed01b11d7c2987f526eb154c36220b3f8361b38e394b91efd30c073f69f9d');
+assert.equal(exact18.calculationIdentity.resultHash,'5e8e73e3fb197eb4e0955a5c850e367b3542cbbdc31df7c18975b9b9146a2985');
+
+const formal18 = contract.requestUser1StoreEvaluation(exactDemand18,{
+  requestId:'JOB1-18-CANDIDATE',
+  currentStorePin:'87c4d2187d051a577ab301acfa12f2c12a6880ea',
+  checkedAt:'2026-09-22T20:47:00.000Z'
+});
+assert.equal(formal18.complete,true);
+assert.equal(formal18.freshEvaluation,true);
+assert.equal(formal18.evaluationReceipt.currentStorePin,'87c4d2187d051a577ab301acfa12f2c12a6880ea');
+assert.equal(contract.sameUser1StoreAnswerIdentity(exact18,formal18),true);
+
+const intermediate = contract.resolveUser1StoreReference({
+  ...exactDemand18,
+  configurationVersion:'review-intermediate-17.000',
+  sawAngleDeg:Number((Math.asin(8/17)*180/Math.PI).toFixed(12)),
+  parts:exactDemand18.parts.map((part,index)=>({
+    ...part,
+    lengthIn:17,
+    features:[{...part.features[0],featureId:'SPOT-'+(index+1),xIn:8.5}]
+  }))
+});
+assert.equal(intermediate.status,'STORE_REFRESH_REQUIRED');
+assert.equal(intermediate.complete,false);
+
 const formalA = contract.requestUser1StoreEvaluation(exactDemand,{
   requestId:'JOB1-FRESH-A',
   currentStorePin:'f88ccaf9a2624899e255e66b51111e2b02309dad',
@@ -147,7 +208,6 @@ for (const forbidden of [
   'sequenceDefinedWorkpiece',
   'machineHourRate',
   'setupCharge',
-  'Math.cos',
   'angleDeg > 45',
 ]) {
   assert.equal(syncBlock.includes(forbidden),false,'visible configurator reclaimed Store authority: '+forbidden);
@@ -182,8 +242,14 @@ assert.match(shell,/no physical production authority created/);
 assert.match(shell,/no live motion or controller command/);
 
 assert.match(frame,/Modeled machine service/);
-assert.match(frame,/id="stb-config-length"[^>]*value="16"/);
-assert.match(frame,/id="stb-config-angle"[^>]*value="30"/);
+assert.match(frame,/id="stb-config-length"[^>]*min="16"[^>]*max="18"[^>]*value="16"/);
+assert.match(frame,/data-length="16">16 IN/);
+assert.match(frame,/data-length="18">18 IN/);
+assert.equal(frame.includes('id="stb-config-angle"'),false,'bounded demo reintroduced a customer angle control');
+assert.equal(frame.includes('data-parts='),false,'bounded demo reintroduced quantity choices');
+assert.equal(frame.includes('data-spot='),false,'bounded demo reintroduced spot choices');
+assert.match(frame,/same 8.000 in horizontal span/i);
+assert.match(frame,/18.000 in → 26.388° end cuts/);
 assert.match(frame,/2×4 · 60 in/);
 assert.match(frame,/Center spot = 16 ÷ 2 = 8 in/);
 
@@ -231,4 +297,4 @@ assert.equal(handoff.requiredGeometryDatumFacts.identifiedParts.length,2);
 assert.equal(handoff.requiredGeometryDatumFacts.identifiedParts[0].features[0].xIn,8);
 assert.equal(handoff.authority.physicalFabrication,false);
 
-console.log('PASS · User 1 visible configurator carries exact demand to a pinned Store-issued travel answer and fails closed on any changed revision');
+console.log('PASS · User 1 bounded 16–18 configurator derives geometry, carries two exact Store references, and fails closed between them');
