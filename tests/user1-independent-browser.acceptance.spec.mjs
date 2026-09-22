@@ -38,11 +38,35 @@ test('actual User 1 journey carries one authoritative Store answer through confi
   await app.locator('#start-own-live').evaluate(() => new Promise(resolve => setTimeout(resolve, 0)));
 
   const project=app.frameLocator('#start-own-proof-frame');
+  const answer=project.locator('#stb-system-answer');
+  try {
+    await expect(answer).toHaveAttribute('data-store-authoritative','true');
+    await expect(answer).toHaveAttribute('data-store-pin',STORE_PIN);
+  } catch (error) {
+    const diagnostic=await project.locator('html').evaluate(root => ({
+      readyState:document.readyState,
+      intentHidden:document.getElementById('stb-start-intent-screen')?.hidden,
+      benchHidden:document.getElementById('stb-start-bench-screen')?.hidden,
+      benchButtons:[...document.querySelectorAll('.stb-bench-button')].map(button=>({
+        text:(button.textContent||'').trim(),
+        disabled:button.disabled,
+        connected:button.isConnected
+      })),
+      answer:{
+        authoritative:document.getElementById('stb-system-answer')?.dataset.storeAuthoritative || null,
+        disposition:document.getElementById('stb-system-answer')?.dataset.storeDisposition || null,
+        pin:document.getElementById('stb-system-answer')?.dataset.storePin || null,
+        text:document.getElementById('stb-system-answer')?.textContent || null
+      },
+      localDefinition:parent.localStorage.getItem('stb-start-own-user1-definition')
+    }));
+    throw new Error('User 1 host binding did not finish before bench interaction: '+JSON.stringify({diagnostic,pageErrors,cause:String(error)}));
+  }
+  await expect(project.locator('.stb-bench-button')).toHaveCount(1);
   await expect(project.locator('.stb-bench-button')).toBeVisible();
   await project.locator('.stb-bench-button').click();
   await expect(project.locator('#stb-start-bench-screen')).toBeVisible();
 
-  const answer=project.locator('#stb-system-answer');
   await expect(answer).toHaveAttribute('data-store-authoritative','true');
   await expect(answer).toHaveAttribute('data-store-disposition','SUPPORTABLE');
   await expect(answer).toHaveAttribute('data-store-pin',STORE_PIN);
