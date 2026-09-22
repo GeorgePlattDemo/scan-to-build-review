@@ -37,13 +37,13 @@
     startOwn: Object.freeze({
       projectId:'start-own',
       projectClass:'USER_DEFINED_BOARD',
-      materialCatalogPin:'95c639a1d0d4812df097ad1eb628594b38f921de',
+      materialCatalogPin:'f88ccaf9a2624899e255e66b51111e2b02309dad',
       capabilityBasis:'STB-D001-DIMENSIONAL-TRAVEL-0.1',
-      capabilityPin:'95c639a1d0d4812df097ad1eb628594b38f921de',
+      capabilityPin:'f88ccaf9a2624899e255e66b51111e2b02309dad',
       economicsModel:'STB-STORE-ZERO-PRICE-1',
       economicsVersion:'0.3.0',
       economicsStatus:'PINNED_STORE_ISSUED_REFERENCE',
-      economicsPin:'95c639a1d0d4812df097ad1eb628594b38f921de',
+      economicsPin:'f88ccaf9a2624899e255e66b51111e2b02309dad',
       governingStandard:'DIMENSIONAL-STORE-TRAVEL-STANDARD-0.1.md',
       acceptanceWorkflowRun:'35757052553',
       systemIntegrationPin:'900dbd13f079f8a5f8d76d49c723fd35279164e8',
@@ -158,7 +158,7 @@
   var START_OWN_STORE_CATALOG = Object.freeze({
     repository:'GeorgePlattDemo/scan-to-build-store',
     file:'store-zero-catalog.json',
-    pin:'95c639a1d0d4812df097ad1eb628594b38f921de',
+    pin:'f88ccaf9a2624899e255e66b51111e2b02309dad',
     clock:"2026-09-10"
   });
 
@@ -312,11 +312,11 @@
     status:'STORE_ISSUED_REFERENCE',
     source:Object.freeze({
       repository:'GeorgePlattDemo/scan-to-build-store',
-      storePin:'95c639a1d0d4812df097ad1eb628594b38f921de',
+      storePin:'f88ccaf9a2624899e255e66b51111e2b02309dad',
       pricingFile:'store-zero-pricing-engine.mjs',
       travelFile:'d001-travel-standard.mjs',
       governingStandard:'DIMENSIONAL-STORE-TRAVEL-STANDARD-0.1.md',
-      workflowRun:'35757052553',
+      workflowRun:'35768861705',
       systemIntegrationPin:'900dbd13f079f8a5f8d76d49c723fd35279164e8'
     }),
     demand:Object.freeze({
@@ -355,7 +355,7 @@
       source:Object.freeze({
         repository:'GeorgePlattDemo/scan-to-build-store',
         file:'store-zero-catalog.json',
-        pin:'95c639a1d0d4812df097ad1eb628594b38f921de',
+        pin:'f88ccaf9a2624899e255e66b51111e2b02309dad',
         clock:'2026-09-10'
       })
     }),
@@ -404,8 +404,8 @@
         setupTimeMin:0
       }),
       calculationIdentity:Object.freeze({
-        inputHash:'5de0367b62087cb0174ef5f1e101e22ded3728ba71906868628a985afafa078b',
-        resultHash:'9ad8d16a7c211d420b83e46ed8a8d224bd289e26a48764ff8d0389b6db698604'
+        inputHash:'e186df5ead47f0c3c233477b18d00206643d8e5e1adf03fdd6dabdc95a0a5168',
+        resultHash:'425af5de05fb614b87ca308696d0d19af0b2701ce2f3fd51c8a6c3ca84042f4f'
       })
     })
   });
@@ -449,30 +449,42 @@
     return true;
   }
 
+  function unresolvedUser1StoreAnswer(status, codes, reason, receipt){
+    return Object.freeze({
+      status:status,
+      complete:false,
+      freshEvaluation:false,
+      capabilityStatus:'UNRESOLVED',
+      economicsStatus:'UNRESOLVED',
+      priceCompleteness:'UNAVAILABLE',
+      material:null,
+      machineService:null,
+      combinedValue:null,
+      estimate:null,
+      calculationIdentity:null,
+      materialResolution:null,
+      refusalConditions:Object.freeze([]),
+      unresolvedConditions:Object.freeze((codes || []).slice()),
+      source:USER1_STORE_REFERENCE.source,
+      evaluationReceipt:receipt || null,
+      reason:reason
+    });
+  }
+
   function resolveUser1StoreReference(input){
     if(!user1StoreDemandMatchesReference(input)){
-      return Object.freeze({
-        status:'STORE_REFRESH_REQUIRED',
-        complete:false,
-        capabilityStatus:'UNRESOLVED',
-        economicsStatus:'UNRESOLVED',
-        priceCompleteness:'UNAVAILABLE',
-        material:null,
-        machineService:null,
-        combinedValue:null,
-        estimate:null,
-        calculationIdentity:null,
-        materialResolution:null,
-        refusalConditions:Object.freeze([]),
-        unresolvedConditions:Object.freeze(['STORE_REFRESH_REQUIRED']),
-        source:USER1_STORE_REFERENCE.source,
-        reason:'This static Review build has no authority to recalculate Store capability, modeled time, economics, or Q for a changed definition.'
-      });
+      return unresolvedUser1StoreAnswer(
+        'STORE_REFRESH_REQUIRED',
+        ['STORE_REFRESH_REQUIRED'],
+        'This static Review build has no authority to recalculate Store capability, modeled time, economics, or Q for a changed definition.',
+        null
+      );
     }
     var estimate=USER1_STORE_REFERENCE.estimate;
     return Object.freeze({
       status:'MATCHED_STORE_REFERENCE',
       complete:true,
+      freshEvaluation:false,
       capabilityStatus:'SUPPORTABLE',
       economicsStatus:estimate.status,
       priceCompleteness:estimate.completeness,
@@ -484,8 +496,102 @@
       materialResolution:USER1_STORE_REFERENCE.materialResolution,
       refusalConditions:Object.freeze([]),
       unresolvedConditions:Object.freeze([]),
-      source:USER1_STORE_REFERENCE.source
+      source:USER1_STORE_REFERENCE.source,
+      evaluationReceipt:null
     });
+  }
+
+  function requestUser1StoreEvaluation(input, request){
+    request=request || {};
+    var requestId=String(request.requestId || '').trim();
+    var currentStorePin=String(request.currentStorePin || '').trim();
+    var checkedAt=String(request.checkedAt || new Date().toISOString());
+
+    if(!requestId){
+      return unresolvedUser1StoreAnswer(
+        'STORE_EVALUATION_REQUEST_ID_REQUIRED',
+        ['STORE_EVALUATION_REQUEST_ID_REQUIRED'],
+        'Every formal Store request requires a new request identity. A prior Store answer cannot authorize a new request.',
+        null
+      );
+    }
+
+    if(!currentStorePin){
+      return unresolvedUser1StoreAnswer(
+        'CURRENT_STORE_AUTHORITY_REQUIRED',
+        ['CURRENT_STORE_AUTHORITY_REQUIRED'],
+        'Current Store authority could not be verified. The prior Store answer remains history only.',
+        Object.freeze({
+          freshnessRule:'EVERY_STORE_REQUEST_REEVALUATES_CURRENT_STORE_STATE',
+          mode:'STATIC_PIN_REVALIDATION',
+          requestId:requestId,
+          checkedAt:checkedAt,
+          currentStorePin:null,
+          referenceStorePin:USER1_STORE_REFERENCE.source.storePin,
+          currentStoreMatchesReference:false
+        })
+      );
+    }
+
+    if(currentStorePin!==USER1_STORE_REFERENCE.source.storePin){
+      return unresolvedUser1StoreAnswer(
+        'STORE_AUTHORITY_CHANGED',
+        ['STORE_REFRESH_REQUIRED','STORE_AUTHORITY_CHANGED'],
+        'Store authority changed after this reference answer was issued. This static Review build must obtain a newly evaluated Store answer before continuing.',
+        Object.freeze({
+          freshnessRule:'EVERY_STORE_REQUEST_REEVALUATES_CURRENT_STORE_STATE',
+          mode:'STATIC_PIN_REVALIDATION',
+          requestId:requestId,
+          checkedAt:checkedAt,
+          currentStorePin:currentStorePin,
+          referenceStorePin:USER1_STORE_REFERENCE.source.storePin,
+          currentStoreMatchesReference:false
+        })
+      );
+    }
+
+    var answer=resolveUser1StoreReference(input);
+    if(answer.complete!==true){
+      return Object.freeze(Object.assign({}, answer, {
+        freshEvaluation:false,
+        evaluationReceipt:Object.freeze({
+          freshnessRule:'EVERY_STORE_REQUEST_REEVALUATES_CURRENT_STORE_STATE',
+          mode:'STATIC_PIN_REVALIDATION',
+          requestId:requestId,
+          checkedAt:checkedAt,
+          currentStorePin:currentStorePin,
+          referenceStorePin:USER1_STORE_REFERENCE.source.storePin,
+          currentStoreMatchesReference:true
+        })
+      }));
+    }
+
+    return Object.freeze(Object.assign({}, answer, {
+      status:'CURRENT_STORE_REFERENCE_REVALIDATED',
+      freshEvaluation:true,
+      evaluationReceipt:Object.freeze({
+        freshnessRule:'EVERY_STORE_REQUEST_REEVALUATES_CURRENT_STORE_STATE',
+        mode:'STATIC_PIN_REVALIDATION',
+        requestId:requestId,
+        checkedAt:checkedAt,
+        currentStorePin:currentStorePin,
+        referenceStorePin:USER1_STORE_REFERENCE.source.storePin,
+        currentStoreMatchesReference:true,
+        machineEnvelopeId:'D001-STAGE2-ENVELOPE-0.3',
+        travelStandardId:'STB-D001-DIMENSIONAL-TRAVEL-0.1',
+        travelStandardVersion:'0.1.0',
+        economicsId:USER1_STORE_REFERENCE.estimate.economics.id,
+        economicsVersion:USER1_STORE_REFERENCE.estimate.economics.version,
+        calculationIdentity:USER1_STORE_REFERENCE.estimate.calculationIdentity
+      })
+    }));
+  }
+
+  function sameUser1StoreAnswerIdentity(a,b){
+    return !!a && !!b &&
+      String(a.source?.storePin || '')===String(b.source?.storePin || '') &&
+      String(a.calculationIdentity?.inputHash || '')===String(b.calculationIdentity?.inputHash || '') &&
+      String(a.calculationIdentity?.resultHash || '')===String(b.calculationIdentity?.resultHash || '');
   }
 
   var D001_CYCLE = Object.freeze({
@@ -868,7 +974,7 @@
   }
 
   root.STBStoreHandoffContract = Object.freeze({
-    version:'0.8',
+    version:'0.9',
     actorOrder:ACTOR_ORDER,
     currentArtifacts:CURRENT_ARTIFACTS,
     storeAuthorities:STORE_AUTHORITIES,
@@ -879,6 +985,8 @@
     user1StoreReference:USER1_STORE_REFERENCE,
     user1StoreDemandMatchesReference:user1StoreDemandMatchesReference,
     resolveUser1StoreReference:resolveUser1StoreReference,
+    requestUser1StoreEvaluation:requestUser1StoreEvaluation,
+    sameUser1StoreAnswerIdentity:sameUser1StoreAnswerIdentity,
     d001Cycle:D001_CYCLE,
     d001Envelope:D001_ENVELOPE,
     d001Hold:D001_HOLD,
