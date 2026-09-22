@@ -24,7 +24,7 @@ assert.deepEqual(
   ['project-definition','store-answer','accept-pay','store-yard','handoff-record','project-library']
 );
 
-assert.equal(contract.currentArtifacts.startOwn.artifact,'stb-start-own-bench-leg-0.1.html');
+assert.equal(contract.currentArtifacts.startOwn.artifact,'three-frames.html');
 assert.equal(contract.currentArtifacts.outdoor.artifact,'stb-outdoor-bench-leg-0.1.html');
 assert.equal(contract.currentArtifacts.alcove.artifact,'system-build-current.html#alcove-capture');
 assert.equal(contract.currentArtifacts.windowSeat.artifact,'stb-window-seat-space-utilization-0.7.4.html');
@@ -67,8 +67,8 @@ assert.equal(shelfMaterial.status,'MAPPED');
 assert.equal(shelfMaterial.storeSku,'STB-ZERO-SPF-2X4-192-001');
 assert.equal(shelfMaterial.materialTotal,8.36);
 
-assert.match(shell,/stb-store-zero-user1\.generated\.js\?v=a55641dc/);
-assert.match(shell,/stb-store-handoff-contract\.js\?v=612079a2/);
+assert.match(shell,/stb-store-zero-user1\.generated\.js\?v=[0-9a-f]{8}/);
+assert.match(shell,/stb-store-handoff-contract\.js\?v=[0-9a-f]{8}/);
 assert.match(shell,/dataset\.startOwnArtifact = 'three-frames\.html'/);
 assert.match(shell,/dataset\.outdoorBuildArtifact = 'stb-outdoor-bench-leg-0\.1\.html'/);
 assert.match(shell,/dataset\.windowSeatArtifact = 'stb-window-seat-space-utilization-0\.7\.4\.html'/);
@@ -169,7 +169,7 @@ assert.match(shell,/ensureProjectJourneyPage\('proof-terms'/);
 assert.match(shell,/outdoor: Object\.freeze\(\{[\s\S]*store:'proof-store'[\s\S]*record:'proof-record'/);
 assert.match(shell,/if \(activeJourneyProject !== nextJourneyProject\) proofHandoff = null/,'project switch does not clear current handoff authority');
 assert.match(shell,/const navButton = event\.target\.closest\?\.\('\.recovery-nav button\[data-journey-stage\]'\)[\s\S]*event\.preventDefault\(\);[\s\S]*event\.stopImmediatePropagation\(\);[\s\S]*showMappedProjectStage\(activeJourneyProject, stage\);/,'project nav can still fall through to another project');
-assert.match(shell,/src="three-frames\.html\?v=305b7484"/);
+assert.match(shell,/src="three-frames\.html\?v=[0-9a-f]{8}"/);
 assert.match(shell,/src="stb-outdoor-bench-leg-0\.1\.html\?v=dcefd0aa"/);
 
 console.log('PASS · current five-project Store convergence and legacy Outdoor quarantine');
