@@ -160,10 +160,10 @@ jobs:
               done
             )
           }
-          git fetch origin 740b510a9688c60e20af93179979dc83fe6b602f --depth=1
+          git fetch origin 01df76657f878155c5a3e9d14e914001a9aa3c8c --depth=1
           rm -rf "$RUNNER_TEMP/review-baseline"
           mkdir -p "$RUNNER_TEMP/review-baseline"
-          git archive 740b510a9688c60e20af93179979dc83fe6b602f | tar -x -C "$RUNNER_TEMP/review-baseline"
+          git archive 01df76657f878155c5a3e9d14e914001a9aa3c8c | tar -x -C "$RUNNER_TEMP/review-baseline"
           audit_dir "$RUNNER_TEMP/review-baseline" "$RUNNER_TEMP/baseline-failures.txt"
           audit_dir "$GITHUB_WORKSPACE" "$RUNNER_TEMP/candidate-failures.txt"
           echo "BASELINE FAILURE SIGNATURES"
