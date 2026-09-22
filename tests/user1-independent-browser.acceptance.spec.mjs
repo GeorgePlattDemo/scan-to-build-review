@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const STORE_PIN='ab8a4c5d470c310f27fef82683611622ab976168';
+const STORE_PIN='7303793620d0ceda509810a661d11e6c31c7d59f';
 
 function appFrame(page){
   return page.frameLocator('#stb-current').frameLocator('#stb-current');
@@ -68,9 +68,9 @@ test('actual User 1 journey carries one authoritative Store answer through confi
   await expect(project.locator('#stb-start-bench-screen')).toBeVisible();
 
   await expect(answer).toHaveAttribute('data-store-authoritative','true');
-  await expect(answer).toHaveAttribute('data-store-disposition','SUPPORTABLE');
+  await expect(answer).toHaveAttribute('data-store-disposition','UNRESOLVED');
   await expect(answer).toHaveAttribute('data-store-pin',STORE_PIN);
-  await expect(project.locator('#stb-price-total')).toHaveText('$54.82');
+  await expect(project.locator('#stb-price-total')).toHaveText('$54.29');
 
   let retained=await app.locator('body').evaluate(() => JSON.parse(localStorage.getItem('stb-start-own-user1-definition')||'null'));
   expect(retained.versionId).toBe(retained.storeReference.answerVersionId);
@@ -78,30 +78,39 @@ test('actual User 1 journey carries one authoritative Store answer through confi
   expect(retained.storeReference.authoritativeRequest.definedWorkpieceLengthIn).toBe(60);
   expect(retained.storeReference.authoritativeRequest.sawAngleDeg).toBe(30);
   expect(retained.storeReference.authoritativeRequest.spotDemand.locationAlongLengthIn).toBe(8);
-  expect(retained.storeReference.authoritativeAnswer.rawEvaluation.status).toBe('SUPPORTABLE');
-  expect(retained.storeReference.authoritativeAnswer.rawEstimate.totals.Q).toBe(54.82);
+  expect(retained.storeReference.authoritativeAnswer.rawEvaluation.status).toBe('UNRESOLVED');
+  expect(retained.storeReference.authoritativeAnswer.rawEstimate.totals.Q).toBe(54.29);
+  expect(retained.storeReference.spotOperation.operationContract).toBe('SPOT_ON_LOCATION/0.2');
+  expect(retained.storeReference.spotOperation.fullDiameterPenetrationIn).toBe(0.1875);
+  expect(retained.storeReference.spotOperation.pointGeometryStatus).toBe('UNRESOLVED');
+  expect(retained.storeReference.spotOperation.totalTipPenetrationIn).toBe(null);
+  expect(retained.storeReference.unresolvedConditions).toContain('SPOT_TOOL_POINT_GEOMETRY_REQUIRED');
+  expect(retained.storeReference.unresolvedConditions).toContain('SPOT_CYCLE_TIME_APPLICABILITY_UNRESOLVED');
   expect(retained.workpieceSequence.finalRemainderIn).toBe(27.625);
   expect(retained.physicalExecutionAuthorized).toBe(false);
 
-  // The frozen visible surface admits 45 but not 46. 46 is covered by exact Store/System acceptance.
+  // Use the existing no-spot control to test the 45° miter independently of unresolved spot tooling.
   const angle=project.locator('#stb-config-angle');
+  await project.locator('#stb-config-spot [data-spot="none"]').click();
   await angle.fill('45');
   await angle.dispatchEvent('input');
   await expect(answer).toHaveAttribute('data-store-disposition','SUPPORTABLE');
   retained=await app.locator('body').evaluate(() => JSON.parse(localStorage.getItem('stb-start-own-user1-definition')||'null'));
   expect(retained.intent.angleDeg.value).toBe(45);
+  expect(retained.storeReference.authoritativeRequest.spotDemand).toBe(null);
   expect(retained.versionId).toBe(retained.storeReference.answerVersionId);
 
   await angle.fill('30');
   await angle.dispatchEvent('input');
-  await expect(answer).toHaveAttribute('data-store-disposition','SUPPORTABLE');
-  await expect(project.locator('#stb-price-total')).toHaveText('$54.82');
+  await project.locator('#stb-config-spot [data-spot="centered"]').click();
+  await expect(answer).toHaveAttribute('data-store-disposition','UNRESOLVED');
+  await expect(project.locator('#stb-price-total')).toHaveText('$54.29');
 
   const beforeConfirm=await app.locator('body').evaluate(() => JSON.parse(localStorage.getItem('stb-start-own-user1-definition')||'null'));
   await project.locator('#stb-confirm-store').click();
   await expect(app.locator('#proof-store.on')).toBeVisible();
   await expect(app.locator('#proof-store-version')).toHaveText(beforeConfirm.versionId);
-  await expect(app.locator('#proof-store-q')).toContainText('$54.82');
+  await expect(app.locator('#proof-store-q')).toContainText('$54.29');
 
   const confirmed=await app.locator('body').evaluate(() => ({
     bench:JSON.parse(localStorage.getItem('stb-start-own-user1-bench')||'null'),
@@ -110,7 +119,7 @@ test('actual User 1 journey carries one authoritative Store answer through confi
   expect(confirmed.bench.definition.versionId).toBe(beforeConfirm.versionId);
   expect(confirmed.bench.definition.storeReference.answerVersionId).toBe(beforeConfirm.versionId);
   expect(confirmed.proof.payload.versionId).toBe(beforeConfirm.versionId);
-  expect(confirmed.proof.payload.storeReference.authoritativeAnswer.rawEstimate.totals.Q).toBe(54.82);
+  expect(confirmed.proof.payload.storeReference.authoritativeAnswer.rawEstimate.totals.Q).toBe(54.29);
 
   await app.locator('#proof-store [data-proof-go="proof-accept"]').click();
   await expect(app.locator('#proof-accept.on')).toBeVisible();
@@ -119,11 +128,11 @@ test('actual User 1 journey carries one authoritative Store answer through confi
   await app.locator('#proof-yard [data-proof-go="proof-record"]').click();
   await expect(app.locator('#proof-terms.on')).toBeVisible();
   await expect(app.locator('#proof-terms-version')).toHaveText(beforeConfirm.versionId);
-  await expect(app.locator('#proof-terms-q')).toContainText('$54.82');
+  await expect(app.locator('#proof-terms-q')).toContainText('$54.29');
   await app.locator('#proof-terms [data-proof-go="proof-record"]').click();
   await expect(app.locator('#proof-record.on')).toBeVisible();
   await expect(app.locator('#proof-record-version')).toHaveText(beforeConfirm.versionId);
-  await expect(app.locator('#proof-record-economics')).toContainText('$54.82');
+  await expect(app.locator('#proof-record-economics')).toContainText('$54.29');
 
   // Return through the real library and confirm the same unchanged version again.
   const firstProof=await app.locator('body').evaluate(() => localStorage.getItem('stb-proof-handoff-job1'));
