@@ -28,6 +28,9 @@ jobs:
       - name: Job 1 start-to-finish gate acceptance
         run: node tests/user1-end-to-end-template.test.mjs
 
+      - name: Job 1 navigation integrity
+        run: node tests/job1-navigation-integrity.test.mjs
+
       - name: Job 1 intent and bench preservation
         run: node tests/start-own-live-store-origin.test.mjs
 
