@@ -31,6 +31,9 @@ jobs:
       - name: Job 1 intent and bench preservation
         run: node tests/start-own-live-store-origin.test.mjs
 
+      - name: Shelf-elevation pilot demand preservation
+        run: node tests/shelf-pilot-demand.test.mjs
+
 # Deliberate scope:
 # This branch proves Job 1 as the operable template.
 # Alcove, Window Seat, Outdoor, S-001, and other projects are not acceptance
