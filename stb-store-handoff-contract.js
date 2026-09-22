@@ -37,16 +37,16 @@
     startOwn: Object.freeze({
       projectId:'start-own',
       projectClass:'USER_DEFINED_BOARD',
-      materialCatalogPin:'f88ccaf9a2624899e255e66b51111e2b02309dad',
+      materialCatalogPin:'140217b0aed64725d26b0d9332e3bf7b5d4396e0',
       capabilityBasis:'STB-D001-DIMENSIONAL-TRAVEL-0.1',
-      capabilityPin:'f88ccaf9a2624899e255e66b51111e2b02309dad',
+      capabilityPin:'140217b0aed64725d26b0d9332e3bf7b5d4396e0',
       economicsModel:'STB-STORE-ZERO-PRICE-1',
       economicsVersion:'0.3.0',
       economicsStatus:'PINNED_STORE_ISSUED_REFERENCE',
-      economicsPin:'f88ccaf9a2624899e255e66b51111e2b02309dad',
+      economicsPin:'140217b0aed64725d26b0d9332e3bf7b5d4396e0',
       governingStandard:'DIMENSIONAL-STORE-TRAVEL-STANDARD-0.1.md',
-      acceptanceWorkflowRun:'35757052553',
-      systemIntegrationPin:'900dbd13f079f8a5f8d76d49c723fd35279164e8',
+      acceptanceWorkflowRun:'35791021805',
+      systemIntegrationPin:'59a9c0326c1afea7af3767e1ed89bf6465a4b809',
       legacyGeneralRecoverySelected:false
     }),
     outdoor: Object.freeze({
@@ -100,6 +100,7 @@
    * Project UI data contains no material price authority of its own.
    */
   var START_OWN_CATALOG_ROWS = Object.freeze([
+    ["2x4","STB-ZERO-SPF-2X4-60-001","board",60,null,null,2.61,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
     ["2x4","STB-ZERO-SPF-2X4-72-001","board",72,null,null,3.13,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
     ["2x4","STB-ZERO-SPF-2X4-96-001","board",96,null,null,4.18,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
     ["2x4","STB-ZERO-SPF-2X4-108-001","board",108,null,null,4.7,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
@@ -312,12 +313,12 @@
     status:'STORE_ISSUED_REFERENCE',
     source:Object.freeze({
       repository:'GeorgePlattDemo/scan-to-build-store',
-      storePin:'f88ccaf9a2624899e255e66b51111e2b02309dad',
+      storePin:'140217b0aed64725d26b0d9332e3bf7b5d4396e0',
       pricingFile:'store-zero-pricing-engine.mjs',
       travelFile:'d001-travel-standard.mjs',
       governingStandard:'DIMENSIONAL-STORE-TRAVEL-STANDARD-0.1.md',
-      workflowRun:'35768861705',
-      systemIntegrationPin:'900dbd13f079f8a5f8d76d49c723fd35279164e8'
+      workflowRun:'35791021805',
+      systemIntegrationPin:'59a9c0326c1afea7af3767e1ed89bf6465a4b809'
     }),
     demand:Object.freeze({
       configurationId:'SYO-USER1-XBRACE',
@@ -341,21 +342,27 @@
     }),
     materialResolution:Object.freeze({
       status:'MAPPED',
-      storeSku:'STB-ZERO-SPF-2X4-72-001',
-      pricingReferenceSku:'STB-ZERO-SPF-2X4-72-001',
-      pricingReferenceStockLengthIn:72,
+      storeSku:'STB-ZERO-SPF-2X4-60-001',
+      pricingReferenceSku:'STB-ZERO-SPF-2X4-60-001',
+      pricingReferenceStockLengthIn:60,
+      requestedMinimumWorkpieceLengthIn:60,
+      requestedDefinedWorkpieceLengthIn:60,
       workpieceLengthIn:60,
+      selectionPolicy:'SHORTEST_COMPLETE_STORE_OFFERING',
+      consideredCandidates:Object.freeze([
+        Object.freeze({storeSku:'STB-ZERO-SPF-2X4-60-001',stockLengthIn:60,candidateStatus:'SUPPORTABLE',reason:null})
+      ]),
       quantity:1,
-      stockLengthIn:72,
-      unitPrice:3.13,
-      materialTotal:3.13,
+      stockLengthIn:60,
+      unitPrice:2.61,
+      materialTotal:2.61,
       allocationClaimed:false,
       cellFamily:Object.freeze(['D-001']),
       supportedOps:Object.freeze(['CROSSCUT','MITER_LIMITED','SPOT_ON_LOCATION','DRILL','MILL_LONGITUDINAL_PROFILE','MILL_END_PROFILE']),
       source:Object.freeze({
         repository:'GeorgePlattDemo/scan-to-build-store',
         file:'store-zero-catalog.json',
-        pin:'f88ccaf9a2624899e255e66b51111e2b02309dad',
+        pin:'140217b0aed64725d26b0d9332e3bf7b5d4396e0',
         clock:'2026-09-10'
       })
     }),
@@ -379,10 +386,10 @@
         T_job_min:1.4128
       }),
       totals:Object.freeze({
-        material:3.13,
+        material:2.61,
         hardware:0,
         machine_service:5.89,
-        Q:9.02,
+        Q:8.50,
         Q_basis:'CALCULATED_FROM_DECLARED_STAGE2_MODEL'
       }),
       travel:Object.freeze({
@@ -404,8 +411,8 @@
         setupTimeMin:0
       }),
       calculationIdentity:Object.freeze({
-        inputHash:'e186df5ead47f0c3c233477b18d00206643d8e5e1adf03fdd6dabdc95a0a5168',
-        resultHash:'425af5de05fb614b87ca308696d0d19af0b2701ce2f3fd51c8a6c3ca84042f4f'
+        inputHash:'f0918ff545e3d77d8d5ec33055d7279bb01dbe172bb4e6cc4d498469d66b2e82',
+        resultHash:'2abe991dbd5331f7fa3762018fed9cc707b637d4512ba62f7fc8fe1e4e28587a'
       })
     })
   });
@@ -414,18 +421,18 @@
     status:'STORE_ISSUED_REFERENCE',
     source:Object.freeze({
       repository:'GeorgePlattDemo/scan-to-build-store',
-      storePin:'87c4d2187d051a577ab301acfa12f2c12a6880ea',
+      storePin:'140217b0aed64725d26b0d9332e3bf7b5d4396e0',
       pricingFile:'store-zero-pricing-engine.mjs',
       travelFile:'d001-travel-standard.mjs',
       governingStandard:'DIMENSIONAL-STORE-TRAVEL-STANDARD-0.1.md',
-      workflowRun:'35782048359',
-      systemIntegrationPin:'380517b3a8fefbfacb00a76d1287aedaed38d662'
+      workflowRun:'35791021805',
+      systemIntegrationPin:'59a9c0326c1afea7af3767e1ed89bf6465a4b809',
+      systemDiagnosticRun:'35791336322'
     }),
     demand:Object.freeze({
       configurationId:'SYO-USER1-XBRACE',
       configurationVersion:'0.2',
       definedWorkpieceLengthIn:60,
-      workpiecePolicy:'GROW_TO_RETAINED_CONTROL',
       partQty:2,
       partLengthIn:18,
       sawAngleDeg:26.387799961242997,
@@ -447,12 +454,14 @@
       storeSku:'STB-ZERO-SPF-2X4-72-001',
       pricingReferenceSku:'STB-ZERO-SPF-2X4-72-001',
       pricingReferenceStockLengthIn:72,
+      requestedMinimumWorkpieceLengthIn:60,
       requestedDefinedWorkpieceLengthIn:60,
-      requiredMinimumWorkpieceLengthIn:60.375,
-      workpieceLengthIn:60.375,
-      workpieceAdjusted:true,
-      workpieceAdjustmentIn:0.375,
-      workpiecePolicy:'GROW_TO_RETAINED_CONTROL',
+      workpieceLengthIn:72,
+      selectionPolicy:'SHORTEST_COMPLETE_STORE_OFFERING',
+      consideredCandidates:Object.freeze([
+        Object.freeze({storeSku:'STB-ZERO-SPF-2X4-60-001',stockLengthIn:60,candidateStatus:'REFUSED',reason:'LAST_REMAIN_BELOW_TWO_ROLLER_CONTROL'}),
+        Object.freeze({storeSku:'STB-ZERO-SPF-2X4-72-001',stockLengthIn:72,candidateStatus:'SUPPORTABLE',reason:null})
+      ]),
       quantity:1,
       stockLengthIn:72,
       unitPrice:3.13,
@@ -463,7 +472,7 @@
       source:Object.freeze({
         repository:'GeorgePlattDemo/scan-to-build-store',
         file:'store-zero-catalog.json',
-        pin:'87c4d2187d051a577ab301acfa12f2c12a6880ea',
+        pin:'140217b0aed64725d26b0d9332e3bf7b5d4396e0',
         clock:'2026-09-10'
       })
     }),
@@ -496,7 +505,7 @@
       travel:Object.freeze({
         derivedSawCuts:3,
         derivedSpotCount:2,
-        finalRemainderIn:24
+        finalRemainderIn:35.625
       }),
       economics:Object.freeze({
         id:'STB-D001-STORE-ECONOMICS-S2-0.1',
@@ -512,8 +521,8 @@
         setupTimeMin:0
       }),
       calculationIdentity:Object.freeze({
-        inputHash:'f32ed01b11d7c2987f526eb154c36220b3f8361b38e394b91efd30c073f69f9d',
-        resultHash:'5e8e73e3fb197eb4e0955a5c850e367b3542cbbdc31df7c18975b9b9146a2985'
+        inputHash:'4b3b498d86177ed5a13c2662778f232b2c11cfafa7f626a689b3823b6872a4cc',
+        resultHash:'59c9988c42ffd2520f6c1931d735a31e07848d72ac602182c510a17c20b89e88'
       })
     })
   });
@@ -535,7 +544,6 @@
     if(String(input.configurationId||'')!==d.configurationId) return false;
     if(String(input.configurationVersion||'')!==d.configurationVersion) return false;
     if(Number(input.definedWorkpieceLengthIn)!==d.definedWorkpieceLengthIn) return false;
-    if(String(input.workpiecePolicy || 'PRESERVE_DEFINED')!==String(d.workpiecePolicy || 'PRESERVE_DEFINED')) return false;
     if(Math.abs(Number(input.sawAngleDeg)-Number(d.sawAngleDeg))>1e-9) return false;
     if(String(input.cutPlane||'')!==d.cutPlane) return false;
     if(String(input.endIdentity||'')!==d.endIdentity) return false;
