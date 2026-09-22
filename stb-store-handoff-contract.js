@@ -372,7 +372,7 @@
         drillCycles:piece.holes,
         drillReferenceDepthIn:piece.depthIn,
         spotCycles:piece.spots,
-        spotToolDiameterIn:0.1875
+        spotToolDiameterIn:answer.attributedBasis && answer.attributedBasis.envelope ? answer.attributedBasis.envelope.spotToolDiameterIn : null
       }) : null,
       engine:answer.attributedBasis ? answer.attributedBasis.pricingEngine : null,
       source:Object.freeze({
