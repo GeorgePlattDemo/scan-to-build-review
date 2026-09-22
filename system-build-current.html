@@ -2236,21 +2236,23 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     });
 
     const s001Confirm = doc.querySelector('#playhouse-review [data-canonical-go="playhouse-request"]');
+    const confirmS001Current = () => {
+      const definition = sync('CONFIRM');
+      if (!definition?.storeAnswer) return null;
+      if (definition.storeAnswer.definitionVersionId !== definition.versionId) return null;
+      const key = definition.definitionId+'@'+definition.versionId;
+      if (s001Confirm?.dataset.s001LastConfirmed === key && confirmedS001Definition) return confirmedS001Definition;
+      confirmedS001Definition = JSON.parse(JSON.stringify(definition));
+      if (s001Confirm) s001Confirm.dataset.s001LastConfirmed = key;
+      renderS001Confirmed(confirmedS001Definition);
+      try {
+        win.localStorage.setItem('stb-s001-confirmed-definition',JSON.stringify(confirmedS001Definition));
+      } catch (_) {}
+      return confirmedS001Definition;
+    };
     if (s001Confirm && s001Confirm.dataset.s001ConfirmBound !== 'true') {
       s001Confirm.dataset.s001ConfirmBound = 'true';
-      s001Confirm.addEventListener('click', () => {
-        const definition = sync('CONFIRM');
-        if (!definition?.storeAnswer) return;
-        if (definition.storeAnswer.definitionVersionId !== definition.versionId) return;
-        const key = definition.definitionId+'@'+definition.versionId;
-        if (s001Confirm.dataset.s001LastConfirmed === key) return;
-        confirmedS001Definition = JSON.parse(JSON.stringify(definition));
-        s001Confirm.dataset.s001LastConfirmed = key;
-        renderS001Confirmed(confirmedS001Definition);
-        try {
-          win.localStorage.setItem('stb-s001-confirmed-definition',JSON.stringify(confirmedS001Definition));
-        } catch (_) {}
-      });
+      s001Confirm.addEventListener('click', confirmS001Current);
     }
 
     sync('INITIAL');
@@ -2668,6 +2670,12 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         return;
       }
       if (activeJourneyProject === 'playhouse' && event.target.closest?.('#playhouse-review [data-canonical-go="playhouse-request"]')) {
+        const confirmed = confirmS001Current();
+        if (!confirmed) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          return;
+        }
         doc.documentElement.dataset.playhouseRevisionConfirmed = 'true';
       }
     }, true);
