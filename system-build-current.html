@@ -2281,10 +2281,10 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         scan:'start-own-live',
         configure:'start-own-live',
         store:'proof-store',
-        review:'proof-store',
+        review:'proof-terms',
         request:'proof-accept',
         yard:'proof-yard',
-        terms:'proof-terms',
+        terms:'proof-yard',
         recap:'proof-record',
         record:'proof-record'
       }),
@@ -2335,12 +2335,12 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       scan:'Start / Intent',
       configure:'Define',
       store:'Store Review',
-      review:'Store Review',
+      review:'Offer / Terms',
       request:'Accept / Pay',
-      yard:'Store / Yard',
-      terms:'Terms',
-      recap:'Handoff / Record',
-      record:'Handoff / Record'
+      yard:'Fulfillment',
+      terms:'Fulfillment',
+      recap:'Pickup / Record',
+      record:'Pickup / Record'
     });
 
     function restoreJourneyNav(nav) {
@@ -2399,7 +2399,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         button.textContent = START_OWN_NAV_LABELS[stage] || button.dataset.defaultLabel;
 
         // Duplicate legacy stages have the same Job 1 destination. Keep one button only.
-        if (stage === 'review' || stage === 'recap') button.hidden = true;
+        if (stage === 'terms' || stage === 'recap') button.hidden = true;
       });
     }
 
