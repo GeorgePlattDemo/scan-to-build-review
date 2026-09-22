@@ -3,6 +3,10 @@ import assert from 'node:assert/strict';
 
 const shell=fs.readFileSync('system-build-current.html','utf8');
 
+assert.equal((shell.match(/<\/html>/g)||[]).length,1,'canonical shell contains duplicate HTML tails');
+assert.equal((shell.match(/<script\b/g)||[]).length,(shell.match(/<\/script>/g)||[]).length,'script tag counts are unbalanced');
+assert.match(shell,/<\/html>\s*$/,'content exists after the canonical HTML close');
+
 // Job 1 owns an explicit route map. No Job 1 stage target may be an Alcove page.
 const mapBlock=shell.slice(
   shell.indexOf("'start-own': Object.freeze({"),
@@ -10,6 +14,10 @@ const mapBlock=shell.slice(
 );
 assert.match(mapBlock,/scan:'start-own-live'/);
 assert.match(mapBlock,/configure:'start-own-live'/);
+
+assert.match(shell,/stage === 'configure' \? 'definition-boundary' : null/);
+assert.match(shell,/const confirmBlock = childDoc\.querySelector\('\.confirm-block'\)/);
+assert.match(shell,/confirmBlock\.scrollIntoView\(\{block:'end'\}\)/);
 assert.match(mapBlock,/store:'proof-store'/);
 assert.match(mapBlock,/request:'proof-accept'/);
 assert.match(mapBlock,/yard:'proof-yard'/);
