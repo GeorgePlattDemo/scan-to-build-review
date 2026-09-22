@@ -792,6 +792,11 @@
       geometry.definedWorkpieceLengthIn=Number(part.definedWorkpieceLengthIn);
     }
     if(spot) geometry.spotDemand=freezeCopy(spot);
+    if(part.datumCMethod) geometry.datumCMethod=String(part.datumCMethod);
+    if(Array.isArray(part.requiredOps)) geometry.requiredOps=freezeCopy(part.requiredOps);
+    if(Number.isFinite(Number(part.declaredSawCuts))) geometry.declaredSawCuts=Number(part.declaredSawCuts);
+    if(Number.isFinite(Number(part.declaredSpotCount))) geometry.declaredSpotCount=Number(part.declaredSpotCount);
+    if(Array.isArray(part.parts)) geometry.identifiedParts=freezeCopy(part.parts);
     return Object.freeze({
       materialDemand: Object.freeze({stockClass:String(part.stockClass || '')}),
       operationDemand: Object.freeze(operations),
