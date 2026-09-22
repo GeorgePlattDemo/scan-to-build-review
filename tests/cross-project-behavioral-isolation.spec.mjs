@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const USER1_STORE_PIN='7303793620d0ceda509810a661d11e6c31c7d59f';
+const USER1_STORE_PIN='bc1a77297df752e32fb3687acc883a629c0b5b13';
 const S001_STORE_PIN='4402abeb6b0299a5b6db2eec85ed04c3b0236bcc';
 const WINDOW_SEAT_STORE_PIN='f88ec61c42446755d00259f88e7fd09f2702fd92';
 
@@ -18,7 +18,7 @@ test('project switching preserves separate definitions, Store answers, prices, a
   await app.locator('#new-user button[data-canonical-go="projects"]').click();
   await expect(app.locator('#projects.on')).toBeVisible();
 
-  // 1. Start Your Own / User 1 — exact 730379 Store authority and partial spot economics.
+  // 1. Start Your Own / User 1 — exact demand-driven Store authority and partial spot economics.
   const startOwn=app.locator('.tile[data-start-own-artifact="three-frames.html"]');
   await expect(startOwn).toBeVisible();
   await startOwn.click();
@@ -30,13 +30,13 @@ test('project switching preserves separate definitions, Store answers, prices, a
   await expect(user1Answer,'ISOLATION_USER1_STORE_BINDING_MISSING').toHaveAttribute('data-store-authoritative','true');
   await expect(user1Answer,'ISOLATION_USER1_STORE_PIN_DRIFT').toHaveAttribute('data-store-pin',USER1_STORE_PIN);
   await startFrame.locator('.stb-bench-button').click();
-  await expect(startFrame.locator('#stb-price-total'),'ISOLATION_USER1_PRICE_DRIFT').toHaveText('$54.29 · PARTIAL');
+  await expect(startFrame.locator('#stb-price-total'),'ISOLATION_USER1_PRICE_DRIFT').toHaveText('$54.27 · PARTIAL');
 
   const user1=await app.locator('body').evaluate(() => JSON.parse(localStorage.getItem('stb-start-own-user1-definition')||'null'));
   expect(user1.versionId,'ISOLATION_USER1_VERSION_MISSING').toBeTruthy();
   expect(user1.versionId,'ISOLATION_USER1_ANSWER_VERSION_DRIFT').toBe(user1.storeReference.answerVersionId);
   expect(user1.storeReference.storePin,'ISOLATION_USER1_RETAINED_STORE_PIN_DRIFT').toBe(USER1_STORE_PIN);
-  expect(user1.storeReference.authoritativeAnswer.rawEstimate.totals.Q,'ISOLATION_USER1_RETAINED_PRICE_DRIFT').toBe(54.29);
+  expect(user1.storeReference.authoritativeAnswer.rawEstimate.totals.Q,'ISOLATION_USER1_RETAINED_PRICE_DRIFT').toBe(54.27);
 
   await startFrame.locator('#stb-bench-library').click();
   await expect(app.locator('#projects.on')).toBeVisible();
@@ -60,7 +60,7 @@ test('project switching preserves separate definitions, Store answers, prices, a
   expect(afterS001.s001.versionId,'ISOLATION_S001_ANSWER_VERSION_DRIFT').toBe(afterS001.s001.storeAnswer.definitionVersionId);
   expect(afterS001.s001.versionId,'ISOLATION_S001_BORROWED_USER1_VERSION').not.toBe(user1.versionId);
   expect(afterS001.user1.versionId,'ISOLATION_S001_SWITCH_MUTATED_USER1_VERSION').toBe(user1.versionId);
-  expect(afterS001.user1.storeReference.authoritativeAnswer.rawEstimate.totals.Q,'ISOLATION_S001_SWITCH_MUTATED_USER1_PRICE').toBe(54.29);
+  expect(afterS001.user1.storeReference.authoritativeAnswer.rawEstimate.totals.Q,'ISOLATION_S001_SWITCH_MUTATED_USER1_PRICE').toBe(54.27);
 
   await app.locator('#playhouse-machine [data-canonical-go="playhouse-s001"]').click();
   await expect(app.locator('#playhouse-s001.on')).toBeVisible();
@@ -91,7 +91,7 @@ test('project switching preserves separate definitions, Store answers, prices, a
   const seatSnapshot=await seat.locator('body').evaluate(() => window.STBWindowSeatJourney.snapshot());
   expect(seatSnapshot.project.id,'ISOLATION_WINDOW_SEAT_WRONG_PROJECT').toBe('window-seat');
   expect(seatSnapshot.storeReference.pin.commit,'ISOLATION_WINDOW_SEAT_STORE_PIN_DRIFT').toBe(WINDOW_SEAT_STORE_PIN);
-  expect(seatSnapshot.storeReference.q,'ISOLATION_WINDOW_SEAT_BORROWED_USER1_PRICE').not.toBe(54.29);
+  expect(seatSnapshot.storeReference.q,'ISOLATION_WINDOW_SEAT_BORROWED_USER1_PRICE').not.toBe(54.27);
   expect(seatSnapshot.storeReference.q,'ISOLATION_WINDOW_SEAT_BORROWED_S001_PRICE').not.toBe(26.55);
   expect(seatSnapshot.storeReference.revision,'ISOLATION_WINDOW_SEAT_REFERENCE_REVISION_DRIFT').toBe(seatSnapshot.revision.number);
 
@@ -118,7 +118,7 @@ test('project switching preserves separate definitions, Store answers, prices, a
   expect(returned.versionId,'ISOLATION_RETURN_USER1_VERSION_DRIFT').toBe(user1.versionId);
   expect(returned.storeReference.answerVersionId,'ISOLATION_RETURN_USER1_ANSWER_VERSION_DRIFT').toBe(user1.storeReference.answerVersionId);
   expect(returned.storeReference.storePin,'ISOLATION_RETURN_USER1_STORE_PIN_DRIFT').toBe(USER1_STORE_PIN);
-  expect(returned.storeReference.authoritativeAnswer.rawEstimate.totals.Q,'ISOLATION_RETURN_USER1_PRICE_DRIFT').toBe(54.29);
+  expect(returned.storeReference.authoritativeAnswer.rawEstimate.totals.Q,'ISOLATION_RETURN_USER1_PRICE_DRIFT').toBe(54.27);
 });
 
 /*
