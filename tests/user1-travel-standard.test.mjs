@@ -40,18 +40,22 @@ const exact = contract.resolveUser1StoreReference(exactDemand);
 assert.equal(exact.status,'MATCHED_STORE_REFERENCE');
 assert.equal(exact.complete,true);
 assert.equal(exact.capabilityStatus,'SUPPORTABLE');
-assert.equal(exact.material,3.13);
+assert.equal(exact.material,2.61);
 assert.equal(exact.machineService,5.89);
-assert.equal(exact.combinedValue,9.02);
+assert.equal(exact.combinedValue,8.50);
 assert.equal(exact.estimate.cycle.T_job_min,1.4128);
 assert.equal(exact.estimate.travel.derivedSawCuts,3);
 assert.equal(exact.estimate.travel.derivedSpotCount,2);
 assert.equal(exact.estimate.travel.finalRemainderIn,27.625);
-assert.equal(exact.source.storePin,'f88ccaf9a2624899e255e66b51111e2b02309dad');
-assert.equal(exact.source.workflowRun,'35768861705');
-assert.equal(exact.source.systemIntegrationPin,'900dbd13f079f8a5f8d76d49c723fd35279164e8');
-assert.equal(exact.calculationIdentity.inputHash,'e186df5ead47f0c3c233477b18d00206643d8e5e1adf03fdd6dabdc95a0a5168');
-assert.equal(exact.calculationIdentity.resultHash,'425af5de05fb614b87ca308696d0d19af0b2701ce2f3fd51c8a6c3ca84042f4f');
+assert.equal(exact.materialResolution.pricingReferenceSku,'STB-ZERO-SPF-2X4-60-001');
+assert.equal(exact.materialResolution.pricingReferenceStockLengthIn,60);
+assert.equal(exact.materialResolution.workpieceLengthIn,60);
+assert.equal(exact.materialResolution.selectionPolicy,'SHORTEST_COMPLETE_STORE_OFFERING');
+assert.equal(exact.source.storePin,'140217b0aed64725d26b0d9332e3bf7b5d4396e0');
+assert.equal(exact.source.workflowRun,'35791021805');
+assert.equal(exact.source.systemIntegrationPin,'59a9c0326c1afea7af3767e1ed89bf6465a4b809');
+assert.equal(exact.calculationIdentity.inputHash,'f0918ff545e3d77d8d5ec33055d7279bb01dbe172bb4e6cc4d498469d66b2e82');
+assert.equal(exact.calculationIdentity.resultHash,'2abe991dbd5331f7fa3762018fed9cc707b637d4512ba62f7fc8fe1e4e28587a');
 assert.equal(exact.freshEvaluation,false);
 assert.equal(exact.evaluationReceipt,null);
 
@@ -60,7 +64,6 @@ const exactDemand18 = {
   configurationId:'SYO-USER1-XBRACE',
   configurationVersion:'0.2',
   definedWorkpieceLengthIn:60,
-  workpiecePolicy:'GROW_TO_RETAINED_CONTROL',
   sawAngleDeg:26.387799961243,
   cutPlane:'miter-face',
   endIdentity:'both',
@@ -82,25 +85,31 @@ assert.equal(exact18.material,3.13);
 assert.equal(exact18.machineService,5.90);
 assert.equal(exact18.combinedValue,9.03);
 assert.equal(exact18.estimate.cycle.T_job_min,1.4151);
-assert.equal(exact18.estimate.travel.finalRemainderIn,24);
+assert.equal(exact18.estimate.travel.finalRemainderIn,35.625);
 assert.equal(exact18.materialResolution.requestedDefinedWorkpieceLengthIn,60);
-assert.equal(exact18.materialResolution.requiredMinimumWorkpieceLengthIn,60.375);
-assert.equal(exact18.materialResolution.workpieceLengthIn,60.375);
-assert.equal(exact18.materialResolution.workpieceAdjusted,true);
+assert.equal(exact18.materialResolution.workpieceLengthIn,72);
 assert.equal(exact18.materialResolution.pricingReferenceStockLengthIn,72);
-assert.equal(exact18.source.storePin,'87c4d2187d051a577ab301acfa12f2c12a6880ea');
-assert.equal(exact18.source.systemIntegrationPin,'380517b3a8fefbfacb00a76d1287aedaed38d662');
-assert.equal(exact18.calculationIdentity.inputHash,'f32ed01b11d7c2987f526eb154c36220b3f8361b38e394b91efd30c073f69f9d');
-assert.equal(exact18.calculationIdentity.resultHash,'5e8e73e3fb197eb4e0955a5c850e367b3542cbbdc31df7c18975b9b9146a2985');
+assert.equal(exact18.materialResolution.selectionPolicy,'SHORTEST_COMPLETE_STORE_OFFERING');
+assert.deepEqual(
+  Array.from(exact18.materialResolution.consideredCandidates).map(entry=>[entry.storeSku,entry.stockLengthIn,entry.candidateStatus,entry.reason]),
+  [
+    ['STB-ZERO-SPF-2X4-60-001',60,'REFUSED','LAST_REMAIN_BELOW_TWO_ROLLER_CONTROL'],
+    ['STB-ZERO-SPF-2X4-72-001',72,'SUPPORTABLE',null]
+  ]
+);
+assert.equal(exact18.source.storePin,'140217b0aed64725d26b0d9332e3bf7b5d4396e0');
+assert.equal(exact18.source.systemIntegrationPin,'59a9c0326c1afea7af3767e1ed89bf6465a4b809');
+assert.equal(exact18.calculationIdentity.inputHash,'4b3b498d86177ed5a13c2662778f232b2c11cfafa7f626a689b3823b6872a4cc');
+assert.equal(exact18.calculationIdentity.resultHash,'59c9988c42ffd2520f6c1931d735a31e07848d72ac602182c510a17c20b89e88');
 
 const formal18 = contract.requestUser1StoreEvaluation(exactDemand18,{
-  requestId:'JOB1-18-CANDIDATE',
-  currentStorePin:'87c4d2187d051a577ab301acfa12f2c12a6880ea',
+  requestId:'JOB1-18-PROMOTED',
+  currentStorePin:'140217b0aed64725d26b0d9332e3bf7b5d4396e0',
   checkedAt:'2026-09-22T20:47:00.000Z'
 });
 assert.equal(formal18.complete,true);
 assert.equal(formal18.freshEvaluation,true);
-assert.equal(formal18.evaluationReceipt.currentStorePin,'87c4d2187d051a577ab301acfa12f2c12a6880ea');
+assert.equal(formal18.evaluationReceipt.currentStorePin,'140217b0aed64725d26b0d9332e3bf7b5d4396e0');
 assert.equal(contract.sameUser1StoreAnswerIdentity(exact18,formal18),true);
 
 const intermediate = contract.resolveUser1StoreReference({
@@ -118,12 +127,12 @@ assert.equal(intermediate.complete,false);
 
 const formalA = contract.requestUser1StoreEvaluation(exactDemand,{
   requestId:'JOB1-FRESH-A',
-  currentStorePin:'f88ccaf9a2624899e255e66b51111e2b02309dad',
+  currentStorePin:'140217b0aed64725d26b0d9332e3bf7b5d4396e0',
   checkedAt:'2026-09-22T18:45:00.000Z'
 });
 const formalB = contract.requestUser1StoreEvaluation(exactDemand,{
   requestId:'JOB1-FRESH-B',
-  currentStorePin:'f88ccaf9a2624899e255e66b51111e2b02309dad',
+  currentStorePin:'140217b0aed64725d26b0d9332e3bf7b5d4396e0',
   checkedAt:'2026-09-22T18:46:00.000Z'
 });
 assert.equal(formalA.status,'CURRENT_STORE_REFERENCE_REVALIDATED');
@@ -132,7 +141,7 @@ assert.equal(formalA.freshEvaluation,true);
 assert.equal(formalA.evaluationReceipt.requestId,'JOB1-FRESH-A');
 assert.equal(formalB.evaluationReceipt.requestId,'JOB1-FRESH-B');
 assert.notEqual(formalA.evaluationReceipt.requestId,formalB.evaluationReceipt.requestId);
-assert.equal(formalA.evaluationReceipt.currentStorePin,'f88ccaf9a2624899e255e66b51111e2b02309dad');
+assert.equal(formalA.evaluationReceipt.currentStorePin,'140217b0aed64725d26b0d9332e3bf7b5d4396e0');
 assert.equal(formalA.evaluationReceipt.currentStoreMatchesReference,true);
 assert.equal(formalA.evaluationReceipt.machineEnvelopeId,'D001-STAGE2-ENVELOPE-0.3');
 assert.equal(formalA.evaluationReceipt.travelStandardId,'STB-D001-DIMENSIONAL-TRAVEL-0.1');
