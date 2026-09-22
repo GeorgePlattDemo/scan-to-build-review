@@ -30,33 +30,29 @@ assert.equal(contract.currentArtifacts.alcove.artifact,'system-build-current.htm
 assert.equal(contract.currentArtifacts.windowSeat.artifact,'stb-window-seat-space-utilization-0.7.4.html');
 assert.equal(contract.currentArtifacts.sheetS001.artifact,'system-build-current.html#playhouse-s001');
 
-assert.equal(contract.storeAuthority('startOwn').capabilityPin,'7303793620d0ceda509810a661d11e6c31c7d59f');
-assert.equal(contract.storeAuthority('startOwn').materialCatalogPin,'7303793620d0ceda509810a661d11e6c31c7d59f');
+assert.equal(contract.storeAuthority('startOwn').capabilityPin,'bc1a77297df752e32fb3687acc883a629c0b5b13');
+assert.equal(contract.storeAuthority('startOwn').materialCatalogPin,'bc1a77297df752e32fb3687acc883a629c0b5b13');
 assert.equal(contract.storeAuthority('startOwn').legacyGeneralRecoverySelected,false);
 assert.equal(contract.storeAuthority('startOwn').economicsModel,'STB-STORE-ZERO-PRICE-1');
+assert.equal(contract.storeAuthority('startOwn').economicsVersion,'0.3.0');
 assert.equal(contract.storeAuthority('startOwn').economicsStatus,'BUDGETARY_ESTIMATE');
 const xBraceQ = contract.quoteStartOwnBoardSequence({
-  material:3.13,
-  definedWorkpieceLengthIn:60,
-  sawCuts:3,
+  finishedPartLengthIn:16,
+  quantity:2,
   sawAngleDeg:30,
-  drillCycles:0,
-  spotCycles:2,
-  spotDemand:{
-    required:true,mode:'SPOT_ON_LOCATION',countPerPart:1,totalCount:2,
-    locationRule:'CENTERED_ON_PART',locationAlongLengthIn:8,acrossWidthRule:'CENTERED_ON_WIDE_FACE'
-  },
-  unresolvedConditions:[],
-  widthIn:3.5
+  spotDemand:null,
+  unresolvedConditions:[]
 });
-assert.equal(xBraceQ.total,54.29);
-assert.equal(xBraceQ.cycle.T_job_min,9.694);
-assert.equal(xBraceQ.completeness,'PARTIAL');
+assert.equal(xBraceQ.total,54.27);
+assert.equal(xBraceQ.cycle.T_job_min,9.686);
+assert.equal(xBraceQ.completeness,'COMPLETE_FOR_ENCODED_DEMAND');
+assert.equal(xBraceQ.operationBasis.finishedPartLengthIn,16);
+assert.equal(xBraceQ.operationBasis.quantity,2);
+assert.equal(xBraceQ.operationBasis.selectedParentLengthIn,72);
+assert.equal(xBraceQ.operationBasis.productionSawCuts,3);
+assert.equal(xBraceQ.operationBasis.preparationSawCuts,0);
 assert.equal(xBraceQ.operationBasis.totalModeledSawCuts,3);
-assert.equal(xBraceQ.operationBasis.drillCycles,0);
-assert.ok(xBraceQ.unresolvedConditions.includes('SPOT_TOOL_POINT_GEOMETRY_REQUIRED'));
-assert.ok(xBraceQ.unresolvedConditions.includes('SPOT_CYCLE_TIME_APPLICABILITY_UNRESOLVED'));
-assert.equal(xBraceQ.operationBasis.spotCycles,0);
+assert.equal(xBraceQ.plan.parents[0].remainderIn,39.625);
 
 assert.equal(contract.storeAuthority('windowSeat').economicsModel,'STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0.1');
 assert.equal(contract.storeAuthority('alcove').economicsModel,null);
