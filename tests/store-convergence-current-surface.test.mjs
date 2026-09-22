@@ -135,7 +135,8 @@ assert.match(windowSeat,/storeRequest:req/);
 assert.match(windowSeat,/storeAnswer:answer/);
 assert.match(windowSeat,/commercial:false/);
 assert.match(shell,/PRIMARY STORE REQUEST<\/b><span>SHEET_MODE2_ARCHED_APERTURE_V0/);
-assert.match(shell,/PRIMARY STORE RESULT<\/b><span>SUPPORTABLE · REFERENCE/);
+assert.match(shell,/PRIMARY STORE RESULT<\/b><span id="s001-record-store-result">NOT CONFIRMED<\/span>/);
+assert.match(shell,/text\('s001-record-store-result', disposition\+' · REFERENCE'\)/);
 assert.match(shell,/CENTER ROUTE \/ STRAIGHT CUTS<\/b><span>UNRESOLVED/);
 
 for (const label of ['STORE ANSWER','ACCEPT / PAY','STORE / YARD','HANDOFF / RECORD']) {
