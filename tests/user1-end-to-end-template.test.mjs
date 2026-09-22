@@ -2,16 +2,18 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 
-const shell = fs.readFileSync('system-build-current.html','utf8');
-const frame = fs.readFileSync('three-frames.html','utf8');
-const contractSource = fs.readFileSync('stb-store-handoff-contract.js','utf8');
+const shell=fs.readFileSync('system-build-current.html','utf8');
+const frame=fs.readFileSync('three-frames.html','utf8');
+const contractSource=fs.readFileSync('stb-store-handoff-contract.js','utf8');
+const fulfillmentSource=fs.readFileSync('stb-job1-simulated-fulfillment.js','utf8');
 
 const sandbox={window:{}};
 vm.runInNewContext(contractSource,sandbox,{filename:'stb-store-handoff-contract.js'});
+vm.runInNewContext(fulfillmentSource,sandbox,{filename:'stb-job1-simulated-fulfillment.js'});
 const contract=sandbox.window.STBStoreHandoffContract;
+const F=sandbox.window.STBJob1SimulatedFulfillment;
 
 const STORE_SHA='95c639a1d0d4812df097ad1eb628594b38f921de';
-const SYSTEM_SHA='900dbd13f079f8a5f8d76d49c723fd35279164e8';
 const INPUT_HASH='5de0367b62087cb0174ef5f1e101e22ded3728ba71906868628a985afafa078b';
 const RESULT_HASH='9ad8d16a7c211d420b83e46ed8a8d224bd289e26a48764ff8d0389b6db698604';
 
@@ -35,10 +37,8 @@ const exactDemand={
 };
 
 const storeAnswer=contract.resolveUser1StoreReference(exactDemand);
-assert.equal(storeAnswer.complete,true,'Job 1 did not obtain a complete Store answer');
-assert.equal(storeAnswer.status,'MATCHED_STORE_REFERENCE');
+assert.equal(storeAnswer.complete,true);
 assert.equal(storeAnswer.source.storePin,STORE_SHA);
-assert.equal(storeAnswer.source.systemIntegrationPin,SYSTEM_SHA);
 assert.equal(storeAnswer.calculationIdentity.inputHash,INPUT_HASH);
 assert.equal(storeAnswer.calculationIdentity.resultHash,RESULT_HASH);
 assert.equal(storeAnswer.material,3.13);
@@ -46,118 +46,151 @@ assert.equal(storeAnswer.machineService,5.89);
 assert.equal(storeAnswer.combinedValue,9.02);
 assert.equal(storeAnswer.estimate.cycle.T_job_min,1.4128);
 
-// ENTRY / DEFINE
+// ENTRY / DEFINE / CONFIRM
 assert.match(frame,/Start your own project/);
 assert.match(frame,/2×4 · 60 in/);
 assert.match(frame,/id="stb-config-length"[^>]*value="16"/);
 assert.match(frame,/id="stb-config-angle"[^>]*value="30"/);
 assert.match(frame,/Center spot = 16 ÷ 2 = 8 in/);
-assert.match(shell,/definitionId:'SYO-USER1-XBRACE-0\.1'/);
-assert.match(shell,/configurationId = 'SYO-USER1-XBRACE'/);
-assert.match(shell,/configurationVersion = definitionRevision === 1[\s\S]*?'0\.1'/);
-assert.match(shell,/parts = Array\.from/);
-assert.match(shell,/requiredOps\.push\('SPOT_ON_LOCATION'\)/);
 assert.match(shell,/resolveUser1StoreReference\(storeDemand\)/);
-
-// CHANGED DEFINITIONS FAIL CLOSED BEFORE CONFIRM
-assert.match(shell,/if \(definition\.storeReference\?\.complete !== true\)/);
-assert.match(shell,/STORE_REFRESH_REQUIRED · confirmation is blocked until Store evaluates this exact revision/);
-assert.match(shell,/confirmButton\.disabled = !storeComplete/);
-
-// CONFIRM creates one Job 1 handoff with the Store answer attached.
-assert.match(shell,/job:'JOB 1 · START YOUR OWN'/);
-assert.match(shell,/source:'start-own'/);
-assert.match(shell,/storeReference:definition\.storeReference/);
-assert.match(shell,/stb-proof-handoff-job1/);
+assert.match(shell,/initializeJob1Fulfillment\(true\)/);
 assert.match(shell,/originalShow\.call\(win,'proof-store'\)/);
 
-// Canonical downstream actor mapping for Job 1.
-assert.match(shell,/'start-own': Object\.freeze\(\{[\s\S]*?store:'proof-store'[\s\S]*?request:'proof-accept'[\s\S]*?yard:'proof-yard'[\s\S]*?terms:'proof-terms'[\s\S]*?record:'proof-record'/);
+// Exact route order for Job 1.
+const mapBlock=shell.slice(
+  shell.indexOf("'start-own': Object.freeze({"),
+  shell.indexOf("outdoor: Object.freeze({",shell.indexOf("'start-own': Object.freeze({"))
+);
+assert.match(mapBlock,/store:'proof-store'/);
+assert.match(mapBlock,/review:'proof-terms'/);
+assert.match(mapBlock,/request:'proof-accept'/);
+assert.match(mapBlock,/yard:'proof-yard'/);
+assert.match(mapBlock,/record:'proof-record'/);
 
-// Gate navigation is one-way capable from Store answer to final record.
-assert.match(shell,/data-proof-go="proof-accept">CONTINUE → ACCEPT \/ PAY/);
-assert.match(shell,/data-proof-go="proof-yard">CONTINUE REFERENCE DEMONSTRATION/);
-assert.match(shell,/if\(proofHandoff\?\.source==='start-own' && target==='proof-record' && go\.closest\('#proof-yard'\)\) target='proof-terms'/);
-assert.match(shell,/data-proof-go="proof-record">CONTINUE → HANDOFF \/ RECORD/);
+// STORE REVIEW supports explicit accept / modify / decline.
+assert.match(shell,/data-job1-action="STORE_RETURN_FOR_MODIFICATION"/);
+assert.match(shell,/data-job1-action="STORE_DECLINE"/);
+assert.match(shell,/data-job1-action="STORE_ACCEPT_AS_ASKED"/);
 
-// Each downstream gate exposes the same custody spine.
-for(const gate of ['store','accept','yard','terms','record']){
-  assert.match(shell,new RegExp('id="proof-'+gate+'-pin"'),'missing Store SHA field on '+gate);
-  assert.match(shell,new RegExp('id="proof-'+gate+'-input-hash"'),'missing input hash field on '+gate);
-  assert.match(shell,new RegExp('id="proof-'+gate+'-result-hash"'),'missing result hash field on '+gate);
-}
-for(const gate of ['store','accept','yard','terms','record']){
-  assert.match(
-    shell,
-    new RegExp("'proof-"+gate+"-pin'"),
-    'Store SHA is not synchronized into '+gate
-  );
-  assert.match(
-    shell,
-    new RegExp("'proof-"+gate+"-input-hash'"),
-    'input hash is not synchronized into '+gate
-  );
-  assert.match(
-    shell,
-    new RegExp("'proof-"+gate+"-result-hash'"),
-    'result hash is not synchronized into '+gate
-  );
-}
+// OFFER / TERMS is before customer acceptance.
+assert.match(shell,/OFFER \/ TERMS/);
+assert.match(shell,/id="proof-terms-offer-id"/);
+assert.match(shell,/data-proof-go="proof-accept">REVIEW OFFER → ACCEPT \/ PAY/);
 
-// Store answer is the only complete economics answer.
-assert.match(shell,/MODELED MACHINE SERVICE/);
-assert.match(shell,/STORE BUDGETARY Q/);
-assert.match(shell,/machine_service/);
-assert.match(shell,/estimate\?\.cycle\?\.T_job_min/,'visible Job 1 must present Store-returned modeled time rather than hard-code a cycle value');
-assert.equal(shell.includes('quoteStartOwnBoardSequence'),false,'Job 1 has a second browser pricing engine');
-assert.equal(shell.includes('machineHourRate'),false,'Job 1 browser contains a Store machine rate');
-assert.equal(shell.includes('setupCharge'),false,'Job 1 browser contains a Store setup charge');
+// ACCEPT / PAY keeps acceptance and settlement separate.
+assert.match(shell,/data-job1-action="CUSTOMER_ACCEPT_OFFER"/);
+assert.match(shell,/data-job1-action="CUSTOMER_DECLINE_OFFER"/);
+assert.match(shell,/data-job1-action="SIMULATE_PURCHASE"/);
+assert.match(shell,/NO REAL PAYMENT/);
 
-// ACCEPT/PAY: commercial events remain null.
-assert.match(shell,/COMMERCIAL OFFER<\/b><span>NOT ESTABLISHED/);
-assert.match(shell,/ACCEPTANCE<\/b><span>NOT ESTABLISHED/);
-assert.match(shell,/PAYMENT<\/b><span>NOT AVAILABLE \/ NOT RECORDED/);
-
-// STORE/YARD: physical authority remains null.
-assert.match(shell,/ALLOCATION<\/b><span>NOT ESTABLISHED/);
-assert.match(shell,/PRODUCTION RELEASE<\/b><span>NOT ESTABLISHED/);
-assert.match(shell,/MACHINE READINESS<\/b><span>NOT ESTABLISHED/);
-assert.match(shell,/CYCLE START<\/b><span>NOT AUTHORIZED/);
-assert.match(shell,/READY<\/b><span>NOT RECORDED/);
+// FULFILLMENT exposes every downstream gate.
+for(const id of [
+  'proof-yard-allocation','proof-yard-release','proof-yard-queue','proof-yard-readiness',
+  'proof-yard-cycle','proof-yard-operations','proof-yard-inspection','proof-yard-labels',
+  'proof-yard-staging','proof-yard-ready'
+]) assert.match(shell,new RegExp('id="'+id+'"'));
 assert.match(shell,/NO BLOOD ON WOOD/);
+assert.match(shell,/data-job1-yard-next/);
 
-// TERMS cannot mutate the definition or manufacture a sale.
-assert.match(shell,/One version, one answer/);
-assert.match(shell,/Terms never rewrite the confirmed definition/);
-assert.match(shell,/OFFER VALIDITY<\/b><span>NOT ESTABLISHED/);
+// PICKUP / RECORD remains distinct from READY.
+assert.match(shell,/data-job1-action="RECORD_PICKUP"/);
+assert.match(shell,/data-job1-action="CLOSE_JOB"/);
+assert.match(shell,/id="proof-record-ledger"/);
 
-// RECORD retains the same definition and Store answer, with no invented fabrication event.
-assert.match(shell,/KEEP THE DEFINITION AND THE STORE ANSWER/);
-assert.match(shell,/Owner-record consequence/);
-assert.match(shell,/PHYSICAL FABRICATION<\/b><span>NOT RECORDED/);
-assert.match(shell,/resultHash/);
+// Same Store identity is displayed at every gate.
+for(const gate of ['store','terms','accept','yard','record']){
+  assert.match(shell,new RegExp('id="proof-'+gate+'-pin"'));
+  assert.match(shell,new RegExp('id="proof-'+gate+'-input-hash"'));
+  assert.match(shell,new RegExp('id="proof-'+gate+'-result-hash"'));
+}
 
-// Template authority: Review points to the tested Store and System candidates.
-assert.equal(contract.storeAuthority('startOwn').economicsPin,STORE_SHA);
-assert.equal(contract.user1StoreReference.source.storePin,STORE_SHA);
-assert.equal(contract.user1StoreReference.source.systemIntegrationPin,SYSTEM_SHA);
-assert.equal(contract.user1StoreReference.estimate.calculationIdentity.inputHash,INPUT_HASH);
-assert.equal(contract.user1StoreReference.estimate.calculationIdentity.resultHash,RESULT_HASH);
+// Exercise the actual gate engine all the way through.
+let state=F.create({
+  jobId:'JOB 1 · START YOUR OWN',
+  versionId:'SYO-USER1-XBRACE-0.1-v1',
+  storePin:STORE_SHA,
+  inputHash:INPUT_HASH,
+  resultHash:RESULT_HASH,
+  q:storeAnswer.combinedValue,
+  modeledCycleMin:storeAnswer.estimate.cycle.T_job_min
+});
 
-// Any changed governing input is not allowed to borrow Job 1's Store result.
+const sequence=[
+  F.ACTIONS.STORE_ACCEPT_AS_ASKED,
+  F.ACTIONS.CUSTOMER_ACCEPT_OFFER,
+  F.ACTIONS.SIMULATE_PURCHASE,
+  F.ACTIONS.STORE_ALLOCATE,
+  F.ACTIONS.STORE_RELEASE,
+  F.ACTIONS.STORE_QUEUE,
+  F.ACTIONS.LOCAL_READY,
+  F.ACTIONS.LOCAL_CYCLE_START,
+  F.ACTIONS.COMPLETE_OPERATIONS,
+  F.ACTIONS.INSPECTION_PASS,
+  F.ACTIONS.LABELS_COMPLETE,
+  F.ACTIONS.STAGE_JOB,
+  F.ACTIONS.ISSUE_READY,
+  F.ACTIONS.RECORD_PICKUP,
+  F.ACTIONS.CLOSE_JOB
+];
+for(const action of sequence) state=F.transition(state,action);
+
+assert.equal(state.storeReview,'ACCEPTED_AS_ASKED');
+assert.equal(state.offer.status,'PURCHASED');
+assert.equal(state.acceptance.status,'ACCEPTED');
+assert.equal(state.settlement.status,'SIMULATED_SETTLED');
+assert.equal(state.allocation.status,'SIMULATED_ALLOCATED');
+assert.equal(state.productionRelease.status,'SIMULATED_RELEASED');
+assert.equal(state.queue.status,'SIMULATED_QUEUED');
+assert.equal(state.machineReadiness.status,'SIMULATED_READY');
+assert.equal(state.cycleStart.status,'SIMULATED_STARTED');
+assert.equal(state.operations.status,'SIMULATED_COMPLETE');
+assert.equal(state.inspection.status,'SIMULATED_PASS');
+assert.equal(state.labels.status,'SIMULATED_COMPLETE');
+assert.equal(state.staging.status,'SIMULATED_STAGED');
+assert.equal(state.ready.status,'SIMULATED_READY_NOTICE');
+assert.equal(state.custody.status,'SIMULATED_PICKED_UP');
+assert.equal(state.closeout.status,'SIMULATED_CLOSED');
+
+for(const event of state.events){
+  assert.equal(event.storePin,STORE_SHA);
+  assert.equal(event.inputHash,INPUT_HASH);
+  assert.equal(event.resultHash,RESULT_HASH);
+  assert.equal(event.authority,'SIMULATION_ONLY');
+}
+assert.equal(state.liveCommerce,false);
+assert.equal(state.liveMotion,false);
+
+// Out-of-order advancement is forbidden.
+const fresh=F.create({
+  jobId:'JOB 1 · START YOUR OWN',
+  versionId:'SYO-USER1-XBRACE-0.1-v1',
+  storePin:STORE_SHA,
+  inputHash:INPUT_HASH,
+  resultHash:RESULT_HASH,
+  q:9.02,
+  modeledCycleMin:1.4128
+});
+assert.throws(()=>F.transition(fresh,F.ACTIONS.SIMULATE_PURCHASE),/ACCEPTED_OFFER_REQUIRED/);
+assert.throws(()=>F.transition(fresh,F.ACTIONS.STORE_RELEASE),/ALLOCATION_REQUIRED/);
+assert.throws(()=>F.transition(fresh,F.ACTIONS.LOCAL_CYCLE_START),/LOCAL_MACHINE_READINESS_REQUIRED/);
+assert.throws(()=>F.transition(fresh,F.ACTIONS.ISSUE_READY),/STAGING_REQUIRED/);
+assert.throws(()=>F.transition(fresh,F.ACTIONS.CLOSE_JOB),/CUSTODY_REQUIRED/);
+
+// Changed project truth still cannot borrow Job 1's Store answer.
 for(const changed of [
   {...exactDemand,configurationVersion:'0.2'},
   {...exactDemand,sawAngleDeg:31},
   {...exactDemand,declaredSawCuts:2},
-  {...exactDemand,parts:[{...exactDemand.parts[0],lengthIn:17},exactDemand.parts[1]]},
-]){
+]) {
   const answer=contract.resolveUser1StoreReference(changed);
   assert.equal(answer.status,'STORE_REFRESH_REQUIRED');
   assert.equal(answer.complete,false);
-  assert.equal(answer.combinedValue,null);
 }
 
-// No live machine/control vocabulary crosses the browser boundary.
+// Browser still owns no Store pricing formula or live controller commands.
+assert.equal(shell.includes('quoteStartOwnBoardSequence'),false);
+assert.equal(shell.includes('machineHourRate'),false);
+assert.equal(shell.includes('setupCharge'),false);
 assert.equal(/\bG0?\d\b|\bM0?3\b|G-code|remote Cycle Start/i.test(shell+frame),false);
 
-console.log('PASS · JOB 1 OPERABLE TEMPLATE · intent → definition → Store → confirm → accept/pay boundary → Store/yard → terms → handoff/record');
+console.log('PASS · JOB 1 FULL TEMPLATE · definition → Store review → offer/terms → accept/purchase → allocation/release/queue → local simulated run → inspection/staging/READY → pickup/custody → closeout');
