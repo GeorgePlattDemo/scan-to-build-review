@@ -354,10 +354,15 @@
       unresolvedConditions:Array.isArray(input.unresolvedConditions) ? input.unresolvedConditions.slice() : []
     });
     var estimate=answer.rawEstimate || null;
-    var piece=answer.mappedCallInputs && answer.mappedCallInputs.estimate
-      && answer.mappedCallInputs.estimate.pieces
-      ? answer.mappedCallInputs.estimate.pieces[0]
+    var mappedDefinition=answer.mappedCallInputs && answer.mappedCallInputs.definition
+      ? answer.mappedCallInputs.definition
       : null;
+    var mappedEstimate=answer.mappedCallInputs && answer.mappedCallInputs.estimate
+      ? answer.mappedCallInputs.estimate
+      : null;
+    var returnedSpot=mappedDefinition && mappedDefinition.spotOperation
+      ? mappedDefinition.spotOperation
+      : (answer.attributedBasis && answer.attributedBasis.envelope ? answer.attributedBasis.envelope.spot : null);
     return Object.freeze({
       status:estimate ? estimate.status : (answer.rawEvaluation && answer.rawEvaluation.status) || 'UNAVAILABLE',
       complete:!!estimate && answer.priceCompleteness && answer.priceCompleteness.status==='COMPLETE_FOR_ENCODED_DEMAND',
@@ -371,16 +376,26 @@
       cellRecovery:estimate && estimate.totals ? estimate.totals.cell_recovery : null,
       total:estimate && estimate.totals ? estimate.totals.Q : null,
       cycle:estimate ? estimate.cycle : null,
-      operationBasis:piece ? Object.freeze({
-        definedWorkpieceLengthIn:Number(input.definedWorkpieceLengthIn),
-        productionSawCuts:Number(input.sawCuts || 0),
-        totalModeledSawCuts:Number(input.sawCuts || 0),
-        sawAngleDeg:angle,
-        sawTraverseIn:piece.sawTraverseIn,
-        drillCycles:piece.holes,
-        drillReferenceDepthIn:piece.depthIn,
-        spotCycles:piece.spots,
-        spotToolDiameterIn:answer.attributedBasis && answer.attributedBasis.envelope ? answer.attributedBasis.envelope.spotToolDiameterIn : null
+      operationBasis:mappedDefinition ? Object.freeze({
+        definedWorkpieceLengthIn:mappedDefinition.definedWorkpieceLengthIn,
+        productionSawCuts:mappedDefinition.productionSawCuts,
+        totalModeledSawCuts:mappedDefinition.totalModeledSawCuts,
+        sawAngleDeg:mappedDefinition.sawAngleDeg,
+        sawTraverseIn:mappedEstimate && mappedEstimate.sawTraverseIn != null ? mappedEstimate.sawTraverseIn : null,
+        drillCycles:mappedDefinition.drillCycles,
+        drillReferenceDepthIn:mappedDefinition.drillDepthIn,
+        spotCycles:estimate && estimate.operationEconomics && estimate.operationEconomics.spot
+          ? Math.max(0, Number(estimate.operationEconomics.spot.requestedCycles || 0) - Number(estimate.operationEconomics.spot.requestedCycles || 0))
+          : 0,
+        requestedSpotCycles:estimate && estimate.operationEconomics && estimate.operationEconomics.spot
+          ? Number(estimate.operationEconomics.spot.requestedCycles || 0)
+          : 0,
+        spotOperation:returnedSpot ? freezeCopy(returnedSpot) : null,
+        spotToolDiameterIn:returnedSpot && returnedSpot.toolDiameterIn != null ? Number(returnedSpot.toolDiameterIn) : null,
+        spotFullDiameterPenetrationIn:returnedSpot && returnedSpot.fullDiameterPenetrationIn != null ? Number(returnedSpot.fullDiameterPenetrationIn) : null,
+        spotDepthReference:returnedSpot ? returnedSpot.depthReference || null : null,
+        spotPointGeometryStatus:returnedSpot ? returnedSpot.pointGeometryStatus || null : null,
+        spotTotalTipPenetrationIn:returnedSpot && returnedSpot.totalTipPenetrationIn != null ? Number(returnedSpot.totalTipPenetrationIn) : null
       }) : null,
       engine:answer.attributedBasis ? answer.attributedBasis.pricingEngine : null,
       source:Object.freeze({
