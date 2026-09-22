@@ -1828,7 +1828,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       +'<div class="proof-actor-grid">'
         +'<div><b>JOB</b><span id="proof-store-job">—</span></div>'
         +'<div><b>VERSION</b><span id="proof-store-version">—</span></div>'
-        +'<div><b>DEFINED WORKPIECE</b><span id="proof-store-workpiece">—</span></div>'
+        +'<div><b>FINISHED DEMAND</b><span id="proof-store-workpiece">—</span></div>'
         +'<div><b>MATERIAL SOURCE</b><span id="proof-store-material-source">Store Zero catalog</span></div>'
         +'<div><b>ECONOMICS AUTHORITY</b><span id="proof-store-economics-authority">—</span></div>'
       +'</div>'
@@ -1843,7 +1843,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       +'<div class="proof-gap" id="proof-store-economics-note"><b>STORE ECONOMICS</b>The project answer will state whether a current Store budgetary estimate is present. A budgetary estimate is not a commercial quote, payment, allocation, release, or fabrication authorization.</div>'
       +proofStoreDoctrine
       +'<div class="proof-nav"><button type="button" data-proof-library>← PROJECT LIBRARY</button><button type="button" data-proof-return-source>← PROJECT DEFINITION</button><button class="next" type="button" data-proof-go="proof-accept">CONTINUE → ACCEPT / PAY</button></div>',
-      '<p class="goal">Same definition, Store answers</p><div class="row"><b>Project truth stays fixed</b><span>The confirmed workpiece is not replaced by the procurement SKU.</span></div><div class="row"><b>Budgetary economics stay labeled</b><span>Q is modeled Store economics, not a payable offer.</span></div>'
+      '<p class="goal">Same finished demand, Store answers</p><div class="row"><b>Project truth stays fixed</b><span>Finished-part geometry remains the requirement; Store-selected parent stock remains the Store answer.</span></div><div class="row"><b>Budgetary economics stay labeled</b><span>Q is modeled Store economics, not a payable offer.</span></div>'
     );
 
     ensureProjectJourneyPage('proof-accept',
@@ -1919,16 +1919,19 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       const title=doc.getElementById('proof-store-title');
       if(title)title.textContent='STORE ANSWER · '+job;
       const materialResolution=payload.storeReference?.materialResolution || null;
-      const definedWorkpiece=payload.definition?.material?.definedWorkpieceLengthIn?.value
-        ?? payload.sourceAuthority?.definedWorkpieceLengthIn?.value
-        ?? payload.physicalDemand?.parentLengthIn
-        ?? null;
+      const finishedLength=payload.physicalDemand?.finishedLength ?? payload.definition?.intent?.finishedLengthIn?.value ?? null;
+      const finishedQty=payload.physicalDemand?.quantity ?? payload.definition?.intent?.partQty?.value ?? null;
+      const finishedDatum=payload.physicalDemand?.lengthDatum ?? payload.definition?.intent?.lengthDatum?.value ?? null;
       const workpieceEl=doc.getElementById('proof-store-workpiece');
-      if(workpieceEl)workpieceEl.textContent=definedWorkpiece==null?'NOT CARRIED':String(definedWorkpiece)+' in · confirmed project fact';
+      if(workpieceEl)workpieceEl.textContent=(finishedLength==null||finishedQty==null)
+        ? 'NOT CARRIED'
+        : String(finishedQty)+' × '+String(finishedLength)+' in'+(finishedDatum?' · '+String(finishedDatum):'');
       const materialSku=doc.getElementById('proof-store-material-sku');
       const materialValue=doc.getElementById('proof-store-material-value');
       const materialSource=doc.getElementById('proof-store-material-source');
-      if(materialSku)materialSku.textContent=materialResolution?.storeSku || 'NOT MAPPED ON THIS PROJECT PAYLOAD';
+      if(materialSku)materialSku.textContent=materialResolution?.storeSku
+        ? materialResolution.storeSku+' · '+String(materialResolution.pricingReferenceStockLengthIn ?? 'length unresolved')+' in · '+String(materialResolution.parentCount ?? '?')+' parent'+(Number(materialResolution.parentCount)===1?'':'s')
+        : 'NOT MAPPED ON THIS PROJECT PAYLOAD';
       if(materialValue)materialValue.textContent=Number.isFinite(Number(materialResolution?.materialTotal))
         ? '$'+Number(materialResolution.materialTotal).toFixed(2)
         : 'NOT ESTABLISHED';
