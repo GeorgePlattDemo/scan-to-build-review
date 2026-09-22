@@ -57,6 +57,7 @@ test('actual User 1 journey is demand-driven from finished members through Store
   expect(retained.storeReference.authoritativeRequest.definedWorkpieceLengthIn).toBeUndefined();
   expect(retained.operationPlan.selected.storeSku).toBe('STB-ZERO-SPF-2X4-72-001');
   expect(retained.operationPlan.selected.parentStockLengthIn).toBe(72);
+  expect(retained.operationPlan.finishedPart.lengthIn,'FAULT_TARGET_STOCK_LENGTH_OVERWRITES_FINISHED_GEOMETRY').toBe(16);
   expect(retained.operationPlan.intermediateBlank,'FAULT_TARGET_UNJUSTIFIED_BLANK_INSERTED').toBe(null);
 
   // 5–6. Drawing/ops/remainder/price are one Store plan. Demonstrate spots OFF, then ON.
