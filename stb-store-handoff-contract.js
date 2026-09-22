@@ -346,9 +346,12 @@
       pricingReferenceStockLengthIn:72,
       workpieceLengthIn:60,
       quantity:1,
+      stockLengthIn:72,
       unitPrice:3.13,
       materialTotal:3.13,
       allocationClaimed:false,
+      cellFamily:Object.freeze(['D-001']),
+      supportedOps:Object.freeze(['CROSSCUT','MITER_LIMITED','SPOT_ON_LOCATION','DRILL','MILL_LONGITUDINAL_PROFILE','MILL_END_PROFILE']),
       source:Object.freeze({
         repository:'GeorgePlattDemo/scan-to-build-store',
         file:'store-zero-catalog.json',
