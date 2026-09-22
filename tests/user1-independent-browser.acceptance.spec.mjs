@@ -7,6 +7,8 @@ function appFrame(page){
 }
 
 test('actual User 1 journey carries one authoritative Store answer through confirmation and record', async ({ page }) => {
+  const pageErrors=[];
+  page.on('pageerror', error => pageErrors.push(String(error?.stack || error)));
   const base=process.env.STB_REVIEW_URL || 'http://127.0.0.1:4173';
   await page.goto(base+'/system-build-current.html');
   const app=appFrame(page);
@@ -18,6 +20,18 @@ test('actual User 1 journey carries one authoritative Store answer through confi
   await expect(app.locator('#projects.on')).toBeVisible();
 
   const startOwn=app.locator('.tile[data-start-own-artifact="three-frames.html"]');
+  if (await startOwn.count() === 0) {
+    const diagnostic=await app.locator('#projects').evaluate(node => ({
+      html:node.innerHTML,
+      tiles:[...node.querySelectorAll('.tile')].map(tile=>({
+        text:(tile.textContent||'').trim().replace(/\s+/g,' ').slice(0,180),
+        dataGo:tile.getAttribute('data-go'),
+        startOwnArtifact:tile.getAttribute('data-start-own-artifact')
+      })),
+      guard:document.documentElement.dataset.s001OutcomeSplit || null
+    }));
+    throw new Error('Start Your Own integration missing: '+JSON.stringify({diagnostic,pageErrors}));
+  }
   await expect(startOwn).toBeVisible();
   await startOwn.click();
   await expect(app.locator('#start-own-live.on')).toBeVisible();
