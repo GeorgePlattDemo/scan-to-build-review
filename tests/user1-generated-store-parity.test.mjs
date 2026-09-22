@@ -65,7 +65,7 @@ for(const angle of [30,45,46]){
   const browser=browserStore.evaluate(request);
   const direct=directMaterial(request);
   const directDisposition=direct.status==='MAPPED' ? direct.capability.status : direct.status;
-  assert.equal(browser.rawEvaluation.status,directDisposition,angle+' degree browser/Store disposition drift');
+  assert.equal(browser.rawEvaluation.status,directDisposition,(angle===46?'FAULT_TARGET_46_DEGREE_MITER_REFUSAL · ':'')+angle+' degree browser/Store disposition drift');
   if(angle<=45){
     assert.equal(browser.rawEvaluation.status,'SUPPORTABLE');
     assert.equal(browser.priceCompleteness.status,'COMPLETE_FOR_ENCODED_DEMAND');
