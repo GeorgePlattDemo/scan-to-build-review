@@ -1,0 +1,381 @@
+name: User 1 visible authoritative acceptance
+
+on:
+  push:
+    branches:
+      - repair/demand-driven-stock-sequence-0.1
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  STORE_PIN: 01f9c5580cea262bd898a9f2c1ac2cd89d02845f
+  STB_STORE_ZERO_ROOT: ${{ github.workspace }}/store-zero
+  STB_STORE_ZERO_S001_ROOT: ${{ github.workspace }}/store-zero-s001
+  STB_STORE_ZERO_WINDOW_ROOT: ${{ github.workspace }}/store-zero-window
+
+jobs:
+  acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout Review candidate
+        uses: actions/checkout@v4
+
+      - name: Checkout exact Store authority
+        uses: actions/checkout@v4
+        with:
+          repository: GeorgePlattDemo/scan-to-build-store
+          ref: 01f9c5580cea262bd898a9f2c1ac2cd89d02845f
+          path: store-zero
+
+      - name: Verify exact Store identity
+        run: |
+          test "$(git -C "$STB_STORE_ZERO_ROOT" rev-parse HEAD)" = "$STORE_PIN"
+          test -z "$(git -C "$STB_STORE_ZERO_ROOT" status --porcelain)"
+
+      - name: Checkout exact S-001 Store authority
+        uses: actions/checkout@v4
+        with:
+          repository: GeorgePlattDemo/scan-to-build-store
+          ref: 4402abeb6b0299a5b6db2eec85ed04c3b0236bcc
+          path: store-zero-s001
+
+      - name: Verify exact S-001 Store identity
+        env:
+          STB_STORE_ZERO_S001_ROOT: ${{ github.workspace }}/store-zero-s001
+        run: |
+          test "$(git -C "$STB_STORE_ZERO_S001_ROOT" rev-parse HEAD)" = "4402abeb6b0299a5b6db2eec85ed04c3b0236bcc"
+          test -z "$(git -C "$STB_STORE_ZERO_S001_ROOT" status --porcelain)"
+
+      - name: Checkout exact Window Seat Store authority
+        uses: actions/checkout@v4
+        with:
+          repository: GeorgePlattDemo/scan-to-build-store
+          ref: f88ec61c42446755d00259f88e7fd09f2702fd92
+          path: store-zero-window
+
+      - name: Verify exact Window Seat Store identity
+        run: |
+          test "$(git -C "$STB_STORE_ZERO_WINDOW_ROOT" rev-parse HEAD)" = "f88ec61c42446755d00259f88e7fd09f2702fd92"
+          test -z "$(git -C "$STB_STORE_ZERO_WINDOW_ROOT" status --porcelain)"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.2'
+
+      - name: Install browser acceptance dependency
+        run: |
+          npm init -y >/dev/null
+          npm install --no-save @playwright/test@1.63.0 >/dev/null
+          npx playwright install --with-deps chromium
+
+      - name: Reproduce generated browser Store package from exact pin
+        run: node tools/generate-user1-store-browser-bundle.mjs --check stb-store-zero-user1.generated.js
+
+      - name: Prove generated browser Store behavioral parity with exact Store
+        run: node tests/user1-generated-store-parity.test.mjs
+
+      - name: Reproduce generated S-001 browser Store package from exact pin
+        env:
+          STB_STORE_ZERO_S001_ROOT: ${{ github.workspace }}/store-zero-s001
+        run: node tools/generate-s001-store-browser-bundle.mjs --check stb-store-zero-s001.generated.js
+
+      - name: Prove generated S-001 browser Store behavioral parity with exact Store
+        env:
+          STB_STORE_ZERO_S001_ROOT: ${{ github.workspace }}/store-zero-s001
+        run: node tests/s001-generated-store-parity.test.mjs
+
+      - name: Start candidate static application
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > "$RUNNER_TEMP/review-server.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/review-server.pid"
+          for i in {1..30}; do
+            curl -fsS http://127.0.0.1:4173/system-build-current.html >/dev/null && exit 0
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/review-server.log"
+          exit 1
+
+      - name: Actual promoted-structure User 1 browser acceptance
+        run: npx playwright test tests/user1-independent-browser.acceptance.spec.mjs --workers=1
+
+      - name: Actual S-001 browser-route acceptance
+        run: npx playwright test tests/s001-independent-browser.acceptance.spec.mjs --workers=1
+
+      - name: Window Seat exact-source browser parity
+        run: npx playwright test tests/window-seat-store-source-parity.spec.mjs --workers=1
+
+      - name: Cross-project behavioral isolation in a real browser
+        run: npx playwright test tests/cross-project-behavioral-isolation.spec.mjs --workers=1
+
+      - name: Prove browser acceptance fails on unrepaired Review checkpoint
+        run: |
+          git fetch origin 740b510a9688c60e20af93179979dc83fe6b602f --depth=1
+          mkdir -p "$RUNNER_TEMP/before-review"
+          git archive 740b510a9688c60e20af93179979dc83fe6b602f | tar -x -C "$RUNNER_TEMP/before-review"
+          cp tests/user1-independent-browser.acceptance.spec.mjs "$RUNNER_TEMP/before-review/tests/"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$RUNNER_TEMP/before-review/node_modules"
+          cd "$RUNNER_TEMP/before-review"
+          python3 -m http.server 4174 --bind 127.0.0.1 > "$RUNNER_TEMP/before-review-server.log" 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid || true' EXIT
+          for i in {1..30}; do
+            curl -fsS http://127.0.0.1:4174/system-build-current.html >/dev/null && break
+            sleep 1
+          done
+          set +e
+          STB_REVIEW_URL=http://127.0.0.1:4174 "$GITHUB_WORKSPACE/node_modules/.bin/playwright" test tests/user1-independent-browser.acceptance.spec.mjs --workers=1 > "$RUNNER_TEMP/review-before-browser.log" 2>&1
+          rc=$?
+          set -e
+          cat "$RUNNER_TEMP/review-before-browser.log"
+          test "$rc" -ne 0
+          grep -Fq "FAULT_TARGET_STORE_BINDING_MISSING" "$RUNNER_TEMP/review-before-browser.log"
+
+      - name: Audit Review failures by assertion/cause against the baseline
+        run: |
+          audit_dir () {
+            dir="$1"
+            out="$2"
+            : > "$out"
+            (
+              cd "$dir"
+              for test_file in tests/*.test.mjs; do
+                log="$RUNNER_TEMP/$(basename "$test_file").log"
+                if node "$test_file" > "$log" 2>&1; then
+                  echo "PASS $test_file"
+                else
+                  signature="$(grep -E -m1 'AssertionError|ERR_ASSERTION|Error:|not ok ' "$log" | sed -E 's/[[:space:]]+/ /g' || true)"
+                  if [ -z "$signature" ]; then
+                    signature="NO_ASSERTION_OR_ERROR_SIGNATURE"
+                  fi
+                  echo "FAIL $test_file :: $signature"
+                  printf '%s|%s\n' "$test_file" "$signature" >> "$out"
+                fi
+              done
+            )
+          }
+          git fetch origin 01df76657f878155c5a3e9d14e914001a9aa3c8c --depth=1
+          rm -rf "$RUNNER_TEMP/review-baseline"
+          mkdir -p "$RUNNER_TEMP/review-baseline"
+          git archive 01df76657f878155c5a3e9d14e914001a9aa3c8c | tar -x -C "$RUNNER_TEMP/review-baseline"
+          audit_dir "$RUNNER_TEMP/review-baseline" "$RUNNER_TEMP/baseline-failures.txt"
+          audit_dir "$GITHUB_WORKSPACE" "$RUNNER_TEMP/candidate-failures.txt"
+          echo "BASELINE FAILURE SIGNATURES"
+          cat "$RUNNER_TEMP/baseline-failures.txt"
+          echo "CANDIDATE FAILURE SIGNATURES"
+          cat "$RUNNER_TEMP/candidate-failures.txt"
+          comm -13 <(sort "$RUNNER_TEMP/baseline-failures.txt") <(sort "$RUNNER_TEMP/candidate-failures.txt") > "$RUNNER_TEMP/new-or-changed-failures.txt"
+          if [ -s "$RUNNER_TEMP/new-or-changed-failures.txt" ]; then
+            echo "NEW OR CHANGED FAILURE SIGNATURES"
+            cat "$RUNNER_TEMP/new-or-changed-failures.txt"
+            exit 1
+          fi
+
+  fault-detection:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout Review candidate
+        uses: actions/checkout@v4
+
+      - name: Checkout exact Store authority
+        uses: actions/checkout@v4
+        with:
+          repository: GeorgePlattDemo/scan-to-build-store
+          ref: 01f9c5580cea262bd898a9f2c1ac2cd89d02845f
+          path: store-zero
+
+      - name: Setup Node and browser
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.2'
+
+      - name: Install browser acceptance dependency
+        run: |
+          npm init -y >/dev/null
+          npm install --no-save @playwright/test@1.63.0 >/dev/null
+          npx playwright install --with-deps chromium
+
+      - name: Clean unmodified control run
+        run: |
+          node tools/generate-user1-store-browser-bundle.mjs --check stb-store-zero-user1.generated.js
+          STB_STORE_ZERO_ROOT="$GITHUB_WORKSPACE/store-zero" node tests/user1-generated-store-parity.test.mjs
+          python3 -m http.server 4173 --bind 127.0.0.1 > "$RUNNER_TEMP/fault-control-server.log" 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid || true' EXIT
+          for i in {1..30}; do
+            curl -fsS http://127.0.0.1:4173/system-build-current.html >/dev/null && break
+            sleep 1
+          done
+          npx playwright test tests/user1-independent-browser.acceptance.spec.mjs --workers=1
+
+      - name: Fault check — incorrect 46-degree SUPPORTABLE is detected specifically
+        run: |
+          rm -rf "$RUNNER_TEMP/fault-46"
+          mkdir -p "$RUNNER_TEMP/fault-46"
+          git archive HEAD | tar -x -C "$RUNNER_TEMP/fault-46"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$RUNNER_TEMP/fault-46/node_modules"
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          p=Path(os.environ["RUNNER_TEMP"])/"fault-46/stb-store-zero-user1.generated.js"
+          s=p.read_text()
+          old='maxDeg: 45,'
+          assert old in s
+          p.write_text(s.replace(old,'maxDeg: 89,',1))
+          PY
+          cd "$RUNNER_TEMP/fault-46"
+          set +e
+          STB_STORE_ZERO_ROOT="$GITHUB_WORKSPACE/store-zero" node tests/user1-generated-store-parity.test.mjs > "$RUNNER_TEMP/fault-46.log" 2>&1
+          rc=$?
+          set -e
+          cat "$RUNNER_TEMP/fault-46.log"
+          test "$rc" -ne 0
+          grep -Fq "FAULT_TARGET_46_DEGREE_MITER_REFUSAL" "$RUNNER_TEMP/fault-46.log"
+
+      - name: Fault check — unjustified intermediate blank is detected by name
+        run: |
+          rm -rf "$RUNNER_TEMP/fault-blank"
+          mkdir -p "$RUNNER_TEMP/fault-blank"
+          git archive HEAD | tar -x -C "$RUNNER_TEMP/fault-blank"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$RUNNER_TEMP/fault-blank/node_modules"
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          p=Path(os.environ["RUNNER_TEMP"])/"fault-blank/system-build-current.html"
+          s=p.read_text()
+          old="const selectedPlan = materialResolution.plan || null;"
+          assert old in s
+          new="const selectedPlan = materialResolution.plan ? {...materialResolution.plan, intermediateBlank:{lengthIn:60,reason:'UNJUSTIFIED_FAULT',source:null}} : null;"
+          p.write_text(s.replace(old,new,1))
+          PY
+          cd "$RUNNER_TEMP/fault-blank"
+          python3 -m http.server 4175 --bind 127.0.0.1 > "$RUNNER_TEMP/fault-blank-server.log" 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid || true' EXIT
+          sleep 2
+          set +e
+          STB_REVIEW_URL=http://127.0.0.1:4175 "$GITHUB_WORKSPACE/node_modules/.bin/playwright" test tests/user1-independent-browser.acceptance.spec.mjs --workers=1 > "$RUNNER_TEMP/fault-blank.log" 2>&1
+          rc=$?
+          set -e
+          cat "$RUNNER_TEMP/fault-blank.log"
+          test "$rc" -ne 0
+          grep -Fq "FAULT_TARGET_UNJUSTIFIED_BLANK_INSERTED" "$RUNNER_TEMP/fault-blank.log"
+
+      - name: Fault check — parent stock overwriting finished geometry is detected by name
+        run: |
+          rm -rf "$RUNNER_TEMP/fault-geometry"
+          mkdir -p "$RUNNER_TEMP/fault-geometry"
+          git archive HEAD | tar -x -C "$RUNNER_TEMP/fault-geometry"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$RUNNER_TEMP/fault-geometry/node_modules"
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          p=Path(os.environ["RUNNER_TEMP"])/"fault-geometry/stb-store-zero-user1.generated.js"
+          s=p.read_text()
+          old="lengthIn: finishedPartLengthIn,"
+          assert s.count(old) == 1
+          p.write_text(s.replace(old,"lengthIn: selected.parentLengthIn,",1))
+          PY
+          cd "$RUNNER_TEMP/fault-geometry"
+          python3 -m http.server 4176 --bind 127.0.0.1 > "$RUNNER_TEMP/fault-geometry-server.log" 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid || true' EXIT
+          sleep 2
+          set +e
+          STB_REVIEW_URL=http://127.0.0.1:4176 "$GITHUB_WORKSPACE/node_modules/.bin/playwright" test tests/user1-independent-browser.acceptance.spec.mjs --workers=1 > "$RUNNER_TEMP/fault-geometry.log" 2>&1
+          rc=$?
+          set -e
+          cat "$RUNNER_TEMP/fault-geometry.log"
+          test "$rc" -ne 0
+          grep -Fq "FAULT_TARGET_STOCK_LENGTH_OVERWRITES_FINISHED_GEOMETRY" "$RUNNER_TEMP/fault-geometry.log"
+
+      - name: Fault check — priced plan omitting a necessary saw operation is detected by name
+        run: |
+          rm -rf "$RUNNER_TEMP/fault-priced-op"
+          mkdir -p "$RUNNER_TEMP/fault-priced-op"
+          git archive HEAD | tar -x -C "$RUNNER_TEMP/fault-priced-op"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$RUNNER_TEMP/fault-priced-op/node_modules"
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          p=Path(os.environ["RUNNER_TEMP"])/"fault-priced-op/stb-store-zero-user1.generated.js"
+          s=p.read_text()
+          old="totalModeledSawCuts: productionSawCuts + preparationSawCuts,"
+          assert s.count(old) == 1
+          p.write_text(s.replace(old,"totalModeledSawCuts: productionSawCuts + preparationSawCuts - 1,",1))
+          PY
+          cd "$RUNNER_TEMP/fault-priced-op"
+          python3 -m http.server 4177 --bind 127.0.0.1 > "$RUNNER_TEMP/fault-priced-op-server.log" 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid || true' EXIT
+          sleep 2
+          set +e
+          STB_REVIEW_URL=http://127.0.0.1:4177 "$GITHUB_WORKSPACE/node_modules/.bin/playwright" test tests/user1-independent-browser.acceptance.spec.mjs --workers=1 > "$RUNNER_TEMP/fault-priced-op.log" 2>&1
+          rc=$?
+          set -e
+          cat "$RUNNER_TEMP/fault-priced-op.log"
+          test "$rc" -ne 0
+          grep -Fq "FAULT_TARGET_PRICED_PLAN_OMITS_NECESSARY_OPERATION" "$RUNNER_TEMP/fault-priced-op.log"
+
+      - name: Fault check — picture diverging from priced plan is detected by name
+        run: |
+          rm -rf "$RUNNER_TEMP/fault-picture"
+          mkdir -p "$RUNNER_TEMP/fault-picture"
+          git archive HEAD | tar -x -C "$RUNNER_TEMP/fault-picture"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$RUNNER_TEMP/fault-picture/node_modules"
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          p=Path(os.environ["RUNNER_TEMP"])/"fault-picture/system-build-current.html"
+          s=p.read_text()
+          old="const productionCuts = Number(plan?.accounting?.productionSawCuts);"
+          assert old in s
+          p.write_text(s.replace(old,"const productionCuts = Number(plan?.accounting?.productionSawCuts) + 1;",1))
+          PY
+          cd "$RUNNER_TEMP/fault-picture"
+          python3 -m http.server 4178 --bind 127.0.0.1 > "$RUNNER_TEMP/fault-picture-server.log" 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid || true' EXIT
+          sleep 2
+          set +e
+          STB_REVIEW_URL=http://127.0.0.1:4178 "$GITHUB_WORKSPACE/node_modules/.bin/playwright" test tests/user1-independent-browser.acceptance.spec.mjs --workers=1 > "$RUNNER_TEMP/fault-picture.log" 2>&1
+          rc=$?
+          set -e
+          cat "$RUNNER_TEMP/fault-picture.log"
+          test "$rc" -ne 0
+          grep -Fq "FAULT_TARGET_PICTURE_PRICED_PLAN_MISMATCH" "$RUNNER_TEMP/fault-picture.log"
+
+      - name: Fault check — stale Store answer after a new revision is detected by name
+        run: |
+          rm -rf "$RUNNER_TEMP/fault-stale"
+          mkdir -p "$RUNNER_TEMP/fault-stale"
+          git archive HEAD | tar -x -C "$RUNNER_TEMP/fault-stale"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$RUNNER_TEMP/fault-stale/node_modules"
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          p=Path(os.environ["RUNNER_TEMP"])/"fault-stale/system-build-current.html"
+          s=p.read_text()
+          old="const markRevision = () => { definitionRevision += 1; };"
+          assert old in s
+          p.write_text(s.replace(old,"const markRevision = () => {};",1))
+          PY
+          cd "$RUNNER_TEMP/fault-stale"
+          python3 -m http.server 4179 --bind 127.0.0.1 > "$RUNNER_TEMP/fault-stale-server.log" 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid || true' EXIT
+          sleep 2
+          set +e
+          STB_REVIEW_URL=http://127.0.0.1:4179 "$GITHUB_WORKSPACE/node_modules/.bin/playwright" test tests/user1-independent-browser.acceptance.spec.mjs --workers=1 > "$RUNNER_TEMP/fault-stale.log" 2>&1
+          rc=$?
+          set -e
+          cat "$RUNNER_TEMP/fault-stale.log"
+          test "$rc" -ne 0
+          grep -Fq "FAULT_TARGET_STALE_ANSWER_ON_NEW_REVISION" "$RUNNER_TEMP/fault-stale.log"

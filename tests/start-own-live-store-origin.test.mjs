@@ -5,176 +5,121 @@ import assert from 'node:assert/strict';
 const read = path => fs.readFileSync(path,'utf8');
 const surface = read('three-frames.html');
 const shell = read('system-build-current.html');
+const generatedStoreSource = read('stb-store-zero-user1.generated.js');
 const contractSource = read('stb-store-handoff-contract.js');
 
-// Landing remains the simple Scan-to-Build entry / intent surface.
 assert.match(surface,/id="stb-start-intent-screen"/);
 assert.match(surface,/Start your own project/);
-for(const label of ['1×6 pine','1×6 poplar','1×6 cherry','1×8 oak','2×4 stud','¾ plywood']){
-  assert.ok(surface.includes(label),'missing landing material choice '+label);
-}
-for(const key of ['1x6p','1x6w','1x6c','1x8o','2x4','p75']){
-  assert.match(surface,new RegExp('data-store-size-key="'+key+'"'),'missing Store glossary key '+key);
-}
-assert.match(surface,/These material choices are checked against the current Store/);
 assert.match(surface,/Grab a board from the Store and tell us what you want done to it/);
-assert.match(surface,/2 parts/);
-assert.match(surface,/16 in each/);
-assert.match(surface,/30° ends/);
-assert.match(surface,/center spot/);
-assert.match(surface,/Center spot = 16 ÷ 2 = 8 in/);
-assert.match(surface,/TAKE THIS 2×4 TO THE BENCH →/);
-assert.equal(surface.includes('<p>2×6 stud</p>'),false);
-assert.equal(surface.includes('<p>2×8 stud</p>'),false);
-assert.equal(surface.includes('FRAME 1 · THE WARM INTRO'),false);
-assert.equal(surface.includes('>USER 1 INTENT<'),false);
-assert.equal(surface.includes('PREVIEW — the three frames'),false);
-
-// Bench is a separate, full project-working surface.
 assert.match(surface,/id="stb-start-bench-screen" hidden/);
-assert.match(surface,/id="stb-bench-back">← Back/);
-assert.match(surface,/id="stb-bench-library">← PROJECT LIBRARY/);
-assert.match(surface,/Make it yours/);
-assert.match(surface,/id="stb-bench-intent-slot"/);
-assert.match(surface,/THE SAME BOARD, ON THE BENCH/);
-assert.match(surface,/2×4 · 60 in/,'60-in defined workpiece changed');
-assert.match(surface,/27⅝ in remains/,'60-in retained math changed');
-assert.match(surface,/3⅝ in spare/,'60-in spare math changed');
-assert.match(surface,/id="stb-bench-controls"/);
-assert.match(surface,/Change of plans\?/);
 assert.match(surface,/id="stb-config-length"[^>]*value="16"/);
-assert.match(surface,/id="stb-config-angle"[^>]*value="30"/);
-assert.match(surface,/data-parts="1"/);
+assert.match(surface,/id="stb-config-angle"[^>]*max="89"[^>]*value="30"/);
 assert.match(surface,/data-parts="2"/);
-assert.equal(surface.includes('data-parts="3"'),false,'quantity control escaped the bounded X-brace proof');
-assert.match(surface,/RESULTING DEFINITION \/ REFERENCE ORDER — USER 1/);
-assert.match(surface,/MATERIAL REQUIRED/);
-assert.match(surface,/REFERENCE CALCULATED PRICE/);
-assert.match(surface,/STORE \/ PRICE BASIS/);
-assert.match(surface,/id="stb-basis-unit-price"/);
-assert.match(surface,/id="stb-basis-cell-family"/);
-assert.match(surface,/id="stb-basis-supported-ops"/);
-assert.match(surface,/Before you send it/);
-assert.match(surface,/CONFIRM &amp; SEND TO STORE ZERO →/);
-assert.match(surface,/id="stb-bench-dynamic-geometry"/);
+assert.match(surface,/data-parts="4"/);
+assert.match(surface,/data-angle="46"/);
+assert.match(surface,/Store-selected parent/);
+assert.match(surface,/long-long outer edge/);
+assert.equal(/supplied[- ]board|owner[- ]owned|board in the truck/i.test(surface),false);
 
-// Host carries one definition through intent, bench, Store, Terms and record.
-assert.match(shell,/three-frames\.html\?v=305b7484/);
-assert.match(shell,/const definedWorkpieceLengthIn = 60;/);
-assert.match(shell,/parentLengthIn:definedWorkpieceLengthIn/);
-assert.match(shell,/materialSource:'STORE_ZERO'/);
-assert.match(shell,/sequenceDefinedWorkpiece/);
-assert.equal(shell.includes('preparationSawCuts'),false,'phantom Store preparation cut returned');
-assert.match(shell,/const drillCycles = 0/);
-assert.equal(shell.includes('previewFromDemand'),false,'active Start Own still invokes legacy Store preview authority');
-assert.match(shell,/const spotDemand =/);
-assert.match(shell,/physicalDemand\.spotDemand = spotDemand/);
-assert.match(shell,/formula:'finishedLengthIn \/ 2'/);
-assert.match(shell,/renderBoardGeometry\(definition\)/);
-assert.match(shell,/showStartOwnStage\('intent'\)/);
-assert.match(shell,/showStartOwnStage\('bench'\)/);
-assert.match(shell,/definitionId:'SYO-USER1-XBRACE-0\.1'/);
+assert.match(shell,/three-frames\.html/);
+assert.match(shell,/materialSource:'STORE_SELECTED'/);
+assert.match(shell,/finishedPartLengthIn:finishedLengthIn/);
+assert.match(shell,/quantity:partQty/);
+assert.match(shell,/operationPlan:selectedPlan/);
+assert.match(shell,/operationPlan:selectedPlan/);
+assert.match(shell,/finishedPartDemand:\{lengthIn:definition\.lineage\.finishedPartLengthIn,quantity:definition\.lineage\.finishedPartQuantity\}/);
+assert.equal(shell.includes('const definedWorkpieceLengthIn = 60;'),false);
+assert.equal(shell.includes('parentLengthIn:definedWorkpieceLengthIn'),false);
+assert.equal(shell.includes('sequenceDefinedWorkpiece({'),false);
+assert.equal(shell.includes("materialSource:'STORE_ZERO'"),false);
+assert.equal(shell.includes('54.29'),false);
+assert.equal(shell.includes('54.82'),false);
 assert.match(shell,/originalShow\.call\(win,'proof-store'\)/);
 assert.match(shell,/ensureProjectJourneyPage\('proof-terms'/);
-assert.match(shell,/terms:'proof-terms'/);
-assert.match(shell,/target==='proof-record' && go\.closest\('#proof-yard'\)\) target='proof-terms'/);
-assert.match(shell,/setTimeout\(\(\) => showStartOwnStage\('bench'\),0\)/);
-assert.match(shell,/STORE BUDGETARY Q<\/b><span id="proof-store-q"/);
 assert.match(shell,/PAYMENT<\/b><span>NOT AVAILABLE \/ NOT RECORDED/);
-assert.equal(shell.includes('START-OWN-CLASS-SCOPED-RECOVERY-NOT-PUBLISHED'),false);
-assert.equal(shell.includes('60-in customer board'),false);
-assert.equal(shell.includes('photo, board, or file you already have'),false);
-assert.equal(shell.includes('parentLengthIn = 72'),false);
+assert.match(shell,/CYCLE START<\/b><span>NOT AUTHORIZED/);
 
-// Shared contract begins at the frozen 60-in workpiece and preserves the resolved 3/16 spot meaning.
 const sandbox = {window:{}};
+vm.runInNewContext(generatedStoreSource,sandbox,{filename:'stb-store-zero-user1.generated.js'});
 vm.runInNewContext(contractSource,sandbox,{filename:'stb-store-handoff-contract.js'});
-const contract = sandbox.window.STBStoreHandoffContract;
-assert.equal(contract.version,'0.7');
-assert.equal(typeof contract.quoteStartOwnBoardSequence,'function');
-assert.equal(typeof contract.sequenceDefinedWorkpiece,'function');
+const runtime=sandbox.window.STBStoreZeroUser1;
+const contract=sandbox.window.STBStoreHandoffContract;
+assert.ok(runtime);
+assert.equal(runtime.storePin,'01f9c5580cea262bd898a9f2c1ac2cd89d02845f');
+assert.equal(contract.storeAuthority('startOwn').materialCatalogPin,runtime.storePin);
+assert.equal(contract.storeAuthority('startOwn').capabilityPin,runtime.storePin);
+assert.equal(contract.storeAuthority('startOwn').economicsPin,runtime.storePin);
+assert.equal(contract.storeAuthority('startOwn').economicsVersion,'0.3.0');
 
-const lineage = contract.sequenceDefinedWorkpiece({
-  definedWorkpieceLengthIn:60,
-  parts:[16,16],
-  establishAngledEnd:true
-});
-assert.equal(lineage.status,'SEQUENCED');
-assert.equal(lineage.rawStockLengthIn,undefined);
-assert.equal(lineage.preparation,undefined);
-assert.equal(lineage.definedWorkpieceLengthIn,60);
-assert.equal(lineage.production.length,3);
-assert.equal(lineage.production[0].kind,'ESTABLISH_ANGLE');
-assert.equal(lineage.finalRemainderIn,27.625);
-assert.equal(lineage.holdIn,24);
-assert.equal(lineage.finalRemainderIn-lineage.holdIn,3.625);
-
-const startQuote = contract.quoteStartOwnBoardSequence({
-  material:3.13,
-  definedWorkpieceLengthIn:60,
-  sawCuts:3,
+const base={
+  definitionVersionId:'STATIC-BASE',
+  materialDemand:{species:'spf',form:'board',nominalT:2,nominalW:4},
+  finishedPartLengthIn:16,
+  quantity:2,
   sawAngleDeg:30,
   drillCycles:0,
-  spotCycles:2,
-  unresolvedConditions:[],
-  widthIn:3.5
-});
-assert.equal(startQuote.status,'BUDGETARY_ESTIMATE');
-assert.equal(startQuote.complete,true);
-assert.equal(startQuote.completeness,'COMPLETE_FOR_ENCODED_DEMAND');
-assert.equal(startQuote.material,3.13);
-assert.equal(startQuote.cellRecovery,51.69);
-assert.equal(startQuote.total,54.82);
-assert.equal(startQuote.cycle.T_job_min,10.014);
-assert.equal(startQuote.operationBasis.preparationSawCuts,undefined);
-assert.equal(startQuote.operationBasis.productionSawCuts,3);
-assert.equal(startQuote.operationBasis.totalModeledSawCuts,3);
-assert.equal(startQuote.operationBasis.drillCycles,0);
-assert.equal(startQuote.operationBasis.spotCycles,2);
-assert.equal(startQuote.operationBasis.spotToolDiameterIn,0.1875);
-assert.equal(startQuote.engine.id,'STB-STORE-ZERO-PRICE-1');
-assert.equal(startQuote.engine.version,'0.2.3');
-assert.equal(startQuote.source.pin,'ab8a4c5d470c310f27fef82683611622ab976168');
-
-const legacyPart = {
-  stockClass:'2x4',finishedLength:15.5,quantity:8,endCondition:'angled',straightCut:true,
-  angleDegrees:10,angleReference:'source-stated',cutPlane:'bevel-thickness',
-  endIdentity:'both',endRelation:'parallel',lengthDatum:'source-length'
+  drillDepthIn:null,
+  requiredOps:['MITER_LIMITED'],
+  cutPlane:'miter-face',
+  endIdentity:'both',
+  endRelation:'parallel',
+  lengthDatum:'long-long-outer-edge',
+  spotDemand:null,
+  unresolvedConditions:[]
 };
-const legacyStart = contract.createComparisonHandoff({
-  projectId:'start-own',projectClass:'USER_DEFINED_BOARD',definitionId:'SYO-TEST',
-  physicalDemand:legacyPart,sourceAuthority:{kind:'USER-DEFINED'}
-});
-const legacyOutdoor = contract.createComparisonHandoff({
-  projectId:'outdoor-build',projectClass:'BOUNDED_SOURCE_BACKED',definitionId:'OB-SAW-TEST',
-  physicalDemand:legacyPart,sourceAuthority:{kind:'BOUNDED SOURCE-BACKED'}
-});
-assert.equal(contract.sameStoreDemand(legacyStart,legacyOutdoor),true);
+const off=runtime.evaluate(base);
+assert.equal(off.rawEvaluation.status,'SUPPORTABLE');
+assert.equal(off.materialResolution.pricingReferenceSku,'STB-ZERO-SPF-2X4-72-001');
+assert.equal(off.materialResolution.pricingReferenceStockLengthIn,72);
+assert.equal(off.materialResolution.parentCount,1);
+assert.equal(off.materialResolution.finishedPartLengthIn,16);
+assert.equal(off.materialResolution.finishedPartQuantity,2);
+assert.equal(off.materialResolution.plan.intermediateBlank,null);
+assert.equal(off.materialResolution.plan.accounting.productionSawCuts,3);
+assert.equal(off.materialResolution.plan.accounting.preparationSawCuts,0);
+assert.equal(off.materialResolution.plan.parents[0].remainderIn,39.625);
+assert.equal(off.rawEstimate.status,'BUDGETARY_ESTIMATE');
+assert.equal(off.rawEstimate.totals.material,3.13);
+assert.equal(off.rawEstimate.totals.cell_recovery,51.14);
+assert.equal(off.rawEstimate.totals.Q,54.27);
+assert.equal(off.rawEstimate.cycle.T_job_min,9.686);
 
-const defined = {
-  stockClass:'2x4',parentLengthIn:60,finishedLength:16,quantity:2,endCondition:'angled',straightCut:false,
-  angleDegrees:30,angleReference:'USER_1_INTENT_IMAGE',cutPlane:'miter-face',
-  endIdentity:'both',endRelation:'parallel',lengthDatum:'long-long-outer-edge',
-  spotDemand:{
-    required:true,mode:'SPOT_ON_LOCATION',countPerPart:1,locationRule:'CENTERED_ON_PART',
-    locationAlongLengthIn:8,acrossWidthRule:'CENTERED_ON_WIDE_FACE',totalCount:2,
-    derivation:{basis:'DERIVED',formula:'finishedLengthIn / 2',input:{finishedLengthIn:16},output:{locationAlongLengthIn:8}}
-  }
+const spotDemand={
+  required:true,mode:'SPOT_ON_LOCATION',countPerPart:1,totalCount:2,
+  locationRule:'CENTERED_ON_PART',locationAlongLengthIn:8,acrossWidthRule:'CENTERED_ON_WIDE_FACE'
 };
-const handoff = contract.createComparisonHandoff({
-  projectId:'start-own',projectClass:'USER_DEFINED_BOARD',definitionId:'SYO-USER1-XBRACE-0.1',
-  physicalDemand:defined,unresolvedConditions:[]
+const on=runtime.evaluate({...base,definitionVersionId:'STATIC-SPOT',spotDemand});
+assert.equal(on.rawEvaluation.status,'UNRESOLVED');
+assert.equal(on.materialResolution.pricingReferenceSku,off.materialResolution.pricingReferenceSku);
+assert.equal(on.materialResolution.plan.parents[0].remainderIn,off.materialResolution.plan.parents[0].remainderIn);
+assert.equal(on.rawEstimate.status,'PARTIAL_BUDGETARY_ESTIMATE');
+assert.equal(on.rawEstimate.totals.material,3.13);
+assert.equal(on.rawEstimate.totals.cell_recovery,51.14);
+assert.equal(on.rawEstimate.totals.Q,54.27);
+assert.ok(on.priceCompleteness.unresolvedConditions.includes('SPOT_TOOL_POINT_GEOMETRY_REQUIRED'));
+assert.ok(on.priceCompleteness.unresolvedConditions.includes('SPOT_CYCLE_TIME_APPLICABILITY_UNRESOLVED'));
+
+const quote=contract.quoteStartOwnBoardSequence({
+  definitionVersionId:'CONTRACT-BASE',
+  finishedPartLengthIn:16,
+  quantity:2,
+  sawAngleDeg:30,
+  spotDemand:null
 });
-assert.equal(handoff.requiredGeometryDatumFacts.parentLengthIn,60);
-const spot = handoff.operationDemand.find(op => op.kind==='SPOT_ON_LOCATION');
-assert.ok(spot);
-assert.equal(spot.countPerPart,1);
-assert.equal(spot.locationAlongLengthIn,8);
-assert.equal(spot.derivation.formula,'finishedLengthIn / 2');
-assert.equal(spot.totalCount,2);
-assert.equal(handoff.operationDemand.some(op => op.kind==='DRILL'),false,'spot was silently converted into a drill operation');
-assert.equal(handoff.authority.physicalFabrication,false);
+assert.equal(quote.total,54.27);
+assert.equal(quote.complete,true);
+assert.equal(quote.operationBasis.finishedPartLengthIn,16);
+assert.equal(quote.operationBasis.quantity,2);
+assert.equal(quote.operationBasis.selectedParentLengthIn,72);
+assert.equal(quote.operationBasis.productionSawCuts,3);
+assert.equal(quote.operationBasis.preparationSawCuts,0);
+assert.equal(quote.plan.parents[0].remainderIn,39.625);
+assert.equal(quote.source.pin,runtime.storePin);
 
+const refused=runtime.evaluate({...base,definitionVersionId:'STATIC-46',sawAngleDeg:46});
+assert.equal(refused.rawEvaluation.status,'REFUSED');
+assert.ok(refused.refusalConditions.includes('MITER_ANGLE_OUTSIDE_D001_STAGE2_ENVELOPE'));
+assert.equal(refused.materialResolution.finishedPartLengthIn,16);
+assert.equal(refused.rawEstimate,null);
 
-
-console.log('PASS · Start Your Own intent → bench → Store → terms preserves one 60-in definition and resolved 3/16 spot meaning');
+console.log('PASS · Start Your Own carries finished-member demand to Store-selected stock without a parent-length seed');

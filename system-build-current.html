@@ -13,7 +13,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 <body>
 <iframe id="stb-current" title="Scan-to-Build System" src="system-build-front-door-0.5.html?v=5ac9677b"></iframe>
 <script src="stb-canonical-journey.js?v=e0619841"></script>
-<script src="stb-store-handoff-contract.js?v=121e67b5"></script>
+<script src="stb-store-zero-user1.generated.js?v=655ea95d"></script>
+<script src="stb-store-zero-s001.generated.js?v=f980dfb4"></script>
+<script src="stb-store-handoff-contract.js?v=7e478476"></script>
 <script src="stb-user-defined-board-store.js?v=1c99c380"></script>
 <script src="store-zero-canonical-doctrine.js?v=65366367"></script>
 <script>
@@ -161,7 +163,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   id="start-own-proof-frame"
                   class="start-own-shell-frame"
                   title="Start Your Own · User 1 · definition to doing"
-                  src="three-frames.html?v=305b7484"
+                  src="three-frames.html?v=4318d327"
                 ></iframe>
               </div>
             `;
@@ -170,7 +172,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
           const liveFrame = startOwnPage.querySelector('#start-own-proof-frame');
           if (liveFrame && !String(liveFrame.getAttribute('src')||'').includes('three-frames.html')) {
-            liveFrame.src = 'three-frames.html?v=305b7484';
+            liveFrame.src = 'three-frames.html?v=4318d327';
           }
           const banner = startOwnPage.querySelector('[data-proof-job="1"]');
           if (banner && /generic floor/.test(banner.textContent||'')) {
@@ -228,7 +230,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
               if (storeLine) {
                 if (ref?.materialResolution?.status === 'MAPPED' && ref?.estimate) {
                   storeLine.textContent =
-                    'Store: current ab8a4c5d Stage-2 answer retained · 60-in project workpiece · '
+                    'Store: current '+String(ref.storePin || 'UNAVAILABLE').slice(0,12)+'… Stage-2 answer retained · Store-selected parent '+String(ref.materialResolution?.pricingReferenceStockLengthIn || 'UNRESOLVED')+' in · '
                     +(ref.priceCompleteness === 'PARTIAL'
                       ? 'modeled value is partial while named conditions remain.'
                       : 'budgetary estimate available.');
@@ -320,6 +322,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
               const glossaryChoices = Array.from(childDoc.querySelectorAll('[data-store-size-key]'));
               const startOwnAuthority = storeHandoffContract?.storeAuthorities?.startOwn || null;
               const catalogSource = storeHandoffContract?.startOwnStoreCatalog || null;
+              const user1StoreRuntime = window.STBStoreZeroUser1 || null;
               let definitionRevision = 1;
               let partQty = 2;
               let spotMode = 'centered';
@@ -343,26 +346,40 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   button.classList.toggle('on',String(button.getAttribute(attr))===String(value));
                 });
               };
+              const storeOfferingsForSize = sizeKey => {
+                if (!user1StoreRuntime || !Array.isArray(user1StoreRuntime.offerings)) return [];
+                const match = String(sizeKey || '').match(/^(\d+)x(\d+)$/);
+                if (!match) return [];
+                const nominalT = Number(match[1]);
+                const nominalW = Number(match[2]);
+                return user1StoreRuntime.offerings.filter(item =>
+                  item &&
+                  item.offered === true &&
+                  item.form === 'board' &&
+                  Number(item.nominalT) === nominalT &&
+                  Number(item.nominalW) === nominalW
+                );
+              };
               const syncStoreGlossary = () => {
-                if (!storeHandoffContract || typeof storeHandoffContract.startOwnOfferings !== 'function') {
-                  if (glossaryStatus) glossaryStatus.textContent = 'Current Store material truth is unavailable. No material choice is being promoted.';
+                if (!user1StoreRuntime || typeof user1StoreRuntime.evaluate !== 'function') {
+                  if (glossaryStatus) glossaryStatus.textContent = 'Current Store reference runtime is unavailable. No material choice is being promoted.';
                   if (benchButton) benchButton.disabled = true;
                   return false;
                 }
                 let backed = 0;
                 glossaryChoices.forEach(choice => {
                   const sizeKey = String(choice.dataset.storeSizeKey || '');
-                  const offerings = storeHandoffContract.startOwnOfferings(sizeKey);
-                  const available = Array.isArray(offerings) && offerings.length > 0;
+                  const offerings = storeOfferingsForSize(sizeKey);
+                  const available = offerings.length > 0;
                   choice.dataset.storeBacked = available ? 'true' : 'false';
-                  choice.dataset.storeCatalogPin = String(catalogSource?.pin || '');
-                  choice.dataset.storeOfferingCount = String(offerings?.length || 0);
+                  choice.dataset.storeCatalogPin = String(user1StoreRuntime.storePin || '');
+                  choice.dataset.storeOfferingCount = String(offerings.length);
                   choice.hidden = !available;
                   if (available) backed += 1;
                 });
                 if (glossaryStatus) {
                   glossaryStatus.textContent = backed === glossaryChoices.length
-                    ? 'These material choices come from the current Store catalog.'
+                    ? 'These material choices come from the current pinned Store reference.'
                     : backed+' current Store material choices are available here.';
                 }
                 return true;
@@ -392,31 +409,22 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
               const syncDefinition = reason => {
                 const finishedLengthIn = Number(lengthInput?.value);
                 const angleDeg = Number(angleInput?.value);
-                const definedWorkpieceLengthIn = 60;
                 if (
-                  !storeHandoffContract ||
-                  typeof storeHandoffContract.sequenceDefinedWorkpiece !== 'function' ||
+                  !user1StoreRuntime ||
+                  typeof user1StoreRuntime.evaluate !== 'function' ||
                   !Number.isFinite(finishedLengthIn) ||
                   finishedLengthIn <= 0 ||
                   !Number.isFinite(angleDeg) ||
-                  angleDeg < 0
+                  angleDeg < 0 ||
+                  angleDeg >= 90 ||
+                  !Number.isInteger(partQty) ||
+                  partQty < 1
                 ) {
                   currentUser1Definition = null;
                   return null;
                 }
 
-                const offerings = storeHandoffContract.startOwnOfferings('2x4');
-                if (!Array.isArray(offerings) || !offerings.length) {
-                  currentUser1Definition = null;
-                  return null;
-                }
-
                 const centerSpotIn = Number((finishedLengthIn / 2).toFixed(6));
-                const storeMaterialResolution = storeHandoffContract.resolveStartOwnMaterial({
-                  sizeKey:'2x4',
-                  sequence:'CROSSCUT_HOLD',
-                  parts:[{name:'x-brace',len:finishedLengthIn,wid:3.5,qty:partQty}]
-                });
                 const spotDemand = spotMode === 'centered' ? {
                   required:true,
                   mode:'SPOT_ON_LOCATION',
@@ -433,11 +441,12 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   }
                 } : null;
 
+                const requiredOps = [angleDeg === 0 ? 'CROSSCUT' : 'MITER_LIMITED'];
+                const versionId = 'SYO-USER1-XBRACE-0.2-v'+definitionRevision;
                 const physicalDemand = {
                   stockClass:'2x4',
-                  materialSource:'STORE_ZERO',
-                  parentLengthIn:definedWorkpieceLengthIn,
-                  definedWorkpieceLengthIn:definedWorkpieceLengthIn,
+                  materialSource:'STORE_SELECTED',
+                  finishedPartLengthIn:finishedLengthIn,
                   finishedLength:finishedLengthIn,
                   quantity:partQty,
                   endCondition:angleDeg ? 'angled' : 'square',
@@ -451,79 +460,113 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 };
                 if (spotDemand) physicalDemand.spotDemand = spotDemand;
 
-                const workpieceSequence = storeHandoffContract.sequenceDefinedWorkpiece({
-                  definedWorkpieceLengthIn:definedWorkpieceLengthIn,
-                  parts:Array.from({length:partQty}, () => finishedLengthIn),
-                  establishAngledEnd:angleDeg !== 0
-                });
-
-                const unresolved = [];
-                const refusals = [];
-                if (angleDeg > 45) {
-                  refusals.push('MITER_ANGLE_OUTSIDE_D001_STAGE2_ENVELOPE');
+                const authoritativeRequest = {
+                  definitionVersionId:versionId,
+                  materialDemand:{species:'spf',form:'board',nominalT:2,nominalW:4},
+                  finishedPartLengthIn:finishedLengthIn,
+                  quantity:partQty,
+                  sawAngleDeg:angleDeg,
+                  drillCycles:0,
+                  drillDepthIn:null,
+                  requiredOps:requiredOps,
+                  cutPlane:'miter-face',
+                  endIdentity:'both',
+                  endRelation:'parallel',
+                  lengthDatum:'long-long-outer-edge',
+                  spotDemand:spotDemand,
+                  unresolvedConditions:[]
+                };
+                const storeAnswer = user1StoreRuntime.evaluate(authoritativeRequest);
+                if (!storeAnswer || storeAnswer.definitionVersionId !== versionId) {
+                  currentUser1Definition = null;
+                  return null;
                 }
-                if (workpieceSequence.status !== 'SEQUENCED') {
-                  unresolved.push(workpieceSequence.code || 'DEFINED_60_IN_WORKPIECE_SEQUENCE_UNRESOLVED');
-                }
 
-                const productionSawCuts = angleDeg !== 0 ? partQty + 1 : partQty;
-                const drillCycles = 0;
-                const spotCycles = spotDemand ? partQty : 0;
-                const requiredOps = [];
-                if (productionSawCuts > 0 && angleDeg === 0) requiredOps.push('CROSSCUT');
-                if (angleDeg !== 0) requiredOps.push('MITER_LIMITED');
-
-                const storeEstimate =
-                  refusals.length === 0 &&
-                  storeMaterialResolution?.status === 'MAPPED' &&
-                  typeof storeHandoffContract.quoteStartOwnBoardSequence === 'function'
-                    ? storeHandoffContract.quoteStartOwnBoardSequence({
-                        material:storeMaterialResolution.materialTotal,
-                        definedWorkpieceLengthIn:definedWorkpieceLengthIn,
-                        sawCuts:productionSawCuts,
-                        sawAngleDeg:angleDeg,
-                        drillCycles:drillCycles,
-                        spotCycles:spotCycles,
-                        unresolvedConditions:unresolved,
-                        widthIn:3.5
-                      })
-                    : null;
-
-                if (!storeEstimate && refusals.length === 0) {
-                  unresolved.push('STORE_ZERO_BUDGETARY_ESTIMATE_UNAVAILABLE');
-                }
+                const materialResolution = storeAnswer.materialResolution || {
+                  status:'UNRESOLVED',
+                  unresolvedConditions:['STORE_MATERIAL_RESPONSE_MISSING']
+                };
+                const selectedPlan = materialResolution.plan || null;
+                const storeUnresolved = Array.isArray(storeAnswer.priceCompleteness?.unresolvedConditions)
+                  ? storeAnswer.priceCompleteness.unresolvedConditions.slice()
+                  : [];
+                const storeRefusals = Array.isArray(storeAnswer.refusalConditions)
+                  ? storeAnswer.refusalConditions.slice()
+                  : [];
+                const capabilityStatus =
+                  storeAnswer.rawEvaluation?.status ||
+                  materialResolution.status ||
+                  'UNRESOLVED';
+                const estimateRaw = storeAnswer.rawEstimate || null;
+                const estimateRequest = storeAnswer.mappedCallInputs?.estimate || null;
+                const storeSpotOperation = storeAnswer.mappedCallInputs?.definition?.spotOperation || null;
+                const storeEstimate = estimateRaw ? {
+                  status:estimateRaw.status,
+                  complete:storeAnswer.priceCompleteness?.status === 'COMPLETE_FOR_ENCODED_DEMAND',
+                  completeness:storeAnswer.priceCompleteness?.status || 'UNAVAILABLE',
+                  unresolvedConditions:storeUnresolved.slice(),
+                  material:estimateRaw.totals?.material ?? null,
+                  cellRecovery:estimateRaw.totals?.cell_recovery ?? null,
+                  total:estimateRaw.totals?.Q ?? null,
+                  cycle:estimateRaw.cycle || null,
+                  operationAccounting:estimateRaw.operationAccounting || null,
+                  operationBasis:estimateRequest ? {
+                    planId:selectedPlan?.planId || null,
+                    selectedParentSku:selectedPlan?.selected?.storeSku || null,
+                    selectedParentLengthIn:selectedPlan?.selected?.parentStockLengthIn ?? null,
+                    parentCount:selectedPlan?.selected?.parentCount ?? null,
+                    productionSawCuts:selectedPlan?.accounting?.productionSawCuts ?? null,
+                    preparationSawCuts:selectedPlan?.accounting?.preparationSawCuts ?? null,
+                    totalModeledSawCuts:selectedPlan?.accounting?.totalModeledSawCuts ?? null,
+                    sawAngleDeg:angleDeg,
+                    spotCycles:estimateRequest.spotCycles ?? 0,
+                    spotOperation:storeSpotOperation
+                  } : null,
+                  engine:storeAnswer.attributedBasis?.pricingEngine || null,
+                  source:{
+                    repository:'GeorgePlattDemo/scan-to-build-store',
+                    pin:storeAnswer.storePin || user1StoreRuntime.storePin || null,
+                    generatedArtifact:'stb-store-zero-user1.generated.js',
+                    sourceBlobs:storeAnswer.sourceBlobs || user1StoreRuntime.sourceBlobs || null
+                  },
+                  notClaimed:['commercial quote','seller-of-record','physical fabrication','live motion','physical stock allocation']
+                } : null;
 
                 const capability = {
-                  status:refusals.length ? 'REFUSED' : (unresolved.length ? 'UNRESOLVED' : 'SUPPORTABLE'),
-                  basis:startOwnAuthority?.capabilityBasis || 'D001-STAGE2-ENVELOPE-0.3',
-                  storePin:startOwnAuthority?.capabilityPin || catalogSource?.pin || null,
-                  requiredOps:requiredOps,
-                  refusalConditions:Array.from(new Set(refusals)),
-                  unresolvedConditions:Array.from(new Set(unresolved))
+                  status:capabilityStatus,
+                  basis:storeAnswer.attributedBasis?.envelope?.id || 'STORE_RETURNED',
+                  storePin:storeAnswer.storePin || user1StoreRuntime.storePin || null,
+                  requiredOps:requiredOps.slice(),
+                  refusalConditions:storeRefusals,
+                  unresolvedConditions:storeUnresolved,
+                  authority:'STORE_RETURNED'
                 };
 
                 currentUser1Definition = {
-                  definitionId:'SYO-USER1-XBRACE-0.1',
-                  versionId:'SYO-USER1-XBRACE-0.1-v'+definitionRevision,
+                  definitionId:'SYO-USER1-XBRACE-0.2',
+                  versionId:versionId,
                   material:{
                     origin:'STORE_ZERO',
+                    materialSource:'STORE_SELECTED',
                     stockClass:'2x4',
                     stockClassAuthority:{
-                      repository:catalogSource?.repository || null,
-                      file:catalogSource?.file || null,
-                      pin:catalogSource?.pin || null,
-                      clock:catalogSource?.clock || null
+                      repository:'GeorgePlattDemo/scan-to-build-store',
+                      file:'store-zero-catalog.json',
+                      pin:storeAnswer.storePin || user1StoreRuntime.storePin || null,
+                      clock:materialResolution.source?.clock || null
                     },
-                    procurement:storeMaterialResolution?.status === 'MAPPED' ? {
-                      pricingReferenceSku:storeMaterialResolution.storeSku,
-                      pricingReferenceStockLengthIn:storeMaterialResolution.stockLengthIn,
-                      quantity:storeMaterialResolution.quantity,
-                      unitPrice:storeMaterialResolution.unitPrice,
-                      materialTotal:storeMaterialResolution.materialTotal,
-                      allocationClaimed:false
+                    procurement:(materialResolution.pricingReferenceSku || materialResolution.storeSku) ? {
+                      pricingReferenceSku:materialResolution.pricingReferenceSku || materialResolution.storeSku || null,
+                      pricingReferenceStockLengthIn:materialResolution.pricingReferenceStockLengthIn || materialResolution.stockLengthIn || null,
+                      parentCount:materialResolution.parentCount ?? null,
+                      unitPrice:materialResolution.unitPrice ?? null,
+                      materialTotal:materialResolution.materialTotal ?? null,
+                      allocationClaimed:false,
+                      capabilityStatus:materialResolution.status || 'UNRESOLVED',
+                      selectionPolicy:materialResolution.selectionPolicy || null
                     } : null,
-                    definedWorkpieceLengthIn:{value:definedWorkpieceLengthIn,basis:'EXISTING_PROJECT_FACT'},
-                    mappedStoreSkus:offerings.map(row => row.storeSku)
+                    intermediateBlank:selectedPlan?.intermediateBlank || null,
+                    mappedStoreSkus:storeOfferingsForSize('2x4').map(row => row.storeSku)
                   },
                   intent:{
                     partQty:{value:partQty,basis:definitionRevision===1?'USER_1_INTENT_IMAGE':'CUSTOMER_INPUT'},
@@ -541,26 +584,34 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                     } : null
                   },
                   physicalDemand:physicalDemand,
-                  workpieceSequence:workpieceSequence,
+                  operationPlan:selectedPlan,
+                  definitionUnresolvedConditions:[],
                   capability:capability,
                   storeReference:{
-                    capabilityStatus:capability.status,
-                    economicsStatus:storeEstimate?.status || 'UNRESOLVED',
-                    priceCompleteness:storeEstimate?.completeness || 'UNAVAILABLE',
-                    material:storeEstimate?.material ?? (storeMaterialResolution?.status==='MAPPED' ? storeMaterialResolution.materialTotal : null),
-                    cellRecovery:storeEstimate?.cellRecovery ?? null,
-                    combinedValue:storeEstimate?.total ?? null,
-                    complete:storeEstimate?.complete === true,
+                    answerVersionId:storeAnswer.definitionVersionId,
+                    storePin:storeAnswer.storePin || user1StoreRuntime.storePin || null,
+                    capabilityStatus:capabilityStatus,
+                    economicsStatus:estimateRaw?.status || 'UNAVAILABLE',
+                    priceCompleteness:storeAnswer.priceCompleteness?.status || 'UNAVAILABLE',
+                    material:estimateRaw?.totals?.material ?? null,
+                    cellRecovery:estimateRaw?.totals?.cell_recovery ?? null,
+                    combinedValue:estimateRaw?.totals?.Q ?? null,
+                    complete:storeAnswer.priceCompleteness?.status === 'COMPLETE_FOR_ENCODED_DEMAND',
                     estimate:storeEstimate,
-                    refusalConditions:Array.from(new Set(refusals)),
-                    unresolvedConditions:Array.from(new Set(unresolved)),
-                    materialResolution:storeMaterialResolution,
+                    refusalConditions:storeRefusals,
+                    unresolvedConditions:storeUnresolved,
+                    materialResolution:materialResolution,
+                    spotOperation:storeSpotOperation,
+                    authoritativeRequest:authoritativeRequest,
+                    authoritativeAnswer:storeAnswer,
                     authority:startOwnAuthority
                   },
                   lineage:{
                     reason:String(reason||'SYNC'),
-                    storeCatalogPin:catalogSource?.pin||null,
-                    definedWorkpieceLengthIn:definedWorkpieceLengthIn
+                    storeCatalogPin:storeAnswer.storePin || user1StoreRuntime.storePin || null,
+                    storeSourceBlobs:storeAnswer.sourceBlobs || user1StoreRuntime.sourceBlobs || null,
+                    finishedPartLengthIn:finishedLengthIn,
+                    finishedPartQuantity:partQty
                   },
                   physicalExecutionAuthorized:false
                 };
@@ -569,162 +620,217 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 } catch (_) {}
                 return currentUser1Definition;
               };
-
               const renderBoardGeometry = definition => {
                 const demand = definition?.physicalDemand;
-                if (!demand) return;
+                const plan = definition?.operationPlan;
                 const overlay = childDoc.getElementById('stb-bench-dynamic-geometry');
-                if (!overlay) return;
+                if (!demand || !overlay) return;
                 ['stb-bench-static-parts','stb-bench-static-cuts','stb-bench-static-cut-markers','stb-bench-static-joint-note','stb-bench-static-spots','stb-bench-static-part1-label','stb-bench-static-part2-label','stb-bench-static-dims','stb-bench-part1-dim','stb-bench-part2-dim'].forEach(id => {
                   const el=childDoc.getElementById(id);
                   if(el) el.style.display='none';
                 });
-                const x0=40, xMax=860, topY=100, bottomY=180, scale=(xMax-x0)/60;
-                const qty=Math.max(1,Math.min(2,Number(demand.quantity)||1));
-                const len=Math.max(0,Number(demand.finishedLength)||0);
-                const angle=Math.max(0,Math.min(89,Number(demand.angleDegrees)||0));
-                const delta=80*Math.tan(angle*Math.PI/180);
-                const boundaries=Array.from({length:qty+1},(_,i)=>x0+i*len*scale);
-                const cutBoundaries=angle>0?boundaries:boundaries.slice(1);
-                const colors=['#a85a2a','#2f6f9e'];
-                let svg='';
-                for(let i=0;i<qty;i++){
-                  const left=boundaries[i], right=boundaries[i+1], fill=colors[i%colors.length];
-                  svg+='<path d="M'+(left+delta)+' 101 L'+(right+delta)+' 101 L'+right+' 179 L'+left+' 179 Z" fill="'+fill+'" opacity=".06"/>';
-                  const cx=left+(right-left)/2;
-                  svg+='<text x="'+cx+'" y="124" text-anchor="middle" font-size="11" font-weight="700" fill="#584533">PART '+(i+1)+'</text>';
-                  if(demand.spotDemand){
-                    svg+='<circle cx="'+cx+'" cy="140" r="12" fill="none" stroke="#2f6f9e" stroke-width="2.4"/><circle cx="'+cx+'" cy="140" r="4" fill="#2f6f9e"/>';
-                  }
-                  svg+='<g stroke="#7a4f22" stroke-width="1.1" fill="none" opacity=".8"><line x1="'+left+'" y1="200" x2="'+right+'" y2="200"/><path d="M'+left+' 195v10M'+right+' 195v10"/></g>';
-                  svg+='<text x="'+cx+'" y="217" text-anchor="middle" font-size="11" font-weight="700" fill="#7a4f22">'+len+' in</text>';
-                }
-                cutBoundaries.forEach((bottomX,index)=>{
-                  const topX=bottomX+delta;
-                  svg+='<line x1="'+topX+'" y1="'+topY+'" x2="'+bottomX+'" y2="'+bottomY+'" stroke="#a85a2a" stroke-width="5" stroke-linecap="round"/>';
-                  const mx=bottomX+delta*.65;
-                  svg+='<circle cx="'+mx+'" cy="74" r="13" fill="#a85a2a"/><text x="'+mx+'" y="79" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">'+(index+1)+'</text>';
-                });
-                overlay.innerHTML=svg;
 
-                const usedEnd=boundaries[qty];
-                const spareLabel=childDoc.getElementById('stb-bench-spare-label');
-                const remainLabel=childDoc.getElementById('stb-bench-remain-label');
-                if(spareLabel){
-                  const spareCenter=usedEnd<532?(usedEnd+532)/2:Math.min(820,(usedEnd+xMax)/2);
-                  spareLabel.setAttribute('x',String(spareCenter));
+                const controlStatic=childDoc.getElementById('stb-bench-static-control');
+                if(controlStatic) controlStatic.style.display='none';
+                if (!plan?.selected || !Array.isArray(plan.parents) || !plan.parents.length) {
+                  overlay.innerHTML='';
+                  return;
                 }
-                if(remainLabel){
-                  const remainCenter=Math.min(800,Math.max(570,(usedEnd+xMax)/2));
-                  remainLabel.setAttribute('x',String(remainCenter));
+
+                const parent=plan.parents[0];
+                const parentLength=Math.max(0,Number(plan.selected.parentStockLengthIn)||0);
+                const qty=Math.max(1,Number(parent.producedParts)||Number(demand.quantity)||1);
+                const len=Math.max(0,Number(demand.finishedPartLengthIn)||Number(demand.finishedLength)||0);
+                const angle=Math.max(0,Math.min(89,Number(demand.angleDegrees)||0));
+                const retainedTail=Math.max(0,Number(plan.sequenceRules?.retainedControlTailIn)||24);
+                if (!(parentLength > 0)) {
+                  overlay.innerHTML='';
+                  return;
                 }
+
+                const x0=40, xMax=860, topY=100, bottomY=180, scale=(xMax-x0)/parentLength;
+                const delta=Math.min(70,80*Math.tan(Math.min(angle,40)*Math.PI/180));
+                const kerf=Number(plan.sequenceRules?.kerfIn)||0.125;
+                let cursor=0;
+                let svg='';
+                const colors=['#a85a2a','#2f6f9e'];
+                const productionOps=(parent.operations||[]).filter(op=>op.operation!=='PREPARE_FINISHED_BLANK');
+
+                productionOps.forEach((op,index)=>{
+                  if(op.operation==='ESTABLISH_FIRST_END'){
+                    cursor+=kerf;
+                    const bottomX=x0+cursor*scale;
+                    const topX=bottomX+delta;
+                    svg+='<line x1="'+topX+'" y1="'+topY+'" x2="'+bottomX+'" y2="'+bottomY+'" stroke="#a85a2a" stroke-width="5" stroke-linecap="round"/>';
+                    svg+='<circle cx="'+(bottomX+delta*.65)+'" cy="74" r="13" fill="#a85a2a"/><text x="'+(bottomX+delta*.65)+'" y="79" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">'+(index+1)+'</text>';
+                  } else if(op.operation==='SEPARATE_FINISHED_PART'){
+                    const left=x0+cursor*scale;
+                    const right=x0+(cursor+len)*scale;
+                    const fill=colors[(Number(op.partNumber)||1)%colors.length];
+                    const cx=(left+right)/2;
+                    svg+='<path d="M'+(left+delta)+' 101 L'+(right+delta)+' 101 L'+right+' 179 L'+left+' 179 Z" fill="'+fill+'" opacity=".06"/>';
+                    svg+='<text x="'+cx+'" y="124" text-anchor="middle" font-size="11" font-weight="700" fill="#584533">PART '+String(op.partNumber||'')+'</text>';
+                    if(demand.spotDemand){
+                      svg+='<circle cx="'+cx+'" cy="140" r="12" fill="none" stroke="#2f6f9e" stroke-width="2.4"/><circle cx="'+cx+'" cy="140" r="4" fill="#2f6f9e"/>';
+                    }
+                    svg+='<g stroke="#7a4f22" stroke-width="1.1" fill="none" opacity=".8"><line x1="'+left+'" y1="200" x2="'+right+'" y2="200"/><path d="M'+left+' 195v10M'+right+' 195v10"/></g>';
+                    svg+='<text x="'+cx+'" y="217" text-anchor="middle" font-size="11" font-weight="700" fill="#7a4f22">'+len+' in</text>';
+                    cursor+=len+kerf;
+                    const bottomX=x0+cursor*scale;
+                    const topX=bottomX+delta;
+                    svg+='<line x1="'+topX+'" y1="'+topY+'" x2="'+bottomX+'" y2="'+bottomY+'" stroke="#a85a2a" stroke-width="5" stroke-linecap="round"/>';
+                    svg+='<circle cx="'+(bottomX+delta*.65)+'" cy="74" r="13" fill="#a85a2a"/><text x="'+(bottomX+delta*.65)+'" y="79" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">'+(index+1)+'</text>';
+                  }
+                });
+
+                const retained=Number(parent.remainderIn);
+                if(Number.isFinite(retained)){
+                  const retainStart=xMax-retainedTail*scale;
+                  const remainderStart=xMax-retained*scale;
+                  svg+='<rect x="'+retainStart+'" y="101" width="'+(retainedTail*scale)+'" height="78" fill="url(#obHatch)"/>';
+                  svg+='<rect x="'+retainStart+'" y="101" width="'+(retainedTail*scale)+'" height="78" fill="none" stroke="#2f6f9e" stroke-width="1.5" stroke-dasharray="6 4" opacity=".8"/>';
+                  svg+='<text x="'+((retainStart+xMax)/2)+'" y="136" text-anchor="middle" font-size="11" font-weight="700" fill="#2f6f9e">CONTROL SURFACE</text>';
+                  svg+='<text x="'+((retainStart+xMax)/2)+'" y="151" text-anchor="middle" font-size="9.5" fill="#2f6f9e">machine grips this · '+retainedTail+' in</text>';
+                  if(remainderStart < retainStart){
+                    svg+='<text x="'+((remainderStart+retainStart)/2)+'" y="96" text-anchor="middle" font-size="8.5" fill="#9a8a72">'+formatInches(retained-retainedTail)+' beyond retained tail</text>';
+                  }
+                }
+                overlay.innerHTML=svg;
               };
 
               const renderBench = definition => {
                 if (!definition) return;
                 const demand = definition.physicalDemand;
-                const sequence = definition.workpieceSequence;
-                const retained = sequence?.status === 'SEQUENCED'
-                  ? Number(sequence.finalRemainderIn)
-                  : null;
-                const holdIn = Number(sequence?.holdIn || 24);
-                const spare = Number.isFinite(retained) ? Number((retained-holdIn).toFixed(6)) : null;
-                const productionCuts = demand.angleDegrees !== 0 ? demand.quantity + 1 : demand.quantity;
-                const totalModeledCuts = productionCuts;
-                const spots = demand.spotDemand ? demand.quantity : 0;
+                const plan = definition.operationPlan;
                 const material = definition.storeReference.materialResolution;
-                const materialMapped = material?.status === 'MAPPED';
+                const materialMapped = material?.status === 'MAPPED' && plan?.selected;
+                const firstParent = materialMapped && Array.isArray(plan.parents) ? plan.parents[0] : null;
+                const retained = firstParent && Number.isFinite(Number(firstParent.remainderIn))
+                  ? Number(firstParent.remainderIn)
+                  : null;
+                const holdIn = Number(plan?.sequenceRules?.retainedControlTailIn || 24);
+                const spare = Number.isFinite(retained) ? Number((retained-holdIn).toFixed(6)) : null;
+                const productionCuts = Number(plan?.accounting?.productionSawCuts);
+                const preparationCuts = Number(plan?.accounting?.preparationSawCuts);
+                const totalModeledCuts = Number(plan?.accounting?.totalModeledSawCuts);
+                const spots = demand.spotDemand ? demand.quantity : 0;
                 const estimate = definition.storeReference.estimate || null;
                 const economics = definition.storeReference.economicsStatus;
                 const capabilityBasis = definition.capability?.basis || definition.capability?.status || 'UNRESOLVED';
+                const parentCount = Number(plan?.selected?.parentCount);
+                const parentLength = Number(plan?.selected?.parentStockLengthIn);
+                const parentSku = plan?.selected?.storeSku || material?.storeSku || null;
+                const selectionRule = plan?.selectionPolicy?.id || material?.selectionPolicy?.id || 'UNRESOLVED';
 
                 renderBoardGeometry(definition);
                 setText('stb-config-parts-value',demand.quantity+' part'+(demand.quantity===1?'':'s'));
-                setText('stb-config-length-value',demand.finishedLength+' in');
+                setText('stb-config-length-value',demand.finishedPartLengthIn+' in');
                 setText('stb-config-angle-value',demand.angleDegrees+'° · both ends · parallel');
                 setText('stb-config-spot-value',demand.spotDemand?'1 centered spot / part':'no spot');
-                setText('stb-bench-length-spec',demand.finishedLength+' in');
+                setText('stb-bench-length-spec',demand.finishedPartLengthIn+' in');
                 setText('stb-bench-angle-spec',demand.angleDegrees+'°');
                 setText('stb-bench-parts-spec',String(demand.quantity));
+                setText('stb-bench-stock-spec',materialMapped ? parentCount+' × 2×4 × '+parentLength+' in' : '2×4 · Store answer unresolved');
+                setText('stb-bench-stock-line',materialMapped
+                  ? parentCount+' × STORE-SELECTED 2×4 · '+parentLength+' IN · '+parentSku+' · SCHEMATIC'
+                  : 'STORE-SELECTED 2×4 PARENT · UNRESOLVED FOR THIS REVISION');
+                setText('stb-def-parent',materialMapped ? parentCount+' × '+parentSku+' · '+parentLength+' in' : 'UNRESOLVED');
                 setText('stb-def-parts',String(demand.quantity));
-                setText('stb-def-length',demand.finishedLength+' in each');
+                setText('stb-def-length',demand.finishedPartLengthIn+' in each');
                 setText('stb-def-angle',demand.angleDegrees+'° · both · parallel');
                 setText('stb-def-spot',demand.spotDemand?'1 centered spot / part':'none');
                 setText('stb-def-spot-location',demand.spotDemand
-                  ? definition.derived.centerSpotAlongLengthIn.value+' in · derived from '+demand.finishedLength+' ÷ 2 · fixed 3/16 in spot/pilot tool'
+                  ? definition.derived.centerSpotAlongLengthIn.value+' in · derived from '+demand.finishedPartLengthIn+' ÷ 2 · bounded 3/16 in spot'
                   : 'not requested');
-                setText('stb-def-retained',Number.isFinite(retained)?formatInches(retained):'UNRESOLVED on one 60-in workpiece');
-                setText('stb-bench-spare-label',Number.isFinite(spare)?formatInches(spare)+' spare':'capacity unresolved');
+                setText('stb-def-retained',Number.isFinite(retained)?formatInches(retained)+' on parent 1':'UNRESOLVED');
+                setText('stb-bench-spare-label',Number.isFinite(spare)?formatInches(spare)+' beyond retained tail':'capacity unresolved');
                 setText('stb-bench-remain-label',Number.isFinite(retained)
-                  ? formatInches(retained)+' remains · '+formatInches(holdIn)+' retained-control minimum · '+formatInches(spare)+' spare'
-                  : 'one 60-in workpiece cannot satisfy this version within the current retained-control rule');
+                  ? formatInches(retained)+' remains · '+formatInches(holdIn)+' retained-control minimum · '+formatInches(spare)+' beyond retained tail'
+                  : 'Store could not prove a retained-control remainder for this revision');
                 setText('stb-bench-control-copy',Number.isFinite(retained)
-                  ? 'The 60-in workpiece leaves '+formatInches(retained)+' after the current cut sequence; '+formatInches(holdIn)+' is the current retained-control minimum.'
-                  : 'This changed version no longer fits the single 60-in workpiece under the current retained-control rule.');
-                setText('stb-bench-cut-copy','cut — '+demand.angleDegrees+'° ends · '+productionCuts+' production cut'+(productionCuts===1?'':'s')+' form '+demand.quantity+' part'+(demand.quantity===1?'':'s'));
-                setText('stb-bench-cut-step','Cut it. '+productionCuts+' production cut'+(productionCuts===1?'':'s')+' on the same defined 60-in workpiece form '+demand.quantity+' part'+(demand.quantity===1?'':'s')+' at '+demand.angleDegrees+'°.');
+                  ? 'Store selected '+formatInches(parentLength)+' parent stock and leaves '+formatInches(retained)+' after the same priced cut plan; '+formatInches(holdIn)+' is the retained-control minimum.'
+                  : 'No parent stock sequence is proven for this revision; the finished-member demand has not been resized.');
+                setText('stb-bench-cut-copy',Number.isFinite(productionCuts)
+                  ? 'cut — '+demand.angleDegrees+'° ends · '+productionCuts+' production saw cycle'+(productionCuts===1?'':'s')+' form '+demand.quantity+' part'+(demand.quantity===1?'':'s')
+                  : 'cut — Store sequence unresolved');
+                setText('stb-bench-cut-step',Number.isFinite(productionCuts)
+                  ? 'Cut it. '+productionCuts+' production saw cycle'+(productionCuts===1?'':'s')+' on the Store-selected parent plan form '+demand.quantity+' part'+(demand.quantity===1?'':'s')+' at '+demand.angleDegrees+'°. '+(preparationCuts?'Preparation adds '+preparationCuts+' separately named saw cycle'+(preparationCuts===1?'':'s')+'.':'No preparation cut is required.')
+                  : 'Cut it. No feasible Store-selected sequence is proven for this revision.');
                 setText('stb-bench-drill-step',demand.spotDemand
-                  ? 'Spot it. One centered spot per part uses the declared fixed 3/16 in spot/pilot operation. It remains distinct from a generic finished hole.'
-                  : 'Spot it. No spot is requested on this version.');
-                setText('stb-bench-stub-step','Keep the stub. The defined parts and the remaining material stay accounted for in the same version.');
-                setText('stb-bench-workline','THAT’S THE WHOLE DEFINED JOB · '+productionCuts+' PRODUCTION CUT'+(productionCuts===1?'':'S')+' · '+spots+' SPOT'+(spots===1?'':'S')+' ON LOCATION · '+(Number.isFinite(retained)?'WITHIN CURRENT RETAINED-CONTROL LIMIT':'CURRENT 60-IN WORKPIECE UNRESOLVED'));
+                  ? 'Spot it. One centered 3/16 in bounded spot per part is requested. Tool-point geometry and the depth-defined spot cycle remain unresolved; the saw/material plan stays resolved.'
+                  : 'Spot it. No spot is requested on this version; material and saw economics stand on their own.');
+                setText('stb-bench-stub-step',materialMapped
+                  ? 'Keep the remainder. The finished parts, '+formatInches(retained)+' parent remainder, and retained-control check are one Store plan.'
+                  : 'Keep the demand unchanged. Store did not produce a feasible parent plan for this revision.');
+                setText('stb-bench-workline','THAT’S THE WHOLE DEFINED JOB · '+(Number.isFinite(productionCuts)?productionCuts:'—')+' PRODUCTION SAW CYCLE'+(productionCuts===1?'':'S')+' · '+spots+' SPOT'+(spots===1?'':'S')+' · '+String(definition.capability.status));
+                setText('stb-bench-capability-badge','STORE · '+String(definition.capability.status));
 
                 const svg = childDoc.getElementById('stb-user1-bench-svg');
                 if (svg) {
                   svg.setAttribute(
                     'aria-label',
-                    'One five-foot two-by-four defined workpiece. This version calls for '+demand.quantity+' part'+(demand.quantity===1?'':'s')+' at '+demand.finishedLength+' inches with '+demand.angleDegrees+' degree ends. '
-                    +(demand.spotDemand?'One centered 3/16 in spot/pilot operation per part is derived at '+definition.derived.centerSpotAlongLengthIn.value+' inches. ':'No spot is requested. ')
-                    +(Number.isFinite(retained)?formatInches(retained)+' remains.':'The one-workpiece retained-control sequence is unresolved.')
+                    (materialMapped
+                      ? 'Store selected '+parentCount+' parent '+parentSku+' at '+parentLength+' inches. '
+                      : 'Store parent selection is unresolved. ')+
+                    'The finished requirement is '+demand.quantity+' part'+(demand.quantity===1?'':'s')+' at '+demand.finishedPartLengthIn+' inches, long-long outer-edge datum, with '+demand.angleDegrees+' degree parallel face-miter ends. '+
+                    (demand.spotDemand?'One centered 3/16 inch bounded spot per part is requested. ':'No spot is requested. ')+
+                    (Number.isFinite(retained)?formatInches(retained)+' remains on the first parent.':'No retained remainder is claimed.')
                   );
                 }
 
-                setText('stb-material-required',
-                  '1 × 2×4 × 60 in defined workpiece · '+demand.quantity+' finished part'+(demand.quantity===1?'':'s')+' · Store material/pricing reference is shown separately below');
+                setText('stb-material-required',materialMapped
+                  ? parentCount+' × '+parentSku+' · '+parentLength+' in Store-selected parent'+(parentCount===1?'':'s')+' · '+demand.quantity+' finished part'+(demand.quantity===1?'':'s')+' × '+demand.finishedPartLengthIn+' in'
+                  : 'Store-selected 2×4 parent stock unresolved for this unchanged finished-member demand.');
                 setText('stb-price-material',estimate?.material==null?'NOT ESTABLISHED':'$'+Number(estimate.material).toFixed(2));
                 setText('stb-price-processing',estimate?.cellRecovery==null?'NOT ESTABLISHED':'$'+Number(estimate.cellRecovery).toFixed(2));
                 setText('stb-price-total',estimate?.total==null
                   ? 'NOT COMPLETE'
-                  : '$'+Number(estimate.total).toFixed(2)+(estimate.complete?'':' · PARTIAL'));
+                  : '$'+Number(estimate.total).toFixed(2)+(estimate.complete?' · COMPLETE':' · PARTIAL'));
                 setText('stb-price-basis',estimate
                   ? (estimate.complete
-                    ? 'Store Zero BudgetaryEstimate · material + modeled D-001 cell recovery · not a commercial quote.'
-                    : 'Store Zero BudgetaryEstimate for the resolved encoded operations only. Named unresolved work is not included as if complete; not a commercial quote.')
-                  : 'Store Zero could not form a budgetary estimate for this version.');
-                setText('stb-basis-sku',materialMapped?material.storeSku:'NOT MAPPED');
+                    ? 'Store Zero BudgetaryEstimate · selected parent material + only the modeled operations in this Store plan · complete for encoded demand · not a commercial quote.'
+                    : 'Store Zero BudgetaryEstimate · selected parent material + resolved modeled operations only. Named unresolved work is excluded; not a commercial quote.')
+                  : 'Store Zero could not form a budgetary estimate for this revision.');
+                setText('stb-basis-sku',materialMapped?parentSku:'NOT MAPPED');
                 setText('stb-basis-source-stock',materialMapped
-                  ? material.quantity+' × '+material.stockLengthIn+' in 2×4 pricing/material reference only · does not redefine the 60-in workpiece'
+                  ? parentCount+' × '+parentLength+' in 2×4 Store-selected parent · selection rule '+selectionRule
                   : 'UNRESOLVED');
-                setText('stb-basis-unit-price',materialMapped && Number.isFinite(Number(material.unitPrice)) ? '$'+Number(material.unitPrice).toFixed(2)+' / ea' : 'UNRESOLVED');
+                setText('stb-basis-unit-price',materialMapped && Number.isFinite(Number(material.unitPrice)) ? '$'+Number(material.unitPrice).toFixed(2)+' / parent' : 'UNRESOLVED');
                 setText('stb-basis-cell-family',materialMapped && Array.isArray(material.cellFamily) ? material.cellFamily.join(' · ') : 'UNRESOLVED');
                 setText('stb-basis-supported-ops',materialMapped && Array.isArray(material.supportedOps) ? material.supportedOps.join(' · ') : 'UNRESOLVED');
                 setText('stb-basis-clock',String(material?.source?.clock || catalogSource?.clock || '—'));
                 setText('stb-basis-catalog-pin',String(material?.source?.pin || catalogSource?.pin || '—'));
                 setText('stb-basis-capability',String(capabilityBasis)+' · '+String(definition.capability.status));
-                setText('stb-basis-store-pin',String(estimate?.source?.pin || definition.storeReference.authority?.economicsPin || '—'));
+                setText('stb-basis-store-pin',String(estimate?.source?.pin || definition.storeReference.storePin || '—'));
                 setText('stb-basis-economics',estimate?.status
                   ? estimate.status+' · '+String(estimate.completeness || 'UNRESOLVED')+' · BUDGETARY ONLY'
                   : String(economics));
                 setText('stb-basis-pricing-engine',estimate?.engine ? estimate.engine.id+' · v'+estimate.engine.version : 'UNRESOLVED');
                 setText('stb-basis-cycle-model',estimate?.cycle?.model || 'UNRESOLVED');
-                setText('stb-basis-job-time',Number.isFinite(Number(estimate?.cycle?.T_job_min)) ? Number(estimate.cycle.T_job_min).toFixed(3)+' min · modeled · '+totalModeledCuts+' saw cycles' : 'UNRESOLVED');
+                setText('stb-basis-job-time',Number.isFinite(Number(estimate?.cycle?.T_job_min))
+                  ? Number(estimate.cycle.T_job_min).toFixed(3)+' min · modeled · '+String(Number.isFinite(totalModeledCuts)?totalModeledCuts:'—')+' saw cycle'+(totalModeledCuts===1?'':'s')
+                  : 'UNRESOLVED');
                 setText('stb-before-send',definition.storeReference.unresolvedConditions.length
-                  ? definition.storeReference.unresolvedConditions.join(' · ')+'. These conditions remain attached to this version. The displayed Store value covers resolved encoded operations only and does not authorize fabrication.'
-                  : 'No additional unresolved conditions are attached to this reference estimate. Budgetary pricing still does not authorize fabrication.');
+                  ? definition.storeReference.unresolvedConditions.join(' · ')+'. These conditions remain attached to this version. Resolved parent material and saw work remain visible; unresolved spot work is not silently priced.'
+                  : 'No additional unresolved conditions are attached to this Store answer. Budgetary pricing still does not authorize fabrication.');
 
                 const answerLine = childDoc.getElementById('stb-system-answer');
                 if (answerLine) {
-                  answerLine.innerHTML = '<b>STORE</b> · '
-                    +(Number.isFinite(retained)
-                      ? 'the 60-in defined workpiece passes the current retained-control sequence; Store material selection remains a separate fulfillment fact'
-                      : 'the same 60-in defined workpiece is unresolved for this changed part demand')
+                  answerLine.dataset.storeAuthoritative = 'true';
+                  answerLine.dataset.storeRevision = String(definition.storeReference.answerVersionId || '');
+                  answerLine.dataset.storePin = String(definition.storeReference.storePin || '');
+                  answerLine.dataset.storeDisposition = String(definition.storeReference.capabilityStatus || 'UNRESOLVED');
+                  answerLine.innerHTML = '<b>STORE</b> · '+String(definition.storeReference.capabilityStatus || 'UNRESOLVED')
+                    +' · '+(materialMapped
+                      ? parentCount+' × '+parentSku+' at '+parentLength+' in · '+formatInches(retained)+' remainder · selection '+selectionRule
+                      : 'no feasible parent stock plan for the unchanged finished-member demand')
                     +(estimate
-                      ? ' · Store Zero modeled value $'+Number(estimate.total).toFixed(2)+(estimate.complete?'':' for resolved operations; partial')
+                      ? ' · modeled value $'+Number(estimate.total).toFixed(2)+(estimate.complete?' complete for encoded demand':' partial; unresolved work excluded')
                       : ' · budgetary estimate unavailable')
-                    +' · raw Store procurement remains separate from project definition.';
+                    +' · answer '+String(definition.storeReference.answerVersionId || 'UNIDENTIFIED')+'.';
                 }
                 activate('#stb-config-parts [data-parts]','data-parts',partQty);
-                activate('[data-length]','data-length',demand.finishedLength);
+                activate('[data-length]','data-length',demand.finishedPartLengthIn);
                 activate('[data-angle]','data-angle',demand.angleDegrees);
                 activate('#stb-config-spot [data-spot]','data-spot',spotMode);
               };
@@ -796,6 +902,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 confirmButton.addEventListener('click', () => {
                   const definition = syncAndRender('CONFIRM');
                   if (!definition) return;
+                  if (definition.storeReference?.answerVersionId !== definition.versionId) return;
                   const confirmationKey = definition.definitionId+'@'+definition.versionId;
                   if (confirmButton.dataset.stbLastConfirmed === confirmationKey) return;
 
@@ -808,7 +915,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                       artifact:'three-frames.html',
                       storeCatalog:definition.material.stockClassAuthority,
                       procurement:definition.material.procurement,
-                      definedWorkpieceLengthIn:definition.material.definedWorkpieceLengthIn
+                      finishedPartDemand:{lengthIn:definition.lineage.finishedPartLengthIn,quantity:definition.lineage.finishedPartQuantity}
                     },
                     storeReference:definition.storeReference
                   });
@@ -825,7 +932,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                         artifact:'three-frames.html',
                         storeCatalog:definition.material.stockClassAuthority,
                         procurement:definition.material.procurement,
-                          definedWorkpieceLengthIn:definition.material.definedWorkpieceLengthIn
+                        finishedPartDemand:{lengthIn:definition.lineage.finishedPartLengthIn,quantity:definition.lineage.finishedPartQuantity}
                       },
                       storeReference:definition.storeReference
                     },
@@ -1016,7 +1123,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             selectJourneyProject(null);
             originalShow.call(win, 'projects');
           } else if (type === 'STB_PROJECT_DEFINITION_CHANGED' && event.data?.projectId === 'start-own') {
-            // Current hosted Start Own is evaluated by the ab8a4c5d handoff contract.
+            // Current hosted Start Own consumes the generated browser Store runtime from exact pin ab8a4c5d.
             // Legacy child messages may trigger proof refresh, but may not supply a competing Store answer.
             captureStartOwnProof();
           } else if (type === 'STB_PROOF_OPEN_JOB1') {
@@ -1554,6 +1661,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
             <div class="btns"><button type="button" data-s001-control id="s001-reset">RESET TO SARAH'S 36 / 24 / 12</button></div>
             <div class="s001-status">ROUTED PROFILE IS INSIDE CURRENT 48 × 36 REFERENCE FIELD</div>
             <p class="dim" id="s001-geometry-summary"></p>
+            <div class="s001-v2-callout" id="s001-live-store-answer"><b>LIVE STORE ZERO</b><span id="s001-live-store-disposition">EVALUATING</span> · material <span id="s001-live-store-material">—</span><br><span id="s001-live-store-reasons">No Store answer yet.</span><br><small id="s001-live-store-version"></small></div>
             <div class="s001-v2-seq">
               <div class="row"><span class="n">01</span><div><b>ROUTE INTERNAL CENTER FEATURE</b><span>Straight internal route. Retained material remains connected by tabs according to the project rule.</span></div></div>
               <div class="row"><span class="n">02</span><div><b>ROUTE OUTER ARCHED PROFILE</b><span>Curvilinear opening profile with retained tabs.</span></div></div>
@@ -1574,16 +1682,16 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       <h1>PLAYHOUSE · CURRENT STORE ANSWER</h1>
       <p class="sub">Store separates what the pinned S-001 routed envelope can support from requested work that still belongs to a separate operation path.</p>
       <div class="s001-v2-store-split">
-        <section class="s001-v2-store-card s001-v2-pass"><h3>ROUTED ARCHED OPENING</h3><p><b>SUPPORTABLE · REFERENCE</b></p><p>Request: <code>SHEET_MODE2_ARCHED_APERTURE_V0</code><br>Envelope: <code>S001-MODE2-ARCHED-APERTURE-V0</code></p><p id="s001-store-opening"></p><p id="s001-store-radius"></p><p>4 requested tabs · Store reference plan 5 · physical retention NOT MEASURED.</p></section>
+        <section class="s001-v2-store-card s001-v2-pass"><h3>ROUTED ARCHED OPENING</h3><p><b id="s001-store-card-status">EVALUATING</b></p><p>Request: <code>SHEET_MODE2_ARCHED_APERTURE_V0</code><br>Envelope: <code>S001-MODE2-ARCHED-APERTURE-V0</code></p><p id="s001-store-opening"></p><p id="s001-store-radius"></p><p id="s001-store-reasons">Waiting for the current Store answer.</p><p>4 requested tabs · Store retention policy remains reference evidence · physical retention NOT MEASURED.</p></section>
         <section class="s001-v2-store-card s001-v2-separate"><h3>ADDITIONAL PROJECT FEATURES</h3><p><b>RETAINED · SEPARATE FROM PINNED ROUTED ENVELOPE</b></p><p>Internal center route feature and two straight saw-cut requests at 18 in from each sheet end remain in the project definition.</p><p>They are not silently promoted into <code>SHEET_MODE2_ARCHED_APERTURE_V0</code>.</p></section>
       </div>
       <div class="s001-v2-order">
         <div><b>MATERIAL</b><span>STB-ZERO-PLY-050-48X96-001</span></div>
-        <div><b>ROUTED DISPOSITION</b><span>SUPPORTABLE · REFERENCE</span></div>
-        <div><b>REFERENCE AMOUNT</b><span>$26.55 material-only</span></div>
-        <div><b>PROCESS / SECONDARY COST</b><span>UNRESOLVED</span></div>
+        <div><b>ROUTED DISPOSITION</b><span id="s001-store-disposition">EVALUATING</span></div>
+        <div><b>REFERENCE AMOUNT</b><span id="s001-store-reference-amount">—</span></div>
+        <div><b>PROCESS / SECONDARY COST</b><span id="s001-store-process-cost">UNRESOLVED</span></div>
         <div><b>COMMISSIONED</b><span>false</span></div>
-        <div><b>PHYSICAL AUTHORITY</b><span>false</span></div>
+        <div><b>PHYSICAL AUTHORITY</b><span>false</span></div><div><b>ANSWER VERSION</b><span id="s001-store-answer-version">—</span></div>
       </div>
       <div class="s001-boundary">The Store answer is deliberately mixed: the arched routed opening is inside the current reference envelope; the extra center route and straight-cut requests remain visible but are not invented into that envelope. No binding quote or fabrication authority is created.</div>
       <div class="btns"><button type="button" data-canonical-go="playhouse-machine">BACK TO MACHINE DEFINITION</button><button type="button" data-canonical-go="playhouse-review">REVIEW JOB FACTS →</button></div>
@@ -1613,7 +1721,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         <div><b>PROJECT</b><span>Playhouse arched window</span></div>
         <div><b>WOOD</b><span>48 × 96 in · 1/2 in plywood</span></div>
         <div><b>OPENING</b><span id="s001-review-opening"></span></div>
-        <div><b>PRIMARY ROUTE</b><span>SUPPORTABLE · REFERENCE</span></div>
+        <div><b>PRIMARY ROUTE</b><span id="s001-review-primary-route">EVALUATING</span></div><div><b>STORE ANSWER VERSION</b><span id="s001-review-store-version">—</span></div>
         <div><b>CENTER FEATURE</b><span>Requested · retained separately</span></div>
         <div><b>STRAIGHT CUTS</b><span>2 requested · 18 in from sheet ends · separate path</span></div>
         <div><b>RETURN MATERIAL</b><span>Center and remnants retained for Sarah</span></div>
@@ -1631,7 +1739,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       <div class="s001-v2-order">
         <div><b>CLASS</b><span>S001_CENTERED_ARCHED_SHEET_V0</span></div>
         <div><b>GEOMETRY</b><span id="s001-result-geometry"></span></div>
-        <div><b>ROUTED STORE STATUS</b><span>SUPPORTABLE · REFERENCE</span></div>
+        <div><b>ROUTED STORE STATUS</b><span id="s001-result-store-status">NOT CONFIRMED</span></div>
         <div><b>ADDITIONAL OPS</b><span>Retained · not admitted to pinned routed envelope</span></div>
         <div><b>PHYSICAL STATUS</b><span>NOT CLAIMED / NOT AUTHORIZED</span></div>
         <div><b>OWNER MATERIAL</b><span>Center + remnants designated for return</span></div>
@@ -1651,15 +1759,15 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         <div><b>MATERIAL</b><span>STB-ZERO-PLY-050-48X96-001 · 48 × 96 in · 1/2 in plywood</span></div>
         <div><b>GEOMETRY</b><span id="s001-record-geometry"></span></div>
         <div><b>PRIMARY STORE REQUEST</b><span>SHEET_MODE2_ARCHED_APERTURE_V0</span></div>
-        <div><b>PRIMARY STORE RESULT</b><span>SUPPORTABLE · REFERENCE</span></div>
+        <div><b>PRIMARY STORE RESULT</b><span id="s001-record-store-result">NOT CONFIRMED</span></div>
         <div><b>RETENTION</b><span>4 requested tabs · 5 planned by reference policy · NOT MEASURED physically</span></div>
         <div><b>ADDITIONAL REQUESTS</b><span>Internal center route + two straight cuts · retained outside pinned routed envelope</span></div>
         <div><b>RETURN TO OWNER</b><span>Center piece and remaining sheet pieces</span></div>
         <div><b>HARDWARE</b><span>Not included</span></div>
-        <div><b>MATERIAL-ONLY REFERENCE</b><span>$26.55</span></div>
+        <div><b>MATERIAL-ONLY REFERENCE</b><span id="s001-yard-material-reference">—</span></div>
         <div><b>PROCESS / SECONDARY PRICE</b><span>UNRESOLVED</span></div>
         <div><b>PHYSICAL EXECUTION</b><span>false · no cut, inspection, staging or pickup recorded</span></div>
-        <div><b>STORE PIN</b><span>4402abeb6b0299a5b6db2eec85ed04c3b0236bcc</span></div>
+        <div><b>STORE PIN</b><span id="s001-record-store-pin">—</span></div><div><b>CONFIRMED VERSION</b><span id="s001-record-store-version">—</span></div>
       </div>
       <div class="s001-v2-callout"><b>Outcome, not gadget.</b>The human page explains why the job exists. The machine page carries only material, geometry and operations. The order / record page keeps only what the journey actually established.</div>
       <div class="btns"><button type="button" data-canonical-go="playhouse-s001">RETURN TO INTENT</button><button type="button" data-canonical-go="projects">HOME</button></div>
@@ -1694,7 +1802,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       +'<div class="proof-actor-grid">'
         +'<div><b>JOB</b><span id="proof-store-job">—</span></div>'
         +'<div><b>VERSION</b><span id="proof-store-version">—</span></div>'
-        +'<div><b>DEFINED WORKPIECE</b><span id="proof-store-workpiece">—</span></div>'
+        +'<div><b>FINISHED DEMAND</b><span id="proof-store-workpiece">—</span></div>'
         +'<div><b>MATERIAL SOURCE</b><span id="proof-store-material-source">Store Zero catalog</span></div>'
         +'<div><b>ECONOMICS AUTHORITY</b><span id="proof-store-economics-authority">—</span></div>'
       +'</div>'
@@ -1709,7 +1817,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       +'<div class="proof-gap" id="proof-store-economics-note"><b>STORE ECONOMICS</b>The project answer will state whether a current Store budgetary estimate is present. A budgetary estimate is not a commercial quote, payment, allocation, release, or fabrication authorization.</div>'
       +proofStoreDoctrine
       +'<div class="proof-nav"><button type="button" data-proof-library>← PROJECT LIBRARY</button><button type="button" data-proof-return-source>← PROJECT DEFINITION</button><button class="next" type="button" data-proof-go="proof-accept">CONTINUE → ACCEPT / PAY</button></div>',
-      '<p class="goal">Same definition, Store answers</p><div class="row"><b>Project truth stays fixed</b><span>The confirmed workpiece is not replaced by the procurement SKU.</span></div><div class="row"><b>Budgetary economics stay labeled</b><span>Q is modeled Store economics, not a payable offer.</span></div>'
+      '<p class="goal">Same finished demand, Store answers</p><div class="row"><b>Project truth stays fixed</b><span>Finished-part geometry remains the requirement; Store-selected parent stock remains the Store answer.</span></div><div class="row"><b>Budgetary economics stay labeled</b><span>Q is modeled Store economics, not a payable offer.</span></div>'
     );
 
     ensureProjectJourneyPage('proof-accept',
@@ -1785,24 +1893,27 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       const title=doc.getElementById('proof-store-title');
       if(title)title.textContent='STORE ANSWER · '+job;
       const materialResolution=payload.storeReference?.materialResolution || null;
-      const definedWorkpiece=payload.definition?.material?.definedWorkpieceLengthIn?.value
-        ?? payload.sourceAuthority?.definedWorkpieceLengthIn?.value
-        ?? payload.physicalDemand?.parentLengthIn
-        ?? null;
+      const finishedLength=payload.physicalDemand?.finishedLength ?? payload.definition?.intent?.finishedLengthIn?.value ?? null;
+      const finishedQty=payload.physicalDemand?.quantity ?? payload.definition?.intent?.partQty?.value ?? null;
+      const finishedDatum=payload.physicalDemand?.lengthDatum ?? payload.definition?.intent?.lengthDatum?.value ?? null;
       const workpieceEl=doc.getElementById('proof-store-workpiece');
-      if(workpieceEl)workpieceEl.textContent=definedWorkpiece==null?'NOT CARRIED':String(definedWorkpiece)+' in · confirmed project fact';
+      if(workpieceEl)workpieceEl.textContent=(finishedLength==null||finishedQty==null)
+        ? 'NOT CARRIED'
+        : String(finishedQty)+' × '+String(finishedLength)+' in'+(finishedDatum?' · '+String(finishedDatum):'');
       const materialSku=doc.getElementById('proof-store-material-sku');
       const materialValue=doc.getElementById('proof-store-material-value');
       const materialSource=doc.getElementById('proof-store-material-source');
-      if(materialSku)materialSku.textContent=materialResolution?.storeSku || 'NOT MAPPED ON THIS PROJECT PAYLOAD';
-      if(materialValue)materialValue.textContent=materialResolution?.status==='MAPPED' && Number.isFinite(Number(materialResolution.materialTotal))
+      if(materialSku)materialSku.textContent=materialResolution?.storeSku
+        ? materialResolution.storeSku+' · '+String(materialResolution.pricingReferenceStockLengthIn ?? 'length unresolved')+' in · '+String(materialResolution.parentCount ?? '?')+' parent'+(Number(materialResolution.parentCount)===1?'':'s')
+        : 'NOT MAPPED ON THIS PROJECT PAYLOAD';
+      if(materialValue)materialValue.textContent=Number.isFinite(Number(materialResolution?.materialTotal))
         ? '$'+Number(materialResolution.materialTotal).toFixed(2)
         : 'NOT ESTABLISHED';
       const estimate=payload.storeReference?.estimate || null;
       const termsMaterial=doc.getElementById('proof-terms-material');
       if(termsMaterial)termsMaterial.textContent=estimate?.material!=null
         ? '$'+Number(estimate.material).toFixed(2)+' material'
-        : (materialResolution?.status==='MAPPED' && Number.isFinite(Number(materialResolution.materialTotal))
+        : (Number.isFinite(Number(materialResolution?.materialTotal))
           ? '$'+Number(materialResolution.materialTotal).toFixed(2)+' material'
           : 'NOT ESTABLISHED');
       const recoveryEl=doc.getElementById('proof-store-cell-recovery');
@@ -1816,7 +1927,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       const recordEconomics=doc.getElementById('proof-record-economics');
       const isStartOwn=proofHandoff?.source==='start-own';
       if(recoveryEl)recoveryEl.textContent=estimate?.cellRecovery!=null?'$'+Number(estimate.cellRecovery).toFixed(2):'UNRESOLVED';
-      if(qEl)qEl.textContent=estimate?.total!=null?'$'+Number(estimate.total).toFixed(2)+' · BudgetaryEstimate':'NOT COMPLETE';
+      if(qEl)qEl.textContent=estimate?.total!=null
+        ? '$'+Number(estimate.total).toFixed(2)+(estimate.complete?' · BudgetaryEstimate':' · PARTIAL RESOLVED SUBTOTAL')
+        : 'NOT COMPLETE';
       if(cycleEl)cycleEl.textContent=Number.isFinite(Number(estimate?.cycle?.T_job_min))
         ? Number(estimate.cycle.T_job_min).toFixed(3)+' min · '+String(estimate.cycle.model || 'modeled')
         : 'NOT ESTABLISHED';
@@ -1827,12 +1940,14 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         ? '<b>STORE ZERO BUDGETARY ESTIMATE RETURNED</b>Q is material plus modeled Store cell recovery for this exact identified definition. It is not a commercial quote, payment, allocation, production release, machine readiness, or physical fabrication authority.'
         : '<b>STORE ECONOMICS UNRESOLVED</b>The physical demand remains preserved exactly. No app-side discount, made-up cycle, or guessed combined value is substituted.';
       if(acceptStatus)acceptStatus.textContent=estimate?.complete?'RETURNED · BUDGETARY ESTIMATE':'RETURNED · ECONOMICS INCOMPLETE';
-      if(termsQ)termsQ.textContent=estimate?.total!=null?'$'+Number(estimate.total).toFixed(2)+' · budgetary only':'NOT COMPLETE';
+      if(termsQ)termsQ.textContent=estimate?.total!=null
+        ? '$'+Number(estimate.total).toFixed(2)+(estimate.complete?' · budgetary only':' · partial resolved subtotal')
+        : 'NOT COMPLETE';
       if(termsNote)termsNote.innerHTML=estimate?.complete
         ? '<b>TERMS REMAIN REFERENCE-ONLY.</b>The Store Zero Q is a BudgetaryEstimate, not a commercial quote or seller-of-record offer. No acceptance, payment, allocation, release, or fabrication event is created from it.'
         : '<b>TERMS REMAIN REFERENCE-ONLY.</b>Economics remain incomplete on this project answer. No acceptance, payment, allocation, release, or fabrication event is invented.';
       if(recordEconomics)recordEconomics.textContent=estimate?.total!=null
-        ? 'BUDGETARY ESTIMATE · Q $'+Number(estimate.total).toFixed(2)+' · '+String(estimate.engine?.id || 'Store Zero')
+        ? (estimate.complete?'BUDGETARY ESTIMATE · Q $':'PARTIAL RESOLVED SUBTOTAL · $')+Number(estimate.total).toFixed(2)+' · '+String(estimate.engine?.id || 'Store Zero')
         : 'UNRESOLVED';
       const yardNext=doc.getElementById('proof-yard-next');
       if(yardNext)yardNext.textContent=isStartOwn?'CONTINUE → TERMS':'CONTINUE → HANDOFF / RECORD';
@@ -1899,7 +2014,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       '<div class="s001-v2-order">' +
         '<div><b>PROJECT</b><span>Playhouse arched window</span></div>' +
         '<div><b>GEOMETRY</b><span id="s001-request-geometry"></span></div>' +
-        '<div><b>PRIMARY ROUTE</b><span>SUPPORTABLE · REFERENCE</span></div>' +
+        '<div><b>PRIMARY ROUTE</b><span id="s001-request-primary-route">NOT CONFIRMED</span></div><div><b>CONFIRMED STORE VERSION</b><span id="s001-request-store-version">—</span></div>' +
         '<div><b>ADDITIONAL OPS</b><span>Internal center route + two straight cuts · unresolved / separate path</span></div>' +
         '<div><b>FULL COMMERCIAL OFFER</b><span>NOT ESTABLISHED</span></div>' +
         '<div><b>PHYSICAL AUTHORITY</b><span>NOT AUTHORIZED</span></div>' +
@@ -1915,8 +2030,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       '<div class="s001-v2-order">' +
         '<div><b>PROJECT</b><span>Playhouse arched window</span></div>' +
         '<div><b>GEOMETRY</b><span id="s001-yard-geometry"></span></div>' +
-        '<div><b>ROUTED OPENING</b><span>SUPPORTABLE · REFERENCE</span></div>' +
-        '<div><b>MATERIAL-ONLY REFERENCE</b><span>$26.55</span></div>' +
+        '<div><b>ROUTED OPENING</b><span id="s001-yard-route">NOT CONFIRMED</span></div>' +
+        '<div><b>MATERIAL-ONLY REFERENCE</b><span id="s001-record-material-reference">—</span></div>' +
         '<div><b>CENTER ROUTE / STRAIGHT CUTS</b><span>UNRESOLVED · separate operation path</span></div>' +
         '<div><b>SELLER-OF-RECORD OFFER</b><span>NOT ESTABLISHED</span></div>' +
       '</div>' +
@@ -1944,6 +2059,145 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     const oldStoreBack = doc.querySelector('#playhouse-store [data-canonical-go="playhouse-s001"]');
     if (oldStoreBack) oldStoreBack.setAttribute('data-canonical-go', 'playhouse-machine');
 
+    const s001StoreRuntime = window.STBStoreZeroS001 || null;
+    let s001Revision = 1;
+    let currentS001Definition = null;
+    let confirmedS001Definition = null;
+
+    const s001StoreReasons = answer => {
+      const cap = answer?.rawEvaluation?.line?.capability || null;
+      const unresolved = Array.isArray(cap?.unresolved) ? cap.unresolved : [];
+      const refused = Array.isArray(cap?.reasons) ? cap.reasons : [];
+      return Array.from(new Set([...unresolved,...refused]));
+    };
+
+    const evaluateS001 = (g, reason) => {
+      const versionId = 'S001-SARAH-PLAYHOUSE-0.1-v'+s001Revision;
+      if (!s001StoreRuntime || typeof s001StoreRuntime.evaluate !== 'function') {
+        currentS001Definition = {
+          definitionId:'S001-SARAH-PLAYHOUSE-0.1',
+          versionId,
+          geometry:{...g},
+          routeDepthIn:0.5,
+          storeAnswer:null,
+          unresolvedConditions:['AUTHORITATIVE_S001_STORE_RUNTIME_UNAVAILABLE'],
+          physicalExecutionAuthorized:false,
+          lineage:{reason:String(reason||'SYNC')}
+        };
+        return currentS001Definition;
+      }
+      const answer = s001StoreRuntime.evaluate({
+        definitionVersionId:versionId,
+        apertureW_in:g.width,
+        apertureStraightH_in:g.straight,
+        arcChord_in:g.width,
+        arcRise_in:g.rise,
+        arcRadius_in:g.radius,
+        tabCount:4,
+        routeDepthIn:0.5
+      });
+      if (!answer || answer.definitionVersionId !== versionId) return null;
+      const reasons = s001StoreReasons(answer);
+      currentS001Definition = {
+        definitionId:'S001-SARAH-PLAYHOUSE-0.1',
+        versionId,
+        geometry:{
+          parentL_in:96,
+          parentW_in:48,
+          apertureW_in:g.width,
+          apertureStraightH_in:g.straight,
+          arcChord_in:g.width,
+          arcRise_in:g.rise,
+          arcRadius_in:g.radius,
+          tabCount:4,
+          routeDepthIn:0.5
+        },
+        material:{
+          storeSku:'STB-ZERO-PLY-050-48X96-001',
+          quantity:1,
+          sourcePin:answer.storePin
+        },
+        primaryOperation:{
+          jobType:'SHEET_MODE2_ARCHED_APERTURE_V0',
+          routeDepthIn:0.5,
+          basis:'CANONICAL_S001_PROJECT_FIXED'
+        },
+        additionalRequests:{
+          centerRoute:'RETAINED_SEPARATE',
+          straightCuts:{count:2,offsetFromSheetEndsIn:18,status:'RETAINED_SEPARATE'}
+        },
+        storeAnswer:answer,
+        unresolvedConditions:reasons,
+        physicalExecutionAuthorized:false,
+        lineage:{
+          reason:String(reason||'SYNC'),
+          storePin:answer.storePin,
+          storeSourceBlobs:answer.sourceBlobs
+        }
+      };
+      try {
+        win.localStorage.setItem('stb-s001-current-definition',JSON.stringify(currentS001Definition));
+      } catch (_) {}
+      return currentS001Definition;
+    };
+
+    const renderS001Live = definition => {
+      const answer = definition?.storeAnswer || null;
+      const disposition = answer?.rawEvaluation?.status || 'UNRESOLVED';
+      const amount = Number(answer?.rawEstimate?.Q);
+      const reasons = definition?.unresolvedConditions || ['STORE_ANSWER_UNAVAILABLE'];
+      const reasonText = reasons.length ? reasons.join(' · ') : 'No unresolved Store conditions.';
+      const amountText = Number.isFinite(amount) ? '$'+amount.toFixed(2)+' material-only' : 'UNRESOLVED';
+      const version = definition?.versionId || '—';
+
+      text('s001-live-store-disposition', disposition+' · REFERENCE');
+      text('s001-live-store-material', amountText);
+      text('s001-live-store-reasons', reasonText);
+      text('s001-live-store-version', 'Answer '+version+' · Store '+String(answer?.storePin || 'UNAVAILABLE').slice(0,12)+'…');
+      text('s001-store-card-status', disposition+' · REFERENCE');
+      text('s001-store-disposition', disposition+' · REFERENCE');
+      text('s001-store-reference-amount', amountText);
+      text('s001-store-process-cost', answer?.rawEstimate?.processQ_status || 'UNRESOLVED');
+      text('s001-store-reasons', reasonText);
+      text('s001-store-answer-version', version);
+      text('s001-review-primary-route', disposition+' · REFERENCE');
+      text('s001-review-store-version', version);
+
+      const card = doc.getElementById('s001-store-card-status')?.closest('.s001-v2-store-card');
+      if (card) {
+        card.classList.toggle('s001-v2-pass', disposition === 'SUPPORTABLE');
+        card.classList.toggle('s001-v2-separate', disposition !== 'SUPPORTABLE');
+      }
+    };
+
+    const renderS001Confirmed = definition => {
+      if (!definition) return;
+      const answer = definition.storeAnswer || null;
+      const disposition = answer?.rawEvaluation?.status || 'UNRESOLVED';
+      const amount = Number(answer?.rawEstimate?.Q);
+      const amountText = Number.isFinite(amount) ? '$'+amount.toFixed(2)+' material-only' : 'UNRESOLVED';
+      const version = definition.versionId || '—';
+      text('s001-request-primary-route', disposition+' · REFERENCE');
+      text('s001-request-store-version', version);
+      text('s001-yard-route', disposition+' · REFERENCE');
+      text('s001-yard-material-reference', amountText);
+      text('s001-result-store-status', disposition+' · REFERENCE');
+      text('s001-record-store-result', disposition+' · REFERENCE');
+      text('s001-record-material-reference', amountText);
+      text('s001-record-store-pin', answer?.storePin || 'UNAVAILABLE');
+      text('s001-record-store-version', version);
+    };
+
+    const restoreS001Confirmed = () => {
+      try {
+        const parsed = JSON.parse(win.localStorage.getItem('stb-s001-confirmed-definition') || 'null');
+        if (parsed?.definitionId === 'S001-SARAH-PLAYHOUSE-0.1') {
+          confirmedS001Definition = parsed;
+          renderS001Confirmed(confirmedS001Definition);
+        }
+      } catch (_) {}
+    };
+
     const fmt = (value) => Number(value).toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
     const read = () => {
       const width = Number(doc.getElementById('s001-opening-width')?.value || 36);
@@ -1954,7 +2208,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       return { width, straight, rise, total, radius };
     };
     const text = (id, value) => { const el = doc.getElementById(id); if (el) el.textContent = value; };
-    const sync = () => {
+    const sync = (reason = 'SYNC') => {
       const widthInput = doc.getElementById('s001-opening-width');
       const straightInput = doc.getElementById('s001-straight-height');
       const riseInput = doc.getElementById('s001-arch-rise');
@@ -2000,16 +2254,45 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       text('s001-request-geometry', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise · ${fmt(g.total)} total height`);
       text('s001-yard-geometry', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise · ${fmt(g.total)} total height`);
       text('s001-record-geometry', `${fmt(g.width)} wide · ${fmt(g.straight)} straight · ${fmt(g.rise)} rise`);
+      const definition = evaluateS001(g, reason);
+      renderS001Live(definition);
+      return definition;
     };
 
-    ['s001-opening-width','s001-straight-height','s001-arch-rise'].forEach(id => doc.getElementById(id)?.addEventListener('input', sync));
+    ['s001-opening-width','s001-straight-height','s001-arch-rise'].forEach(id => doc.getElementById(id)?.addEventListener('input', () => {
+      s001Revision += 1;
+      sync('CUSTOMER_INPUT');
+    }));
     doc.getElementById('s001-reset')?.addEventListener('click', () => {
       doc.getElementById('s001-opening-width').value = '36';
       doc.getElementById('s001-straight-height').value = '24';
       doc.getElementById('s001-arch-rise').value = '12';
-      sync();
+      s001Revision += 1;
+      sync('CUSTOMER_RESET');
     });
-    sync();
+
+    const s001Confirm = doc.querySelector('#playhouse-review [data-canonical-go="playhouse-request"]');
+    const confirmS001Current = () => {
+      const definition = sync('CONFIRM');
+      if (!definition?.storeAnswer) return null;
+      if (definition.storeAnswer.definitionVersionId !== definition.versionId) return null;
+      const key = definition.definitionId+'@'+definition.versionId;
+      if (s001Confirm?.dataset.s001LastConfirmed === key && confirmedS001Definition) return confirmedS001Definition;
+      confirmedS001Definition = JSON.parse(JSON.stringify(definition));
+      if (s001Confirm) s001Confirm.dataset.s001LastConfirmed = key;
+      renderS001Confirmed(confirmedS001Definition);
+      try {
+        win.localStorage.setItem('stb-s001-confirmed-definition',JSON.stringify(confirmedS001Definition));
+      } catch (_) {}
+      return confirmedS001Definition;
+    };
+    if (s001Confirm && s001Confirm.dataset.s001ConfirmBound !== 'true') {
+      s001Confirm.dataset.s001ConfirmBound = 'true';
+      s001Confirm.addEventListener('click', confirmS001Current);
+    }
+
+    sync('INITIAL');
+    restoreS001Confirmed();
 
 
     const picnicConfigNext = doc.querySelector('#picnic-config [data-go="picnic-review"]');
@@ -2423,6 +2706,12 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         return;
       }
       if (activeJourneyProject === 'playhouse' && event.target.closest?.('#playhouse-review [data-canonical-go="playhouse-request"]')) {
+        const confirmed = confirmS001Current();
+        if (!confirmed) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          return;
+        }
         doc.documentElement.dataset.playhouseRevisionConfirmed = 'true';
       }
     }, true);

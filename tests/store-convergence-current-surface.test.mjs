@@ -7,10 +7,12 @@ const shell = read('system-build-current.html');
 const startOwn = read('stb-start-own-0.11.html');
 const outdoor = read('stb-outdoor-build.html');
 const windowSeat = read('stb-window-seat-space-utilization-0.7.4.html');
+const generatedStoreSource = read('stb-store-zero-user1.generated.js');
 const contractSource = read('stb-store-handoff-contract.js');
 const alcoveBase = read('system-build-base-8d8a9dd.html');
 
 const sandbox = {window:{}};
+vm.runInNewContext(generatedStoreSource,sandbox,{filename:'stb-store-zero-user1.generated.js'});
 vm.runInNewContext(contractSource,sandbox,{filename:'stb-store-handoff-contract.js'});
 const contract = sandbox.window.STBStoreHandoffContract;
 
@@ -22,33 +24,35 @@ assert.deepEqual(
   ['project-definition','store-answer','accept-pay','store-yard','handoff-record','project-library']
 );
 
-assert.equal(contract.currentArtifacts.startOwn.artifact,'stb-start-own-bench-leg-0.1.html');
+assert.equal(contract.currentArtifacts.startOwn.artifact,'three-frames.html');
 assert.equal(contract.currentArtifacts.outdoor.artifact,'stb-outdoor-bench-leg-0.1.html');
 assert.equal(contract.currentArtifacts.alcove.artifact,'system-build-current.html#alcove-capture');
 assert.equal(contract.currentArtifacts.windowSeat.artifact,'stb-window-seat-space-utilization-0.7.4.html');
 assert.equal(contract.currentArtifacts.sheetS001.artifact,'system-build-current.html#playhouse-s001');
 
-assert.equal(contract.storeAuthority('startOwn').capabilityPin,'ab8a4c5d470c310f27fef82683611622ab976168');
-assert.equal(contract.storeAuthority('startOwn').materialCatalogPin,'ab8a4c5d470c310f27fef82683611622ab976168');
+assert.equal(contract.storeAuthority('startOwn').capabilityPin,'01f9c5580cea262bd898a9f2c1ac2cd89d02845f');
+assert.equal(contract.storeAuthority('startOwn').materialCatalogPin,'01f9c5580cea262bd898a9f2c1ac2cd89d02845f');
 assert.equal(contract.storeAuthority('startOwn').legacyGeneralRecoverySelected,false);
 assert.equal(contract.storeAuthority('startOwn').economicsModel,'STB-STORE-ZERO-PRICE-1');
+assert.equal(contract.storeAuthority('startOwn').economicsVersion,'0.3.0');
 assert.equal(contract.storeAuthority('startOwn').economicsStatus,'BUDGETARY_ESTIMATE');
 const xBraceQ = contract.quoteStartOwnBoardSequence({
-  material:3.13,
-  definedWorkpieceLengthIn:60,
-  sawCuts:3,
+  finishedPartLengthIn:16,
+  quantity:2,
   sawAngleDeg:30,
-  drillCycles:0,
-  spotCycles:2,
-  unresolvedConditions:[],
-  widthIn:3.5
+  spotDemand:null,
+  unresolvedConditions:[]
 });
-assert.equal(xBraceQ.total,54.82);
-assert.equal(xBraceQ.cycle.T_job_min,10.014);
+assert.equal(xBraceQ.total,54.27);
+assert.equal(xBraceQ.cycle.T_job_min,9.686);
 assert.equal(xBraceQ.completeness,'COMPLETE_FOR_ENCODED_DEMAND');
+assert.equal(xBraceQ.operationBasis.finishedPartLengthIn,16);
+assert.equal(xBraceQ.operationBasis.quantity,2);
+assert.equal(xBraceQ.operationBasis.selectedParentLengthIn,72);
+assert.equal(xBraceQ.operationBasis.productionSawCuts,3);
+assert.equal(xBraceQ.operationBasis.preparationSawCuts,0);
 assert.equal(xBraceQ.operationBasis.totalModeledSawCuts,3);
-assert.equal(xBraceQ.operationBasis.drillCycles,0);
-assert.equal(xBraceQ.operationBasis.spotCycles,2);
+assert.equal(xBraceQ.plan.parents[0].remainderIn,39.625);
 
 assert.equal(contract.storeAuthority('windowSeat').economicsModel,'STB-STORE-ZERO-WINDOW-SEAT-RECOVERY-0.1');
 assert.equal(contract.storeAuthority('alcove').economicsModel,null);
@@ -63,7 +67,8 @@ assert.equal(shelfMaterial.status,'MAPPED');
 assert.equal(shelfMaterial.storeSku,'STB-ZERO-SPF-2X4-192-001');
 assert.equal(shelfMaterial.materialTotal,8.36);
 
-assert.match(shell,/stb-store-handoff-contract\.js\?v=121e67b5/);
+assert.match(shell,/stb-store-zero-user1\.generated\.js\?v=[0-9a-f]{8}/);
+assert.match(shell,/stb-store-handoff-contract\.js\?v=[0-9a-f]{8}/);
 assert.match(shell,/dataset\.startOwnArtifact = 'three-frames\.html'/);
 assert.match(shell,/dataset\.outdoorBuildArtifact = 'stb-outdoor-bench-leg-0\.1\.html'/);
 assert.match(shell,/dataset\.windowSeatArtifact = 'stb-window-seat-space-utilization-0\.7\.4\.html'/);
@@ -113,7 +118,8 @@ assert.match(outdoor,/STB_OUTDOOR_CONFIRMED/);
 assert.match(outdoor,/normalizedPart:normalized/);
 assert.match(shell,/createComparisonStoreHandoff\('start-own'/);
 assert.equal(shell.includes('previewFromDemand'),false,'Start Own still uses legacy preview authority');
-assert.match(shell,/const drillCycles = 0/,'spot was silently priced as a generic drill cycle');
+assert.match(shell,/drillCycles:0/,'generic drill cycle count is not explicitly zero');
+assert.match(shell,/spotDemand:spotDemand/,'spot demand is not carried separately from generic drilling');
 assert.match(shell,/stbHostConfirmBound/,'host confirmation idempotence guard is missing');
 assert.match(shell,/payload\.storeReference\?\.unresolvedConditions/);
 assert.match(shell,/createComparisonStoreHandoff\('outdoor'/);
@@ -126,7 +132,8 @@ assert.match(windowSeat,/storeRequest:req/);
 assert.match(windowSeat,/storeAnswer:answer/);
 assert.match(windowSeat,/commercial:false/);
 assert.match(shell,/PRIMARY STORE REQUEST<\/b><span>SHEET_MODE2_ARCHED_APERTURE_V0/);
-assert.match(shell,/PRIMARY STORE RESULT<\/b><span>SUPPORTABLE · REFERENCE/);
+assert.match(shell,/PRIMARY STORE RESULT<\/b><span id="s001-record-store-result">NOT CONFIRMED<\/span>/);
+assert.match(shell,/text\('s001-record-store-result', disposition\+' · REFERENCE'\)/);
 assert.match(shell,/CENTER ROUTE \/ STRAIGHT CUTS<\/b><span>UNRESOLVED/);
 
 for (const label of ['STORE ANSWER','ACCEPT / PAY','STORE / YARD','HANDOFF / RECORD']) {
@@ -163,7 +170,7 @@ assert.match(shell,/ensureProjectJourneyPage\('proof-terms'/);
 assert.match(shell,/outdoor: Object\.freeze\(\{[\s\S]*store:'proof-store'[\s\S]*record:'proof-record'/);
 assert.match(shell,/if \(activeJourneyProject !== nextJourneyProject\) proofHandoff = null/,'project switch does not clear current handoff authority');
 assert.match(shell,/const navButton = event\.target\.closest\?\.\('\.recovery-nav button\[data-journey-stage\]'\)[\s\S]*event\.preventDefault\(\);[\s\S]*event\.stopImmediatePropagation\(\);[\s\S]*showMappedProjectStage\(activeJourneyProject, stage\);/,'project nav can still fall through to another project');
-assert.match(shell,/src="three-frames\.html\?v=305b7484"/);
+assert.match(shell,/src="three-frames\.html\?v=[0-9a-f]{8}"/);
 assert.match(shell,/src="stb-outdoor-bench-leg-0\.1\.html\?v=dcefd0aa"/);
 
 console.log('PASS · current five-project Store convergence and legacy Outdoor quarantine');
