@@ -410,20 +410,132 @@
     })
   });
 
+  var USER1_STORE_REFERENCE_18 = Object.freeze({
+    status:'STORE_ISSUED_REFERENCE',
+    source:Object.freeze({
+      repository:'GeorgePlattDemo/scan-to-build-store',
+      storePin:'87c4d2187d051a577ab301acfa12f2c12a6880ea',
+      pricingFile:'store-zero-pricing-engine.mjs',
+      travelFile:'d001-travel-standard.mjs',
+      governingStandard:'DIMENSIONAL-STORE-TRAVEL-STANDARD-0.1.md',
+      workflowRun:'35782048359',
+      systemIntegrationPin:'380517b3a8fefbfacb00a76d1287aedaed38d662'
+    }),
+    demand:Object.freeze({
+      configurationId:'SYO-USER1-XBRACE',
+      configurationVersion:'0.2',
+      definedWorkpieceLengthIn:60,
+      workpiecePolicy:'GROW_TO_RETAINED_CONTROL',
+      partQty:2,
+      partLengthIn:18,
+      sawAngleDeg:26.387799961242997,
+      cutPlane:'miter-face',
+      endIdentity:'both',
+      endRelation:'parallel',
+      lengthDatum:'long-long-outer-edge',
+      datumCMethod:'REFERENCE_CUT',
+      requiredOps:Object.freeze(['MITER_LIMITED','SPOT_ON_LOCATION']),
+      spotMode:'SPOT_ON_LOCATION',
+      spotLocationRule:'CENTERED_ON_PART',
+      spotAcrossWidthRule:'CENTERED_ON_WIDE_FACE',
+      spotXIn:9,
+      declaredSawCuts:3,
+      declaredSpotCount:2
+    }),
+    materialResolution:Object.freeze({
+      status:'MAPPED',
+      storeSku:'STB-ZERO-SPF-2X4-72-001',
+      pricingReferenceSku:'STB-ZERO-SPF-2X4-72-001',
+      pricingReferenceStockLengthIn:72,
+      requestedDefinedWorkpieceLengthIn:60,
+      requiredMinimumWorkpieceLengthIn:60.375,
+      workpieceLengthIn:60.375,
+      workpieceAdjusted:true,
+      workpieceAdjustmentIn:0.375,
+      workpiecePolicy:'GROW_TO_RETAINED_CONTROL',
+      quantity:1,
+      stockLengthIn:72,
+      unitPrice:3.13,
+      materialTotal:3.13,
+      allocationClaimed:false,
+      cellFamily:Object.freeze(['D-001']),
+      supportedOps:Object.freeze(['CROSSCUT','MITER_LIMITED','SPOT_ON_LOCATION','DRILL','MILL_LONGITUDINAL_PROFILE','MILL_END_PROFILE']),
+      source:Object.freeze({
+        repository:'GeorgePlattDemo/scan-to-build-store',
+        file:'store-zero-catalog.json',
+        pin:'87c4d2187d051a577ab301acfa12f2c12a6880ea',
+        clock:'2026-09-10'
+      })
+    }),
+    estimate:Object.freeze({
+      status:'BUDGETARY_ESTIMATE',
+      complete:true,
+      completeness:'COMPLETE_FOR_TRAVEL_STANDARD',
+      documentKind:'BudgetaryEstimate',
+      engine:Object.freeze({
+        id:'STB-STORE-ZERO-PRICE-1',
+        version:'0.3.0',
+        clock:'2026-09-22',
+        documentKind:'BudgetaryEstimate'
+      }),
+      cycle:Object.freeze({
+        model:'STB-D001-DIMENSIONAL-TRAVEL-0.1',
+        version:'0.1.0',
+        basis:'DECLARED_STAGE2_MODEL',
+        measured:false,
+        commissioned:false,
+        T_job_min:1.4151
+      }),
+      totals:Object.freeze({
+        material:3.13,
+        hardware:0,
+        machine_service:5.90,
+        Q:9.03,
+        Q_basis:'CALCULATED_FROM_DECLARED_STAGE2_MODEL'
+      }),
+      travel:Object.freeze({
+        derivedSawCuts:3,
+        derivedSpotCount:2,
+        finalRemainderIn:24
+      }),
+      economics:Object.freeze({
+        id:'STB-D001-STORE-ECONOMICS-S2-0.1',
+        version:'0.1.0',
+        basis:'DECLARED_STAGE2_MODEL',
+        measured:false,
+        forecastProductiveHours:600,
+        annualCostPoolUsd:120000,
+        targetGrossMargin:0.20,
+        breakEvenPerHour:200,
+        sellRatePerHour:250,
+        setupCharge:0,
+        setupTimeMin:0
+      }),
+      calculationIdentity:Object.freeze({
+        inputHash:'f32ed01b11d7c2987f526eb154c36220b3f8361b38e394b91efd30c073f69f9d',
+        resultHash:'5e8e73e3fb197eb4e0955a5c850e367b3542cbbdc31df7c18975b9b9146a2985'
+      })
+    })
+  });
+
+  var USER1_STORE_REFERENCES = Object.freeze([USER1_STORE_REFERENCE,USER1_STORE_REFERENCE_18]);
+
   function roundN(value, places){
     var p=Math.pow(10, places == null ? 2 : places);
     return Math.round(Number(value)*p)/p;
   }
 
-  function user1StoreDemandMatchesReference(input){
+  function user1StoreDemandMatchesReference(input,reference){
     input=input || {};
-    var d=USER1_STORE_REFERENCE.demand;
+    reference=reference || USER1_STORE_REFERENCE;
+    var d=reference.demand;
     var parts=Array.isArray(input.parts)?input.parts:[];
     var ops=Array.isArray(input.requiredOps)?input.requiredOps.slice().sort():[];
     var expectedOps=d.requiredOps.slice().sort();
     if(String(input.configurationId||'')!==d.configurationId) return false;
     if(String(input.configurationVersion||'')!==d.configurationVersion) return false;
     if(Number(input.definedWorkpieceLengthIn)!==d.definedWorkpieceLengthIn) return false;
+    if(String(input.workpiecePolicy || 'PRESERVE_DEFINED')!==String(d.workpiecePolicy || 'PRESERVE_DEFINED')) return false;
     if(Number(input.sawAngleDeg)!==d.sawAngleDeg) return false;
     if(String(input.cutPlane||'')!==d.cutPlane) return false;
     if(String(input.endIdentity||'')!==d.endIdentity) return false;
@@ -449,6 +561,13 @@
     return true;
   }
 
+  function user1StoreReferenceForDemand(input){
+    for(var i=0;i<USER1_STORE_REFERENCES.length;i++){
+      if(user1StoreDemandMatchesReference(input,USER1_STORE_REFERENCES[i])) return USER1_STORE_REFERENCES[i];
+    }
+    return null;
+  }
+
   function unresolvedUser1StoreAnswer(status, codes, reason, receipt){
     return Object.freeze({
       status:status,
@@ -472,15 +591,16 @@
   }
 
   function resolveUser1StoreReference(input){
-    if(!user1StoreDemandMatchesReference(input)){
+    var reference=user1StoreReferenceForDemand(input);
+    if(!reference){
       return unresolvedUser1StoreAnswer(
         'STORE_REFRESH_REQUIRED',
         ['STORE_REFRESH_REQUIRED'],
-        'This static Review build has no authority to recalculate Store capability, modeled time, economics, or Q for a changed definition.',
+        'This static Review build carries only the two tested 16-in and 18-in Store references. Intermediate geometry requires the live System Store endpoint.',
         null
       );
     }
-    var estimate=USER1_STORE_REFERENCE.estimate;
+    var estimate=reference.estimate;
     return Object.freeze({
       status:'MATCHED_STORE_REFERENCE',
       complete:true,
@@ -493,10 +613,10 @@
       combinedValue:estimate.totals.Q,
       estimate:estimate,
       calculationIdentity:estimate.calculationIdentity,
-      materialResolution:USER1_STORE_REFERENCE.materialResolution,
+      materialResolution:reference.materialResolution,
       refusalConditions:Object.freeze([]),
       unresolvedConditions:Object.freeze([]),
-      source:USER1_STORE_REFERENCE.source,
+      source:reference.source,
       evaluationReceipt:null
     });
   }
@@ -527,13 +647,15 @@
           requestId:requestId,
           checkedAt:checkedAt,
           currentStorePin:null,
-          referenceStorePin:USER1_STORE_REFERENCE.source.storePin,
+          referenceStorePin:answer.source?.storePin || USER1_STORE_REFERENCE.source.storePin,
           currentStoreMatchesReference:false
         })
       );
     }
 
-    if(currentStorePin!==USER1_STORE_REFERENCE.source.storePin){
+    var reference=user1StoreReferenceForDemand(input);
+    var expectedStorePin=reference?.source?.storePin || USER1_STORE_REFERENCE.source.storePin;
+    if(currentStorePin!==expectedStorePin){
       return unresolvedUser1StoreAnswer(
         'STORE_AUTHORITY_CHANGED',
         ['STORE_REFRESH_REQUIRED','STORE_AUTHORITY_CHANGED'],
@@ -544,7 +666,7 @@
           requestId:requestId,
           checkedAt:checkedAt,
           currentStorePin:currentStorePin,
-          referenceStorePin:USER1_STORE_REFERENCE.source.storePin,
+          referenceStorePin:expectedStorePin,
           currentStoreMatchesReference:false
         })
       );
@@ -560,7 +682,7 @@
           requestId:requestId,
           checkedAt:checkedAt,
           currentStorePin:currentStorePin,
-          referenceStorePin:USER1_STORE_REFERENCE.source.storePin,
+          referenceStorePin:answer.source?.storePin || USER1_STORE_REFERENCE.source.storePin,
           currentStoreMatchesReference:true
         })
       }));
@@ -575,14 +697,14 @@
         requestId:requestId,
         checkedAt:checkedAt,
         currentStorePin:currentStorePin,
-        referenceStorePin:USER1_STORE_REFERENCE.source.storePin,
+        referenceStorePin:answer.source?.storePin || USER1_STORE_REFERENCE.source.storePin,
         currentStoreMatchesReference:true,
         machineEnvelopeId:'D001-STAGE2-ENVELOPE-0.3',
         travelStandardId:'STB-D001-DIMENSIONAL-TRAVEL-0.1',
         travelStandardVersion:'0.1.0',
-        economicsId:USER1_STORE_REFERENCE.estimate.economics.id,
-        economicsVersion:USER1_STORE_REFERENCE.estimate.economics.version,
-        calculationIdentity:USER1_STORE_REFERENCE.estimate.calculationIdentity
+        economicsId:answer.estimate?.economics?.id || USER1_STORE_REFERENCE.estimate.economics.id,
+        economicsVersion:answer.estimate?.economics?.version || USER1_STORE_REFERENCE.estimate.economics.version,
+        calculationIdentity:answer.calculationIdentity || USER1_STORE_REFERENCE.estimate.calculationIdentity
       })
     }));
   }
@@ -983,6 +1105,8 @@
     startOwnOfferings:startOwnOfferings,
     resolveStartOwnMaterial:resolveStartOwnMaterial,
     user1StoreReference:USER1_STORE_REFERENCE,
+    user1StoreReferences:USER1_STORE_REFERENCES,
+    user1StoreReferenceForDemand:user1StoreReferenceForDemand,
     user1StoreDemandMatchesReference:user1StoreDemandMatchesReference,
     resolveUser1StoreReference:resolveUser1StoreReference,
     requestUser1StoreEvaluation:requestUser1StoreEvaluation,
