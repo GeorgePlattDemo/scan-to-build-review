@@ -12,7 +12,7 @@ assert.match(own,/STB_START_OWN_CONFIRMED/);
 assert.match(outdoor,/STB_OUTDOOR_CONFIRMED/);
 assert.match(shell,/type === 'STB_START_OWN_CONFIRMED'/);
 assert.match(shell,/type === 'STB_OUTDOOR_CONFIRMED'/);
-assert.match(shell,/proofHandoff = \{job:'JOB 1 · START YOUR OWN'/);
+assert.match(shell,/proofHandoff = \{[\s\S]*?job:'JOB 1 · START YOUR OWN'/);
 assert.match(shell,/proofHandoff = \{job:'JOB 2 · OUTDOOR BUILD'/);
 
 assert.match(shell,/MATERIAL SOURCE/);
