@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
-const EXPECTED_PIN="34d4c6e7a2cb7e4bce428e396c7d7cbf228d20b7";
+const EXPECTED_PIN="01f9c5580cea262bd898a9f2c1ac2cd89d02845f";
 const pin=EXPECTED_PIN;
 const root=resolve(process.env.STB_STORE_ZERO_ROOT||"");
 if(!process.env.STB_STORE_ZERO_ROOT) throw new Error("STB_STORE_ZERO_ROOT is required");
