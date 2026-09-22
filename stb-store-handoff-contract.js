@@ -760,7 +760,7 @@
   }
 
   root.STBStoreHandoffContract = Object.freeze({
-    version:'0.8',
+    version:'0.7',
     actorOrder:ACTOR_ORDER,
     currentArtifacts:CURRENT_ARTIFACTS,
     storeAuthorities:STORE_AUTHORITIES,
