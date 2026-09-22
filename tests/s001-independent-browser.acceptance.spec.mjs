@@ -11,8 +11,10 @@ test('actual S-001 project route carries one exact Store answer through review a
   await page.goto(base+'/system-build-current.html');
   const app=appFrame(page);
 
+  await expect(app.locator('#landing.on')).toBeVisible();
   await app.getByRole('button',{name:'NEW USER'}).click();
-  await app.getByRole('button',{name:'SARAH · MY PROJECTS'}).click();
+  await expect(app.locator('#new-user.on')).toBeVisible();
+  await app.locator('#new-user button[data-canonical-go="projects"]').click();
   await expect(app.locator('#projects.on')).toBeVisible();
 
   const tile=app.locator('#projects .tile[data-go="window-parts"]');
