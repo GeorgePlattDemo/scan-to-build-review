@@ -305,11 +305,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
           };
           if (proofFrame && !proofFrame.dataset.proofObserved) {
             proofFrame.dataset.proofObserved = 'true';
-            const bindStartOwnProofFrame = () => {
+            proofFrame.addEventListener('load', () => {
               const childDoc = proofFrame.contentDocument;
               if (!childDoc) return;
-              if (childDoc.documentElement.dataset.stbHostBindings === 'true') return;
-              childDoc.documentElement.dataset.stbHostBindings = 'true';
               const benchButton = childDoc.querySelector('.stb-bench-button');
               const intentScreen = childDoc.getElementById('stb-start-intent-screen');
               const benchScreen = childDoc.getElementById('stb-start-bench-screen');
@@ -928,9 +926,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 win.setTimeout(captureStartOwnProof, 0);
               }, true);
               captureStartOwnProof();
-            };
-            proofFrame.addEventListener('load', bindStartOwnProofFrame);
-            if (proofFrame.contentDocument?.readyState === 'complete') bindStartOwnProofFrame();
+            });
           }
           startOwnPage.querySelector('#proof-job1-back')?.addEventListener('click', () => {
             selectJourneyProject(null);
