@@ -70,7 +70,7 @@ for(const angle of [30,45,46]){
     assert.equal(browser.rawEvaluation.status,'SUPPORTABLE');
     assert.equal(browser.priceCompleteness.status,'COMPLETE_FOR_ENCODED_DEMAND');
   }else{
-    assert.equal(browser.rawEvaluation.status,'REFUSED');
+    assert.equal(browser.rawEvaluation.status,'REFUSED','FAULT_TARGET_46_DEGREE_MITER_REFUSAL');
     assert.equal(browser.rawEstimate,null);
   }
 }
