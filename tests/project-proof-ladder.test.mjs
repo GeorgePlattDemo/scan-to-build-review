@@ -76,7 +76,7 @@ assert.match(shell, /STB_OUTDOOR_CONFIRMED/);
 assert.match(shell, /MATERIAL SOURCE/);
 assert.match(shell, /STORE PROCUREMENT SKU/);
 assert.match(shell, /MATERIAL VALUE/);
-assert.match(shell, /MODELED CELL RECOVERY/);
+assert.match(shell, /MODELED MACHINE SERVICE/);
 assert.match(shell, /STORE BUDGETARY Q/);
 assert.match(shell, /STORE ZERO BUDGETARY ESTIMATE RETURNED/);
 assert.match(shell, /BudgetaryEstimate/);
