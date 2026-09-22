@@ -320,15 +320,19 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
               const benchLibrary = childDoc.getElementById('stb-bench-library');
               const benchIntentSlot = childDoc.getElementById('stb-bench-intent-slot');
               const lengthInput = childDoc.getElementById('stb-config-length');
-              const angleInput = childDoc.getElementById('stb-config-angle');
+              const boundaryNote = childDoc.getElementById('stb-config-boundary-note');
+              const resetDemoButton = childDoc.getElementById('stb-config-reset');
               const confirmButton = childDoc.getElementById('stb-confirm-store');
               const glossaryStatus = childDoc.getElementById('stb-store-glossary-status');
               const glossaryChoices = Array.from(childDoc.querySelectorAll('[data-store-size-key]'));
               const startOwnAuthority = storeHandoffContract?.storeAuthorities?.startOwn || null;
               const catalogSource = storeHandoffContract?.startOwnStoreCatalog || null;
               let definitionRevision = 1;
-              let partQty = 2;
-              let spotMode = 'centered';
+              const partQty = 2;
+              const spotMode = 'centered';
+              const DEMO_MIN_LENGTH_IN = 16;
+              const DEMO_MAX_LENGTH_IN = 18;
+              const DEMO_HORIZONTAL_SPAN_IN = 8;
               let currentUser1Definition = null;
               let storeRequestSequence = 0;
               const currentStoreAuthorityUrl = 'https://api.github.com/repos/GeorgePlattDemo/scan-to-build-store/commits/main';
@@ -434,20 +438,31 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
               const syncDefinition = reason => {
                 const finishedLengthIn = Number(lengthInput?.value);
-                const angleDeg = Number(angleInput?.value);
-                const definedWorkpieceLengthIn = 60;
+                const withinDemo =
+                  Number.isFinite(finishedLengthIn) &&
+                  finishedLengthIn >= DEMO_MIN_LENGTH_IN &&
+                  finishedLengthIn <= DEMO_MAX_LENGTH_IN;
+                if (boundaryNote) boundaryNote.hidden = withinDemo;
+                if (resetDemoButton) resetDemoButton.hidden = withinDemo;
                 if (
                   !storeHandoffContract ||
                   typeof storeHandoffContract.resolveUser1StoreReference !== 'function' ||
-                  !Number.isFinite(finishedLengthIn) ||
-                  finishedLengthIn <= 0 ||
-                  !Number.isFinite(angleDeg) ||
-                  angleDeg < 0
+                  !withinDemo
                 ) {
-                  currentUser1Definition = null;
+                  if (confirmButton) confirmButton.disabled = true;
                   return null;
                 }
 
+                const spanRatio = DEMO_HORIZONTAL_SPAN_IN / finishedLengthIn;
+                const angleDeg = Number((Math.asin(spanRatio) * 180 / Math.PI).toFixed(12));
+                const achievedRiseIn = Number(Math.sqrt(
+                  finishedLengthIn * finishedLengthIn -
+                  DEMO_HORIZONTAL_SPAN_IN * DEMO_HORIZONTAL_SPAN_IN
+                ).toFixed(6));
+                const definedWorkpieceLengthIn = 60;
+                const workpiecePolicy = finishedLengthIn > DEMO_MIN_LENGTH_IN
+                  ? 'GROW_TO_RETAINED_CONTROL'
+                  : 'PRESERVE_DEFINED';
                 const centerSpotIn = Number((finishedLengthIn / 2).toFixed(6));
                 const spotDemand = spotMode === 'centered' ? {
                   required:true,
@@ -489,15 +504,20 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                  * 0.1 reference. Any changed revision requires a fresh Store answer.
                  */
                 const configurationId = 'SYO-USER1-XBRACE';
-                const configurationVersion = definitionRevision === 1
+                const endpoint16 = Math.abs(finishedLengthIn - 16) < 1e-9;
+                const endpoint18 = Math.abs(finishedLengthIn - 18) < 1e-9;
+                const configurationVersion = endpoint16
                   ? '0.1'
-                  : 'review-revision-'+definitionRevision;
+                  : endpoint18
+                    ? '0.2'
+                    : 'review-intermediate-'+finishedLengthIn.toFixed(3);
                 const declaredSawCuts = angleDeg !== 0 ? partQty + 1 : partQty;
                 const declaredSpotCount = spotDemand ? partQty : 0;
                 const storeDemand = {
                   configurationId:configurationId,
                   configurationVersion:configurationVersion,
                   definedWorkpieceLengthIn:definedWorkpieceLengthIn,
+                  workpiecePolicy:workpiecePolicy,
                   sawAngleDeg:angleDeg,
                   cutPlane:'miter-face',
                   endIdentity:'both',
@@ -512,6 +532,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 const storeAnswer = storeHandoffContract.resolveUser1StoreReference(storeDemand);
                 const storeMaterialResolution = storeAnswer.materialResolution || null;
                 const storeEstimate = storeAnswer.estimate || null;
+                const effectiveWorkpieceLengthIn = Number.isFinite(Number(storeMaterialResolution?.workpieceLengthIn))
+                  ? Number(storeMaterialResolution.workpieceLengthIn)
+                  : definedWorkpieceLengthIn;
                 const unresolved = Array.isArray(storeAnswer.unresolvedConditions)
                   ? storeAnswer.unresolvedConditions.slice()
                   : [];
@@ -522,14 +545,14 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 const physicalDemand = {
                   stockClass:'2x4',
                   materialSource:'STORE_ZERO',
-                  parentLengthIn:definedWorkpieceLengthIn,
-                  definedWorkpieceLengthIn:definedWorkpieceLengthIn,
+                  parentLengthIn:effectiveWorkpieceLengthIn,
+                  definedWorkpieceLengthIn:effectiveWorkpieceLengthIn,
                   finishedLength:finishedLengthIn,
                   quantity:partQty,
                   endCondition:angleDeg ? 'angled' : 'square',
                   straightCut:angleDeg === 0,
                   angleDegrees:angleDeg,
-                  angleReference:'CUSTOMER_INPUT',
+                  angleReference:'DERIVED_SAME_SPAN',
                   cutPlane:'miter-face',
                   endIdentity:'both',
                   endRelation:'parallel',
@@ -590,20 +613,35 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                       materialTotal:storeMaterialResolution.materialTotal,
                       allocationClaimed:false
                     } : null,
-                    definedWorkpieceLengthIn:{value:definedWorkpieceLengthIn,basis:'EXISTING_PROJECT_FACT'},
+                    definedWorkpieceLengthIn:{
+                      value:effectiveWorkpieceLengthIn,
+                      requestedValue:definedWorkpieceLengthIn,
+                      basis:storeMaterialResolution?.workpieceAdjusted===true?'STORE_RETURNED_GROWTH':'EXISTING_PROJECT_FACT'
+                    },
                     mappedStoreSkus:storeMaterialResolution?.storeSku ? [storeMaterialResolution.storeSku] : []
                   },
                   intent:{
-                    partQty:{value:partQty,basis:definitionRevision===1?'USER_1_INTENT_IMAGE':'CUSTOMER_INPUT'},
-                    finishedLengthIn:{value:finishedLengthIn,basis:definitionRevision===1?'USER_1_INTENT_IMAGE':'CUSTOMER_INPUT'},
-                    angleDeg:{value:angleDeg,basis:definitionRevision===1?'USER_1_INTENT_IMAGE':'CUSTOMER_INPUT'},
+                    partQty:{value:partQty,basis:'BOUNDED_DEMO_FIXED'},
+                    finishedLengthIn:{value:finishedLengthIn,basis:endpoint16?'USER_1_INTENT_IMAGE':'CUSTOMER_INPUT'},
+                    angleDeg:{value:angleDeg,basis:'DERIVED_SAME_SPAN'},
                     endIdentity:{value:'both',basis:'USER_1_INTENT'},
                     endRelation:{value:'parallel',basis:'USER_1_INTENT'},
                     cutPlane:{value:'miter-face',basis:'USER_1_INTENT'},
                     lengthDatum:{value:'long-long-outer-edge',basis:'USER_1_INTENT'},
-                    centerSpot:{value:spotMode==='centered'?'one-per-part':'none',basis:definitionRevision===1?'USER_1_INTENT_IMAGE':'CUSTOMER_INPUT'}
+                    centerSpot:{value:'one-per-part',basis:'DERIVED_FROM_PART_LENGTH'}
                   },
                   derived:{
+                    fixedHorizontalSpanIn:{value:DEMO_HORIZONTAL_SPAN_IN,basis:'BOUNDED_DEMO_BASELINE'},
+                    achievedRiseIn:{
+                      value:achievedRiseIn,basis:'DERIVED',
+                      formula:'sqrt(finishedLengthIn^2 - fixedHorizontalSpanIn^2)',
+                      input:{finishedLengthIn:finishedLengthIn,fixedHorizontalSpanIn:DEMO_HORIZONTAL_SPAN_IN}
+                    },
+                    endCutAngleDeg:{
+                      value:angleDeg,basis:'DERIVED',
+                      formula:'asin(fixedHorizontalSpanIn / finishedLengthIn)',
+                      input:{finishedLengthIn:finishedLengthIn,fixedHorizontalSpanIn:DEMO_HORIZONTAL_SPAN_IN}
+                    },
                     centerSpotAlongLengthIn:spotDemand ? {
                       value:centerSpotIn,basis:'DERIVED',formula:'finishedLengthIn / 2',input:{finishedLengthIn:finishedLengthIn}
                     } : null
@@ -635,7 +673,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                     storeAnswerPin:storeAnswer.source?.storePin || null,
                     storeCalculationInputHash:storeAnswer.calculationIdentity?.inputHash || null,
                     storeCalculationResultHash:storeAnswer.calculationIdentity?.resultHash || null,
-                    definedWorkpieceLengthIn:definedWorkpieceLengthIn
+                    requestedDefinedWorkpieceLengthIn:definedWorkpieceLengthIn,
+                    effectiveDefinedWorkpieceLengthIn:effectiveWorkpieceLengthIn,
+                    workpiecePolicy:workpiecePolicy,
+                    fixedHorizontalSpanIn:DEMO_HORIZONTAL_SPAN_IN,
+                    achievedRiseIn:achievedRiseIn
                   },
                   physicalExecutionAuthorized:false
                 };
@@ -654,7 +696,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   const el=childDoc.getElementById(id);
                   if(el) el.style.display='none';
                 });
-                const x0=40, xMax=860, topY=100, bottomY=180, scale=(xMax-x0)/60;
+                const x0=40, xMax=860, topY=100, bottomY=180;
+                const workpieceLength=Math.max(1,Number(demand.definedWorkpieceLengthIn)||60);
+                const scale=(xMax-x0)/workpieceLength;
                 const qty=Math.max(1,Math.min(2,Number(demand.quantity)||1));
                 const len=Math.max(0,Number(demand.finishedLength)||0);
                 const angle=Math.max(0,Math.min(89,Number(demand.angleDegrees)||0));
@@ -717,15 +761,19 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
                 renderBoardGeometry(definition);
                 setText('stb-config-parts-value',demand.quantity+' part'+(demand.quantity===1?'':'s'));
-                setText('stb-config-length-value',demand.finishedLength+' in');
+                setText('stb-config-length-value',
+                  Number(demand.finishedLength).toFixed(3)+' in · '+
+                  Number(demand.angleDegrees).toFixed(3)+'° end cuts · '+
+                  Number(definition.derived.achievedRiseIn.value).toFixed(3)+' in achieved rise');
                 setText('stb-config-angle-value',demand.angleDegrees+'° · both ends · parallel');
                 setText('stb-config-spot-value',demand.spotDemand?'1 centered spot / part':'no spot');
-                setText('stb-bench-length-spec',demand.finishedLength+' in');
-                setText('stb-bench-angle-spec',demand.angleDegrees+'°');
+                setText('stb-bench-workpiece-spec','2×4 · '+formatInches(demand.definedWorkpieceLengthIn));
+                setText('stb-bench-length-spec',Number(demand.finishedLength).toFixed(3)+' in');
+                setText('stb-bench-angle-spec',Number(demand.angleDegrees).toFixed(3)+'°');
                 setText('stb-bench-parts-spec',String(demand.quantity));
                 setText('stb-def-parts',String(demand.quantity));
                 setText('stb-def-length',demand.finishedLength+' in each');
-                setText('stb-def-angle',demand.angleDegrees+'° · both · parallel');
+                setText('stb-def-angle',Number(demand.angleDegrees).toFixed(3)+'° · derived to preserve 8.000 in span · both · parallel');
                 setText('stb-def-spot',demand.spotDemand?'1 centered spot / part':'none');
                 setText('stb-def-spot-location',demand.spotDemand
                   ? definition.derived.centerSpotAlongLengthIn.value+' in · derived from '+demand.finishedLength+' ÷ 2 · 3/16 in SPOT_ON_LOCATION demand'
@@ -738,7 +786,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   ? formatInches(retained)+' remains · '+formatInches(holdIn)+' retained-control minimum · '+formatInches(spare)+' spare · Store returned'
                   : 'This changed definition has no Store-issued travel result in the static Review build.');
                 setText('stb-bench-control-copy',Number.isFinite(retained)
-                  ? 'Store returned '+formatInches(retained)+' remaining on the 60-in workpiece; '+formatInches(holdIn)+' is the Store travel model retained-control minimum.'
+                  ? 'Store returned '+formatInches(retained)+' remaining on the '+formatInches(demand.definedWorkpieceLengthIn)+' defined workpiece; '+formatInches(holdIn)+' is the Store travel model retained-control minimum.'
                   : 'The project definition changed. This browser does not decide Store capability or retained-control validity; a fresh Store answer is required.');
                 setText('stb-bench-cut-copy','cut demand — '+demand.angleDegrees+'° ends · '+productionCuts+' declared saw operation'+(productionCuts===1?'':'s')+' · '+demand.quantity+' part'+(demand.quantity===1?'':'s'));
                 setText('stb-bench-cut-step','Define it. This version carries '+productionCuts+' declared saw operation'+(productionCuts===1?'':'s')+' with '+demand.quantity+' part'+(demand.quantity===1?'':'s')+' at '+demand.angleDegrees+'°. Store owns the admitted machine sequence.');
@@ -752,14 +800,14 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 if (svg) {
                   svg.setAttribute(
                     'aria-label',
-                    'One five-foot two-by-four defined workpiece. This version calls for '+demand.quantity+' part'+(demand.quantity===1?'':'s')+' at '+demand.finishedLength+' inches with '+demand.angleDegrees+' degree ends. '
+                    'This version calls for '+demand.quantity+' part'+(demand.quantity===1?'':'s')+' at '+Number(demand.finishedLength).toFixed(3)+' inches with '+Number(demand.angleDegrees).toFixed(3)+' degree ends, derived to preserve the same 8.000 inch horizontal span. '
                     +(demand.spotDemand?'One centered 3/16 in spot demand per part is derived at '+definition.derived.centerSpotAlongLengthIn.value+' inches. ':'No spot is requested. ')
                     +(Number.isFinite(retained)?'Store returned '+formatInches(retained)+' remaining.':'A fresh Store answer is required for this revision.')
                   );
                 }
 
                 setText('stb-material-required',
-                  '1 × 2×4 × 60 in defined workpiece · '+demand.quantity+' finished part'+(demand.quantity===1?'':'s')+' · Store material/pricing reference remains separate');
+                  '1 × 2×4 × '+formatInches(demand.definedWorkpieceLengthIn)+' defined workpiece · '+demand.quantity+' finished parts · Store stock/pricing reference remains separate');
                 setText('stb-price-material',totals?.material==null?'NOT ESTABLISHED':'$'+Number(totals.material).toFixed(2));
                 setText('stb-price-processing',totals?.machine_service==null?'NOT ESTABLISHED':'$'+Number(totals.machine_service).toFixed(2));
                 setText('stb-price-total',totals?.Q==null ? 'NOT COMPLETE' : '$'+Number(totals.Q).toFixed(2));
@@ -768,7 +816,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   : 'STORE_REFRESH_REQUIRED · this static Review build does not calculate Store capability, machine time, economics, or Q for changed definitions.');
                 setText('stb-basis-sku',materialMapped?material.storeSku:'NOT MAPPED');
                 setText('stb-basis-source-stock',materialMapped
-                  ? material.quantity+' × '+material.stockLengthIn+' in 2×4 Store pricing/material reference only · does not redefine the 60-in workpiece'
+                  ? material.quantity+' × '+material.stockLengthIn+' in 2×4 Store stock/pricing reference · defined workpiece '+formatInches(demand.definedWorkpieceLengthIn)
                   : 'FRESH STORE ANSWER REQUIRED');
                 setText('stb-basis-unit-price',materialMapped && Number.isFinite(Number(material.unitPrice)) ? '$'+Number(material.unitPrice).toFixed(2)+' / ea' : 'UNRESOLVED');
                 setText('stb-basis-cell-family',materialMapped && Array.isArray(material.cellFamily) ? material.cellFamily.join(' · ') : 'UNRESOLVED');
@@ -789,23 +837,28 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   ? definition.storeReference.unresolvedConditions.join(' · ')+'. No browser-side Store answer is substituted. A fresh Store evaluation is required before confirmation.'
                   : 'No unresolved Store conditions are attached to this exact pinned reference. Q remains budgetary and does not authorize fabrication.');
 
+                const candidateReference = storeComplete &&
+                  String(definition.storeReference.source?.storePin || '') !==
+                  String(startOwnAuthority?.economicsPin || '');
                 const answerLine = childDoc.getElementById('stb-system-answer');
                 if (answerLine) {
                   answerLine.innerHTML = storeComplete
                     ? '<b>STORE</b> · exact Store-issued reference matched · Q $'+Number(totals.Q).toFixed(2)+' · '+Number(estimate.cycle.T_job_min).toFixed(4)+' modeled min · 3 saw operations · 2 spots · calculation '+String(estimate.calculationIdentity?.resultHash || '').slice(0,12)+'…'
-                    : '<b>STORE</b> · STORE_REFRESH_REQUIRED · the definition changed and this static Review build will not invent capability, machine time, economics, or Q.';
+                    : '<b>STORE</b> · STORE_REFRESH_REQUIRED · this value is inside the geometry demo, but the static Review build carries exact Store answers only for 16.000 and 18.000 in.';
+                  if (candidateReference) {
+                    answerLine.innerHTML += ' · <b>CANDIDATE STORE PIN</b> · tested but not promoted to Store main.';
+                  }
                 }
 
                 if (confirmButton) {
-                  confirmButton.disabled = !storeComplete;
-                  confirmButton.title = storeComplete
-                    ? 'Confirm the exact definition with its pinned Store-issued reference answer.'
-                    : 'A fresh Store answer is required for this changed definition before confirmation.';
+                  confirmButton.disabled = !storeComplete || candidateReference;
+                  confirmButton.title = candidateReference
+                    ? 'This 18-in candidate has a tested Store answer, but its Store pin is not promoted to main. Configuration may be reviewed here; formal confirmation stays blocked.'
+                    : storeComplete
+                      ? 'Confirm the exact definition with its pinned Store-issued reference answer.'
+                      : 'A fresh Store answer is required for this changed definition before confirmation.';
                 }
-                activate('#stb-config-parts [data-parts]','data-parts',partQty);
                 activate('[data-length]','data-length',demand.finishedLength);
-                activate('[data-angle]','data-angle',demand.angleDegrees);
-                activate('#stb-config-spot [data-spot]','data-spot',spotMode);
               };
 
               const syncAndRender = reason => {
@@ -829,17 +882,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 originalShow.call(win,'projects');
               });
 
-              childDoc.querySelectorAll('#stb-config-parts [data-parts]').forEach(button => {
-                button.addEventListener('click', () => {
-                  const next = Number(button.dataset.parts);
-                  if (!Number.isInteger(next) || next < 1) return;
-                  partQty = next;
-                  markRevision();
-                  syncAndRender('CUSTOMER_INPUT');
-                });
-              });
               lengthInput?.addEventListener('input', () => {
-                if (!Number.isFinite(Number(lengthInput.value)) || Number(lengthInput.value) <= 0) return;
+                const next=Number(lengthInput.value);
+                if (!Number.isFinite(next)) return;
                 markRevision();
                 syncAndRender('CUSTOMER_INPUT');
               });
@@ -850,24 +895,10 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   syncAndRender('CUSTOMER_INPUT');
                 });
               });
-              angleInput?.addEventListener('input', () => {
-                if (!Number.isFinite(Number(angleInput.value)) || Number(angleInput.value) < 0) return;
+              resetDemoButton?.addEventListener('click', () => {
+                if (lengthInput) lengthInput.value = '16';
                 markRevision();
-                syncAndRender('CUSTOMER_INPUT');
-              });
-              childDoc.querySelectorAll('[data-angle]').forEach(button => {
-                button.addEventListener('click', () => {
-                  if (angleInput) angleInput.value = button.dataset.angle;
-                  markRevision();
-                  syncAndRender('CUSTOMER_INPUT');
-                });
-              });
-              childDoc.querySelectorAll('#stb-config-spot [data-spot]').forEach(button => {
-                button.addEventListener('click', () => {
-                  spotMode = button.dataset.spot === 'none' ? 'none' : 'centered';
-                  markRevision();
-                  syncAndRender('CUSTOMER_INPUT');
-                });
+                syncAndRender('RESET_DEMO');
               });
 
               if (confirmButton && confirmButton.dataset.stbHostConfirmBound !== 'true') {
