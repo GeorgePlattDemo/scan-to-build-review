@@ -15,8 +15,9 @@ vm.runInNewContext(contractSource,sandbox,{filename:'stb-store-handoff-contract.
 const contract = sandbox.window.STBStoreHandoffContract;
 
 assert.ok(contract,'shared Store handoff contract did not load');
-assert.equal(contract.version,'0.8');
+assert.equal(contract.version,'0.9');
 assert.equal(typeof contract.quoteAlcoveInsert,'undefined','shared Store contract must not reprice Alcove');
+assert.equal(typeof contract.requestUser1StoreEvaluation,'function');
 assert.deepEqual(
   Array.from(contract.actorOrder),
   ['project-definition','store-answer','accept-pay','store-yard','handoff-record','project-library']
@@ -28,8 +29,8 @@ assert.equal(contract.currentArtifacts.alcove.artifact,'system-build-current.htm
 assert.equal(contract.currentArtifacts.windowSeat.artifact,'stb-window-seat-space-utilization-0.7.4.html');
 assert.equal(contract.currentArtifacts.sheetS001.artifact,'system-build-current.html#playhouse-s001');
 
-assert.equal(contract.storeAuthority('startOwn').capabilityPin,'95c639a1d0d4812df097ad1eb628594b38f921de');
-assert.equal(contract.storeAuthority('startOwn').materialCatalogPin,'95c639a1d0d4812df097ad1eb628594b38f921de');
+assert.equal(contract.storeAuthority('startOwn').capabilityPin,'f88ccaf9a2624899e255e66b51111e2b02309dad');
+assert.equal(contract.storeAuthority('startOwn').materialCatalogPin,'f88ccaf9a2624899e255e66b51111e2b02309dad');
 assert.equal(contract.storeAuthority('startOwn').legacyGeneralRecoverySelected,false);
 assert.equal(contract.storeAuthority('startOwn').economicsModel,'STB-STORE-ZERO-PRICE-1');
 assert.equal(contract.storeAuthority('startOwn').economicsStatus,'PINNED_STORE_ISSUED_REFERENCE');
@@ -59,7 +60,7 @@ assert.equal(xBraceQ.priceCompleteness,'COMPLETE_FOR_TRAVEL_STANDARD');
 assert.equal(xBraceQ.estimate.travel.derivedSawCuts,3);
 assert.equal(xBraceQ.estimate.travel.derivedSpotCount,2);
 assert.equal(xBraceQ.estimate.travel.finalRemainderIn,27.625);
-assert.equal(xBraceQ.calculationIdentity.resultHash,'9ad8d16a7c211d420b83e46ed8a8d224bd289e26a48764ff8d0389b6db698604');
+assert.equal(xBraceQ.calculationIdentity.resultHash,'425af5de05fb614b87ca308696d0d19af0b2701ce2f3fd51c8a6c3ca84042f4f');
 
 const changedXBrace = contract.resolveUser1StoreReference({
   configurationId:'SYO-USER1-XBRACE',
@@ -148,6 +149,9 @@ assert.equal(shell.includes('previewFromDemand'),false,'Start Own still uses leg
 assert.match(shell,/requiredOps\.push\('SPOT_ON_LOCATION'\)/,'spot is not carried as an explicit Store operation');
 assert.equal(shell.includes('quoteStartOwnBoardSequence'),false,'visible Start Own still owns Store pricing');
 assert.match(shell,/resolveUser1StoreReference/);
+assert.match(shell,/requestUser1StoreEvaluation/);
+assert.match(shell,/cache:'no-store'/);
+assert.equal(shell.includes('stbLastConfirmed'),false,'Store-send button regressed to one-use behavior');
 assert.match(shell,/stbHostConfirmBound/,'host confirmation idempotence guard is missing');
 assert.match(shell,/payload\.storeReference\?\.unresolvedConditions/);
 assert.match(shell,/createComparisonStoreHandoff\('outdoor'/);
