@@ -13,7 +13,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 <body>
 <iframe id="stb-current" title="Scan-to-Build System" src="system-build-front-door-0.5.html?v=63e67dcf"></iframe>
 <script src="stb-canonical-journey.js?v=e0619841"></script>
-<script src="stb-store-handoff-contract.js?v=e26b0863"></script>
+<script src="stb-store-handoff-contract.js?v=82c7dcf3"></script>
 <script src="stb-user-defined-board-store.js?v=1c99c380"></script>
 <script src="store-zero-canonical-doctrine.js?v=65366367"></script>
 <script>
@@ -113,6 +113,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     let activeJourneyProject = null;
     let seatJourneySnapshot = null;
     let proofHandoff = null;
+    let proofSimulation = null;
     const storeHandoffContract = window.STBStoreHandoffContract || null;
     let captureStartOwnProof = () => {};
     let pendingSeatView = {mode:'continuous',stage:null};
@@ -162,7 +163,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   id="start-own-proof-frame"
                   class="start-own-shell-frame"
                   title="Start Your Own · User 1 · definition to doing"
-                  src="three-frames.html?v=d176205b"
+                  src="three-frames.html?v=e7321f0e"
                 ></iframe>
               </div>
             `;
@@ -171,7 +172,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
           const liveFrame = startOwnPage.querySelector('#start-own-proof-frame');
           if (liveFrame && !String(liveFrame.getAttribute('src')||'').includes('three-frames.html')) {
-            liveFrame.src = 'three-frames.html?v=d176205b';
+            liveFrame.src = 'three-frames.html?v=e7321f0e';
           }
           const banner = startOwnPage.querySelector('[data-proof-job="1"]');
           if (banner && /generic floor/.test(banner.textContent||'')) {
@@ -319,15 +320,19 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
               const benchLibrary = childDoc.getElementById('stb-bench-library');
               const benchIntentSlot = childDoc.getElementById('stb-bench-intent-slot');
               const lengthInput = childDoc.getElementById('stb-config-length');
-              const angleInput = childDoc.getElementById('stb-config-angle');
+              const boundaryNote = childDoc.getElementById('stb-config-boundary-note');
+              const resetDemoButton = childDoc.getElementById('stb-config-reset');
               const confirmButton = childDoc.getElementById('stb-confirm-store');
               const glossaryStatus = childDoc.getElementById('stb-store-glossary-status');
               const glossaryChoices = Array.from(childDoc.querySelectorAll('[data-store-size-key]'));
               const startOwnAuthority = storeHandoffContract?.storeAuthorities?.startOwn || null;
               const catalogSource = storeHandoffContract?.startOwnStoreCatalog || null;
               let definitionRevision = 1;
-              let partQty = 2;
-              let spotMode = 'centered';
+              const partQty = 2;
+              const spotMode = 'centered';
+              const DEMO_MIN_LENGTH_IN = 16;
+              const DEMO_MAX_LENGTH_IN = 18;
+              const DEMO_HORIZONTAL_SPAN_IN = 8;
               let currentUser1Definition = null;
               let storeRequestSequence = 0;
               const currentStoreAuthorityUrl = 'https://api.github.com/repos/GeorgePlattDemo/scan-to-build-store/commits/main';
@@ -433,20 +438,28 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
               const syncDefinition = reason => {
                 const finishedLengthIn = Number(lengthInput?.value);
-                const angleDeg = Number(angleInput?.value);
-                const definedWorkpieceLengthIn = 60;
+                const withinDemo =
+                  Number.isFinite(finishedLengthIn) &&
+                  finishedLengthIn >= DEMO_MIN_LENGTH_IN &&
+                  finishedLengthIn <= DEMO_MAX_LENGTH_IN;
+                if (boundaryNote) boundaryNote.hidden = withinDemo;
+                if (resetDemoButton) resetDemoButton.hidden = withinDemo;
                 if (
                   !storeHandoffContract ||
                   typeof storeHandoffContract.resolveUser1StoreReference !== 'function' ||
-                  !Number.isFinite(finishedLengthIn) ||
-                  finishedLengthIn <= 0 ||
-                  !Number.isFinite(angleDeg) ||
-                  angleDeg < 0
+                  !withinDemo
                 ) {
-                  currentUser1Definition = null;
+                  if (confirmButton) confirmButton.disabled = true;
                   return null;
                 }
 
+                const spanRatio = DEMO_HORIZONTAL_SPAN_IN / finishedLengthIn;
+                const angleDeg = Number((Math.asin(spanRatio) * 180 / Math.PI).toFixed(12));
+                const achievedRiseIn = Number(Math.sqrt(
+                  finishedLengthIn * finishedLengthIn -
+                  DEMO_HORIZONTAL_SPAN_IN * DEMO_HORIZONTAL_SPAN_IN
+                ).toFixed(6));
+                const definedWorkpieceLengthIn = 60;
                 const centerSpotIn = Number((finishedLengthIn / 2).toFixed(6));
                 const spotDemand = spotMode === 'centered' ? {
                   required:true,
@@ -484,13 +497,17 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 /*
                  * This is the project/configurator demand only. Store owns whether
                  * it is supportable, how D-001 moves, modeled occupied time, and Q.
-                 * The static Review build may present only the exact Store-issued
-                 * 0.1 reference. Any changed revision requires a fresh Store answer.
+                 * The static public Review build may present only exact Store-issued
+                 * references proven against promoted authority. Other values require a live Store answer.
                  */
                 const configurationId = 'SYO-USER1-XBRACE';
-                const configurationVersion = definitionRevision === 1
+                const endpoint16 = Math.abs(finishedLengthIn - 16) < 1e-9;
+                const endpoint18 = Math.abs(finishedLengthIn - 18) < 1e-9;
+                const configurationVersion = endpoint16
                   ? '0.1'
-                  : 'review-revision-'+definitionRevision;
+                  : endpoint18
+                    ? '0.2'
+                    : 'review-intermediate-'+finishedLengthIn.toFixed(3);
                 const declaredSawCuts = angleDeg !== 0 ? partQty + 1 : partQty;
                 const declaredSpotCount = spotDemand ? partQty : 0;
                 const storeDemand = {
@@ -511,6 +528,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 const storeAnswer = storeHandoffContract.resolveUser1StoreReference(storeDemand);
                 const storeMaterialResolution = storeAnswer.materialResolution || null;
                 const storeEstimate = storeAnswer.estimate || null;
+                const effectiveWorkpieceLengthIn = Number.isFinite(Number(storeMaterialResolution?.workpieceLengthIn))
+                  ? Number(storeMaterialResolution.workpieceLengthIn)
+                  : definedWorkpieceLengthIn;
                 const unresolved = Array.isArray(storeAnswer.unresolvedConditions)
                   ? storeAnswer.unresolvedConditions.slice()
                   : [];
@@ -521,14 +541,14 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 const physicalDemand = {
                   stockClass:'2x4',
                   materialSource:'STORE_ZERO',
-                  parentLengthIn:definedWorkpieceLengthIn,
-                  definedWorkpieceLengthIn:definedWorkpieceLengthIn,
+                  parentLengthIn:effectiveWorkpieceLengthIn,
+                  definedWorkpieceLengthIn:effectiveWorkpieceLengthIn,
                   finishedLength:finishedLengthIn,
                   quantity:partQty,
                   endCondition:angleDeg ? 'angled' : 'square',
                   straightCut:angleDeg === 0,
                   angleDegrees:angleDeg,
-                  angleReference:'CUSTOMER_INPUT',
+                  angleReference:'DERIVED_SAME_SPAN',
                   cutPlane:'miter-face',
                   endIdentity:'both',
                   endRelation:'parallel',
@@ -589,20 +609,38 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                       materialTotal:storeMaterialResolution.materialTotal,
                       allocationClaimed:false
                     } : null,
-                    definedWorkpieceLengthIn:{value:definedWorkpieceLengthIn,basis:'EXISTING_PROJECT_FACT'},
+                    definedWorkpieceLengthIn:{
+                      value:definedWorkpieceLengthIn,
+                      basis:'PROJECT_MINIMUM_REQUEST'
+                    },
+                    selectedStoreWorkpieceLengthIn:{
+                      value:effectiveWorkpieceLengthIn,
+                      basis:storeMaterialResolution?.selectionPolicy || 'STORE_ANSWER_REQUIRED'
+                    },
                     mappedStoreSkus:storeMaterialResolution?.storeSku ? [storeMaterialResolution.storeSku] : []
                   },
                   intent:{
-                    partQty:{value:partQty,basis:definitionRevision===1?'USER_1_INTENT_IMAGE':'CUSTOMER_INPUT'},
-                    finishedLengthIn:{value:finishedLengthIn,basis:definitionRevision===1?'USER_1_INTENT_IMAGE':'CUSTOMER_INPUT'},
-                    angleDeg:{value:angleDeg,basis:definitionRevision===1?'USER_1_INTENT_IMAGE':'CUSTOMER_INPUT'},
+                    partQty:{value:partQty,basis:'BOUNDED_DEMO_FIXED'},
+                    finishedLengthIn:{value:finishedLengthIn,basis:endpoint16?'USER_1_INTENT_IMAGE':'CUSTOMER_INPUT'},
+                    angleDeg:{value:angleDeg,basis:'DERIVED_SAME_SPAN'},
                     endIdentity:{value:'both',basis:'USER_1_INTENT'},
                     endRelation:{value:'parallel',basis:'USER_1_INTENT'},
                     cutPlane:{value:'miter-face',basis:'USER_1_INTENT'},
                     lengthDatum:{value:'long-long-outer-edge',basis:'USER_1_INTENT'},
-                    centerSpot:{value:spotMode==='centered'?'one-per-part':'none',basis:definitionRevision===1?'USER_1_INTENT_IMAGE':'CUSTOMER_INPUT'}
+                    centerSpot:{value:'one-per-part',basis:'DERIVED_FROM_PART_LENGTH'}
                   },
                   derived:{
+                    fixedHorizontalSpanIn:{value:DEMO_HORIZONTAL_SPAN_IN,basis:'BOUNDED_DEMO_BASELINE'},
+                    achievedRiseIn:{
+                      value:achievedRiseIn,basis:'DERIVED',
+                      formula:'sqrt(finishedLengthIn^2 - fixedHorizontalSpanIn^2)',
+                      input:{finishedLengthIn:finishedLengthIn,fixedHorizontalSpanIn:DEMO_HORIZONTAL_SPAN_IN}
+                    },
+                    endCutAngleDeg:{
+                      value:angleDeg,basis:'DERIVED',
+                      formula:'asin(fixedHorizontalSpanIn / finishedLengthIn)',
+                      input:{finishedLengthIn:finishedLengthIn,fixedHorizontalSpanIn:DEMO_HORIZONTAL_SPAN_IN}
+                    },
                     centerSpotAlongLengthIn:spotDemand ? {
                       value:centerSpotIn,basis:'DERIVED',formula:'finishedLengthIn / 2',input:{finishedLengthIn:finishedLengthIn}
                     } : null
@@ -634,7 +672,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                     storeAnswerPin:storeAnswer.source?.storePin || null,
                     storeCalculationInputHash:storeAnswer.calculationIdentity?.inputHash || null,
                     storeCalculationResultHash:storeAnswer.calculationIdentity?.resultHash || null,
-                    definedWorkpieceLengthIn:definedWorkpieceLengthIn
+                    requestedDefinedWorkpieceLengthIn:definedWorkpieceLengthIn,
+                    effectiveDefinedWorkpieceLengthIn:effectiveWorkpieceLengthIn,
+                    storeSelectionPolicy:storeMaterialResolution?.selectionPolicy || null,
+                    fixedHorizontalSpanIn:DEMO_HORIZONTAL_SPAN_IN,
+                    achievedRiseIn:achievedRiseIn
                   },
                   physicalExecutionAuthorized:false
                 };
@@ -653,7 +695,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   const el=childDoc.getElementById(id);
                   if(el) el.style.display='none';
                 });
-                const x0=40, xMax=860, topY=100, bottomY=180, scale=(xMax-x0)/60;
+                const x0=40, xMax=860, topY=100, bottomY=180;
+                const workpieceLength=Math.max(1,Number(demand.definedWorkpieceLengthIn)||60);
+                const scale=(xMax-x0)/workpieceLength;
                 const qty=Math.max(1,Math.min(2,Number(demand.quantity)||1));
                 const len=Math.max(0,Number(demand.finishedLength)||0);
                 const angle=Math.max(0,Math.min(89,Number(demand.angleDegrees)||0));
@@ -716,15 +760,19 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
                 renderBoardGeometry(definition);
                 setText('stb-config-parts-value',demand.quantity+' part'+(demand.quantity===1?'':'s'));
-                setText('stb-config-length-value',demand.finishedLength+' in');
+                setText('stb-config-length-value',
+                  Number(demand.finishedLength).toFixed(3)+' in · '+
+                  Number(demand.angleDegrees).toFixed(3)+'° end cuts · '+
+                  Number(definition.derived.achievedRiseIn.value).toFixed(3)+' in achieved rise');
                 setText('stb-config-angle-value',demand.angleDegrees+'° · both ends · parallel');
                 setText('stb-config-spot-value',demand.spotDemand?'1 centered spot / part':'no spot');
-                setText('stb-bench-length-spec',demand.finishedLength+' in');
-                setText('stb-bench-angle-spec',demand.angleDegrees+'°');
+                setText('stb-bench-workpiece-spec','2×4 · '+formatInches(demand.definedWorkpieceLengthIn));
+                setText('stb-bench-length-spec',Number(demand.finishedLength).toFixed(3)+' in');
+                setText('stb-bench-angle-spec',Number(demand.angleDegrees).toFixed(3)+'°');
                 setText('stb-bench-parts-spec',String(demand.quantity));
                 setText('stb-def-parts',String(demand.quantity));
                 setText('stb-def-length',demand.finishedLength+' in each');
-                setText('stb-def-angle',demand.angleDegrees+'° · both · parallel');
+                setText('stb-def-angle',Number(demand.angleDegrees).toFixed(3)+'° · derived to preserve 8.000 in span · both · parallel');
                 setText('stb-def-spot',demand.spotDemand?'1 centered spot / part':'none');
                 setText('stb-def-spot-location',demand.spotDemand
                   ? definition.derived.centerSpotAlongLengthIn.value+' in · derived from '+demand.finishedLength+' ÷ 2 · 3/16 in SPOT_ON_LOCATION demand'
@@ -737,7 +785,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   ? formatInches(retained)+' remains · '+formatInches(holdIn)+' retained-control minimum · '+formatInches(spare)+' spare · Store returned'
                   : 'This changed definition has no Store-issued travel result in the static Review build.');
                 setText('stb-bench-control-copy',Number.isFinite(retained)
-                  ? 'Store returned '+formatInches(retained)+' remaining on the 60-in workpiece; '+formatInches(holdIn)+' is the Store travel model retained-control minimum.'
+                  ? 'Store returned '+formatInches(retained)+' remaining on the '+formatInches(demand.definedWorkpieceLengthIn)+' defined workpiece; '+formatInches(holdIn)+' is the Store travel model retained-control minimum.'
                   : 'The project definition changed. This browser does not decide Store capability or retained-control validity; a fresh Store answer is required.');
                 setText('stb-bench-cut-copy','cut demand — '+demand.angleDegrees+'° ends · '+productionCuts+' declared saw operation'+(productionCuts===1?'':'s')+' · '+demand.quantity+' part'+(demand.quantity===1?'':'s'));
                 setText('stb-bench-cut-step','Define it. This version carries '+productionCuts+' declared saw operation'+(productionCuts===1?'':'s')+' with '+demand.quantity+' part'+(demand.quantity===1?'':'s')+' at '+demand.angleDegrees+'°. Store owns the admitted machine sequence.');
@@ -751,14 +799,14 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 if (svg) {
                   svg.setAttribute(
                     'aria-label',
-                    'One five-foot two-by-four defined workpiece. This version calls for '+demand.quantity+' part'+(demand.quantity===1?'':'s')+' at '+demand.finishedLength+' inches with '+demand.angleDegrees+' degree ends. '
+                    'This version calls for '+demand.quantity+' part'+(demand.quantity===1?'':'s')+' at '+Number(demand.finishedLength).toFixed(3)+' inches with '+Number(demand.angleDegrees).toFixed(3)+' degree ends, derived to preserve the same 8.000 inch horizontal span. '
                     +(demand.spotDemand?'One centered 3/16 in spot demand per part is derived at '+definition.derived.centerSpotAlongLengthIn.value+' inches. ':'No spot is requested. ')
                     +(Number.isFinite(retained)?'Store returned '+formatInches(retained)+' remaining.':'A fresh Store answer is required for this revision.')
                   );
                 }
 
                 setText('stb-material-required',
-                  '1 × 2×4 × 60 in defined workpiece · '+demand.quantity+' finished part'+(demand.quantity===1?'':'s')+' · Store material/pricing reference remains separate');
+                  '1 × 2×4 × '+formatInches(demand.definedWorkpieceLengthIn)+' Store-selected workpiece · '+demand.quantity+' finished parts · project minimum remains 60 in');
                 setText('stb-price-material',totals?.material==null?'NOT ESTABLISHED':'$'+Number(totals.material).toFixed(2));
                 setText('stb-price-processing',totals?.machine_service==null?'NOT ESTABLISHED':'$'+Number(totals.machine_service).toFixed(2));
                 setText('stb-price-total',totals?.Q==null ? 'NOT COMPLETE' : '$'+Number(totals.Q).toFixed(2));
@@ -767,7 +815,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   : 'STORE_REFRESH_REQUIRED · this static Review build does not calculate Store capability, machine time, economics, or Q for changed definitions.');
                 setText('stb-basis-sku',materialMapped?material.storeSku:'NOT MAPPED');
                 setText('stb-basis-source-stock',materialMapped
-                  ? material.quantity+' × '+material.stockLengthIn+' in 2×4 Store pricing/material reference only · does not redefine the 60-in workpiece'
+                  ? material.quantity+' × '+material.stockLengthIn+' in 2×4 Store stock/pricing reference · Store-selected workpiece '+formatInches(demand.definedWorkpieceLengthIn)
                   : 'FRESH STORE ANSWER REQUIRED');
                 setText('stb-basis-unit-price',materialMapped && Number.isFinite(Number(material.unitPrice)) ? '$'+Number(material.unitPrice).toFixed(2)+' / ea' : 'UNRESOLVED');
                 setText('stb-basis-cell-family',materialMapped && Array.isArray(material.cellFamily) ? material.cellFamily.join(' · ') : 'UNRESOLVED');
@@ -791,20 +839,17 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 const answerLine = childDoc.getElementById('stb-system-answer');
                 if (answerLine) {
                   answerLine.innerHTML = storeComplete
-                    ? '<b>STORE</b> · exact Store-issued reference matched · Q $'+Number(totals.Q).toFixed(2)+' · '+Number(estimate.cycle.T_job_min).toFixed(4)+' modeled min · 3 saw operations · 2 spots · calculation '+String(estimate.calculationIdentity?.resultHash || '').slice(0,12)+'…'
-                    : '<b>STORE</b> · STORE_REFRESH_REQUIRED · the definition changed and this static Review build will not invent capability, machine time, economics, or Q.';
+                    ? '<b>STORE</b> · exact promoted Store reference matched · '+String(material?.stockLengthIn || demand.definedWorkpieceLengthIn)+' in stock · Q $'+Number(totals.Q).toFixed(2)+' · '+Number(estimate.cycle.T_job_min).toFixed(4)+' modeled min · 3 saw operations · 2 spots · calculation '+String(estimate.calculationIdentity?.resultHash || '').slice(0,12)+'…'
+                    : '<b>STORE</b> · STORE_REFRESH_REQUIRED · this typed value is inside the geometry demo, but the static public Review surface carries exact Store answers only for 16.000 and 18.000 in.';
                 }
 
                 if (confirmButton) {
                   confirmButton.disabled = !storeComplete;
                   confirmButton.title = storeComplete
-                    ? 'Confirm the exact definition with its pinned Store-issued reference answer.'
+                    ? 'Confirm this exact definition and revalidate the current promoted Store authority.'
                     : 'A fresh Store answer is required for this changed definition before confirmation.';
                 }
-                activate('#stb-config-parts [data-parts]','data-parts',partQty);
                 activate('[data-length]','data-length',demand.finishedLength);
-                activate('[data-angle]','data-angle',demand.angleDegrees);
-                activate('#stb-config-spot [data-spot]','data-spot',spotMode);
               };
 
               const syncAndRender = reason => {
@@ -828,17 +873,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 originalShow.call(win,'projects');
               });
 
-              childDoc.querySelectorAll('#stb-config-parts [data-parts]').forEach(button => {
-                button.addEventListener('click', () => {
-                  const next = Number(button.dataset.parts);
-                  if (!Number.isInteger(next) || next < 1) return;
-                  partQty = next;
-                  markRevision();
-                  syncAndRender('CUSTOMER_INPUT');
-                });
-              });
               lengthInput?.addEventListener('input', () => {
-                if (!Number.isFinite(Number(lengthInput.value)) || Number(lengthInput.value) <= 0) return;
+                const next=Number(lengthInput.value);
+                if (!Number.isFinite(next)) return;
                 markRevision();
                 syncAndRender('CUSTOMER_INPUT');
               });
@@ -849,24 +886,10 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   syncAndRender('CUSTOMER_INPUT');
                 });
               });
-              angleInput?.addEventListener('input', () => {
-                if (!Number.isFinite(Number(angleInput.value)) || Number(angleInput.value) < 0) return;
+              resetDemoButton?.addEventListener('click', () => {
+                if (lengthInput) lengthInput.value = '16';
                 markRevision();
-                syncAndRender('CUSTOMER_INPUT');
-              });
-              childDoc.querySelectorAll('[data-angle]').forEach(button => {
-                button.addEventListener('click', () => {
-                  if (angleInput) angleInput.value = button.dataset.angle;
-                  markRevision();
-                  syncAndRender('CUSTOMER_INPUT');
-                });
-              });
-              childDoc.querySelectorAll('#stb-config-spot [data-spot]').forEach(button => {
-                button.addEventListener('click', () => {
-                  spotMode = button.dataset.spot === 'none' ? 'none' : 'centered';
-                  markRevision();
-                  syncAndRender('CUSTOMER_INPUT');
-                });
+                syncAndRender('RESET_DEMO');
               });
 
               if (confirmButton && confirmButton.dataset.stbHostConfirmBound !== 'true') {
@@ -1874,8 +1897,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     );
 
     ensureProjectJourneyPage('proof-accept',
-      '<p class="stage-tag">ACCEPT / PAY</p><h1>STORE ANSWER RECEIVED. CUSTOMER EVENT REMAINS SEPARATE.</h1>'
-      +'<p class="sub">A Store budgetary answer can be complete as an estimate without becoming a payable commercial offer. Those events remain separate.</p>'
+      '<p class="stage-tag">ACCEPT / PAY</p><h1>YOU ARE ALREADY AT THE YARD. DO YOU WANT THE YARD TO DO THE MACHINE WORK TOO?</h1>'
+      +'<p class="sub">You can take the board home and do the work yourself. Or you can use this simulation to carry the same identified job all the way through Store service, payment, yard work and pickup.</p>'
       +'<div class="proof-actor-grid">'
         +'<div><b>JOB</b><span id="proof-accept-job">—</span></div>'
         +'<div><b>VERSION</b><span id="proof-accept-version">—</span></div>'
@@ -1883,39 +1906,44 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         +'<div><b>INPUT HASH</b><span id="proof-accept-input-hash">—</span></div>'
         +'<div><b>RESULT HASH</b><span id="proof-accept-result-hash">—</span></div>'
         +'<div><b>STORE ANSWER</b><span id="proof-accept-store-status">RETURNED</span></div>'
-        +'<div><b>COMMERCIAL OFFER</b><span>NOT ESTABLISHED</span></div>'
-        +'<div><b>ACCEPTANCE</b><span>NOT ESTABLISHED</span></div>'
-        +'<div><b>PAYMENT</b><span>NOT AVAILABLE / NOT RECORDED</span></div>'
+        +'<div><b>STORE Q</b><span id="proof-accept-q">—</span></div>'
+        +'<div><b>MODELED MACHINE SERVICE</b><span id="proof-accept-service">—</span></div>'
+        +'<div><b>SIMULATED OFFER</b><span id="proof-sim-offer-status">NOT CREATED</span></div>'
+        +'<div><b>SIMULATED ACCEPTANCE</b><span id="proof-sim-accept-status">NOT RECORDED</span></div>'
+        +'<div><b>SIMULATED PAYMENT</b><span id="proof-sim-pay-status">NOT RECORDED</span></div>'
       +'</div>'
-      +'<div class="proof-gap"><b>REFERENCE DEMONSTRATION ONLY</b>Continuing below does not accept an offer, charge money, reserve stock, or authorize fabrication. It demonstrates that the customer can continue through the actor chain while null events remain null.</div>'
-      +'<div class="proof-nav"><button type="button" data-proof-library>← PROJECT LIBRARY</button><button type="button" data-proof-go="proof-store">← STORE ANSWER</button><button class="next" type="button" data-proof-go="proof-yard">CONTINUE REFERENCE DEMONSTRATION →</button></div>',
-      '<p class="goal">Keep events apart</p><div class="row"><b>Offer ≠ acceptance</b><span>No payable offer exists here.</span></div><div class="row"><b>Acceptance ≠ payment</b><span>No simulated payment event is manufactured.</span></div>'
+      +'<div class="band"><b>THE USER CHOICE.</b> You already came to the yard for the board. The modeled machine-service portion for this exact definition is <b id="proof-accept-service-copy">—</b>. Owning a miter saw does not make setup, measuring, three angled cuts, spotting, cleanup and carrying the board home free. The choice is yours.</div>'
+      +'<div class="proof-gap"><b>SIMULATION ONLY.</b>The buttons below create labeled demonstration events and receipts. No money moves. No physical stock is reserved. No production authority or machine motion is created.</div>'
+      +'<div class="proof-nav"><button type="button" data-proof-sim-action="offer">CREATE SIMULATED OFFER</button><button type="button" data-proof-sim-action="accept" disabled>ACCEPT SIMULATED OFFER</button><button class="primary" type="button" data-proof-sim-action="pay" disabled>SIMULATE PAYMENT</button></div>'
+      +'<div class="proof-nav"><button type="button" data-proof-library>← PROJECT LIBRARY</button><button type="button" data-proof-go="proof-store">← STORE ANSWER</button><button class="next" id="proof-accept-next" type="button" data-proof-go="proof-yard" disabled>CONTINUE → STORE / YARD</button></div>',
+      '<p class="goal">A small service can still be useful</p><div class="row"><b>Machine service is visible</b><span>The customer sees the service portion separately from material.</span></div><div class="row"><b>Simulation stays labeled</b><span>Offer, acceptance and payment get receipts without pretending live commerce occurred.</span></div>'
     );
 
     ensureProjectJourneyPage('proof-yard',
-      '<p class="stage-tag">STORE / YARD</p><h1>STORE / YARD · REFERENCE HANDOFF</h1>'
-      +'<p class="sub">The identified definition and Store answer can move through the demonstration record without being promoted into physical work.</p>'
+      '<p class="stage-tag">STORE / YARD</p><h1>THE SIMULATED ORDER IS PAID. NOW WATCH THE YARD DO ITS PART.</h1>'
+      +'<p class="sub">Each event is separate. Each event gets its own receipt. Nothing is allowed to become true merely because the next page exists.</p>'
       +'<div class="proof-actor-grid">'
         +'<div><b>JOB</b><span id="proof-yard-job">—</span></div>'
         +'<div><b>VERSION</b><span id="proof-yard-version">—</span></div>'
         +'<div><b>STORE SHA</b><span id="proof-yard-pin">—</span></div>'
         +'<div><b>INPUT HASH</b><span id="proof-yard-input-hash">—</span></div>'
         +'<div><b>RESULT HASH</b><span id="proof-yard-result-hash">—</span></div>'
-        +'<div><b>ALLOCATION</b><span>NOT ESTABLISHED</span></div>'
-        +'<div><b>PRODUCTION RELEASE</b><span>NOT ESTABLISHED</span></div>'
-        +'<div><b>MACHINE READINESS</b><span>NOT ESTABLISHED</span></div>'
-        +'<div><b>CYCLE START</b><span>NOT AUTHORIZED</span></div>'
-        +'<div><b>INSPECTION / STAGING</b><span>NOT RECORDED</span></div>'
-        +'<div><b>READY</b><span>NOT RECORDED</span></div>'
+        +'<div><b>ALLOCATION</b><span id="proof-sim-allocation-status">NOT RECORDED</span></div>'
+        +'<div><b>PRODUCTION RELEASE</b><span id="proof-sim-release-status">NOT RECORDED</span></div>'
+        +'<div><b>LOCAL CELL READINESS</b><span id="proof-sim-readiness-status">NOT RECORDED</span></div>'
+        +'<div><b>SIMULATED EXECUTION</b><span id="proof-sim-execution-status">NOT RECORDED</span></div>'
+        +'<div><b>INSPECTION / LABEL / STAGE</b><span id="proof-sim-stage-status">NOT RECORDED</span></div>'
+        +'<div><b>READY NOTICE</b><span id="proof-sim-ready-status">NOT RECORDED</span></div>'
       +'</div>'
-      +'<div class="proof-gap"><b>NO BLOOD ON WOOD.</b>Network presence, a project definition, a Store support statement, or a budgetary model does not create local motion authority.</div>'
-      +'<div class="proof-nav"><button type="button" data-proof-library>← PROJECT LIBRARY</button><button type="button" data-proof-go="proof-accept">← ACCEPT / PAY</button><button class="next" id="proof-yard-next" type="button" data-proof-go="proof-record">CONTINUE → HANDOFF / RECORD</button></div>',
-      '<p class="goal">Physical events remain null</p><div class="row"><b>No release</b><span>Reference continuity is not fabrication authority.</span></div><div class="row"><b>Cycle Start remains local</b><span>Machine-local authority stays local.</span></div>'
+      +'<div class="proof-gap"><b>NO BLOOD ON WOOD.</b>This is a simulated fulfillment record only. It does not send controller code, command a machine, establish commissioned readiness, or create a live Cycle Start.</div>'
+      +'<div class="proof-nav"><button type="button" data-proof-sim-action="allocate">1 · SIMULATE ALLOCATION</button><button type="button" data-proof-sim-action="release" disabled>2 · SIMULATE RELEASE</button><button type="button" data-proof-sim-action="run" disabled>3 · RUN CELL SIMULATION</button><button type="button" data-proof-sim-action="stage" disabled>4 · INSPECT / LABEL / STAGE</button><button class="primary" type="button" data-proof-sim-action="ready" disabled>5 · ISSUE READY NOTICE</button></div>'
+      +'<div class="proof-nav"><button type="button" data-proof-library>← PROJECT LIBRARY</button><button type="button" data-proof-go="proof-accept">← ACCEPT / PAY</button><button class="next" id="proof-yard-next" type="button" data-proof-go="proof-terms" disabled>CONTINUE → RECEIPTS</button></div>',
+      '<p class="goal">One event at a time</p><div class="row"><b>Payment ≠ allocation</b><span>The simulation makes allocation explicit.</span></div><div class="row"><b>Release ≠ machine readiness</b><span>The local-cell boundary remains visible even in simulation.</span></div><div class="row"><b>READY is its own event</b><span>Staging does not silently become customer notice.</span></div>'
     );
 
     ensureProjectJourneyPage('proof-terms',
-      '<p class="stage-tag">TERMS</p><h1>TERMS · COMMERCIAL PATH</h1>'
-      +'<p class="sub">The confirmed definition and Store budgetary answer remain identified. A modeled Q can exist while offer, acceptance, payment and physical authority remain separate.</p>'
+      '<p class="stage-tag">RECEIPTS</p><h1>EVERY SIMULATED STEP LEFT A RECEIPT.</h1>'
+      +'<p class="sub">The definition and Store answer stay identified. The downstream events are demonstration records tied to that exact answer, not claims that a real payment or physical job occurred.</p>'
       +'<div class="proof-actor-grid">'
         +'<div><b>JOB</b><span id="proof-terms-job">—</span></div>'
         +'<div><b>VERSION</b><span id="proof-terms-version">—</span></div>'
@@ -1923,20 +1951,19 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         +'<div><b>INPUT HASH</b><span id="proof-terms-input-hash">—</span></div>'
         +'<div><b>RESULT HASH</b><span id="proof-terms-result-hash">—</span></div>'
         +'<div><b>REFERENCE MATERIAL VALUE</b><span id="proof-terms-material">—</span></div>'
-        +'<div><b>STORE BUDGETARY Q</b><span id="proof-terms-q">—</span></div>'
-        +'<div><b>COMMERCIAL OFFER</b><span>NOT ESTABLISHED</span></div>'
-        +'<div><b>OFFER VALIDITY</b><span>NOT ESTABLISHED</span></div>'
-        +'<div><b>PAYMENT</b><span>NOT AVAILABLE / NOT RECORDED</span></div>'
+        +'<div><b>STORE Q</b><span id="proof-terms-q">—</span></div>'
+        +'<div><b>SIMULATION RECEIPTS</b><span id="proof-sim-receipt-count">0</span></div>'
       +'</div>'
-      +'<div class="proof-gap" id="proof-terms-note"><b>TERMS REMAIN REFERENCE-ONLY.</b>A Store Zero BudgetaryEstimate is not a commercial quote or seller-of-record offer. No acceptance, payment, allocation, release, or fabrication event is invented from Q.</div>'
-      +'<div class="band"><b>One version, one answer.</b> A later project change makes a new version and requires a new Store answer. Terms never rewrite the confirmed definition.</div>'
-      +'<div class="proof-nav"><button type="button" data-proof-library>← PROJECT LIBRARY</button><button type="button" data-proof-go="proof-yard">← STORE / YARD</button><button class="next" type="button" data-proof-go="proof-record">CONTINUE → HANDOFF / RECORD</button></div>',
-      '<p class="goal">Commercial truth stays separate</p><div class="row"><b>Budgetary Q ≠ offer</b><span>Modeled economics can be shown without inventing payment authority.</span></div><div class="row"><b>Version stays fixed</b><span>Terms may answer the version; they may not rewrite it.</span></div>'
+      +'<div class="proof-gap" id="proof-terms-note"><b>SIMULATED DOWNSTREAM CHAIN.</b>The Store answer is preserved as its own identified result. Every event below is explicitly simulated and carries a separate demonstration receipt.</div>'
+      +'<div id="proof-receipt-ledger" class="reviewbox"><p class="dim">No simulated receipts yet.</p></div>'
+      +'<div class="band"><b>Nothing was collapsed.</b> Offer, acceptance, payment, allocation, release, local readiness, simulated execution, inspection/staging and READY remain separate events.</div>'
+      +'<div class="proof-nav"><button type="button" data-proof-library>← PROJECT LIBRARY</button><button type="button" data-proof-go="proof-yard">← STORE / YARD</button><button class="next" id="proof-terms-next" type="button" data-proof-go="proof-record">CONTINUE → HANDOFF / RECORD</button></div>',
+      '<p class="goal">Receipts make the chain auditable</p><div class="row"><b>Same definition</b><span>No downstream event rewrites the project.</span></div><div class="row"><b>Same Store answer</b><span>All simulated receipts point back to the identified Store result.</span></div>'
     );
 
     ensureProjectJourneyPage('proof-record',
-      '<p class="stage-tag">HANDOFF / RECORD</p><h1>KEEP THE DEFINITION AND THE STORE ANSWER.</h1>'
-      +'<p class="sub">The demonstration ends with the exact confirmed version, its Store response state, and the events that did not occur.</p>'
+      '<p class="stage-tag">HANDOFF / RECORD</p><h1>THE PARTS ARE READY IN THE SIMULATION. PICKUP CLOSES THE JOB.</h1>'
+      +'<p class="sub">READY is not custody. The final simulated event records pickup and then closes the owner record.</p>'
       +'<div class="proof-actor-grid">'
         +'<div><b>JOB</b><span id="proof-record-job">—</span></div>'
         +'<div><b>VERSION</b><span id="proof-record-version">—</span></div>'
@@ -1944,12 +1971,204 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         +'<div><b>INPUT HASH</b><span id="proof-record-input-hash">—</span></div>'
         +'<div><b>RESULT HASH</b><span id="proof-record-result-hash">—</span></div>'
         +'<div><b>STORE ECONOMICS</b><span id="proof-record-economics">—</span></div>'
-        +'<div><b>PHYSICAL FABRICATION</b><span>NOT RECORDED</span></div>'
+        +'<div><b>READY</b><span id="proof-record-ready">NOT RECORDED</span></div>'
+        +'<div><b>CUSTODY</b><span id="proof-record-custody">NOT TRANSFERRED</span></div>'
+        +'<div><b>OWNER RECORD</b><span id="proof-record-status">OPEN · SIMULATION</span></div>'
+        +'<div><b>PHYSICAL FABRICATION</b><span>NOT CLAIMED · SIMULATION ONLY</span></div>'
       +'</div>'
-      +'<div class="band"><b>Owner-record consequence.</b> The project definition is retained as the thing that was confirmed. The Store budgetary answer and every still-unresolved condition remain attached to that identified version.</div>'
-      +'<div class="proof-nav"><button type="button" data-proof-go="proof-yard">← STORE / YARD</button><button class="next" type="button" data-proof-library>← PROJECT LIBRARY</button></div>',
-      '<p class="goal">Record the truth</p><div class="row"><b>Definition survives</b><span>Store economics do not rewrite geometry.</span></div><div class="row"><b>Null events survive</b><span>No physical outcome is invented.</span></div>'
+      +'<div class="proof-gap"><b>SIMULATED HANDOFF ONLY.</b>No physical part is claimed to exist. This closes the demonstration record, not a real Store order.</div>'
+      +'<div id="proof-record-ledger" class="reviewbox"><p class="dim">Simulation receipts will appear here.</p></div>'
+      +'<div class="proof-nav"><button class="primary" id="proof-sim-pickup" type="button" data-proof-sim-action="pickup">SIMULATE PICKUP / TRANSFER CUSTODY</button></div>'
+      +'<div class="proof-nav"><button type="button" data-proof-go="proof-terms">← RECEIPTS</button><button class="next" type="button" data-proof-library>← PROJECT LIBRARY</button></div>',
+      '<p class="goal">Handoff closes the simulated job</p><div class="row"><b>READY ≠ pickup</b><span>The custody event remains separate.</span></div><div class="row"><b>Owner record survives</b><span>The exact definition, Store result and every simulated receipt remain one chain.</span></div>'
     );
+
+    function proofSimulationEconomics(){
+      const storeReference=proofHandoff?.payload?.storeReference || null;
+      const estimate=storeReference?.estimate || null;
+      const totals=estimate?.totals || null;
+      return {
+        complete:storeReference?.complete===true || estimate?.complete===true,
+        q:totals?.Q ?? estimate?.total ?? null,
+        material:totals?.material ?? estimate?.material ?? storeReference?.materialResolution?.materialTotal ?? null,
+        machineService:totals?.machine_service ?? estimate?.cellRecovery ?? null,
+        cycleMin:estimate?.cycle?.T_job_min ?? null,
+        sku:storeReference?.materialResolution?.storeSku || storeReference?.materialResolution?.pricingReferenceSku || null,
+        resultHash:estimate?.calculationIdentity?.resultHash || storeReference?.calculationIdentity?.resultHash || null,
+        storeReceipt:storeReference?.evaluationReceipt || null
+      };
+    }
+
+    function proofSimulationKey(){
+      if(proofHandoff?.source!=='start-own') return null;
+      const payload=proofHandoff.payload||{};
+      const economics=proofSimulationEconomics();
+      const version=proofHandoff.storeHandoff?.versionId||payload.id||payload.versionId||payload.normalizedPart?.versionId||'IDENTIFIED';
+      const receiptIdentity=economics.storeReceipt?.receiptHash||economics.storeReceipt?.requestId||economics.resultHash||'NO_STORE_RECEIPT';
+      return String(version)+'|'+String(receiptIdentity);
+    }
+
+    function ensureProofSimulation(){
+      const key=proofSimulationKey();
+      if(!key) return null;
+      if(!proofSimulation || proofSimulation.key!==key){
+        proofSimulation={key:key,receipts:[],createdAt:new Date().toISOString()};
+      }
+      return proofSimulation;
+    }
+
+    function proofSimulationReceipt(type,detail){
+      const sim=ensureProofSimulation();
+      if(!sim) return null;
+      const existing=sim.receipts.find(receipt=>receipt.type===type);
+      if(existing) return existing;
+      const economics=proofSimulationEconomics();
+      const base=String(economics.storeReceipt?.receiptHash||economics.storeReceipt?.requestId||economics.resultHash||'REFERENCE')
+        .replace(/[^a-z0-9]/gi,'').slice(0,12).toUpperCase() || 'REFERENCE';
+      const sequence=String(sim.receipts.length+1).padStart(2,'0');
+      const receipt={
+        type:type,
+        receiptId:'SIM-'+type.replace(/^SIMULATED_/,'').replace(/[^A-Z0-9]+/gi,'-')+'-'+base+'-'+sequence,
+        at:new Date().toISOString(),
+        detail:detail
+      };
+      sim.receipts.push(receipt);
+      return receipt;
+    }
+
+    function proofSimulationHas(type){
+      return !!ensureProofSimulation()?.receipts.some(receipt=>receipt.type===type);
+    }
+
+    function proofSimulationReceiptLabel(type){
+      return ensureProofSimulation()?.receipts.find(receipt=>receipt.type===type)?.receiptId || null;
+    }
+
+    function renderProofReceiptLedger(targetId){
+      const target=doc.getElementById(targetId);
+      if(!target) return;
+      const sim=ensureProofSimulation();
+      if(!sim || !sim.receipts.length){
+        target.innerHTML='<p class="dim">No simulated receipts yet.</p>';
+        return;
+      }
+      target.innerHTML=sim.receipts.map((receipt,index)=>
+        '<div class="kv"><span>'+(index+1)+' · '+receipt.type.replace(/^SIMULATED_/,'').replaceAll('_',' ')+'</span><span><b>'+receipt.receiptId+'</b><br><span class="dim">'+receipt.detail+' · '+receipt.at+'</span></span></div>'
+      ).join('');
+    }
+
+    function syncProofSimulationUI(){
+      if(proofHandoff?.source!=='start-own') return;
+      const sim=ensureProofSimulation();
+      if(!sim) return;
+      const economics=proofSimulationEconomics();
+      const money=value=>Number.isFinite(Number(value))?'$'+Number(value).toFixed(2):'UNRESOLVED';
+      const set=(id,value)=>{ const el=doc.getElementById(id); if(el) el.textContent=value; };
+      const status=(id,type,empty)=>{
+        const receipt=proofSimulationReceiptLabel(type);
+        set(id,receipt?'✓ SIMULATED · '+receipt:empty);
+      };
+
+      set('proof-accept-q',money(economics.q));
+      set('proof-accept-service',money(economics.machineService));
+      set('proof-accept-service-copy',money(economics.machineService));
+
+      status('proof-sim-offer-status','SIMULATED_OFFER','NOT CREATED');
+      status('proof-sim-accept-status','SIMULATED_ACCEPTANCE','NOT RECORDED');
+      status('proof-sim-pay-status','SIMULATED_PAYMENT','NOT RECORDED');
+      status('proof-sim-allocation-status','SIMULATED_ALLOCATION','NOT RECORDED');
+      status('proof-sim-release-status','SIMULATED_PRODUCTION_RELEASE','NOT RECORDED');
+      status('proof-sim-readiness-status','SIMULATED_CELL_READINESS','NOT RECORDED');
+      status('proof-sim-execution-status','SIMULATED_EXECUTION','NOT RECORDED');
+      status('proof-sim-stage-status','SIMULATED_INSPECTION_STAGING','NOT RECORDED');
+      status('proof-sim-ready-status','SIMULATED_READY_NOTICE','NOT RECORDED');
+
+      const offer=proofSimulationHas('SIMULATED_OFFER');
+      const accepted=proofSimulationHas('SIMULATED_ACCEPTANCE');
+      const paid=proofSimulationHas('SIMULATED_PAYMENT');
+      const allocated=proofSimulationHas('SIMULATED_ALLOCATION');
+      const released=proofSimulationHas('SIMULATED_PRODUCTION_RELEASE');
+      const executed=proofSimulationHas('SIMULATED_EXECUTION');
+      const staged=proofSimulationHas('SIMULATED_INSPECTION_STAGING');
+      const ready=proofSimulationHas('SIMULATED_READY_NOTICE');
+      const custody=proofSimulationHas('SIMULATED_CUSTODY_TRANSFER');
+
+      const actionButton=action=>doc.querySelector('#proof-accept [data-proof-sim-action="'+action+'"],#proof-yard [data-proof-sim-action="'+action+'"],#proof-record [data-proof-sim-action="'+action+'"]');
+      const offerButton=actionButton('offer'); if(offerButton) offerButton.disabled=!economics.complete||!Number.isFinite(Number(economics.q))||offer;
+      const acceptButton=actionButton('accept'); if(acceptButton) acceptButton.disabled=!offer||accepted;
+      const payButton=actionButton('pay'); if(payButton){ payButton.disabled=!accepted||paid; payButton.textContent=paid?'✓ SIMULATED PAYMENT RECORDED':'SIMULATE PAYMENT · '+money(economics.q); }
+      const allocateButton=actionButton('allocate'); if(allocateButton) allocateButton.disabled=!paid||allocated;
+      const releaseButton=actionButton('release'); if(releaseButton) releaseButton.disabled=!allocated||released;
+      const runButton=actionButton('run'); if(runButton) runButton.disabled=!released||executed;
+      const stageButton=actionButton('stage'); if(stageButton) stageButton.disabled=!executed||staged;
+      const readyButton=actionButton('ready'); if(readyButton) readyButton.disabled=!staged||ready;
+      const pickupButton=actionButton('pickup'); if(pickupButton){ pickupButton.disabled=!ready||custody; pickupButton.textContent=custody?'✓ SIMULATED PICKUP RECORDED':'SIMULATE PICKUP / TRANSFER CUSTODY'; }
+
+      const acceptNext=doc.getElementById('proof-accept-next'); if(acceptNext) acceptNext.disabled=!paid;
+      const yardNext=doc.getElementById('proof-yard-next'); if(yardNext) yardNext.disabled=!ready;
+      const termsNext=doc.getElementById('proof-terms-next'); if(termsNext) termsNext.disabled=!ready;
+
+      set('proof-sim-receipt-count',String(sim.receipts.length));
+      set('proof-record-ready',ready?'✓ SIMULATED READY NOTICE RECORDED':'NOT RECORDED');
+      set('proof-record-custody',custody?'✓ SIMULATED CUSTODY TRANSFERRED':'NOT TRANSFERRED');
+      set('proof-record-status',custody?'✓ CLOSED · SIMULATED OWNER RECORD':'OPEN · SIMULATION');
+      renderProofReceiptLedger('proof-receipt-ledger');
+      renderProofReceiptLedger('proof-record-ledger');
+
+      doc.querySelectorAll('.recovery-nav button[data-journey-stage]').forEach(button=>{
+        if(activeJourneyProject!=='start-own') return;
+        const stage=button.dataset.journeyStage;
+        if(stage==='yard') button.disabled=!paid;
+        if(stage==='terms'||stage==='record') button.disabled=!ready;
+      });
+    }
+
+    function handleProofSimulationAction(action){
+      if(proofHandoff?.source!=='start-own') return false;
+      const economics=proofSimulationEconomics();
+      const q=Number(economics.q);
+      const money=Number.isFinite(q)?'$'+q.toFixed(2):'UNRESOLVED';
+      if(action==='offer'){
+        if(economics.complete!==true || !Number.isFinite(q)) return true;
+        proofSimulationReceipt('SIMULATED_OFFER','Simulated offer created from the identified Store answer · total '+money);
+      } else if(action==='accept'){
+        if(!proofSimulationHas('SIMULATED_OFFER')) return true;
+        proofSimulationReceipt('SIMULATED_ACCEPTANCE','Customer accepted the simulated offer for the same identified definition');
+      } else if(action==='pay'){
+        if(!proofSimulationHas('SIMULATED_ACCEPTANCE')) return true;
+        proofSimulationReceipt('SIMULATED_PAYMENT','Simulated payment recorded · '+money+' · no money moved');
+      } else if(action==='allocate'){
+        if(!proofSimulationHas('SIMULATED_PAYMENT')) return true;
+        proofSimulationReceipt('SIMULATED_ALLOCATION','Simulated material allocation'+(economics.sku?' · '+economics.sku:'')+' · no live inventory reserved');
+      } else if(action==='release'){
+        if(!proofSimulationHas('SIMULATED_ALLOCATION')) return true;
+        proofSimulationReceipt('SIMULATED_PRODUCTION_RELEASE','Simulated job release recorded · no physical production authority created');
+      } else if(action==='run'){
+        if(!proofSimulationHas('SIMULATED_PRODUCTION_RELEASE')) return true;
+        proofSimulationReceipt('SIMULATED_CELL_READINESS','Reference-cell readiness satisfied for simulation only · no commissioned-machine claim');
+        proofSimulationReceipt('SIMULATED_EXECUTION','Simulated job completed'+(Number.isFinite(Number(economics.cycleMin))?' · modeled '+Number(economics.cycleMin).toFixed(4)+' min':'')+' · no live motion or controller command');
+      } else if(action==='stage'){
+        if(!proofSimulationHas('SIMULATED_EXECUTION')) return true;
+        proofSimulationReceipt('SIMULATED_INSPECTION_STAGING','Simulated inspection, labeling and staging recorded');
+      } else if(action==='ready'){
+        if(!proofSimulationHas('SIMULATED_INSPECTION_STAGING')) return true;
+        proofSimulationReceipt('SIMULATED_READY_NOTICE','Simulated READY notice issued · staged is still not picked up');
+      } else if(action==='pickup'){
+        if(!proofSimulationHas('SIMULATED_READY_NOTICE')) return true;
+        proofSimulationReceipt('SIMULATED_CUSTODY_TRANSFER','Simulated pickup and custody transfer recorded · demonstration job closed');
+      } else {
+        return false;
+      }
+      syncProofSimulationUI();
+      return true;
+    }
+
+    function canOpenStartOwnSimulationStage(stage){
+      if(proofHandoff?.source!=='start-own') return stage==='scan'||stage==='configure';
+      if(stage==='yard') return proofSimulationHas('SIMULATED_PAYMENT');
+      if(stage==='terms'||stage==='record') return proofSimulationHas('SIMULATED_READY_NOTICE');
+      return true;
+    }
 
     function syncProofHandoff(){
       if(!proofHandoff)return;
@@ -2051,6 +2270,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         : storeReference?.source?.storePin
           ? 'Store Zero · tested reference '+String(storeReference.source.storePin).slice(0,12)+'…'
           : 'Store Zero catalog · exact project material mapping not carried here';
+      syncProofSimulationUI();
     }
 
     doc.addEventListener('click', function(event){
@@ -2073,6 +2293,12 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
           selectJourneyProject('outdoor');
           originalShow.call(win,'outdoor-build-live');
         }
+        return;
+      }
+      const simAction=event.target.closest?.('[data-proof-sim-action]');
+      if(simAction){
+        event.preventDefault();
+        handleProofSimulationAction(simAction.dataset.proofSimAction);
         return;
       }
       const go=event.target.closest?.('[data-proof-go]');
@@ -2423,7 +2649,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       review:'Store Review',
       request:'Accept / Pay',
       yard:'Store / Yard',
-      terms:'Terms',
+      terms:'Receipts',
       recap:'Handoff / Record',
       record:'Handoff / Record'
     });
@@ -2439,6 +2665,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         }
         button.textContent = button.dataset.defaultLabel;
         button.hidden = false;
+        button.disabled = false;
         button.removeAttribute('aria-current');
         if (button.dataset.defaultGo) button.setAttribute('data-go',button.dataset.defaultGo);
         else button.removeAttribute('data-go');
@@ -2490,7 +2717,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
     function selectJourneyProject(projectId) {
       const nextJourneyProject = projectId || null;
-      if (activeJourneyProject !== nextJourneyProject) proofHandoff = null;
+      if (activeJourneyProject !== nextJourneyProject) { proofHandoff = null; proofSimulation = null; }
       activeJourneyProject = nextJourneyProject;
       seatJourneySnapshot = null;
       if (activeJourneyProject) doc.documentElement.dataset.activeJourneyProject = activeJourneyProject;
@@ -2603,6 +2830,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     }
 
     function showMappedProjectStage(projectId, stage) {
+      if (projectId === 'start-own' && !canOpenStartOwnSimulationStage(stage)) { syncProofSimulationUI(); return true; }
       if (projectId === 'start-own' && (stage === 'scan' || stage === 'configure')) {
         originalShow.call(win,'start-own-live');
         setTimeout(() => showStartOwnStage(

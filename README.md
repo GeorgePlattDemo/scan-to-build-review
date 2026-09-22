@@ -1,6 +1,6 @@
 # Scan-to-Build / Home as a Twin — Public Review Package
 
-<a href="https://georgeplattdemo.github.io/scan-to-build-review/working-app.html"><kbd>▶ OPEN WORKING APP</kbd></a>
+<a href="https://georgeplattdemo.github.io/scan-to-build-review/system-build-current.html"><kbd>▶ OPEN WORKING APP</kbd></a>
 
 Public review artifact · simulation only · no live machine control · no production claim.
 

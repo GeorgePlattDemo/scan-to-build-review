@@ -299,13 +299,13 @@
       </svg>
       </div>
       <div class="specrow">
-        <div class="spec"><b>STOCK</b><span>2×4 · 60 in</span></div>
+        <div class="spec"><b>DEFINED WORKPIECE</b><span id="stb-bench-workpiece-spec">2×4 · 60 in</span></div>
         <div class="spec"><b>EACH PART</b><span id="stb-bench-length-spec">16 in</span></div>
         <div class="spec"><b>END CUTS</b><span id="stb-bench-angle-spec">30°</span></div>
         <div class="spec"><b>PARTS</b><span id="stb-bench-parts-spec">2</span></div>
         <div class="spec"><b>CONTROL</b><span>24 in min</span></div>
       </div>
-      <div class="stb-system-answer" id="stb-system-answer" aria-live="polite"><b>STORE</b> · this same 60-in definition will be checked against current Store and machine truth.</div>
+      <div class="stb-system-answer" id="stb-system-answer" aria-live="polite"><b>STORE</b> · this definition will be checked against the current Store catalog and machine truth.</div>
       <ol class="steps">
         <li id="stb-bench-cut-step"><b>Cut it.</b> Three cuts along the one board — a 30° angle each — make the two parts.</li>
         <li id="stb-bench-drill-step"><b>Drill it.</b> One spot, on location, centered in each part.</li>
@@ -316,13 +316,23 @@
   </div>
 
   <div class="bench-panel" id="stb-bench-controls">
-    <h2>Change of plans?</h2>
-    <p class="lede">These controls make a new version of the same project. The 60-in Store-origin workpiece stays the workpiece unless that fact is explicitly changed in a later pass.</p>
-    <div class="control-grid">
-      <div class="control"><b>PARTS</b><span class="value" id="stb-config-parts-value">2 parts</span><div class="choice-row" id="stb-config-parts"><button type="button" data-parts="1">1</button><button type="button" class="on" data-parts="2">2</button></div></div>
-      <div class="control"><b>EACH PART</b><span class="value" id="stb-config-length-value">16 in</span><input id="stb-config-length" type="number" min="1" max="35" step="0.125" value="16" inputmode="decimal"><div class="choice-row"><button type="button" data-length="12">12</button><button type="button" class="on" data-length="16">16</button><button type="button" data-length="18">18</button><button type="button" data-length="24">24</button></div></div>
-      <div class="control"><b>END ANGLE</b><span class="value" id="stb-config-angle-value">30° · both ends · parallel</span><input id="stb-config-angle" type="number" min="0" max="45" step="0.5" value="30" inputmode="decimal"><div class="choice-row"><button type="button" data-angle="0">0°</button><button type="button" data-angle="15">15°</button><button type="button" class="on" data-angle="30">30°</button><button type="button" data-angle="45">45°</button></div></div>
-      <div class="control"><b>SPOT</b><span class="value" id="stb-config-spot-value">1 centered spot / part</span><div class="choice-row" id="stb-config-spot"><button type="button" class="on" data-spot="centered">CENTERED</button><button type="button" data-spot="none">NONE</button></div></div>
+    <h2>One change. Same span.</h2>
+    <p class="lede">Keep the same 8.000 in horizontal span. Change only the brace length from 16 to 18 in. Scan-to-Build derives the matching end-cut angle and centered spot. Store decides whether the defined workpiece, stock, capability, modeled time, and Q still resolve.</p>
+    <div class="control-grid" style="grid-template-columns:minmax(280px,1fr)">
+      <div class="control">
+        <b>EACH BRACE · BOUNDED DEMO</b>
+        <span class="value" id="stb-config-length-value">16.000 in · 30.000° end cuts · 13.856 in achieved rise</span>
+        <input id="stb-config-length" type="number" min="16" max="18" step="0.125" value="16" inputmode="decimal" aria-describedby="stb-config-geometry-note stb-config-boundary-note">
+        <div class="choice-row">
+          <button type="button" class="on" data-length="16">16 IN</button>
+          <button type="button" data-length="18">18 IN</button>
+        </div>
+        <p class="lede" id="stb-config-geometry-note" style="margin:10px 0 0;font-size:11px">16.000 in → 30.000° end cuts. 18.000 in → 26.388° end cuts. Both preserve the same 8.000 in horizontal span.</p>
+        <div id="stb-config-boundary-note" hidden style="margin-top:10px;padding:9px 10px;border:1px solid #b63f35;border-radius:7px;background:#fff0ee;color:#8d261f;font-size:11px;font-weight:700">
+          OUTSIDE THIS DEMO RANGE · Enter 16.000 through 18.000 in, or reset the demo.
+        </div>
+        <button id="stb-config-reset" type="button" hidden style="margin-top:8px">RESET TO 16 IN</button>
+      </div>
     </div>
   </div>
 
@@ -331,7 +341,7 @@
     <div class="definition-grid">
       <div class="defrow"><span>Project</span><span>Outdoor X Brace repair</span></div>
       <div class="defrow"><span>Store-origin material</span><span>2×4 stud</span></div>
-      <div class="defrow"><span>Defined workpiece</span><span>60 in</span></div>
+      <div class="defrow"><span>Requested minimum workpiece</span><span>60 in</span></div>
       <div class="defrow"><span>Parts</span><span id="stb-def-parts">2</span></div>
       <div class="defrow"><span>Finished length</span><span id="stb-def-length">16 in each</span></div>
       <div class="defrow"><span>Ends</span><span id="stb-def-angle">30° · both · parallel</span></div>
@@ -376,7 +386,7 @@
       <div class="basis-box"><b>CYCLE MODEL</b><span id="stb-basis-cycle-model">—</span></div>
       <div class="basis-box"><b>MODELED JOB TIME</b><span id="stb-basis-job-time">—</span></div>
     </div>
-    <p class="lede" style="margin-top:12px">The project remains one 60-in defined workpiece. Store procurement may identify a longer raw SKU behind that workpiece; procurement does not redefine the project.</p>
+    <p class="lede" style="margin-top:12px">The definition carries a 60-in minimum. Store selects the shortest complete offered board. At 16 in that is the 60-in SKU; when the same-span 18-in version no longer passes retained control on 60 in, Store advances to 72 in.</p>
   </div>
 
   <div class="bench-panel warn">

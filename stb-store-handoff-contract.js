@@ -37,16 +37,16 @@
     startOwn: Object.freeze({
       projectId:'start-own',
       projectClass:'USER_DEFINED_BOARD',
-      materialCatalogPin:'f88ccaf9a2624899e255e66b51111e2b02309dad',
+      materialCatalogPin:'140217b0aed64725d26b0d9332e3bf7b5d4396e0',
       capabilityBasis:'STB-D001-DIMENSIONAL-TRAVEL-0.1',
-      capabilityPin:'f88ccaf9a2624899e255e66b51111e2b02309dad',
+      capabilityPin:'140217b0aed64725d26b0d9332e3bf7b5d4396e0',
       economicsModel:'STB-STORE-ZERO-PRICE-1',
       economicsVersion:'0.3.0',
       economicsStatus:'PINNED_STORE_ISSUED_REFERENCE',
-      economicsPin:'f88ccaf9a2624899e255e66b51111e2b02309dad',
+      economicsPin:'140217b0aed64725d26b0d9332e3bf7b5d4396e0',
       governingStandard:'DIMENSIONAL-STORE-TRAVEL-STANDARD-0.1.md',
-      acceptanceWorkflowRun:'35757052553',
-      systemIntegrationPin:'900dbd13f079f8a5f8d76d49c723fd35279164e8',
+      acceptanceWorkflowRun:'35791021805',
+      systemIntegrationPin:'59a9c0326c1afea7af3767e1ed89bf6465a4b809',
       legacyGeneralRecoverySelected:false
     }),
     outdoor: Object.freeze({
@@ -100,6 +100,7 @@
    * Project UI data contains no material price authority of its own.
    */
   var START_OWN_CATALOG_ROWS = Object.freeze([
+    ["2x4","STB-ZERO-SPF-2X4-60-001","board",60,null,null,2.61,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
     ["2x4","STB-ZERO-SPF-2X4-72-001","board",72,null,null,3.13,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
     ["2x4","STB-ZERO-SPF-2X4-96-001","board",96,null,null,4.18,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
     ["2x4","STB-ZERO-SPF-2X4-108-001","board",108,null,null,4.7,["CROSSCUT","MITER_LIMITED","SPOT_ON_LOCATION","DRILL","MILL_LONGITUDINAL_PROFILE","MILL_END_PROFILE"],["D-001"]],
@@ -312,12 +313,12 @@
     status:'STORE_ISSUED_REFERENCE',
     source:Object.freeze({
       repository:'GeorgePlattDemo/scan-to-build-store',
-      storePin:'f88ccaf9a2624899e255e66b51111e2b02309dad',
+      storePin:'140217b0aed64725d26b0d9332e3bf7b5d4396e0',
       pricingFile:'store-zero-pricing-engine.mjs',
       travelFile:'d001-travel-standard.mjs',
       governingStandard:'DIMENSIONAL-STORE-TRAVEL-STANDARD-0.1.md',
-      workflowRun:'35768861705',
-      systemIntegrationPin:'900dbd13f079f8a5f8d76d49c723fd35279164e8'
+      workflowRun:'35791021805',
+      systemIntegrationPin:'59a9c0326c1afea7af3767e1ed89bf6465a4b809'
     }),
     demand:Object.freeze({
       configurationId:'SYO-USER1-XBRACE',
@@ -341,21 +342,27 @@
     }),
     materialResolution:Object.freeze({
       status:'MAPPED',
-      storeSku:'STB-ZERO-SPF-2X4-72-001',
-      pricingReferenceSku:'STB-ZERO-SPF-2X4-72-001',
-      pricingReferenceStockLengthIn:72,
+      storeSku:'STB-ZERO-SPF-2X4-60-001',
+      pricingReferenceSku:'STB-ZERO-SPF-2X4-60-001',
+      pricingReferenceStockLengthIn:60,
+      requestedMinimumWorkpieceLengthIn:60,
+      requestedDefinedWorkpieceLengthIn:60,
       workpieceLengthIn:60,
+      selectionPolicy:'SHORTEST_COMPLETE_STORE_OFFERING',
+      consideredCandidates:Object.freeze([
+        Object.freeze({storeSku:'STB-ZERO-SPF-2X4-60-001',stockLengthIn:60,candidateStatus:'SUPPORTABLE',reason:null})
+      ]),
       quantity:1,
-      stockLengthIn:72,
-      unitPrice:3.13,
-      materialTotal:3.13,
+      stockLengthIn:60,
+      unitPrice:2.61,
+      materialTotal:2.61,
       allocationClaimed:false,
       cellFamily:Object.freeze(['D-001']),
       supportedOps:Object.freeze(['CROSSCUT','MITER_LIMITED','SPOT_ON_LOCATION','DRILL','MILL_LONGITUDINAL_PROFILE','MILL_END_PROFILE']),
       source:Object.freeze({
         repository:'GeorgePlattDemo/scan-to-build-store',
         file:'store-zero-catalog.json',
-        pin:'f88ccaf9a2624899e255e66b51111e2b02309dad',
+        pin:'140217b0aed64725d26b0d9332e3bf7b5d4396e0',
         clock:'2026-09-10'
       })
     }),
@@ -379,10 +386,10 @@
         T_job_min:1.4128
       }),
       totals:Object.freeze({
-        material:3.13,
+        material:2.61,
         hardware:0,
         machine_service:5.89,
-        Q:9.02,
+        Q:8.50,
         Q_basis:'CALCULATED_FROM_DECLARED_STAGE2_MODEL'
       }),
       travel:Object.freeze({
@@ -404,27 +411,140 @@
         setupTimeMin:0
       }),
       calculationIdentity:Object.freeze({
-        inputHash:'e186df5ead47f0c3c233477b18d00206643d8e5e1adf03fdd6dabdc95a0a5168',
-        resultHash:'425af5de05fb614b87ca308696d0d19af0b2701ce2f3fd51c8a6c3ca84042f4f'
+        inputHash:'f0918ff545e3d77d8d5ec33055d7279bb01dbe172bb4e6cc4d498469d66b2e82',
+        resultHash:'2abe991dbd5331f7fa3762018fed9cc707b637d4512ba62f7fc8fe1e4e28587a'
       })
     })
   });
+
+  var USER1_STORE_REFERENCE_18 = Object.freeze({
+    status:'STORE_ISSUED_REFERENCE',
+    source:Object.freeze({
+      repository:'GeorgePlattDemo/scan-to-build-store',
+      storePin:'140217b0aed64725d26b0d9332e3bf7b5d4396e0',
+      pricingFile:'store-zero-pricing-engine.mjs',
+      travelFile:'d001-travel-standard.mjs',
+      governingStandard:'DIMENSIONAL-STORE-TRAVEL-STANDARD-0.1.md',
+      workflowRun:'35791021805',
+      systemIntegrationPin:'59a9c0326c1afea7af3767e1ed89bf6465a4b809',
+      systemDiagnosticRun:'35791336322'
+    }),
+    demand:Object.freeze({
+      configurationId:'SYO-USER1-XBRACE',
+      configurationVersion:'0.2',
+      definedWorkpieceLengthIn:60,
+      partQty:2,
+      partLengthIn:18,
+      sawAngleDeg:26.387799961242997,
+      cutPlane:'miter-face',
+      endIdentity:'both',
+      endRelation:'parallel',
+      lengthDatum:'long-long-outer-edge',
+      datumCMethod:'REFERENCE_CUT',
+      requiredOps:Object.freeze(['MITER_LIMITED','SPOT_ON_LOCATION']),
+      spotMode:'SPOT_ON_LOCATION',
+      spotLocationRule:'CENTERED_ON_PART',
+      spotAcrossWidthRule:'CENTERED_ON_WIDE_FACE',
+      spotXIn:9,
+      declaredSawCuts:3,
+      declaredSpotCount:2
+    }),
+    materialResolution:Object.freeze({
+      status:'MAPPED',
+      storeSku:'STB-ZERO-SPF-2X4-72-001',
+      pricingReferenceSku:'STB-ZERO-SPF-2X4-72-001',
+      pricingReferenceStockLengthIn:72,
+      requestedMinimumWorkpieceLengthIn:60,
+      requestedDefinedWorkpieceLengthIn:60,
+      workpieceLengthIn:72,
+      selectionPolicy:'SHORTEST_COMPLETE_STORE_OFFERING',
+      consideredCandidates:Object.freeze([
+        Object.freeze({storeSku:'STB-ZERO-SPF-2X4-60-001',stockLengthIn:60,candidateStatus:'REFUSED',reason:'LAST_REMAIN_BELOW_TWO_ROLLER_CONTROL'}),
+        Object.freeze({storeSku:'STB-ZERO-SPF-2X4-72-001',stockLengthIn:72,candidateStatus:'SUPPORTABLE',reason:null})
+      ]),
+      quantity:1,
+      stockLengthIn:72,
+      unitPrice:3.13,
+      materialTotal:3.13,
+      allocationClaimed:false,
+      cellFamily:Object.freeze(['D-001']),
+      supportedOps:Object.freeze(['CROSSCUT','MITER_LIMITED','SPOT_ON_LOCATION','DRILL','MILL_LONGITUDINAL_PROFILE','MILL_END_PROFILE']),
+      source:Object.freeze({
+        repository:'GeorgePlattDemo/scan-to-build-store',
+        file:'store-zero-catalog.json',
+        pin:'140217b0aed64725d26b0d9332e3bf7b5d4396e0',
+        clock:'2026-09-10'
+      })
+    }),
+    estimate:Object.freeze({
+      status:'BUDGETARY_ESTIMATE',
+      complete:true,
+      completeness:'COMPLETE_FOR_TRAVEL_STANDARD',
+      documentKind:'BudgetaryEstimate',
+      engine:Object.freeze({
+        id:'STB-STORE-ZERO-PRICE-1',
+        version:'0.3.0',
+        clock:'2026-09-22',
+        documentKind:'BudgetaryEstimate'
+      }),
+      cycle:Object.freeze({
+        model:'STB-D001-DIMENSIONAL-TRAVEL-0.1',
+        version:'0.1.0',
+        basis:'DECLARED_STAGE2_MODEL',
+        measured:false,
+        commissioned:false,
+        T_job_min:1.4151
+      }),
+      totals:Object.freeze({
+        material:3.13,
+        hardware:0,
+        machine_service:5.90,
+        Q:9.03,
+        Q_basis:'CALCULATED_FROM_DECLARED_STAGE2_MODEL'
+      }),
+      travel:Object.freeze({
+        derivedSawCuts:3,
+        derivedSpotCount:2,
+        finalRemainderIn:35.625
+      }),
+      economics:Object.freeze({
+        id:'STB-D001-STORE-ECONOMICS-S2-0.1',
+        version:'0.1.0',
+        basis:'DECLARED_STAGE2_MODEL',
+        measured:false,
+        forecastProductiveHours:600,
+        annualCostPoolUsd:120000,
+        targetGrossMargin:0.20,
+        breakEvenPerHour:200,
+        sellRatePerHour:250,
+        setupCharge:0,
+        setupTimeMin:0
+      }),
+      calculationIdentity:Object.freeze({
+        inputHash:'4b3b498d86177ed5a13c2662778f232b2c11cfafa7f626a689b3823b6872a4cc',
+        resultHash:'59c9988c42ffd2520f6c1931d735a31e07848d72ac602182c510a17c20b89e88'
+      })
+    })
+  });
+
+  var USER1_STORE_REFERENCES = Object.freeze([USER1_STORE_REFERENCE,USER1_STORE_REFERENCE_18]);
 
   function roundN(value, places){
     var p=Math.pow(10, places == null ? 2 : places);
     return Math.round(Number(value)*p)/p;
   }
 
-  function user1StoreDemandMatchesReference(input){
+  function user1StoreDemandMatchesReference(input,reference){
     input=input || {};
-    var d=USER1_STORE_REFERENCE.demand;
+    reference=reference || USER1_STORE_REFERENCE;
+    var d=reference.demand;
     var parts=Array.isArray(input.parts)?input.parts:[];
     var ops=Array.isArray(input.requiredOps)?input.requiredOps.slice().sort():[];
     var expectedOps=d.requiredOps.slice().sort();
     if(String(input.configurationId||'')!==d.configurationId) return false;
     if(String(input.configurationVersion||'')!==d.configurationVersion) return false;
     if(Number(input.definedWorkpieceLengthIn)!==d.definedWorkpieceLengthIn) return false;
-    if(Number(input.sawAngleDeg)!==d.sawAngleDeg) return false;
+    if(Math.abs(Number(input.sawAngleDeg)-Number(d.sawAngleDeg))>1e-9) return false;
     if(String(input.cutPlane||'')!==d.cutPlane) return false;
     if(String(input.endIdentity||'')!==d.endIdentity) return false;
     if(String(input.endRelation||'')!==d.endRelation) return false;
@@ -447,6 +567,13 @@
       if(String(feature.acrossWidthRule||'')!==d.spotAcrossWidthRule) return false;
     }
     return true;
+  }
+
+  function user1StoreReferenceForDemand(input){
+    for(var i=0;i<USER1_STORE_REFERENCES.length;i++){
+      if(user1StoreDemandMatchesReference(input,USER1_STORE_REFERENCES[i])) return USER1_STORE_REFERENCES[i];
+    }
+    return null;
   }
 
   function unresolvedUser1StoreAnswer(status, codes, reason, receipt){
@@ -472,15 +599,16 @@
   }
 
   function resolveUser1StoreReference(input){
-    if(!user1StoreDemandMatchesReference(input)){
+    var reference=user1StoreReferenceForDemand(input);
+    if(!reference){
       return unresolvedUser1StoreAnswer(
         'STORE_REFRESH_REQUIRED',
         ['STORE_REFRESH_REQUIRED'],
-        'This static Review build has no authority to recalculate Store capability, modeled time, economics, or Q for a changed definition.',
+        'This static Review build carries only the two tested 16-in and 18-in Store references. Intermediate geometry requires the live System Store endpoint.',
         null
       );
     }
-    var estimate=USER1_STORE_REFERENCE.estimate;
+    var estimate=reference.estimate;
     return Object.freeze({
       status:'MATCHED_STORE_REFERENCE',
       complete:true,
@@ -493,10 +621,10 @@
       combinedValue:estimate.totals.Q,
       estimate:estimate,
       calculationIdentity:estimate.calculationIdentity,
-      materialResolution:USER1_STORE_REFERENCE.materialResolution,
+      materialResolution:reference.materialResolution,
       refusalConditions:Object.freeze([]),
       unresolvedConditions:Object.freeze([]),
-      source:USER1_STORE_REFERENCE.source,
+      source:reference.source,
       evaluationReceipt:null
     });
   }
@@ -506,6 +634,9 @@
     var requestId=String(request.requestId || '').trim();
     var currentStorePin=String(request.currentStorePin || '').trim();
     var checkedAt=String(request.checkedAt || new Date().toISOString());
+
+    var reference=user1StoreReferenceForDemand(input);
+    var expectedStorePin=reference?.source?.storePin || USER1_STORE_REFERENCE.source.storePin;
 
     if(!requestId){
       return unresolvedUser1StoreAnswer(
@@ -527,13 +658,15 @@
           requestId:requestId,
           checkedAt:checkedAt,
           currentStorePin:null,
-          referenceStorePin:USER1_STORE_REFERENCE.source.storePin,
+          referenceStorePin:expectedStorePin,
           currentStoreMatchesReference:false
         })
       );
     }
 
-    if(currentStorePin!==USER1_STORE_REFERENCE.source.storePin){
+    var reference=user1StoreReferenceForDemand(input);
+    var expectedStorePin=reference?.source?.storePin || USER1_STORE_REFERENCE.source.storePin;
+    if(currentStorePin!==expectedStorePin){
       return unresolvedUser1StoreAnswer(
         'STORE_AUTHORITY_CHANGED',
         ['STORE_REFRESH_REQUIRED','STORE_AUTHORITY_CHANGED'],
@@ -544,7 +677,7 @@
           requestId:requestId,
           checkedAt:checkedAt,
           currentStorePin:currentStorePin,
-          referenceStorePin:USER1_STORE_REFERENCE.source.storePin,
+          referenceStorePin:expectedStorePin,
           currentStoreMatchesReference:false
         })
       );
@@ -560,7 +693,7 @@
           requestId:requestId,
           checkedAt:checkedAt,
           currentStorePin:currentStorePin,
-          referenceStorePin:USER1_STORE_REFERENCE.source.storePin,
+          referenceStorePin:answer.source?.storePin || USER1_STORE_REFERENCE.source.storePin,
           currentStoreMatchesReference:true
         })
       }));
@@ -575,14 +708,14 @@
         requestId:requestId,
         checkedAt:checkedAt,
         currentStorePin:currentStorePin,
-        referenceStorePin:USER1_STORE_REFERENCE.source.storePin,
+        referenceStorePin:answer.source?.storePin || USER1_STORE_REFERENCE.source.storePin,
         currentStoreMatchesReference:true,
         machineEnvelopeId:'D001-STAGE2-ENVELOPE-0.3',
         travelStandardId:'STB-D001-DIMENSIONAL-TRAVEL-0.1',
         travelStandardVersion:'0.1.0',
-        economicsId:USER1_STORE_REFERENCE.estimate.economics.id,
-        economicsVersion:USER1_STORE_REFERENCE.estimate.economics.version,
-        calculationIdentity:USER1_STORE_REFERENCE.estimate.calculationIdentity
+        economicsId:answer.estimate?.economics?.id || USER1_STORE_REFERENCE.estimate.economics.id,
+        economicsVersion:answer.estimate?.economics?.version || USER1_STORE_REFERENCE.estimate.economics.version,
+        calculationIdentity:answer.calculationIdentity || USER1_STORE_REFERENCE.estimate.calculationIdentity
       })
     }));
   }
@@ -983,6 +1116,8 @@
     startOwnOfferings:startOwnOfferings,
     resolveStartOwnMaterial:resolveStartOwnMaterial,
     user1StoreReference:USER1_STORE_REFERENCE,
+    user1StoreReferences:USER1_STORE_REFERENCES,
+    user1StoreReferenceForDemand:user1StoreReferenceForDemand,
     user1StoreDemandMatchesReference:user1StoreDemandMatchesReference,
     resolveUser1StoreReference:resolveUser1StoreReference,
     requestUser1StoreEvaluation:requestUser1StoreEvaluation,
