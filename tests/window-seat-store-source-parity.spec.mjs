@@ -86,14 +86,17 @@ test('Window Seat supported edits recompute definition, Store basis, displayed v
   const initialDisplayed=Number((await page.locator('#e-price').textContent()).replace(/[^0-9.]/g,''));
   expect(initial.project.id,'WINDOW_SEAT_EDIT_WRONG_PROJECT').toBe('window-seat');
   expect(initial.storeReference.pin.commit,'WINDOW_SEAT_EDIT_WRONG_STORE_AUTHORITY').toBe(STORE_PIN);
+  expect(initial.definition.mats.every(line => line.family==='Select Pine'),'WINDOW_SEAT_EDIT_INITIAL_MATERIAL_DRIFT').toBe(true);
   expect(initialDisplayed,'WINDOW_SEAT_EDIT_DISPLAY_NOT_STORE_VALUE').toBe(initial.storeReference.q);
 
-  await page.locator('#c-wC').fill('60');
-  await page.locator('#c-wC').dispatchEvent('input');
+  // Change a supported customer choice that materially changes the definition and Store economics
+  // without creating a site-fit conflict: Pine -> Poplar.
+  await page.locator('#species [data-k="poplar"]').click();
   const edited=await page.evaluate(() => window.STBWindowSeatJourney.snapshot());
   const editedDisplayed=Number((await page.locator('#e-price').textContent()).replace(/[^0-9.]/g,''));
 
-  expect(edited.definition.W,'WINDOW_SEAT_EDIT_DEFINITION_NOT_RECOMPUTED').toBe(initial.definition.W+5);
+  expect(edited.definition.W,'WINDOW_SEAT_EDIT_GEOMETRY_SHOULD_BE_PRESERVED').toBe(initial.definition.W);
+  expect(edited.definition.mats.every(line => line.family==='Select Poplar'),'WINDOW_SEAT_EDIT_DEFINITION_NOT_RECOMPUTED').toBe(true);
   expect(edited.storeRequest.revision,'WINDOW_SEAT_EDIT_REQUEST_REVISION_DRIFT').toBe(edited.revision.number);
   expect(edited.storeReference.revision,'WINDOW_SEAT_EDIT_STORE_REVISION_DRIFT').toBe(edited.revision.number);
   expect(edited.storeReference.pin.commit,'WINDOW_SEAT_EDIT_STORE_AUTHORITY_DRIFT').toBe(STORE_PIN);
@@ -107,14 +110,16 @@ test('Window Seat supported edits recompute definition, Store basis, displayed v
   expect(confirmed.storeAnswer.pin.commit,'WINDOW_SEAT_CONFIRM_STORE_AUTHORITY_DRIFT').toBe(STORE_PIN);
   expect(confirmed.storeAnswer.q,'WINDOW_SEAT_CONFIRM_ANSWER_NOT_CURRENT_STORE_VALUE').toBe(confirmed.storeReference.q);
 
-  await page.locator('#c-wC').fill('61');
-  await page.locator('#c-wC').dispatchEvent('input');
+  // A second supported material edit after confirmation must make the held answer historical.
+  await page.locator('#species [data-k="oak"]').click();
   const revised=await page.evaluate(() => window.STBWindowSeatJourney.snapshot());
+  expect(revised.definition.mats.every(line => line.family==='Select Red Oak'),'WINDOW_SEAT_REVISE_DEFINITION_NOT_RECOMPUTED').toBe(true);
   expect(revised.revision.number,'WINDOW_SEAT_REVISE_DID_NOT_INCREMENT').toBe(confirmed.revision.number+1);
   expect(revised.revision.confirmed,'WINDOW_SEAT_REVISE_LEFT_REVISION_CONFIRMED').toBe(false);
   expect(revised.storeAnswer.stale,'WINDOW_SEAT_REVISE_OLD_ANSWER_NOT_HISTORICAL').toBe(true);
   expect(revised.storeAnswer.atRevision,'WINDOW_SEAT_REVISE_OLD_ANSWER_IDENTITY_CHANGED').toBe(confirmed.revision.number);
   expect(revised.storeReference.revision,'WINDOW_SEAT_REVISE_LIVE_REFERENCE_STALE').toBe(revised.revision.number);
+  expect(revised.storeReference.pin.commit,'WINDOW_SEAT_REVISE_STORE_AUTHORITY_DRIFT').toBe(STORE_PIN);
 
   await page.locator('[data-ws-confirm-send]').click();
   confirmed=await page.evaluate(() => window.STBWindowSeatJourney.snapshot());
