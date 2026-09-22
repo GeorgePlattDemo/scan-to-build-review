@@ -147,9 +147,9 @@ assert.equal(exactStoreAnswer.estimate.travel.derivedSawCuts,3);
 assert.equal(exactStoreAnswer.estimate.travel.derivedSpotCount,2);
 assert.equal(exactStoreAnswer.estimate.travel.finalRemainderIn,27.625);
 assert.equal(exactStoreAnswer.estimate.engine.version,'0.3.0');
-assert.equal(exactStoreAnswer.source.storePin,'f8373520a726090ed91eff82e5e720f4a9634615');
-assert.equal(exactStoreAnswer.calculationIdentity.inputHash,'caa7c91f1296c243a5abb05ed35a0c55b5b1f5d4dab32efd64cd2656d75f3036');
-assert.equal(exactStoreAnswer.calculationIdentity.resultHash,'15a8835dd50771136020190db7f5dbed1bd35b78930bf338be63bea8427353c2');
+assert.equal(exactStoreAnswer.source.storePin,'95c639a1d0d4812df097ad1eb628594b38f921de');
+assert.equal(exactStoreAnswer.calculationIdentity.inputHash,'5de0367b62087cb0174ef5f1e101e22ded3728ba71906868628a985afafa078b');
+assert.equal(exactStoreAnswer.calculationIdentity.resultHash,'9ad8d16a7c211d420b83e46ed8a8d224bd289e26a48764ff8d0389b6db698604');
 
 const changedRevision = contract.resolveUser1StoreReference({
   configurationId:'SYO-USER1-XBRACE',
