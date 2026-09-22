@@ -699,7 +699,7 @@ var FIX={
 
 /* ═══════════ 2 · PROJECT STATE — customer intent only ═══════════ */
 var START={fam:'pine', H:94, W:{LEFT:24,CENTER:55,RIGHT:24}, SH:{LEFT:4,RIGHT:4},
-           seat:22, upperH:14, bays:2, cub:2, front:false,
+           seat:22, upperH:14, bays:2, cub:2, front:false, shelfPilotSpots:false,
            depth:14, runs:2, gap:0, hw:{sku:'',qty:1}};
 var P=JSON.parse(JSON.stringify(START));
 var rev={n:1,confirmed:false};
@@ -814,17 +814,19 @@ function buildDefinition(){
     /* SUPPLIED-ELEVATION RELATIONSHIP, not an invented even-spacing formula:
        the top tower shelf sits on the same datum as the center upper-storage shelf (the window head),
        and the shelves below it divide the space beneath that datum. */
-    var datum=P.H-T-P.upperH-T, bay, topBay;
+    var datum=P.H-T-P.upperH-T, bay, topBay, shelfDatums=[];
     if(n>=1){
       bay=(datum-T-(n-1)*T)/n;
       for(var i=1;i<n;i++){
         var y=T+i*bay+(i-1)*T;
+        shelfDatums.push(r3(y));
         feat(asm,'SHELF','Shelf',w-2*T,{x:x0+T,y:y,w:w-2*T,h:T});
       }
+      shelfDatums.push(r3(datum));
       feat(asm,'SHELF','Shelf',w-2*T,{x:x0+T,y:datum,w:w-2*T,h:T});
       topBay=P.H-T-(datum+T);
     } else { bay=P.H-2*T; topBay=0 }
-    return {clearBay:r3(bay),topBay:r3(topBay),datum:r3(datum),shelfLen:r3(w-2*T),n:n};
+    return {clearBay:r3(bay),topBay:r3(topBay),datum:r3(datum),shelfLen:r3(w-2*T),n:n,shelfDatums:shelfDatums};
   }
   var left=tower('ASM-LEFT',0,P.W.LEFT,P.SH.LEFT);
   /* ── ASM-CENTER — ONE complete window-seat module ── */
@@ -865,6 +867,29 @@ function buildDefinition(){
       groups[key].quantity++; groups[key].runIds.push(r.id); groups[key].parts[f.role]=1;
     });
   });
+  var shelfPilotFeatures=[];
+  if(P.shelfPilotSpots){
+    [{asm:'ASM-LEFT',datums:left.shelfDatums},{asm:'ASM-RIGHT',datums:right.shelfDatums}].forEach(function(towerDef){
+      var uprights=feats.filter(function(f){return f.asm===towerDef.asm&&f.role==='UPRIGHT'});
+      uprights.forEach(function(upright,uprightIndex){
+        towerDef.datums.forEach(function(y,shelfIndex){
+          shelfPilotFeatures.push({
+            featureId:towerDef.asm+'-UPRIGHT-'+(uprightIndex+1)+'-SPOT-'+('0'+(shelfIndex+1)).slice(-2),
+            kind:'SPOT_ON_LOCATION',
+            targetOccurrenceId:upright.id,
+            targetRole:'UPRIGHT',
+            assembly:towerDef.asm,
+            partRelativeXIn:r3(y),
+            xIn:r3(y),
+            reference:'FROM_BASE',
+            acrossWidthRule:'CENTERED_ON_WIDE_FACE',
+            toolDiameterIn:0.1875,
+            basis:'DERIVED_FROM_CONFIGURED_SHELF_ELEVATION'
+          });
+        });
+      });
+    });
+  }
   var W=P.W.LEFT+P.W.CENTER+P.W.RIGHT;
   return {cls:'space_utilization.window_seat', rev:rev.n, W:W, H:P.H, depth:P.depth, runW:runW,
     thickness:T, feats:feats, runs:runs,
@@ -873,7 +898,10 @@ function buildDefinition(){
             windowW:r3(c-2*T),windowH:r3(uy-P.seat),
             cubClearW:r3(cubW),cubClearH:r3(lowH),
             seat:P.seat,upperShelfLen:r3(c-2*T)},
-    left:left, right:right};
+    left:left, right:right,
+    shelfPilotDemand:{enabled:P.shelfPilotSpots,mode:'SPOT_ON_LOCATION',toolDiameterIn:0.1875,
+      source:'CONFIGURED_SHELF_ELEVATIONS',features:shelfPilotFeatures,
+      pricingStatus:P.shelfPilotSpots?'UNPRICED_UNTIL_STORE_MIGRATION':'NOT_REQUESTED'}};
 }
 
 /* ═══════════ 6 · STORE REQUEST OBJECT — what travels ═══════════ */
@@ -888,6 +916,20 @@ function buildRequest(def){
     if(o.id==='OP-OTHER')e.parameters={description:o.params.text};
     return e;
   });
+  if(def.shelfPilotDemand.enabled){
+    ops.push({
+      operationId:'OP-SHELF-PILOT-SPOTS-316',
+      name:'3/16 in pilot spots at configured shelf elevations',
+      applies:'left and right tower uprights',
+      basis:'GENERATED FROM CONFIGURATION',
+      parameters:{
+        mode:'SPOT_ON_LOCATION',
+        diameterIn:0.1875,
+        features:def.shelfPilotDemand.features,
+        meaning:'part-relative spot locations derived from configured shelf elevations; not a generic finished-hole request'
+      }
+    });
+  }
   return {
     projectClass:def.cls, revision:def.rev, candidate:!rev.confirmed,
     evidence:[{ref:'room-capture.usdz',kind:'scan',retained:true,role:'supporting context'},
@@ -1232,6 +1274,9 @@ function controls(){
   h+='<div class="grp"><p class="gh">4 · RIGHT TOWER</p>'
     +stepper('RIGHT','v-wR2','Right width')
     +lab('Right shelf count','v-shR')+rng('c-shR',0,8,1,P.SH.RIGHT,0)
+    +'<label class="cbx"><input type="checkbox" id="c-shelf-pilot"'+(P.shelfPilotSpots?' checked':'')+'>'
+    +'<span>3/16 in pilot spots on tower uprights at every shelf elevation<br><span class="dim">Derived SPOT_ON_LOCATION features. The current Window Seat price does not absorb this new operation; Store migration remains required.</span></span></label>'
+    +'<p class="dim" id="v-shelf-pilot" style="font-size:10px;margin:4px 0 0">Pilot spots off.</p>'
     +'</div>';
   h+='<div class="grp" id="material-panel"><p class="gh">5 · MATERIAL</p>'
     +'<div id="species" style="display:grid;grid-template-columns:1fr 1fr;gap:4px"></div>'
@@ -1285,6 +1330,7 @@ function controls(){
   on('c-cub',function(e){P.cub=+e.value});
   on('c-shL',function(e){P.SH.LEFT=+e.value});
   on('c-shR',function(e){P.SH.RIGHT=+e.value});
+  $('c-shelf-pilot').onchange=function(){P.shelfPilotSpots=this.checked;bump();cycle()};
   $('c-front').onchange=function(){P.front=this.checked;bump();cycle()};
   $('c-runs').onclick=function(e){var b=e.target.closest('button');if(!b)return;
     P.runs=+b.dataset.n;bump();cycle()};
@@ -1318,6 +1364,10 @@ function syncControls(def){
   $('v-seat').textContent=inch(P.seat); $('v-upperH').textContent=inch(P.upperH);
   $('v-bays').textContent=P.bays; $('v-cub').textContent=P.cub;
   $('v-shL').textContent=P.SH.LEFT; $('v-shR').textContent=P.SH.RIGHT;
+  if($('c-shelf-pilot'))$('c-shelf-pilot').checked=P.shelfPilotSpots;
+  if($('v-shelf-pilot'))$('v-shelf-pilot').textContent=P.shelfPilotSpots
+    ? def.shelfPilotDemand.features.length+' derived SPOT_ON_LOCATION features · '+(P.SH.LEFT+P.SH.RIGHT)+' shelf elevations × 2 uprights'
+    : 'Pilot spots off.';
   $('v-runs').textContent=P.runs;
   $('v-hwq').textContent=P.hw.sku?P.hw.qty:'none selected';
   if($('c-hw')&&$('c-hw').value!==P.hw.sku)$('c-hw').value=P.hw.sku;
@@ -1382,6 +1432,14 @@ function draw(def){
     var g=f.geom, fill=(f.role==='SEAT')?'#c9a97a':(f.role==='FRONT'?'#cdbb96':'#dfd2b8');
     rect(X(g.x),Y(g.y+g.h),g.w*S,g.h*S,f.defined?fill:'#e8c6c0','#57534e',false,0.7);
   });
+  if(def.shelfPilotDemand.enabled){
+    def.shelfPilotDemand.features.forEach(function(feature){
+      var target=def.feats.filter(function(f){return f.id===feature.targetOccurrenceId})[0];
+      if(!target)return;
+      var gx=target.geom.x+target.geom.w/2, gy=feature.partRelativeXIn;
+      o.push('<circle cx="'+X(gx)+'" cy="'+Y(gy)+'" r="2.4" fill="#2f6f9e" stroke="#f7f1e6" stroke-width="0.8"/>');
+    });
+  }
   /* dimensions — ordered, outside the drawing */
   dimH(X(0),X(W),yTop-24,fmt(W)+'" overall',12);
   txt((X(0)+X(W))/2,yTop-36,fmt(P.W.LEFT)+'" + '+fmt(P.W.CENTER)+'" + '+fmt(P.W.RIGHT)+'" = calculated width',8.8,'#8a8580');
@@ -1535,6 +1593,9 @@ function cycle(){
     +kv('Finished shelf each',fmt(R.shelfLen)+' W × '+dd+' D × '+th+' T')
     +kv('Clear bay each',fmt(R.shelfLen)+' W × '+fmt(R.clearBay)+' H')
     +kv('Top bay, on the upper-storage datum',R.n?(fmt(R.shelfLen)+' W × '+fmt(R.topBay)+' H'):'no shelves')
+    +kv('Shelf pilot spots',def.shelfPilotDemand.enabled
+      ? def.shelfPilotDemand.features.length+' × 3/16 in SPOT_ON_LOCATION · derived from shelf elevations'
+      : 'none')
     +'</div>';
 
   /* store card */
