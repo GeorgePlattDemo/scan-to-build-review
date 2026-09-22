@@ -10,9 +10,9 @@
 
 - Repository: `GeorgePlattDemo/scan-to-build-store`
 - Branch: `build/d001-travel-standard-0.1`
-- Exact tested SHA: `f8373520a726090ed91eff82e5e720f4a9634615`
+- Exact tested SHA: `95c639a1d0d4812df097ad1eb628594b38f921de`
 - Workflow: `D-001 Travel Standard Acceptance`
-- Successful run: `35752240345`
+- Successful run: `35757052553`
 - Governing standard: `DIMENSIONAL-STORE-TRAVEL-STANDARD-0.1.md`
 - Governing evaluator: `evaluateDimensionalTravelJob()`
 
@@ -20,7 +20,7 @@
 
 - Repository: `GeorgePlattDemo/scan-to-build-system`
 - Branch: `build/d001-travel-standard-0.1`
-- Exact tested SHA: `682ce2b2a60c88b5fb6543e2f4f1c9ebfe7b01b8`
+- Exact tested SHA: `900dbd13f079f8a5f8d76d49c723fd35279164e8`
 - Workflow: `D-001 Travel Integration`
 - Successful run: `35753012574`
 
@@ -76,8 +76,8 @@ The exact Store evaluator returns:
 - economics basis: `DECLARED_STAGE2_MODEL`
 - measured: `false`
 - commissioned: `false`
-- calculation input hash: `caa7c91f1296c243a5abb05ed35a0c55b5b1f5d4dab32efd64cd2656d75f3036`
-- calculation result hash: `15a8835dd50771136020190db7f5dbed1bd35b78930bf338be63bea8427353c2`
+- calculation input hash: `5de0367b62087cb0174ef5f1e101e22ded3728ba71906868628a985afafa078b`
+- calculation result hash: `9ad8d16a7c211d420b83e46ed8a8d224bd289e26a48764ff8d0389b6db698604`
 
 The 72 in SKU is a Store procurement/pricing reference. It does not redefine the 60 in project workpiece.
 
