@@ -2,10 +2,17 @@ import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
 const shell=fs.readFileSync('system-build-current.html','utf8');
+const readme=fs.readFileSync('README.md','utf8');
 
 assert.equal((shell.match(/<\/html>/g)||[]).length,1,'canonical shell contains duplicate HTML tails');
 assert.equal((shell.match(/<script\b/g)||[]).length,(shell.match(/<\/script>/g)||[]).length,'script tag counts are unbalanced');
 assert.match(shell,/<\/html>\s*$/,'content exists after the canonical HTML close');
+
+// The README must open the actual current build, not the obsolete presentation preview.
+assert.match(readme,/https:\/\/georgeplattdemo\.github\.io\/scan-to-build-review\/system-build-current\.html/);
+assert.equal(readme.includes('/working-app.html"><kbd>▶ OPEN WORKING APP'),false,'README button still opens obsolete presentation preview');
+assert.match(shell,/three-frames\.html\?v=e7321f0e/);
+assert.match(shell,/stb-store-handoff-contract\.js\?v=82c7dcf3/);
 
 // Job 1 owns an explicit route map. No Job 1 stage target may be an Alcove page.
 const mapBlock=shell.slice(
