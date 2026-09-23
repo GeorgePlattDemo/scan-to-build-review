@@ -3,7 +3,7 @@
 
   const ENDPOINT = 'http://localhost:4317/api/store-zero/job';
   const PROTOCOL_VERSION = 'stb-store-zero-http/1';
-  const EXPECTED_STORE_PIN = 'bacbc9a08c6fa5dba3d7fc2b9fd0982646c3e5ed';
+  const EXPECTED_STORE_PIN = '0224e99f96dc65759bd7d3761d99e0708ad23e4a';
   const REQUEST_TYPE = 'ALCOVE_INSERT_V1';
   const SCOPE = 'ALCOVE_INSERT_V1';
   const DEFINITION_KIND = 'alcove_insert.v1';
