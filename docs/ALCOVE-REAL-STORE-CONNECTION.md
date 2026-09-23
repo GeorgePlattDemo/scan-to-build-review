@@ -13,8 +13,15 @@ The bridge reads deployment configuration without cache. Missing deployment is `
 ## Frozen starting sources
 
 - Review: 8c979d468c34d71df24f37c35b3a608e9d21ecb1
-- System: 0abedaecb42d5540a767e76de85ca53b9df2c3e8
-- Store: 0224e99f96dc65759bd7d3761d99e0708ad23e4a
+- System starting point: 0abedaecb42d5540a767e76de85ca53b9df2c3e8
+- Store starting point: 0224e99f96dc65759bd7d3761d99e0708ad23e4a
+
+## Verified demand-driven candidate pins
+
+- System: 22bb9738436fa089935a45b8d75450f54b5134c2
+- Store: 39a1b318063f62220c9c20c42200389098e0c687
+
+These candidates pass the real pinned cross-repository Alcove integration. The Review bridge expects the exact Store pin above.
 
 ## Current status: NOT YET VISIBLE / DEPLOYMENT REQUIRED
 
