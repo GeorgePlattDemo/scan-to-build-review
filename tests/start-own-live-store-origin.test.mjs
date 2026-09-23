@@ -6,6 +6,7 @@ const read = path => fs.readFileSync(path,'utf8');
 const surface = read('three-frames.html');
 const shell = read('system-build-current.html');
 const contractSource = read('stb-store-handoff-contract.js');
+const runtimeBridgeSource = read('stb-user-defined-board-runtime-bridge.js');
 
 // Landing remains the simple Scan-to-Build entry / intent surface.
 assert.match(surface,/id="stb-start-intent-screen"/);
@@ -80,9 +81,9 @@ assert.equal(shell.includes('quoteStartOwnBoardSequence'),false,'visible User 1 
 assert.equal(shell.includes('machineHourRate'),false,'visible User 1 reintroduced Store rate logic');
 assert.equal(shell.includes('setupCharge'),false,'visible User 1 reintroduced Store setup-charge logic');
 assert.match(shell,/STORE_REFRESH_REQUIRED/);
-assert.match(shell,/definition\.storeReference\?\.complete !== true/);
-assert.match(shell,/requestUser1StoreEvaluation/);
-assert.match(shell,/cache:'no-store'/);
+assert.match(shell,/stb-user-defined-board-runtime-bridge\.js\?v=132f1266/);
+assert.match(shell,/user1RuntimeBridge\.request\(definition\.storeDemand/);
+assert.equal(shell.includes('currentStoreAuthorityUrl'),false,'active Start Own still floats on Store main');
 assert.equal(shell.includes('stbLastConfirmed'),false,'Store-send button regressed to one-use behavior');
 assert.match(shell,/const spotDemand =/);
 assert.match(shell,/physicalDemand\.spotDemand = spotDemand/);
@@ -104,6 +105,14 @@ assert.equal(shell.includes('START-OWN-CLASS-SCOPED-RECOVERY-NOT-PUBLISHED'),fal
 assert.equal(shell.includes('60-in customer board'),false);
 assert.equal(shell.includes('photo, board, or file you already have'),false);
 assert.equal(shell.includes('parentLengthIn = 72'),false);
+
+// The live bridge is transport/correlation only; it does not reclaim Store decisions.
+assert.match(runtimeBridgeSource,/USER_DEFINED_BOARD_V1/);
+assert.match(runtimeBridgeSource,/stb-store-runtime\.json/);
+assert.match(runtimeBridgeSource,/materialDemand:\{species:'spf',form:'board',nominalT:2,nominalW:4\}/);
+for (const forbidden of ['sellingPrice','machineHourRate','setupCharge','parentLengthIn','storeSku:']) {
+  assert.equal(runtimeBridgeSource.includes(forbidden),false,'live User 1 bridge reclaimed Store authority: '+forbidden);
+}
 
 // Shared contract begins at the frozen 60-in workpiece and preserves the resolved 3/16 spot meaning.
 const sandbox = {window:{}};

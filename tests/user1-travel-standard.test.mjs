@@ -222,16 +222,16 @@ for (const forbidden of [
   assert.equal(syncBlock.includes(forbidden),false,'visible configurator reclaimed Store authority: '+forbidden);
 }
 
-assert.match(shell,/definition\.storeReference\?\.complete !== true/);
-assert.match(shell,/currentStoreAuthorityUrl = 'https:\/\/api\.github\.com\/repos\/GeorgePlattDemo\/scan-to-build-store\/commits\/main'/);
-assert.match(shell,/cache:'no-store'/);
+assert.match(shell,/stb-user-defined-board-runtime-bridge\.js\?v=132f1266/);
+assert.match(shell,/const user1RuntimeBridge = window\.STBUserDefinedBoardRuntimeBridge \|\| null/);
 assert.match(shell,/nextStoreRequestId/);
-assert.match(shell,/requestUser1StoreEvaluation/);
-assert.match(shell,/freshStoreAnswer\?\.evaluationReceipt\?\.requestId !== requestId/);
-assert.match(shell,/sameUser1StoreAnswerIdentity/);
-assert.match(shell,/STORE_ANSWER_CHANGED_RECONFIRM_REQUIRED/);
+assert.match(shell,/user1RuntimeBridge\.request\(definition\.storeDemand/);
+assert.match(shell,/freshReceipt\?\.requestId === requestId/);
+assert.match(shell,/LIVE STORE EVALUATION REQUIRED/);
+assert.equal(shell.includes('currentStoreAuthorityUrl'),false,'active Start Own still floats on Store main');
+assert.equal(shell.includes('fetchCurrentStorePin'),false,'active Start Own still fetches Store main');
+assert.equal(shell.includes('sameUser1StoreAnswerIdentity(definition.storeReference'),false,'active Start Own still blocks on old static Store identity');
 assert.equal(shell.includes('stbLastConfirmed'),false,'Store-send control regressed to one-use behavior');
-assert.match(shell,/STORE_REFRESH_REQUIRED · confirmation is blocked until Store evaluates this exact revision/);
 assert.match(shell,/MODELED MACHINE SERVICE/);
 assert.match(shell,/machine_service/);
 assert.match(shell,/calculationIdentity/);

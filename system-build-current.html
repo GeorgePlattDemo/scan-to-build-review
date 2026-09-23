@@ -15,6 +15,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 <script src="stb-canonical-journey.js?v=e0619841"></script>
 <script src="stb-store-handoff-contract.js?v=82c7dcf3"></script>
 <script src="stb-user-defined-board-store.js?v=1c99c380"></script>
+<script src="stb-user-defined-board-runtime-bridge.js?v=132f1266"></script>
 <script src="store-zero-canonical-doctrine.js?v=65366367"></script>
 <script>
 (() => {
@@ -115,6 +116,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     let proofHandoff = null;
     let proofSimulation = null;
     const storeHandoffContract = window.STBStoreHandoffContract || null;
+    const user1RuntimeBridge = window.STBUserDefinedBoardRuntimeBridge || null;
     let captureStartOwnProof = () => {};
     let pendingSeatView = {mode:'continuous',stage:null};
 
@@ -335,7 +337,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
               const DEMO_HORIZONTAL_SPAN_IN = 8;
               let currentUser1Definition = null;
               let storeRequestSequence = 0;
-              const currentStoreAuthorityUrl = 'https://api.github.com/repos/GeorgePlattDemo/scan-to-build-store/commits/main';
 
               const nextStoreRequestId = definition => {
                 storeRequestSequence += 1;
@@ -345,19 +346,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   String(Date.now()),
                   String(storeRequestSequence)
                 ].join('@');
-              };
-
-              const fetchCurrentStorePin = async () => {
-                const response = await win.fetch(currentStoreAuthorityUrl, {
-                  method:'GET',
-                  cache:'no-store',
-                  headers:{Accept:'application/vnd.github+json'}
-                });
-                if (!response.ok) throw new Error('CURRENT_STORE_AUTHORITY_UNAVAILABLE');
-                const data = await response.json();
-                const sha = String(data?.sha || '').trim();
-                if (!sha) throw new Error('CURRENT_STORE_AUTHORITY_UNAVAILABLE');
-                return sha;
               };
 
               const setText = (id,value) => {
@@ -813,7 +801,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 setText('stb-price-total',totals?.Q==null ? 'NOT COMPLETE' : '$'+Number(totals.Q).toFixed(2));
                 setText('stb-price-basis',estimate
                   ? 'Store-issued BudgetaryEstimate · material + modeled D-001 machine service · DECLARED_STAGE2_MODEL · not a commercial quote.'
-                  : 'STORE_REFRESH_REQUIRED · this static Review build does not calculate Store capability, machine time, economics, or Q for changed definitions.');
+                  : 'LIVE STORE EVALUATION REQUIRED · Store Zero will calculate capability, modeled time, economics, and Q for this exact definition when you confirm.');
                 setText('stb-basis-sku',materialMapped?material.storeSku:'NOT MAPPED');
                 setText('stb-basis-source-stock',materialMapped
                   ? material.quantity+' × '+material.stockLengthIn+' in 2×4 Store stock/pricing reference · Store-selected workpiece '+formatInches(demand.definedWorkpieceLengthIn)
@@ -834,21 +822,22 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                   ? Number(estimate.cycle.T_job_min).toFixed(4)+' min · modeled · Store returned '+totalModeledCuts+' saw operations'
                   : 'UNRESOLVED');
                 setText('stb-before-send',definition.storeReference.unresolvedConditions.length
-                  ? definition.storeReference.unresolvedConditions.join(' · ')+'. No browser-side Store answer is substituted. A fresh Store evaluation is required before confirmation.'
-                  : 'No unresolved Store conditions are attached to this exact pinned reference. Q remains budgetary and does not authorize fabrication.');
+                  ? definition.storeReference.unresolvedConditions.join(' · ')+'. No browser-side Store answer is substituted. A fresh Store evaluation will run when you confirm this exact revision.'
+                  : 'The displayed Store reference is history/preview. Confirm requests a fresh Store Zero evaluation before the Store Answer step.');
 
                 const answerLine = childDoc.getElementById('stb-system-answer');
                 if (answerLine) {
                   answerLine.innerHTML = storeComplete
                     ? '<b>STORE</b> · exact promoted Store reference matched · '+String(material?.stockLengthIn || demand.definedWorkpieceLengthIn)+' in stock · Q $'+Number(totals.Q).toFixed(2)+' · '+Number(estimate.cycle.T_job_min).toFixed(4)+' modeled min · 3 saw operations · 2 spots · calculation '+String(estimate.calculationIdentity?.resultHash || '').slice(0,12)+'…'
-                    : '<b>STORE</b> · STORE_REFRESH_REQUIRED · this typed value is inside the geometry demo, but the static public Review surface carries exact Store answers only for 16.000 and 18.000 in.';
+                    : '<b>STORE</b> · LIVE STORE EVALUATION REQUIRED · confirm sends this exact definition to Store Zero; no browser-side Store answer is substituted.';
                 }
 
                 if (confirmButton) {
-                  confirmButton.disabled = !storeComplete;
-                  confirmButton.title = storeComplete
-                    ? 'Confirm this exact definition and revalidate the current promoted Store authority.'
-                    : 'A fresh Store answer is required for this changed definition before confirmation.';
+                  const runtimeAvailable = !!user1RuntimeBridge && typeof user1RuntimeBridge.request === 'function';
+                  confirmButton.disabled = !runtimeAvailable;
+                  confirmButton.title = runtimeAvailable
+                    ? 'Confirm this exact definition and request a fresh Store Zero evaluation.'
+                    : 'The deployed Store runtime connection is unavailable.';
                 }
                 activate('[data-length]','data-length',demand.finishedLength);
               };
@@ -898,82 +887,174 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
                 confirmButton.addEventListener('click', async () => {
                   const definition = syncAndRender('CONFIRM');
                   if (!definition) return;
-                  if (definition.storeReference?.complete !== true) {
-                    setText('stb-before-send','STORE_REFRESH_REQUIRED · confirmation is blocked until Store evaluates this exact revision. The browser will not substitute a Store answer.');
-                    return;
-                  }
-                  if (!storeHandoffContract || typeof storeHandoffContract.requestUser1StoreEvaluation !== 'function') {
-                    setText('stb-before-send','CURRENT_STORE_AUTHORITY_REQUIRED · the fresh Store-evaluation contract is unavailable. The previous answer remains history only.');
+                  if (!user1RuntimeBridge || typeof user1RuntimeBridge.request !== 'function') {
+                    setText('stb-before-send','STORE_RUNTIME_UNAVAILABLE · the deployed Store Zero connection is unavailable. Nothing was sent and no prior Store answer was reused.');
                     return;
                   }
 
                   const requestId = nextStoreRequestId(definition);
                   confirmButton.disabled = true;
-                  let currentStorePin = null;
+                  setText('stb-before-send','ASKING STORE ZERO · this exact definition is being freshly evaluated. The displayed prior reference is not being reused.');
+
+                  let freshStoreBody = null;
                   try {
-                    currentStorePin = await fetchCurrentStorePin();
-                  } catch (_) {
-                    setText('stb-before-send','CURRENT_STORE_AUTHORITY_REQUIRED · Store authority could not be checked. Nothing was sent and the previous Store answer was not reused.');
-                    confirmButton.disabled = false;
-                    return;
-                  }
-
-                  const freshStoreAnswer = storeHandoffContract.requestUser1StoreEvaluation(
-                    definition.storeDemand,
-                    {
+                    freshStoreBody = await user1RuntimeBridge.request(definition.storeDemand, {
                       requestId:requestId,
-                      currentStorePin:currentStorePin,
-                      checkedAt:new Date().toISOString()
-                    }
+                      candidateRevisionId:definition.versionId
+                    });
+                  } catch (error) {
+                    setText('stb-before-send',String(error?.message || 'STORE_ZERO_UNAVAILABLE')+' · Store Zero could not evaluate this definition. Nothing was sent downstream and no prior Store answer was reused.');
+                    confirmButton.disabled = false;
+                    return;
+                  }
+
+                  const freshEvaluation = freshStoreBody?.rawEvaluation || null;
+                  const freshEstimate = freshStoreBody?.rawEstimate || null;
+                  const freshReceipt = freshStoreBody?.evaluationReceipt || freshEvaluation?.evaluationReceipt || null;
+                  const freshnessOk =
+                    freshEvaluation?.freshEvaluation === true &&
+                    freshReceipt?.requestId === requestId &&
+                    freshReceipt?.authority?.storeRevision === freshStoreBody?.storePin;
+                  const complete =
+                    freshEvaluation?.status === 'SUPPORTABLE' &&
+                    freshnessOk &&
+                    freshEstimate?.complete === true &&
+                    freshStoreBody?.priceCompleteness?.status === 'COMPLETE_FOR_TRAVEL_STANDARD';
+
+                  if (!complete) {
+                    const reasons = []
+                      .concat(freshStoreBody?.priceCompleteness?.refusalConditions || [])
+                      .concat(freshStoreBody?.priceCompleteness?.unresolvedConditions || [])
+                      .concat(freshEvaluation?.refusalConditions || [])
+                      .concat(freshEvaluation?.unresolvedConditions || [])
+                      .filter(Boolean);
+                    const code = reasons.length
+                      ? Array.from(new Set(reasons)).join(' · ')
+                      : String(freshEvaluation?.status || 'STORE_REFRESH_REQUIRED');
+                    setText('stb-before-send',code+' · Store Zero did not return a complete current answer for this definition. No prior Store answer was reused.');
+                    confirmButton.disabled = false;
+                    return;
+                  }
+
+                  const rawMaterial = freshStoreBody.materialResolution || {};
+                  const rawOffering = freshStoreBody.rawOffering || {};
+                  const storeSku = rawMaterial.storeSku || rawMaterial.pricingReferenceSku || rawOffering.storeSku || null;
+                  const stockLengthIn = Number(
+                    rawMaterial.stockLengthIn ??
+                    rawMaterial.pricingReferenceStockLengthIn ??
+                    rawOffering.stockL_in
                   );
-
-                  if (
-                    freshStoreAnswer?.complete !== true ||
-                    freshStoreAnswer?.freshEvaluation !== true ||
-                    freshStoreAnswer?.evaluationReceipt?.requestId !== requestId
-                  ) {
-                    const codes = Array.isArray(freshStoreAnswer?.unresolvedConditions)
-                      ? freshStoreAnswer.unresolvedConditions.join(' · ')
-                      : String(freshStoreAnswer?.status || 'STORE_REFRESH_REQUIRED');
-                    setText('stb-before-send',codes+' · Store changed or could not revalidate this definition. The prior Store answer was not reused.');
-                    confirmButton.disabled = false;
-                    return;
-                  }
-
-                  if (
-                    typeof storeHandoffContract.sameUser1StoreAnswerIdentity !== 'function' ||
-                    !storeHandoffContract.sameUser1StoreAnswerIdentity(definition.storeReference,freshStoreAnswer)
-                  ) {
-                    setText('stb-before-send','STORE_ANSWER_CHANGED_RECONFIRM_REQUIRED · the Store answer changed after it was displayed. Review the current Store answer before confirming again.');
-                    confirmButton.disabled = false;
-                    return;
-                  }
-
-                  const freshStoreReference = Object.assign({}, definition.storeReference, {
-                    status:freshStoreAnswer.status,
+                  const workpieceLengthIn = Number(
+                    rawMaterial.workpieceLengthIn ??
+                    rawMaterial.pricingReferenceStockLengthIn ??
+                    definition.storeDemand.definedWorkpieceLengthIn
+                  );
+                  const unitPrice = Number(rawMaterial.unitPrice ?? rawOffering.sellingPrice);
+                  const materialResolution = Object.assign({}, rawMaterial, {
+                    storeSku:storeSku,
+                    stockLengthIn:Number.isFinite(stockLengthIn) ? stockLengthIn : null,
+                    unitPrice:Number.isFinite(unitPrice) ? unitPrice : null,
+                    cellFamily:Array.isArray(rawOffering.cellFamily) ? rawOffering.cellFamily.slice() : [],
+                    supportedOps:Array.isArray(rawOffering.supportedOps) ? rawOffering.supportedOps.slice() : [],
+                    source:{
+                      repository:'GeorgePlattDemo/scan-to-build-store',
+                      pin:freshStoreBody.storePin,
+                      clock:rawOffering.catalogClock || null
+                    }
+                  });
+                  const normalizedEstimate = Object.assign({}, freshEstimate, {
+                    completeness:freshStoreBody.priceCompleteness.status
+                  });
+                  const refusalConditions = Array.from(new Set(
+                    []
+                      .concat(freshStoreBody?.priceCompleteness?.refusalConditions || [])
+                      .concat(freshEvaluation?.refusalConditions || [])
+                      .filter(Boolean)
+                  ));
+                  const unresolvedConditions = Array.from(new Set(
+                    []
+                      .concat(freshStoreBody?.priceCompleteness?.unresolvedConditions || [])
+                      .concat(freshEvaluation?.unresolvedConditions || [])
+                      .filter(Boolean)
+                  ));
+                  const freshStoreReference = {
+                    status:freshEvaluation.status,
                     complete:true,
                     freshEvaluation:true,
-                    capabilityStatus:freshStoreAnswer.capabilityStatus,
-                    economicsStatus:freshStoreAnswer.economicsStatus,
-                    priceCompleteness:freshStoreAnswer.priceCompleteness,
-                    material:freshStoreAnswer.material,
-                    machineService:freshStoreAnswer.machineService,
-                    combinedValue:freshStoreAnswer.combinedValue,
-                    estimate:freshStoreAnswer.estimate,
-                    calculationIdentity:freshStoreAnswer.calculationIdentity,
-                    materialResolution:freshStoreAnswer.materialResolution,
-                    refusalConditions:Array.from(freshStoreAnswer.refusalConditions || []),
-                    unresolvedConditions:Array.from(freshStoreAnswer.unresolvedConditions || []),
-                    source:freshStoreAnswer.source,
-                    evaluationReceipt:freshStoreAnswer.evaluationReceipt,
+                    capabilityStatus:freshEvaluation.status,
+                    economicsStatus:freshEstimate.status || 'UNRESOLVED',
+                    priceCompleteness:freshStoreBody.priceCompleteness.status,
+                    material:freshEstimate?.totals?.material ?? null,
+                    machineService:freshEstimate?.totals?.machine_service ?? null,
+                    combinedValue:freshEstimate?.totals?.Q ?? null,
+                    estimate:normalizedEstimate,
+                    calculationIdentity:freshStoreBody.calculationIdentity || freshEstimate.calculationIdentity || null,
+                    materialResolution:materialResolution,
+                    refusalConditions:refusalConditions,
+                    unresolvedConditions:unresolvedConditions,
+                    source:{
+                      repository:'GeorgePlattDemo/scan-to-build-store',
+                      storePin:freshStoreBody.storePin,
+                      protocolVersion:freshStoreBody.protocolVersion,
+                      wrapperBuildId:freshStoreBody.wrapperBuildId,
+                      mode:'LIVE_STORE_RUNTIME'
+                    },
+                    evaluationReceipt:freshReceipt,
                     authority:startOwnAuthority
-                  });
+                  };
+                  const selectedWorkpieceLengthIn = Number.isFinite(workpieceLengthIn)
+                    ? workpieceLengthIn
+                    : definition.storeDemand.definedWorkpieceLengthIn;
                   const confirmedDefinition = Object.assign({}, definition, {
+                    material:Object.assign({}, definition.material, {
+                      stockClassAuthority:Object.assign({}, definition.material.stockClassAuthority, {
+                        repository:'GeorgePlattDemo/scan-to-build-store',
+                        pin:freshStoreBody.storePin,
+                        clock:rawOffering.catalogClock || definition.material.stockClassAuthority?.clock || null
+                      }),
+                      procurement:{
+                        pricingReferenceSku:storeSku,
+                        pricingReferenceStockLengthIn:materialResolution.pricingReferenceStockLengthIn || materialResolution.stockLengthIn,
+                        quantity:materialResolution.quantity,
+                        unitPrice:materialResolution.unitPrice,
+                        materialTotal:materialResolution.materialTotal,
+                        allocationClaimed:false
+                      },
+                      selectedStoreWorkpieceLengthIn:{
+                        value:selectedWorkpieceLengthIn,
+                        basis:materialResolution.selectionPolicy || 'STORE_ZERO_CURRENT_EVALUATION'
+                      },
+                      mappedStoreSkus:storeSku ? [storeSku] : []
+                    }),
+                    physicalDemand:Object.assign({}, definition.physicalDemand, {
+                      parentLengthIn:selectedWorkpieceLengthIn,
+                      definedWorkpieceLengthIn:selectedWorkpieceLengthIn
+                    }),
+                    workpieceSequence:freshEstimate?.travel ? {
+                      status:'SEQUENCED',
+                      basis:'STORE_RETURNED_TRAVEL',
+                      finalRemainderIn:freshEstimate.travel.finalRemainderIn,
+                      holdIn:freshEstimate.travel.holdIn ?? 24,
+                      derivedSawCuts:freshEstimate.travel.derivedSawCuts,
+                      derivedSpotCount:freshEstimate.travel.derivedSpotCount
+                    } : definition.workpieceSequence,
+                    capability:Object.assign({}, definition.capability, {
+                      status:freshEvaluation.status,
+                      basis:freshStoreBody?.attributedBasis?.envelope?.id || definition.capability.basis,
+                      storePin:freshStoreBody.storePin,
+                      refusalConditions:refusalConditions,
+                      unresolvedConditions:unresolvedConditions
+                    }),
                     storeReference:freshStoreReference,
                     lineage:Object.assign({}, definition.lineage, {
                       formalStoreRequestId:requestId,
-                      formalStoreCheckedAt:freshStoreAnswer.evaluationReceipt.checkedAt,
-                      formalStorePin:freshStoreAnswer.evaluationReceipt.currentStorePin
+                      formalStoreCheckedAt:freshReceipt?.evaluatedAt || freshReceipt?.checkedAt || freshStoreBody.wrapperRespondedAt,
+                      formalStorePin:freshStoreBody.storePin,
+                      storeAnswerPin:freshStoreBody.storePin,
+                      storeCalculationInputHash:freshStoreReference.calculationIdentity?.inputHash || null,
+                      storeCalculationResultHash:freshStoreReference.calculationIdentity?.resultHash || null,
+                      effectiveDefinedWorkpieceLengthIn:selectedWorkpieceLengthIn,
+                      storeSelectionPolicy:materialResolution.selectionPolicy || null
                     })
                   });
                   currentUser1Definition = confirmedDefinition;

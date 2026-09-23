@@ -88,25 +88,23 @@ assert.match(shell,/parts = Array\.from/);
 assert.match(shell,/requiredOps\.push\('SPOT_ON_LOCATION'\)/);
 assert.match(shell,/resolveUser1StoreReference\(storeDemand\)/);
 
-// CHANGED DEFINITIONS FAIL CLOSED BEFORE CONFIRM
-assert.match(shell,/if \(definition\.storeReference\?\.complete !== true\)/);
-assert.match(shell,/STORE_REFRESH_REQUIRED · confirmation is blocked until Store evaluates this exact revision/);
-assert.match(shell,/confirmButton\.disabled = !storeComplete/);
+// CHANGED DEFINITIONS GO TO THE LIVE STORE. No browser-side answer is substituted.
+assert.match(shell,/LIVE STORE EVALUATION REQUIRED/);
+assert.match(shell,/confirmButton\.disabled = !runtimeAvailable/);
 
-// CONFIRM performs a fresh Store-authority check on every press, then creates the Job 1 handoff.
+// CONFIRM performs a fresh USER_DEFINED_BOARD_V1 request on every press, then creates the Job 1 handoff.
 assert.match(shell,/job:'JOB 1 · START YOUR OWN'/);
 assert.match(shell,/source:'start-own'/);
 assert.match(shell,/storeReference:freshStoreReference/);
 assert.match(shell,/stb-proof-handoff-job1/);
 assert.match(shell,/originalShow\.call\(win,'proof-store'\)/);
-assert.match(shell,/currentStoreAuthorityUrl = 'https:\/\/api\.github\.com\/repos\/GeorgePlattDemo\/scan-to-build-store\/commits\/main'/);
-assert.match(shell,/cache:'no-store'/);
+assert.match(shell,/stb-user-defined-board-runtime-bridge\.js\?v=132f1266/);
 assert.match(shell,/const requestId = nextStoreRequestId\(definition\)/);
-assert.match(shell,/requestUser1StoreEvaluation/);
-assert.match(shell,/freshStoreAnswer\?\.freshEvaluation !== true/);
-assert.match(shell,/freshStoreAnswer\?\.evaluationReceipt\?\.requestId !== requestId/);
-assert.match(shell,/sameUser1StoreAnswerIdentity\(definition\.storeReference,freshStoreAnswer\)/);
-assert.match(shell,/STORE_ANSWER_CHANGED_RECONFIRM_REQUIRED/);
+assert.match(shell,/user1RuntimeBridge\.request\(definition\.storeDemand/);
+assert.match(shell,/freshEvaluation\?\.freshEvaluation === true/);
+assert.match(shell,/freshReceipt\?\.requestId === requestId/);
+assert.equal(shell.includes('currentStoreAuthorityUrl'),false,'Job 1 still floats on Store main');
+assert.equal(shell.includes('sameUser1StoreAnswerIdentity(definition.storeReference'),false,'Job 1 still compares live Store to old static identity');
 assert.equal(shell.includes('stbLastConfirmed'),false,'Job 1 Store-send button became one-use again');
 
 // Canonical downstream actor mapping for Job 1.
