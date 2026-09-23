@@ -246,7 +246,7 @@ assert.match(shell,/SIMULATED_OFFER/);
 assert.match(shell,/SIMULATED_ACCEPTANCE/);
 assert.match(shell,/SIMULATED_PAYMENT/);
 assert.match(shell,/no money moved/);
-assert.match(shell,/does not send controller code, command a machine, establish commissioned readiness, or create a live Cycle Start/);
+assert.match(shell,/does not send controller code, reserve live inventory, establish commissioned-machine readiness, issue physical production authority, or create a live Cycle Start/);
 assert.match(shell,/PHYSICAL FABRICATION<\/b><span>NOT CLAIMED · SIMULATION ONLY/);
 assert.match(shell,/no live inventory reserved/);
 assert.match(shell,/no physical production authority created/);
