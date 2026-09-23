@@ -16,14 +16,15 @@ The bridge reads deployment configuration without cache. Missing deployment is `
 - System starting point: 0abedaecb42d5540a767e76de85ca53b9df2c3e8
 - Store starting point: 0224e99f96dc65759bd7d3761d99e0708ad23e4a
 
-## Verified demand-driven candidate pins
+## Verified demand-driven sources
 
-- System: 22bb9738436fa089935a45b8d75450f54b5134c2
-- Store: 39a1b318063f62220c9c20c42200389098e0c687
+- System promoted main: 58471122d8940461ba8b389a223f468490e140b5
+- Store merged main: 1f9f1a217d91686ef21848508b20e605e7cc6bc1
+- Exact tested Store source used by System and Review: 39a1b318063f62220c9c20c42200389098e0c687
 
-These candidates pass the real pinned cross-repository Alcove integration. The Review bridge expects the exact Store pin above.
+The promoted System runtime passed the real cross-repository Alcove integration against the exact tested Store source above. The Review bridge expects that exact Store source pin so the returned answer remains reproducible.
 
-## Current status: NOT YET VISIBLE / DEPLOYMENT REQUIRED
+## Current status: BACKEND PROMOTED / PUBLIC DEPLOYMENT REQUIRED
 
 The configuration intentionally contains `jobEndpoint: null`: no verified public runtime URL is available. Railway was discovered but was not connected. This branch must not be described as a working public connection or promoted as complete.
 
@@ -47,13 +48,13 @@ STB_SYSTEM_ROOT=/absolute/path/to/system STB_STORE_ZERO_ROOT=/absolute/path/to/s
 
 This test executes the existing page's definition-building functions and the actual bridge against the real hosted System HTTP server and pinned Store. It does not substitute a Store evaluator. Node supplies the browser Origin header; this is an HTTP integration test, not evidence of browser CORS or public deployment.
 
-Checked scope: 65 in high, 44 in wide, 14 in deep, five shelves, spots off. Store returned pine material 272.86 + hardware 18 + machine service 132.43 = modeled Q 423.29. Poplar returned 568.79. Changing pine depth to 11 in returned 254.15. These are observed model outputs, not independent validation of the machine timing model, and are not fixture prices to embed in the application.
+Checked scope: 65 in high, 44 in wide, 14 in deep, five shelves, spots off. The demand-driven Store selected parent material from the finished component programs instead of accepting parent lengths from Alcove. In the promoted System integration, pine resolved to four 72 in upright parents and eight 96 in shelf parents; material 230.88 + hardware 18 + modeled machine service 133.67 = budgetary Q 382.55. Poplar returned budgetary Q 505.67 through its Store offerings. These are observed Store-model outputs, not independent validation of the machine timing model, and are not fixture prices to embed in the application.
 
 The test also checks repeat evaluation identity, species/depth changes, arithmetic, response-revision fault rejection, missing deployment, and rejection of public-to-localhost wiring.
 
 ## Known limits to preserve honestly
 
-Spotting enabled currently prevents Alcove's complete dimensional batch evaluation. Inspect the returned demand and declared cell capability before addressing that specific operation. Do not silently turn spots off or alter limits. Existing parent-board demand and component planning are unchanged by this connection patch; no claim of general stock-planning correctness is made.
+Spotting enabled remains intentionally incomplete because the Alcove identifies shelf-elevation spot intent and target role, but does not yet bind each requested spot to an identified physical upright component. Store returns `ALCOVE_SPOT_TARGET_COMPONENT_MAPPING_REQUIRED` as a `DEFINITION_GAP`; it does not silently turn spotting off, invent a location, or return a complete Q. Parent-board selection is now Store-owned: Alcove sends finished component programs and material preference, while Store selects parent offering, Store SKU, parent quantity, stock answer, material extension, capability disposition, and modeled work.
 
 Future projects should reuse the real service and manufacturing rules. Translating project geometry into demand is allowed; supplying project-specific prices or capabilities is not. A green local test is not public completion.
 

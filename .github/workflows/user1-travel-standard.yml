@@ -37,9 +37,28 @@ jobs:
       - name: Shelf-elevation pilot demand preservation
         run: node tests/shelf-pilot-demand.test.mjs
 
+      - name: Checkout promoted System runtime
+        uses: actions/checkout@v4
+        with:
+          repository: GeorgePlattDemo/scan-to-build-system
+          ref: 58471122d8940461ba8b389a223f468490e140b5
+          path: .stb-system
+
+      - name: Checkout exact tested Store source
+        uses: actions/checkout@v4
+        with:
+          repository: GeorgePlattDemo/scan-to-build-store
+          ref: 39a1b318063f62220c9c20c42200389098e0c687
+          path: .stb-store
+
+      - name: Alcove real Store HTTP integration
+        env:
+          STB_SYSTEM_ROOT: ${{ github.workspace }}/.stb-system
+          STB_STORE_ZERO_ROOT: ${{ github.workspace }}/.stb-store
+        run: node --test tests/alcove-real-runtime.test.mjs
+
 # Deliberate scope:
-# This branch proves Job 1 as the operable template.
-# Alcove, Window Seat, Outdoor, S-001, and other projects are not acceptance
-# blockers here. They must be migrated later to the same governing standard;
-# their current failures are evidence of incomplete migration, not a reason to
-# weaken Job 1 or reintroduce project-specific Store logic.
+# This workflow preserves the Job 1 operable-template acceptance and also proves
+# the existing Alcove HTML + bridge against the promoted System runtime and exact
+# tested Store source. Window Seat, Outdoor, S-001, and other projects are not
+# changed by this Alcove connection pass.
