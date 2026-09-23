@@ -28,6 +28,9 @@ jobs:
       - name: Current shell inline syntax
         run: node --test tests/system-build-current-syntax.test.mjs
 
+      - name: Full developer Build Guide contract
+        run: node --test tests/build-guide-full-treatment.test.mjs
+
       - name: Job 1 Store authority acceptance
         run: node tests/user1-travel-standard.test.mjs
 
