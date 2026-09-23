@@ -11,16 +11,16 @@ const sandbox={window:{}};
 vm.runInNewContext(source,sandbox,{filename:'stb-build-guide-spec.js'});
 const spec=sandbox.window.STBBuildGuideSpec;
 
-test('developer Build Guide covers every current page surface without rewriting the main column',()=>{
-  assert.equal(spec.version,'STB-BUILD-GUIDE-0.1');
-  assert.match(shell,/stb-build-guide-spec\.js\?v=4c3e13e3/);
+test('Dev Guide covers current pages and only rewrites the reserved rail',()=>{
+  assert.equal(spec.version,'STB-DEV-GUIDE-0.2');
+  assert.match(shell,/stb-build-guide-spec\.js\?v=/);
   assert.match(shell,/function installDeveloperBuildGuides\(\)/);
 
   const fn=shell.slice(shell.indexOf('function installDeveloperBuildGuides()'),shell.indexOf('installDeveloperBuildGuides();',shell.indexOf('function installDeveloperBuildGuides()')));
   assert.match(fn,/page\.querySelector\(':scope > aside\.rail'\)/);
   assert.match(fn,/page\.append\(rail\)/);
   assert.match(fn,/rail\.innerHTML = spec\.render\(page\.id\)/);
-  assert.equal(/\.main[^\n]*innerHTML|querySelector\([^\n]*\.main[^\n]*\)\.innerHTML/.test(fn),false,'Build Guide installer rewrites customer main content');
+  assert.equal(/\.main[^\n]*innerHTML|querySelector\([^\n]*\.main[^\n]*\)\.innerHTML/.test(fn),false,'Dev Guide installer rewrites customer main content');
 
   const baseIds=[...base.matchAll(/<section[^>]+id="([^"]+)"/g)].map(m=>m[1]);
   const dynamicIds=[
@@ -30,30 +30,37 @@ test('developer Build Guide covers every current page surface without rewriting 
     'picnic-store','picnic-request','picnic-yard','picnic-terms','picnic-recap','picnic-record',
     'alcove-store-order-surface','alcove-store-service-choices','alcove-store-yard-answer','alcove-store-commercial-sequence','alcove-store-returned-offer'
   ];
+
   for(const id of new Set([...baseIds,...dynamicIds])){
-    assert.ok(spec.pages[id],`missing Build Guide page contract: ${id}`);
-    for(const key of ['goal','visual','behavior','state','authority','wart','fullBuild']){
-      assert.ok(String(spec.pages[id][key]||'').trim().length>8,`thin Build Guide ${key}: ${id}`);
-    }
+    assert.ok(spec.pages[id],`missing Dev Guide: ${id}`);
+    assert.ok(spec.pages[id].rows.length>=2 && spec.pages[id].rows.length<=5,`Dev Guide not shorthand-sized: ${id}`);
     const rendered=spec.render(id);
-    for(const label of ['BUILD GUIDE · FULL BUILD','VISUAL','BEHAVIOR','STATE / DATA','AUTHORITY','PROTOTYPE WART','FULL BUILD GUARDRAIL','GLOBAL WARTS','PRODUCTION BASELINE']){
-      assert.ok(rendered.includes(label),`rendered guide missing ${label}: ${id}`);
-    }
+    assert.match(rendered,/DEV GUIDE/);
+    assert.equal(rendered.includes('GLOBAL WARTS'),false);
+    assert.equal(rendered.includes('PRODUCTION BASELINE'),false);
+    assert.equal(rendered.includes('BUILD GUIDE · FULL BUILD'),false);
   }
 });
 
-test('Build Guide names the real prototype debt instead of generic tech vocabulary',()=>{
-  assert.match(spec.pages['start-own-live'].wart,/iframe bridge/i);
-  assert.match(spec.pages['start-own-live'].fullBuild,/postMessage|message schemas/i);
-  assert.match(spec.pages['proof-store'].wart,/out-of-order|timeout|duplicate/i);
-  assert.match(spec.pages['proof-store'].fullBuild,/idempotent|stale/i);
-  assert.match(spec.pages['proof-accept'].wart,/payment processor|PSP|webhook/i);
-  assert.match(spec.pages['proof-accept'].fullBuild,/idempotency keys/i);
-  assert.match(spec.pages['proof-yard'].wart,/MachineNeutralOp/);
-  assert.match(spec.pages['proof-yard'].wart,/queue service|machine telemetry/i);
-  assert.match(spec.pages['proof-yard'].fullBuild,/event-driven backend/i);
-  assert.match(spec.pages.intake.wart,/malware scanning|hostile-file/i);
-  assert.match(spec.pages.projects.wart,/legacy routes|quarantined/i);
-  assert.match(spec.global.wart,/no production auth\/session service/i);
-  assert.match(spec.global.fullBuild,/CSP|accessibility|backup\/recovery/i);
+test('landing Dev Guide restores the original short cues',()=>{
+  const html=spec.render('landing');
+  for(const phrase of [
+    'Say what this is','One screen, no scrolling to understand it.',
+    'Show who does what','Four steps are yours, one is ours.',
+    'Make the seam visible','The definition reaches the cut unchanged.',
+    'Offer three ways in','Same road after. Different opening.'
+  ]) assert.ok(html.includes(phrase),`landing Dev Guide lost: ${phrase}`);
+});
+
+test('sharp shorthand still names the important build debt',()=>{
+  assert.match(spec.render('projects'),/Don’t overcrowd/);
+  assert.match(spec.render('alcove-config'),/Kill stale replies/);
+  assert.match(spec.render('proof-store'),/Reject stale results/);
+  assert.match(spec.render('proof-accept'),/One click, three receipts/);
+  assert.match(spec.render('proof-accept'),/idempotent/i);
+  assert.match(spec.render('proof-yard'),/READY ≠ custody/);
+  assert.match(spec.render('proof-yard'),/No magic controller/);
+  assert.match(spec.render('proof-yard'),/Durable queue/);
+  assert.match(spec.render('intake'),/Don’t trust uploads/);
+  assert.match(spec.render('start-own-live'),/postMessage is a contract/);
 });
