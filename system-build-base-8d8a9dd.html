@@ -282,7 +282,7 @@ function buildAlcoveStoreDefinition(x){
  const across=Math.ceil(x.d/5.5),boardsPerShelf=Math.ceil(across/2),shelfParentQty=boardsPerShelf*x.n;
  return {configurationId:'ALCOVE-USER1',configurationVersion:'ALCOVE-UI-'+alcoveDefinitionSignature(x),materialDemand:{species:x.material,form:'board',nominalT:1,nominalW:6,grade:'select'},boardRequirements:[{requirementId:'ALCOVE-UPRIGHT-PARENTS',role:'UPRIGHTS',stockLengthIn:72,keptLengthIn:x.h,qty:4,requiredOps:['CROSSCUT'],carriesSpotDemand:true},{requirementId:'ALCOVE-SHELF-PARENTS',role:'SHELVES',stockLengthIn:96,keptLengthIn:x.span,qty:shelfParentQty,requiredOps:['CROSSCUT'],carriesSpotDemand:false}],componentPrograms:alcoveComponentPrograms(x.h,x.d,x.span,x.n),hardwareDemand:{storeSku:'STB-ZERO-HW-ALCOVE-PACK-001',qty:1},spotDemand:{enabled:alcove.pilotShelves,mode:'SPOT_ON_LOCATION',toolDiameterIn:0.1875,source:'SHELF_ELEVATIONS',features:x.pilotFeatures},unresolvedConditions:[],materialSource:'STORE_ZERO'}
 }
-function storeMoney(v){return Number.isFinite(Number(v))?money(Number(v)):'UNRESOLVED'}
+function storeMoney(v){return v!==null&&v!==undefined&&v!==''&&Number.isFinite(Number(v))?money(Number(v)):'UNRESOLVED'}
 function setAlcoveStorePending(){
  ['o-sku','o-unit','o-oh','o-mat','o-hw','o-cyc','o-rec'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='asking Store Zero…'});
  document.getElementById('p-price').textContent='ASKING STORE ZERO…';
@@ -301,7 +301,7 @@ function renderAlcoveStoreFailure(error){
 }
 function renderAlcoveStoreAnswer(answer){
  alcoveStoreAnswer=answer;window.STBAlcoveStoreAnswer=Object.freeze(JSON.parse(JSON.stringify(answer)));
- const evaln=answer.rawEvaluation||{},estimate=answer.rawEstimate||evaln.estimate||{},totals=estimate.totals||{},lines=Array.isArray(evaln.lines)?evaln.lines:[],status=evaln.status||answer.priceCompleteness?.status||'UNRESOLVED',q=Number(totals.Q),cycle=estimate.cycle||{},skus=lines.map(line=>line.storeSku).filter(Boolean),priceLines=lines.map(line=>line.price&&Number.isFinite(Number(line.price.sellingPrice))?line.role+' '+money(Number(line.price.sellingPrice)):null).filter(Boolean),stockLines=lines.map(line=>{const s=line.stock||{};return line.role+' '+(s.status||'UNRESOLVED')+(Number.isFinite(Number(s.available))?' '+s.available+'/'+line.qty:'')});
+ const evaln=answer.rawEvaluation||{},estimate=answer.rawEstimate||evaln.estimate||{},totals=estimate.totals||{},lines=Array.isArray(evaln.lines)?evaln.lines:[],status=evaln.status||answer.priceCompleteness?.status||'UNRESOLVED',q=totals.Q!==null&&totals.Q!==undefined&&totals.Q!==''&&Number.isFinite(Number(totals.Q))?Number(totals.Q):null,cycle=estimate.cycle||{},skus=lines.map(line=>line.storeSku).filter(Boolean),priceLines=lines.map(line=>line.price&&line.price.sellingPrice!==null&&line.price.sellingPrice!==undefined&&Number.isFinite(Number(line.price.sellingPrice))?line.role+' '+money(Number(line.price.sellingPrice)):null).filter(Boolean),stockLines=lines.map(line=>{const s=line.stock||{};return line.role+' '+(s.status||'UNRESOLVED')+(s.available!==null&&s.available!==undefined&&Number.isFinite(Number(s.available))?' '+s.available+'/'+line.qty:'')});
  document.getElementById('p-price').textContent=Number.isFinite(q)?money(q):status;
  document.getElementById('p-basis').textContent=Number.isFinite(q)?'Store Zero budgetary estimate · material '+storeMoney(totals.material)+' + machine service '+storeMoney(totals.machine_service)+' + hardware '+storeMoney(totals.hardware):'Store Zero '+status+' · '+([...(answer.priceCompleteness?.unresolvedConditions||[]),...(evaln.refusalConditions||[])].join(' · ')||answer.priceCompleteness?.note||'complete Q not returned');
  document.getElementById('o-sku').textContent=skus.length?skus.map(s=>s.replace('STB-ZERO-','')).join(' · '):'UNRESOLVED';
@@ -309,7 +309,7 @@ function renderAlcoveStoreAnswer(answer){
  document.getElementById('o-oh').textContent=stockLines.length?stockLines.join(' · '):'UNRESOLVED';
  document.getElementById('o-mat').textContent=storeMoney(totals.material);
  document.getElementById('o-hw').textContent=storeMoney(totals.hardware);
- document.getElementById('o-cyc').textContent=Number.isFinite(Number(cycle.T_job_min))?Number(cycle.T_job_min).toFixed(4).replace(/0+$/,'').replace(/\.$/,'')+' min':'UNRESOLVED';
+ document.getElementById('o-cyc').textContent=cycle.T_job_min!==null&&cycle.T_job_min!==undefined&&Number.isFinite(Number(cycle.T_job_min))?Number(cycle.T_job_min).toFixed(4).replace(/0+$/,'').replace(/\.$/,'')+' min':'UNRESOLVED';
  document.getElementById('o-rec').textContent=storeMoney(totals.machine_service);
  document.getElementById('r-sku').textContent=ALCOVE_MATERIAL_DISPLAY[alcove.material].name+(skus.length?' · '+skus.map(s=>s.replace('STB-ZERO-','')).join(' · '):' · Store unresolved');
  document.getElementById('r-q').textContent=Number.isFinite(q)?money(q):status;
