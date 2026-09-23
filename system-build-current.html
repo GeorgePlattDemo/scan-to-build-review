@@ -1995,9 +1995,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         +'<div><b>SIMULATED PAYMENT</b><span id="proof-sim-pay-status">NOT RECORDED</span></div>'
       +'</div>'
       +'<div class="band"><b>THE USER CHOICE.</b> You already came to the yard for the board. The modeled machine-service portion for this exact definition is <b id="proof-accept-service-copy">—</b>. Owning a miter saw does not make setup, measuring, three angled cuts, spotting, cleanup and carrying the board home free. The choice is yours.</div>'
-      +'<div class="proof-gap"><b>SIMULATION ONLY.</b>The buttons below create labeled demonstration events and receipts. No money moves. No physical stock is reserved. No production authority or machine motion is created.</div>'
-      +'<div class="proof-nav"><button type="button" data-proof-sim-action="offer">CREATE SIMULATED OFFER</button><button type="button" data-proof-sim-action="accept" disabled>ACCEPT SIMULATED OFFER</button><button class="primary" type="button" data-proof-sim-action="pay" disabled>SIMULATE PAYMENT</button></div>'
-      +'<div class="proof-nav"><button type="button" data-proof-library>← PROJECT LIBRARY</button><button type="button" data-proof-go="proof-store">← STORE ANSWER</button><button class="next" id="proof-accept-next" type="button" data-proof-go="proof-yard" disabled>CONTINUE → STORE / YARD</button></div>',
+      +'<div class="proof-gap"><b>SIMULATION ONLY.</b>The action below preserves separate offer, acceptance and payment receipts for this exact Store answer. No money moves. No physical stock is reserved. No production authority or machine motion is created.</div>'
+      +'<div class="proof-nav"><button type="button" data-proof-return-source>← GO BACK / CHANGE DEFINITION</button><button class="next primary" id="proof-accept-pay-yard" type="button" data-proof-sim-action="accept-pay-yard">ACCEPT STORE QUOTE / PAY / SEND TO YARD →</button></div>',
       '<p class="goal">A small service can still be useful</p><div class="row"><b>Machine service is visible</b><span>The customer sees the service portion separately from material.</span></div><div class="row"><b>Simulation stays labeled</b><span>Offer, acceptance and payment get receipts without pretending live commerce occurred.</span></div>'
     );
 
@@ -2179,6 +2178,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       const offerButton=actionButton('offer'); if(offerButton) offerButton.disabled=!economics.complete||!Number.isFinite(Number(economics.q))||offer;
       const acceptButton=actionButton('accept'); if(acceptButton) acceptButton.disabled=!offer||accepted;
       const payButton=actionButton('pay'); if(payButton){ payButton.disabled=!accepted||paid; payButton.textContent=paid?'✓ SIMULATED PAYMENT RECORDED':'SIMULATE PAYMENT · '+money(economics.q); }
+      const acceptPayYardButton=actionButton('accept-pay-yard');
+      if(acceptPayYardButton){
+        acceptPayYardButton.disabled=!economics.complete||!Number.isFinite(Number(economics.q))||paid;
+        acceptPayYardButton.textContent=paid?'✓ ACCEPTED / PAID / SENT TO YARD':'ACCEPT STORE QUOTE / PAY / SEND TO YARD →';
+      }
       const allocateButton=actionButton('allocate'); if(allocateButton) allocateButton.disabled=!paid||allocated;
       const releaseButton=actionButton('release'); if(releaseButton) releaseButton.disabled=!allocated||released;
       const runButton=actionButton('run'); if(runButton) runButton.disabled=!released||executed;
@@ -2186,7 +2190,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       const readyButton=actionButton('ready'); if(readyButton) readyButton.disabled=!staged||ready;
       const pickupButton=actionButton('pickup'); if(pickupButton){ pickupButton.disabled=!ready||custody; pickupButton.textContent=custody?'✓ SIMULATED PICKUP RECORDED':'SIMULATE PICKUP / TRANSFER CUSTODY'; }
 
-      const acceptNext=doc.getElementById('proof-accept-next'); if(acceptNext) acceptNext.disabled=!paid;
       const yardNext=doc.getElementById('proof-yard-next'); if(yardNext) yardNext.disabled=!ready;
       const termsNext=doc.getElementById('proof-terms-next'); if(termsNext) termsNext.disabled=!ready;
 
@@ -2210,7 +2213,16 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       const economics=proofSimulationEconomics();
       const q=Number(economics.q);
       const money=Number.isFinite(q)?'$'+q.toFixed(2):'UNRESOLVED';
-      if(action==='offer'){
+      if(action==='accept-pay-yard'){
+        if(economics.complete!==true || !Number.isFinite(q)) return true;
+        proofSimulationReceipt('SIMULATED_OFFER','Simulated offer created from the identified Store answer · total '+money);
+        proofSimulationReceipt('SIMULATED_ACCEPTANCE','Customer accepted the simulated offer for the same identified definition');
+        proofSimulationReceipt('SIMULATED_PAYMENT','Simulated payment recorded · '+money+' · no money moved');
+        syncProofSimulationUI();
+        originalShow.call(win,'proof-yard');
+        syncJourneyNav('yard');
+        return true;
+      } else if(action==='offer'){
         if(economics.complete!==true || !Number.isFinite(q)) return true;
         proofSimulationReceipt('SIMULATED_OFFER','Simulated offer created from the identified Store answer · total '+money);
       } else if(action==='accept'){

@@ -112,7 +112,7 @@ assert.match(shell,/'start-own': Object\.freeze\(\{[\s\S]*?store:'proof-store'[\
 
 // Gate navigation is sequential from Store answer to simulated owner record.
 assert.match(shell,/data-proof-go="proof-accept">CONTINUE → ACCEPT \/ PAY/);
-assert.match(shell,/id="proof-accept-next"[^>]*data-proof-go="proof-yard" disabled>CONTINUE → STORE \/ YARD/);
+assert.match(shell,/id="proof-accept-pay-yard"[^>]*data-proof-sim-action="accept-pay-yard">ACCEPT STORE QUOTE \/ PAY \/ SEND TO YARD →/);
 assert.match(shell,/id="proof-yard-next"[^>]*data-proof-go="proof-terms" disabled>CONTINUE → RECEIPTS/);
 assert.match(shell,/id="proof-terms-next"[^>]*data-proof-go="proof-record">CONTINUE → HANDOFF \/ RECORD/);
 assert.match(shell,/canOpenStartOwnSimulationStage/);
@@ -152,10 +152,12 @@ assert.equal(shell.includes('quoteStartOwnBoardSequence'),false,'Job 1 has a sec
 assert.equal(shell.includes('machineHourRate'),false,'Job 1 browser contains a Store machine rate');
 assert.equal(shell.includes('setupCharge'),false,'Job 1 browser contains a Store setup charge');
 
-// ACCEPT/PAY: a simulated offer, acceptance, and payment are explicit separate events.
-assert.match(shell,/CREATE SIMULATED OFFER/);
-assert.match(shell,/ACCEPT SIMULATED OFFER/);
-assert.match(shell,/SIMULATE PAYMENT/);
+// ACCEPT/PAY: one customer action preserves three explicit commerce receipts.
+assert.match(shell,/← GO BACK \/ CHANGE DEFINITION/);
+assert.match(shell,/ACCEPT STORE QUOTE \/ PAY \/ SEND TO YARD →/);
+assert.match(shell,/data-proof-sim-action="accept-pay-yard"/);
+assert.equal(shell.includes('CREATE SIMULATED OFFER'),false,'Accept/Pay still exposes the old offer button');
+assert.equal(shell.includes('ACCEPT SIMULATED OFFER'),false,'Accept/Pay still exposes the old acceptance button');
 assert.match(shell,/SIMULATED_OFFER/);
 assert.match(shell,/SIMULATED_ACCEPTANCE/);
 assert.match(shell,/SIMULATED_PAYMENT/);

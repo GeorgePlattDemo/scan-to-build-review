@@ -241,7 +241,9 @@ assert.match(shell,/proof-yard/);
 assert.match(shell,/proof-terms/);
 assert.match(shell,/proof-record/);
 // Store authority remains real-to-the-model while downstream commerce/fulfillment is explicitly simulated.
-assert.match(shell,/data-proof-sim-action="pay"/);
+assert.match(shell,/data-proof-sim-action="accept-pay-yard"/);
+assert.match(shell,/SIMULATED_OFFER/);
+assert.match(shell,/SIMULATED_ACCEPTANCE/);
 assert.match(shell,/SIMULATED_PAYMENT/);
 assert.match(shell,/no money moved/);
 assert.match(shell,/does not send controller code, command a machine, establish commissioned readiness, or create a live Cycle Start/);
