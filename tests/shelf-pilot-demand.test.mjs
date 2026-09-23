@@ -84,8 +84,8 @@ assert.match(seat,/fill="#2f6f9e"/);
 assert.equal(/if\(o\.operationId==='OP-SHELF-PILOT-SPOTS-316'\)/.test(seat),false);
 assert.match(seat,/no declared service line for this request at this pin — the Store answers it, this page does not invent it/);
 
-// Neither project is promoted to the Job-1 Store standard merely by adding the UI option.
-assert.match(alcove,/pricingStatus:alcove\.pilotShelves\?'NOT_MIGRATED_TO_JOB1_STORE_STANDARD':'NOT_REQUESTED'/);
+// Alcove now routes the option to Store for evaluation; Window Seat remains unmigrated.
+assert.match(alcove,/pricingStatus:alcove\.pilotShelves\?'STORE_EVALUATION_REQUIRED':'NOT_REQUESTED'/);
 assert.match(seat,/pricingStatus:P\.shelfPilotSpots\?'UNPRICED_UNTIL_STORE_MIGRATION':'NOT_REQUESTED'/);
 
 console.log('PASS · Alcove and Window Seat expose optional shelf-elevation SPOT_ON_LOCATION demand without inventing Store pricing');
