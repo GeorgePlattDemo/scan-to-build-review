@@ -23,8 +23,14 @@ assert.match(alcove,/pilotFeatures\.length\+' × 3\/16 in SPOT_ON_LOCATION/);
 assert.match(alcove,/<circle cx="'\+\(x0\+1\.75\)/);
 assert.match(alcove,/<circle cx="'\+\(x1-1\.75\)/);
 
-// The existing Alcove reference price remains untouched by the pilot toggle.
-assert.match(alcove,/q=\+\(mat\+rec\+hw\)\.toFixed\(2\)/);
+// Alcove no longer owns Store price, cycle, availability, or Q.
+assert.equal(alcove.includes('STORE_FIXTURE'),false);
+assert.equal(alcove.includes('RECOVERY[across]'),false);
+assert.equal(alcove.includes('CYCLE[across]'),false);
+assert.match(alcove,/stb-alcove-store-bridge\.js/);
+assert.match(alcove,/requestAlcoveStore\(x/);
+assert.match(alcove,/MILL_LONGITUDINAL_PROFILE/);
+assert.match(alcove,/no local fallback/);
 assert.match(alcove,/Legacy Alcove price is not allowed to absorb them; Store migration remains required/);
 
 // Window Seat: same concept, derived from the actual generated tower shelf datums.
