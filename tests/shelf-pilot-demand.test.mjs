@@ -1,7 +1,10 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
+import vm from 'node:vm';
 
 const alcove=fs.readFileSync('system-build-base-8d8a9dd.html','utf8');
+const bridge=fs.readFileSync('stb-alcove-store-bridge.js','utf8');
+new vm.Script(bridge,{filename:'stb-alcove-store-bridge.js'});
 const seat=fs.readFileSync('stb-window-seat-space-utilization-0.7.4.html','utf8');
 
 // Alcove: one bounded option, off by default, derived from existing shelf elevations.
@@ -23,8 +26,29 @@ assert.match(alcove,/pilotFeatures\.length\+' × 3\/16 in SPOT_ON_LOCATION/);
 assert.match(alcove,/<circle cx="'\+\(x0\+1\.75\)/);
 assert.match(alcove,/<circle cx="'\+\(x1-1\.75\)/);
 
-// The existing Alcove reference price remains untouched by the pilot toggle.
-assert.match(alcove,/q=\+\(mat\+rec\+hw\)\.toFixed\(2\)/);
+// Alcove no longer owns Store price, cycle, availability, or Q.
+assert.equal(alcove.includes('STORE_FIXTURE'),false);
+assert.equal(alcove.includes('RECOVERY[across]'),false);
+assert.equal(alcove.includes('CYCLE[across]'),false);
+assert.match(alcove,/stb-alcove-store-bridge\.js/);
+assert.match(alcove,/requestAlcoveStore\(x/);
+assert.match(alcove,/MILL_LONGITUDINAL_PROFILE/);
+assert.match(alcove,/no local fallback/);
+assert.match(bridge,/http:\/\/localhost:4317\/api\/store-zero\/job/);
+assert.match(bridge,/ALCOVE_INSERT_V1/);
+assert.match(bridge,/expectedStorePin/);
+assert.match(bridge,/STORE_CORRELATION_ERROR/);
+const programStart=alcove.indexOf('function alcoveComponentPrograms');
+const programEnd=alcove.indexOf('function alcoveDefinitionSignature',programStart);
+assert.ok(programStart>=0&&programEnd>programStart,'Alcove component-program translator missing');
+const componentPrograms=vm.runInNewContext('('+alcove.slice(programStart,programEnd).trim()+')');
+const depth14=componentPrograms(65,14,44,5);
+const depth11=componentPrograms(65,11,44,5);
+assert.equal(depth14.length,19);
+assert.equal(depth14.filter(component=>component.features.some(feature=>feature.kind==='MILL_LONGITUDINAL_PROFILE')).length,5);
+assert.equal(depth11.length,14);
+assert.equal(depth11.filter(component=>component.features.some(feature=>feature.kind==='MILL_LONGITUDINAL_PROFILE')).length,0);
+assert.equal(/materialTotal|machine_service\s*=|sellingPrice\s*\*/.test(bridge),false,'transport bridge contains Store calculation logic');
 assert.match(alcove,/Legacy Alcove price is not allowed to absorb them; Store migration remains required/);
 
 // Window Seat: same concept, derived from the actual generated tower shelf datums.
