@@ -1,7 +1,10 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
+import vm from 'node:vm';
 
 const alcove=fs.readFileSync('system-build-base-8d8a9dd.html','utf8');
+const bridge=fs.readFileSync('stb-alcove-store-bridge.js','utf8');
+new vm.Script(bridge,{filename:'stb-alcove-store-bridge.js'});
 const seat=fs.readFileSync('stb-window-seat-space-utilization-0.7.4.html','utf8');
 
 // Alcove: one bounded option, off by default, derived from existing shelf elevations.
@@ -31,6 +34,11 @@ assert.match(alcove,/stb-alcove-store-bridge\.js/);
 assert.match(alcove,/requestAlcoveStore\(x/);
 assert.match(alcove,/MILL_LONGITUDINAL_PROFILE/);
 assert.match(alcove,/no local fallback/);
+assert.match(bridge,/http:\/\/localhost:4317\/api\/store-zero\/job/);
+assert.match(bridge,/ALCOVE_INSERT_V1/);
+assert.match(bridge,/expectedStorePin/);
+assert.match(bridge,/STORE_CORRELATION_ERROR/);
+assert.equal(/materialTotal|machine_service\s*=|sellingPrice\s*\*/.test(bridge),false,'transport bridge contains Store calculation logic');
 assert.match(alcove,/Legacy Alcove price is not allowed to absorb them; Store migration remains required/);
 
 // Window Seat: same concept, derived from the actual generated tower shelf datums.
