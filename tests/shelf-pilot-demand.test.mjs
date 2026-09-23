@@ -38,6 +38,16 @@ assert.match(bridge,/http:\/\/localhost:4317\/api\/store-zero\/job/);
 assert.match(bridge,/ALCOVE_INSERT_V1/);
 assert.match(bridge,/expectedStorePin/);
 assert.match(bridge,/STORE_CORRELATION_ERROR/);
+const programStart=alcove.indexOf('function alcoveComponentPrograms');
+const programEnd=alcove.indexOf('function alcoveDefinitionSignature',programStart);
+assert.ok(programStart>=0&&programEnd>programStart,'Alcove component-program translator missing');
+const componentPrograms=vm.runInNewContext('('+alcove.slice(programStart,programEnd).trim()+')');
+const depth14=componentPrograms(65,14,44,5);
+const depth11=componentPrograms(65,11,44,5);
+assert.equal(depth14.length,19);
+assert.equal(depth14.filter(component=>component.features.some(feature=>feature.kind==='MILL_LONGITUDINAL_PROFILE')).length,5);
+assert.equal(depth11.length,14);
+assert.equal(depth11.filter(component=>component.features.some(feature=>feature.kind==='MILL_LONGITUDINAL_PROFILE')).length,0);
 assert.equal(/materialTotal|machine_service\s*=|sellingPrice\s*\*/.test(bridge),false,'transport bridge contains Store calculation logic');
 assert.match(alcove,/Legacy Alcove price is not allowed to absorb them; Store migration remains required/);
 
