@@ -2115,7 +2115,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       '<p class="goal">The whole circuit stays visible</p><div class="row"><b>One definition</b><span>Store, controller, operator and Yard add only the facts they own.</span></div><div class="row"><b>One audit chain</b><span>Every simulated receipt remains tied to the identified Store result.</span></div><div class="row"><b>One physical boundary</b><span>Cycle Start stays local; simulation never claims machine authority.</span></div>'
     );
 
-    ensureProjectJourneyPage('proof-terms',    ensureProjectJourneyPage('proof-terms',
+    ensureProjectJourneyPage('proof-terms',
       '<p class="stage-tag">RECEIPTS</p><h1>EVERY SIMULATED STEP LEFT A RECEIPT.</h1>'
       +'<p class="sub">The definition and Store answer stay identified. The downstream events are demonstration records tied to that exact answer, not claims that a real payment or physical job occurred.</p>'
       +'<div class="proof-actor-grid">'
@@ -2155,7 +2155,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       '<p class="goal">The record closes without rewriting history</p><div class="row"><b>READY ≠ custody</b><span>The handoff event remains separate.</span></div><div class="row"><b>Failures would remain</b><span>A later success would not erase an earlier attempt.</span></div><div class="row"><b>Same definition</b><span>The final record points back to the same identified work and Store answer.</span></div>'
     );
 
-    function proofSimulationEconomics(){    function proofSimulationEconomics(){
+    function proofSimulationEconomics(){
       const storeReference=proofHandoff?.payload?.storeReference || null;
       const estimate=storeReference?.estimate || null;
       const totals=estimate?.totals || null;
