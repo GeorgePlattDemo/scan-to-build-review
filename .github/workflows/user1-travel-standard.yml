@@ -22,6 +22,12 @@ jobs:
       - name: Shared Store contract syntax
         run: node --check stb-store-handoff-contract.js
 
+      - name: Start Own live bridge syntax
+        run: node --check stb-user-defined-board-runtime-bridge.js
+
+      - name: Current shell inline syntax
+        run: node --test tests/system-build-current-syntax.test.mjs
+
       - name: Job 1 Store authority acceptance
         run: node tests/user1-travel-standard.test.mjs
 
@@ -59,6 +65,9 @@ jobs:
 
       - name: Alcove public Railway Store acceptance
         run: node --test tests/alcove-public-runtime.test.mjs
+
+      - name: Start Own public Railway Store acceptance
+        run: node --test tests/user1-public-runtime.test.mjs
 
 # Deliberate scope:
 # This workflow preserves the Job 1 operable-template acceptance and also proves
