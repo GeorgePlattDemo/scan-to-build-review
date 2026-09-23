@@ -1,9 +1,26 @@
 (function(root){
   'use strict';
 
-  const ENDPOINT = 'http://localhost:4317/api/store-zero/job';
+  // Deployment configuration, never a browser-side Store implementation.
+  const CONFIG_URL = new URL('stb-store-runtime.json', document.currentScript.src).href;
+  async function resolveEndpoint(){
+    const response = await fetch(CONFIG_URL, {cache:'no-store'});
+    if(!response.ok) throw new Error('STORE_RUNTIME_CONFIGURATION_UNAVAILABLE');
+    const config = await response.json();
+    if(!config.jobEndpoint) throw new Error('STORE_RUNTIME_NOT_DEPLOYED');
+    const endpoint = new URL(config.jobEndpoint);
+    const loopback = host => ['localhost','127.0.0.1','[::1]'].includes(host);
+    const localTest = loopback(root.location.hostname) && loopback(endpoint.hostname);
+    if(endpoint.username || endpoint.password || endpoint.search || endpoint.hash ||
+       endpoint.pathname !== '/api/store-zero/job' ||
+       (!localTest && (endpoint.protocol !== 'https:' || loopback(endpoint.hostname))) ||
+       (localTest && !['http:','https:'].includes(endpoint.protocol))){
+      throw new Error('STORE_RUNTIME_ENDPOINT_INVALID');
+    }
+    return endpoint.href;
+  }
   const PROTOCOL_VERSION = 'stb-store-zero-http/1';
-  const EXPECTED_STORE_PIN = '0224e99f96dc65759bd7d3761d99e0708ad23e4a';
+  const EXPECTED_STORE_PIN = '39a1b318063f62220c9c20c42200389098e0c687';
   const REQUEST_TYPE = 'ALCOVE_INSERT_V1';
   const SCOPE = 'ALCOVE_INSERT_V1';
   const DEFINITION_KIND = 'alcove_insert.v1';
@@ -82,9 +99,11 @@
       payload
     };
 
-    const response = await fetch(ENDPOINT, {
+    const endpoint = await resolveEndpoint();
+    const response = await fetch(endpoint, {
       method: 'POST',
       mode: 'cors',
+      signal: AbortSignal.timeout(20000),
       cache: 'no-store',
       headers: {'Content-Type':'application/json'},
       body: canonicalJson(wire)
@@ -95,7 +114,8 @@
       error.storeBody = body;
       throw error;
     }
-    if(body.requestId !== requestId || body.attemptId !== attemptId){
+    if(['protocolVersion','requestId','attemptId','projectId','candidateRevisionId',
+        'requestType','scope','demandSignature','payloadDigest'].some(key => body[key] !== wire[key])){
       throw new Error('STORE_CORRELATION_ERROR');
     }
     if(body.storePin !== EXPECTED_STORE_PIN){
@@ -105,8 +125,8 @@
   }
 
   root.STBAlcoveStoreBridge = Object.freeze({
-    version: '0.1',
-    endpoint: ENDPOINT,
+    version: '0.2',
+    configurationUrl: CONFIG_URL,
     expectedStorePin: EXPECTED_STORE_PIN,
     request
   });

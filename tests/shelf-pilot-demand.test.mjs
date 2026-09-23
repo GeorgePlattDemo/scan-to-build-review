@@ -34,7 +34,10 @@ assert.match(alcove,/stb-alcove-store-bridge\.js/);
 assert.match(alcove,/requestAlcoveStore\(x/);
 assert.match(alcove,/MILL_LONGITUDINAL_PROFILE/);
 assert.match(alcove,/no local fallback/);
-assert.match(bridge,/http:\/\/localhost:4317\/api\/store-zero\/job/);
+assert.equal(bridge.includes('http://localhost:4317/api/store-zero/job'),false);
+assert.match(bridge,/stb-store-runtime\.json/);
+assert.match(bridge,/STORE_RUNTIME_NOT_DEPLOYED/);
+assert.match(bridge,/STORE_RUNTIME_ENDPOINT_INVALID/);
 assert.match(bridge,/ALCOVE_INSERT_V1/);
 assert.match(bridge,/expectedStorePin/);
 assert.match(bridge,/STORE_CORRELATION_ERROR/);
@@ -49,7 +52,10 @@ assert.equal(depth14.filter(component=>component.features.some(feature=>feature.
 assert.equal(depth11.length,14);
 assert.equal(depth11.filter(component=>component.features.some(feature=>feature.kind==='MILL_LONGITUDINAL_PROFILE')).length,0);
 assert.equal(/materialTotal|machine_service\s*=|sellingPrice\s*\*/.test(bridge),false,'transport bridge contains Store calculation logic');
-assert.match(alcove,/Legacy Alcove price is not allowed to absorb them; Store migration remains required/);
+assert.match(alcove,/Store Zero must evaluate or refuse them; no local price path may absorb or suppress them/);
+assert.equal(/stockLengthIn:72|stockLengthIn:96|STB-ZERO-HW-ALCOVE-PACK-001/.test(alcove),false,'Alcove definition contains stale Store-owned stock or SKU decisions');
+assert.match(alcove,/selectionAuthority:'STORE_ZERO'/);
+assert.match(alcove,/requirementId:'ALCOVE-PINS-AND-SCREWS'/);
 
 // Window Seat: same concept, derived from the actual generated tower shelf datums.
 assert.match(seat,/shelfPilotSpots:false/);
@@ -78,8 +84,8 @@ assert.match(seat,/fill="#2f6f9e"/);
 assert.equal(/if\(o\.operationId==='OP-SHELF-PILOT-SPOTS-316'\)/.test(seat),false);
 assert.match(seat,/no declared service line for this request at this pin — the Store answers it, this page does not invent it/);
 
-// Neither project is promoted to the Job-1 Store standard merely by adding the UI option.
-assert.match(alcove,/pricingStatus:alcove\.pilotShelves\?'NOT_MIGRATED_TO_JOB1_STORE_STANDARD':'NOT_REQUESTED'/);
+// Alcove now routes the option to Store for evaluation; Window Seat remains unmigrated.
+assert.match(alcove,/pricingStatus:alcove\.pilotShelves\?'STORE_EVALUATION_REQUIRED':'NOT_REQUESTED'/);
 assert.match(seat,/pricingStatus:P\.shelfPilotSpots\?'UNPRICED_UNTIL_STORE_MIGRATION':'NOT_REQUESTED'/);
 
 console.log('PASS · Alcove and Window Seat expose optional shelf-elevation SPOT_ON_LOCATION demand without inventing Store pricing');
