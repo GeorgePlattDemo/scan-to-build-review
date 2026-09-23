@@ -37,6 +37,9 @@ jobs:
       - name: Job 1 Accept Pay two-action contract
         run: node --test tests/job1-accept-pay-two-actions.test.mjs
 
+      - name: Job 1 continuous Yard handoff contract
+        run: node --test tests/job1-yard-continuous-handoff.test.mjs
+
       - name: Job 1 navigation integrity
         run: node tests/job1-navigation-integrity.test.mjs
 

@@ -108,16 +108,16 @@ assert.equal(shell.includes('sameUser1StoreAnswerIdentity(definition.storeRefere
 assert.equal(shell.includes('stbLastConfirmed'),false,'Job 1 Store-send button became one-use again');
 
 // Canonical downstream actor mapping for Job 1.
-assert.match(shell,/'start-own': Object\.freeze\(\{[\s\S]*?store:'proof-store'[\s\S]*?request:'proof-accept'[\s\S]*?yard:'proof-yard'[\s\S]*?terms:'proof-terms'[\s\S]*?record:'proof-record'/);
+assert.match(shell,/'start-own': Object\.freeze\(\{[\s\S]*?store:'proof-store'[\s\S]*?request:'proof-accept'[\s\S]*?yard:'proof-yard'[\s\S]*?terms:'proof-yard'[\s\S]*?record:'proof-record'/);
 
-// Gate navigation is sequential from Store answer to simulated owner record.
+// Gate navigation is sequential from Store answer to one continuous Yard surface and final custody record.
 assert.match(shell,/data-proof-go="proof-accept">CONTINUE → ACCEPT \/ PAY/);
 assert.match(shell,/id="proof-accept-pay-yard"[^>]*data-proof-sim-action="accept-pay-yard">ACCEPT STORE QUOTE \/ PAY \/ SEND TO YARD →/);
-assert.match(shell,/id="proof-yard-next"[^>]*data-proof-go="proof-terms" disabled>CONTINUE → RECEIPTS/);
-assert.match(shell,/id="proof-terms-next"[^>]*data-proof-go="proof-record">CONTINUE → HANDOFF \/ RECORD/);
+assert.match(shell,/id="proof-yard-handoff"[^>]*data-proof-sim-action="handoff-record">CUSTOMER \/ YARD RECORD HANDOFF →/);
+assert.equal(shell.includes('id="proof-yard-next"'),false,'Job 1 Yard still has a separate receipts-next button');
 assert.match(shell,/canOpenStartOwnSimulationStage/);
 assert.match(shell,/stage==='yard'[\s\S]*SIMULATED_PAYMENT/);
-assert.match(shell,/stage==='terms'\|\|stage==='record'[\s\S]*SIMULATED_READY_NOTICE/);
+assert.match(shell,/stage==='record'[\s\S]*SIMULATED_CUSTODY_TRANSFER/);
 
 // Each downstream gate exposes the same custody spine.
 for(const gate of ['store','accept','yard','terms','record']){
@@ -165,34 +165,39 @@ assert.match(shell,/no money moved/);
 assert.match(shell,/modeled machine-service portion for this exact definition/);
 assert.match(shell,/proof-accept-service-copy/);
 
-// STORE/YARD: simulated fulfillment advances one event at a time.
+// STORE/YARD: the accepted demonstration runs the internal simulation in sequence and exposes it in one scroll.
 for(const type of [
   'SIMULATED_ALLOCATION',
+  'SIMULATED_QUEUE',
   'SIMULATED_PRODUCTION_RELEASE',
+  'SIMULATED_MACHINE_NEUTRAL_PLAN',
+  'SIMULATED_LOCAL_LOWERING',
   'SIMULATED_CELL_READINESS',
+  'SIMULATED_OPERATOR_LOAD',
+  'SIMULATED_CYCLE_START',
   'SIMULATED_EXECUTION',
   'SIMULATED_INSPECTION_STAGING',
   'SIMULATED_READY_NOTICE',
 ]){
   assert.match(shell,new RegExp(type));
 }
-assert.match(shell,/1 · SIMULATE ALLOCATION/);
-assert.match(shell,/2 · SIMULATE RELEASE/);
-assert.match(shell,/3 · RUN CELL SIMULATION/);
-assert.match(shell,/4 · INSPECT \/ LABEL \/ STAGE/);
-assert.match(shell,/5 · ISSUE READY NOTICE/);
+for(const oldButton of ['SIMULATE ALLOCATION','SIMULATE RELEASE','RUN CELL SIMULATION','ISSUE READY NOTICE']){
+  assert.equal(shell.includes(oldButton),false,'Yard still exposes internal event button: '+oldButton);
+}
+assert.match(shell,/DEFINE → VERIFY → QUOTE → PURCHASE → ALLOCATE → QUEUE → TRANSLATE → LOAD → CYCLE → INSPECT → STAGE → HANDOFF/);
 assert.match(shell,/NO BLOOD ON WOOD/);
-assert.match(shell,/does not send controller code, command a machine, establish commissioned readiness, or create a live Cycle Start/);
+assert.match(shell,/Scrolling creates no event/);
+assert.match(shell,/Current digital stack:/);
+assert.match(shell,/Physical stack to prove:/);
+assert.match(shell,/candidate bounded cell/);
+assert.match(shell,/proof-yard-receipt-ledger/);
 
 // RECEIPTS are tied to the exact Store evaluation/result identity.
 assert.match(shell,/receiptIdentity=economics\.storeReceipt\?\.receiptHash\|\|economics\.storeReceipt\?\.requestId\|\|economics\.resultHash/);
 assert.match(shell,/receiptId:'SIM-'/);
-assert.match(shell,/EVERY SIMULATED STEP LEFT A RECEIPT/);
-assert.match(shell,/proof-receipt-ledger/);
-assert.match(shell,/Same Store answer/);
 
-// RECORD closes only after a separate simulated custody transfer.
-assert.match(shell,/SIMULATE PICKUP \/ TRANSFER CUSTODY/);
+// RECORD closes only after the Yard handoff creates separate custody.
+assert.match(shell,/CUSTOMER \/ YARD RECORD HANDOFF →/);
 assert.match(shell,/SIMULATED_CUSTODY_TRANSFER/);
 assert.match(shell,/READY is not custody/);
 assert.match(shell,/CLOSED · SIMULATED OWNER RECORD/);
