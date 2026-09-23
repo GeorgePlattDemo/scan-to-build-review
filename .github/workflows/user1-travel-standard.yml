@@ -57,6 +57,9 @@ jobs:
           STB_STORE_ZERO_ROOT: ${{ github.workspace }}/.stb-store
         run: node --test tests/alcove-real-runtime.test.mjs
 
+      - name: Alcove public Railway Store acceptance
+        run: node --test tests/alcove-public-runtime.test.mjs
+
 # Deliberate scope:
 # This workflow preserves the Job 1 operable-template acceptance and also proves
 # the existing Alcove HTML + bridge against the promoted System runtime and exact
