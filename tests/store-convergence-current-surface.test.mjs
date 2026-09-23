@@ -196,7 +196,7 @@ assert.match(alcoveBase,/id="review-price">\$374\.42/,'native Pine review price 
 assert.match(shell,/selectJourneyProject\('start-own'\)/);
 assert.match(shell,/selectJourneyProject\('outdoor'\)/);
 assert.match(shell,/'start-own': Object\.freeze\(\{[\s\S]*store:'proof-store'[\s\S]*record:'proof-record'/);
-assert.match(shell,/'start-own': Object\.freeze\(\{[\s\S]*terms:'proof-terms'/);
+assert.match(shell,/'start-own': Object\.freeze\(\{[\s\S]*terms:'proof-yard'/);
 assert.match(shell,/ensureProjectJourneyPage\('proof-terms'/);
 assert.match(shell,/outdoor: Object\.freeze\(\{[\s\S]*store:'proof-store'[\s\S]*record:'proof-record'/);
 assert.match(shell,/if \(activeJourneyProject !== nextJourneyProject\) proofHandoff = null/,'project switch does not clear current handoff authority');

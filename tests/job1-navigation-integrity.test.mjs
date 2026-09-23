@@ -28,7 +28,7 @@ assert.match(shell,/confirmBlock\.scrollIntoView\(\{block:'end'\}\)/);
 assert.match(mapBlock,/store:'proof-store'/);
 assert.match(mapBlock,/request:'proof-accept'/);
 assert.match(mapBlock,/yard:'proof-yard'/);
-assert.match(mapBlock,/terms:'proof-terms'/);
+assert.match(mapBlock,/terms:'proof-yard'/);
 assert.match(mapBlock,/record:'proof-record'/);
 for(const forbidden of ['alcove-capture','alcove-config','alcove-review']) {
   assert.equal(mapBlock.includes(forbidden),false,'Job 1 route map leaks to Alcove: '+forbidden);
@@ -44,7 +44,7 @@ assert.match(shell,/button\.dataset\.jobExit = 'project-library'/);
 assert.match(shell,/button\.textContent = '← Project Library'/);
 
 // Legacy duplicate stage buttons are hidden while Job 1 is active.
-assert.match(shell,/stage === 'review' \|\| stage === 'recap'/);
+assert.match(shell,/stage === 'review' \|\| stage === 'terms' \|\| stage === 'recap'/);
 
 // Clicking the project-library exit clears Job 1 identity before leaving.
 assert.match(shell,/data-job-exit="project-library"/);

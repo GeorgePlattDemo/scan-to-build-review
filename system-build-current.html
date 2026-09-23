@@ -2001,28 +2001,121 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     );
 
     ensureProjectJourneyPage('proof-yard',
-      '<p class="stage-tag">STORE / YARD</p><h1>THE SIMULATED ORDER IS PAID. NOW WATCH THE YARD DO ITS PART.</h1>'
-      +'<p class="sub">Each event is separate. Each event gets its own receipt. Nothing is allowed to become true merely because the next page exists.</p>'
+      '<p class="stage-tag">STORE / YARD · CONTINUOUS FULFILLMENT RECORD</p><h1>THE PAID DEFINITION BECOMES PHYSICAL WORK.</h1>'
+      +'<p class="sub">One identified job travels from customer intent through Store, local control, operator action, reconciliation and staging. The customer does not operate the Yard by clicking internal events. The events remain separate and keep their own receipts.</p>'
       +'<div class="proof-actor-grid">'
         +'<div><b>JOB</b><span id="proof-yard-job">—</span></div>'
         +'<div><b>VERSION</b><span id="proof-yard-version">—</span></div>'
         +'<div><b>STORE SHA</b><span id="proof-yard-pin">—</span></div>'
         +'<div><b>INPUT HASH</b><span id="proof-yard-input-hash">—</span></div>'
         +'<div><b>RESULT HASH</b><span id="proof-yard-result-hash">—</span></div>'
-        +'<div><b>ALLOCATION</b><span id="proof-sim-allocation-status">NOT RECORDED</span></div>'
-        +'<div><b>PRODUCTION RELEASE</b><span id="proof-sim-release-status">NOT RECORDED</span></div>'
-        +'<div><b>LOCAL CELL READINESS</b><span id="proof-sim-readiness-status">NOT RECORDED</span></div>'
-        +'<div><b>SIMULATED EXECUTION</b><span id="proof-sim-execution-status">NOT RECORDED</span></div>'
-        +'<div><b>INSPECTION / LABEL / STAGE</b><span id="proof-sim-stage-status">NOT RECORDED</span></div>'
-        +'<div><b>READY NOTICE</b><span id="proof-sim-ready-status">NOT RECORDED</span></div>'
+        +'<div><b>STORE EVALUATION RECEIPT</b><span id="proof-yard-store-receipt">—</span></div>'
+        +'<div><b>MATERIAL</b><span id="proof-yard-material">—</span></div>'
+        +'<div><b>MODELED MACHINE SERVICE</b><span id="proof-yard-service">—</span></div>'
+        +'<div><b>STORE Q</b><span id="proof-yard-q">—</span></div>'
+        +'<div><b>MODELED JOB TIME</b><span id="proof-yard-cycle">—</span></div>'
       +'</div>'
-      +'<div class="proof-gap"><b>NO BLOOD ON WOOD.</b>This is a simulated fulfillment record only. It does not send controller code, command a machine, establish commissioned readiness, or create a live Cycle Start.</div>'
-      +'<div class="proof-nav"><button type="button" data-proof-sim-action="allocate">1 · SIMULATE ALLOCATION</button><button type="button" data-proof-sim-action="release" disabled>2 · SIMULATE RELEASE</button><button type="button" data-proof-sim-action="run" disabled>3 · RUN CELL SIMULATION</button><button type="button" data-proof-sim-action="stage" disabled>4 · INSPECT / LABEL / STAGE</button><button class="primary" type="button" data-proof-sim-action="ready" disabled>5 · ISSUE READY NOTICE</button></div>'
-      +'<div class="proof-nav"><button type="button" data-proof-library>← PROJECT LIBRARY</button><button type="button" data-proof-go="proof-accept">← ACCEPT / PAY</button><button class="next" id="proof-yard-next" type="button" data-proof-go="proof-terms" disabled>CONTINUE → RECEIPTS</button></div>',
-      '<p class="goal">One event at a time</p><div class="row"><b>Payment ≠ allocation</b><span>The simulation makes allocation explicit.</span></div><div class="row"><b>Release ≠ machine readiness</b><span>The local-cell boundary remains visible even in simulation.</span></div><div class="row"><b>READY is its own event</b><span>Staging does not silently become customer notice.</span></div>'
+      +'<div class="band"><b>DEFINE → VERIFY → QUOTE → PURCHASE → ALLOCATE → QUEUE → TRANSLATE → LOAD → CYCLE → INSPECT → STAGE → HANDOFF</b><br>The responsibility changes hands. The identified definition and evidence tied to it do not.</div>'
+      +'<div class="proof-gap"><b>SIMULATION BOUNDARY.</b>This page records a digital fulfillment simulation. It does not send controller code, reserve live inventory, establish commissioned-machine readiness, issue physical production authority, or create a live Cycle Start. Scrolling creates no event.</div>'
+
+      +'<div class="proof-gap"><b>01 · CUSTOMER — DEFINE THE WORK.</b>'
+        +'<p>The customer defines the finished work: identified parts, dimensions, material intent, quantities, required cuts and part-relative features. The definition owns what the part must be. It does not choose a Store SKU or machine coordinate.</p>'
+        +'<div class="kv"><span>Definition state</span><span><b>IDENTIFIED · VERSIONED</b></span></div>'
+      +'</div>'
+
+      +'<div class="proof-gap"><b>02 · STORE — VERIFY AND RETURN THE IDENTIFIED ANSWER.</b>'
+        +'<p>Store resolves its own material offering, parent stock, capability, modeled work and economics against that exact definition. A changed definition requires another Store evaluation; a prior answer is history.</p>'
+        +'<div class="kv"><span>Store evaluation</span><span id="proof-yard-store-receipt-copy">—</span></div>'
+        +'<div class="kv"><span>Calculation</span><span><span id="proof-yard-store-calc">—</span></span></div>'
+      +'</div>'
+
+      +'<div class="proof-gap"><b>03 · CUSTOMER — ACCEPT THE OFFER AND START FULFILLMENT.</b>'
+        +'<p>The single customer action on the previous page preserved three separate commercial records. Commercial completion does not start a machine.</p>'
+        +'<div class="kv"><span>Offer</span><span id="proof-yard-offer-receipt">NOT RECORDED</span></div>'
+        +'<div class="kv"><span>Acceptance</span><span id="proof-yard-accept-receipt">NOT RECORDED</span></div>'
+        +'<div class="kv"><span>Payment</span><span id="proof-yard-payment-receipt">NOT RECORDED</span></div>'
+      +'</div>'
+
+      +'<div class="proof-gap"><b>04 · YARD — ALLOCATE, QUEUE AND RELEASE.</b>'
+        +'<p>The Yard binds material to the paid job, places the identified work in the appropriate fulfillment queue and releases it toward the local cell. Allocation is not consumption. Release is not readiness.</p>'
+        +'<div class="kv"><span>Allocation</span><span id="proof-yard-allocation-receipt">NOT RECORDED</span></div>'
+        +'<div class="kv"><span>Queue</span><span id="proof-yard-queue-receipt">NOT RECORDED</span></div>'
+        +'<div class="kv"><span>Production release</span><span id="proof-yard-release-receipt">NOT RECORDED</span></div>'
+      +'</div>'
+
+      +'<div class="proof-gap"><b>05 · PORTABLE WORK — DESCRIBE WHAT THE PART REQUIRES.</b>'
+        +'<p>The accepted work becomes a machine-neutral operation sequence: load identified stock, establish a reference, perform the admitted cut / mill / drill / spot operations, release and identify the part. This layer carries finished geometry and part-relative features, not a controller register map.</p>'
+        +'<div class="kv"><span>Portable operation plan</span><span id="proof-yard-plan-receipt">NOT RECORDED</span></div>'
+      +'</div>'
+
+      +'<div class="proof-gap"><b>06 · LOCAL CELL / CONTROLLER — RESOLVE THE WORK AGAINST ACTUAL IRON.</b>'
+        +'<p>A commissioned cell contributes the facts the project should not contain: station locations, tool geometry, workholding references, axes, offsets, kerf/process compensation and admitted limits. A machine-specific lowering/postprocessor would combine those local facts with the portable operations to produce controller-readable instructions.</p>'
+        +'<p><b>Current digital stack:</b> customer definition → live Store HTTP request → hosted System adapter → Store Zero evaluator → D-001 Stage-2 envelope → travel model → Store economics → Store answer + hashes + receipt.</p>'
+        +'<p><b>Physical stack to prove:</b> accepted definition → machine-neutral operations → commissioned MachineEnvelope → lowering/postprocessor → controller program identity → local operator gate → cycle records.</p>'
+        +'<div class="kv"><span>Machine-neutral plan</span><span id="proof-yard-plan-receipt-copy">NOT RECORDED</span></div>'
+        +'<div class="kv"><span>Local lowering boundary</span><span id="proof-yard-lowering-receipt">NOT RECORDED</span></div>'
+        +'<div class="kv"><span>Local cell readiness</span><span id="proof-yard-readiness-receipt">NOT RECORDED</span></div>'
+      +'</div>'
+
+      +'<div class="proof-gap"><b>07 · OPERATOR — LOAD THE IDENTIFIED MATERIAL AND OWN CYCLE START.</b>'
+        +'<p>The operator pulls and inspects the named material, loads it in the declared orientation and verifies the physical setup. The operator does not redraw the job, calculate the miter or lay out the spot from a tape measure. Cycle Start remains local to the person standing at the machine.</p>'
+        +'<div class="kv"><span>Operator load</span><span id="proof-yard-load-receipt">NOT RECORDED</span></div>'
+        +'<div class="kv"><span>Local Cycle Start</span><span id="proof-yard-cycle-start-receipt">NOT RECORDED</span></div>'
+        +'<p><b>NO BLOOD ON WOOD.</b> Network delivery of work is not remote authority to start physical motion.</p>'
+      +'</div>'
+
+      +'<div class="proof-gap"><b>08 · CONTROLLER / MACHINE — EXECUTE, OBSERVE AND KEEP THE OUTCOME.</b>'
+        +'<p>The controller would establish the physical reference chain, position stock, invoke admitted tools and record each cycle outcome. Commanded motion is not proof that the material moved or the feature was made correctly. Failed, aborted or rerun work remains part of the record.</p>'
+        +'<div class="kv"><span>Simulated execution</span><span id="proof-yard-execution-receipt">NOT RECORDED</span></div>'
+        +'<div class="kv"><span>Current physical authority</span><span><b>NOT ISSUABLE · DIGITAL SIMULATION</b></span></div>'
+      +'</div>'
+
+      +'<div class="proof-gap"><b>09 · FULFILLMENT REGISTER — COMPLETE EVERYTHING THAT WAS PURCHASED.</b>'
+        +'<p>Not every useful task belongs inside the automated cell. The accepted scope determines which services travel with the order. Unavailable or unselected services stay visible instead of being implied.</p>'
+        +'<div class="kv"><span>Material supply</span><span><b>SELECTED · STORE-RESOLVED</b></span></div>'
+        +'<div class="kv"><span>Primary machining</span><span><b>SELECTED · MODELED</b></span></div>'
+        +'<div class="kv"><span>Secondary operation · spotting</span><span><b>SELECTED · MODELED</b></span></div>'
+        +'<div class="kv"><span>Hardware / joining pack</span><span>NOT APPLICABLE TO JOB 1</span></div>'
+        +'<div class="kv"><span>Assembly information</span><span>NOT PURCHASED / NOT REQUIRED FOR THIS DEMO</span></div>'
+        +'<div class="kv"><span>Finishing</span><span>NOT SELECTED</span></div>'
+        +'<div class="kv"><span>Packaging</span><span>SIMULATED GROUP / STAGE</span></div>'
+        +'<div class="kv"><span>Remnant</span><span id="proof-yard-remnant">—</span></div>'
+        +'<div class="kv"><span>Customer pickup</span><span><b>SELECTED FOR DEMONSTRATION HANDOFF</b></span></div>'
+        +'<div class="kv"><span>Delivery to door / curb</span><span>NOT SELECTED · NOT MODELED HERE</span></div>'
+        +'<div class="kv"><span>Delivery inside</span><span>NOT SELECTED · NOT MODELED HERE</span></div>'
+        +'<div class="kv"><span>Assembly / installation service</span><span>NOT SELECTED · NOT MODELED HERE</span></div>'
+      +'</div>'
+
+      +'<div class="proof-gap"><b>10 · YARD — RECONCILE, INSPECT, LABEL, STAGE AND ISSUE READY.</b>'
+        +'<p>The Yard reconciles required parts, actual outcomes, material use, remnants, rejected attempts, labels and the rest of the purchased scope. The quote described expected work. Closeout records what the simulation says actually happened.</p>'
+        +'<div class="kv"><span>Inspection / label / staging</span><span id="proof-yard-stage-receipt">NOT RECORDED</span></div>'
+        +'<div class="kv"><span>READY notice</span><span id="proof-yard-ready-receipt">NOT RECORDED</span></div>'
+        +'<p><b>READY is not custody.</b> The staged order remains with the Yard until handoff.</p>'
+      +'</div>'
+
+      +'<div class="proof-gap"><b>11 · WHY THE CELL IS BOUNDED — LET EVIDENCE EARN THE NEXT CAPABILITY.</b>'
+        +'<p>The objective is not to build the largest possible CNC before learning whether the service is useful. The patent specification describes a compact retail profit center whose capabilities may be implemented in stages, and it deliberately leaves some secondary work manual when that reduces initial investment and preserves flexibility.</p>'
+        +'<p>The candidate bounded cell is therefore a question to test: which combination of footprint, capital, operator attention, occupied-cell time and project coverage earns its place beside material already in stock?</p>'
+        +'<p><b>Development path:</b> digital model → guarded lab evidence → commissioned cell → field evidence → reviewed next version. A successful exceptional cut does not silently expand the admitted envelope.</p>'
+        +'<p><a href="https://patents.google.com/patent/US9720401B2/en" target="_blank" rel="noopener">U.S. Patent 9,720,401 B2</a> · <a href="https://patents.justia.com/patent/10768609" target="_blank" rel="noopener">U.S. Patent 10,768,609 B2</a></p>'
+      +'</div>'
+
+      +'<div class="proof-gap"><b>12 · COMPLETE RECEIPT LEDGER.</b>'
+        +'<p>Every simulated downstream event remains separate and points back to this identified Store result. Long IDs are retained because they are evidence, not decoration.</p>'
+        +'<div id="proof-yard-receipt-ledger" class="reviewbox"><p class="dim">Simulation receipts will appear here.</p></div>'
+        +'<div class="kv"><span>Receipts carried</span><span id="proof-yard-receipt-count">0</span></div>'
+      +'</div>'
+
+      +'<div class="proof-gap"><b>13 · CUSTOMER / YARD — HANDOFF CLOSES THE TRANSACTION.</b>'
+        +'<p>The Yard has reached READY. The remaining event is custody. The handoff records that the identified package left the Yard through the selected pickup path and closes the simulated owner record.</p>'
+        +'<div class="kv"><span>READY</span><span id="proof-yard-ready-state">NOT RECORDED</span></div>'
+        +'<div class="kv"><span>CUSTODY</span><span id="proof-yard-custody-state">NOT TRANSFERRED</span></div>'
+      +'</div>'
+      +'<div class="proof-nav"><button class="next primary" id="proof-yard-handoff" type="button" data-proof-sim-action="handoff-record">CUSTOMER / YARD RECORD HANDOFF →</button></div>',
+      '<p class="goal">The whole circuit stays visible</p><div class="row"><b>One definition</b><span>Store, controller, operator and Yard add only the facts they own.</span></div><div class="row"><b>One audit chain</b><span>Every simulated receipt remains tied to the identified Store result.</span></div><div class="row"><b>One physical boundary</b><span>Cycle Start stays local; simulation never claims machine authority.</span></div>'
     );
 
-    ensureProjectJourneyPage('proof-terms',
+    ensureProjectJourneyPage('proof-terms',    ensureProjectJourneyPage('proof-terms',
       '<p class="stage-tag">RECEIPTS</p><h1>EVERY SIMULATED STEP LEFT A RECEIPT.</h1>'
       +'<p class="sub">The definition and Store answer stay identified. The downstream events are demonstration records tied to that exact answer, not claims that a real payment or physical job occurred.</p>'
       +'<div class="proof-actor-grid">'
@@ -2043,8 +2136,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     );
 
     ensureProjectJourneyPage('proof-record',
-      '<p class="stage-tag">HANDOFF / RECORD</p><h1>THE PARTS ARE READY IN THE SIMULATION. PICKUP CLOSES THE JOB.</h1>'
-      +'<p class="sub">READY is not custody. The final simulated event records pickup and then closes the owner record.</p>'
+      '<p class="stage-tag">FINAL OWNER RECORD</p><h1>THE SIMULATED TRANSACTION IS CLOSED.</h1>'
+      +'<p class="sub">The final record keeps the definition, Store answer, commercial events, Yard execution simulation and custody event in one identified chain.</p>'
       +'<div class="proof-actor-grid">'
         +'<div><b>JOB</b><span id="proof-record-job">—</span></div>'
         +'<div><b>VERSION</b><span id="proof-record-version">—</span></div>'
@@ -2057,14 +2150,12 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         +'<div><b>OWNER RECORD</b><span id="proof-record-status">OPEN · SIMULATION</span></div>'
         +'<div><b>PHYSICAL FABRICATION</b><span>NOT CLAIMED · SIMULATION ONLY</span></div>'
       +'</div>'
-      +'<div class="proof-gap"><b>SIMULATED HANDOFF ONLY.</b>No physical part is claimed to exist. This closes the demonstration record, not a real Store order.</div>'
-      +'<div id="proof-record-ledger" class="reviewbox"><p class="dim">Simulation receipts will appear here.</p></div>'
-      +'<div class="proof-nav"><button class="primary" id="proof-sim-pickup" type="button" data-proof-sim-action="pickup">SIMULATE PICKUP / TRANSFER CUSTODY</button></div>'
-      +'<div class="proof-nav"><button type="button" data-proof-go="proof-terms">← RECEIPTS</button><button class="next" type="button" data-proof-library>← PROJECT LIBRARY</button></div>',
-      '<p class="goal">Handoff closes the simulated job</p><div class="row"><b>READY ≠ pickup</b><span>The custody event remains separate.</span></div><div class="row"><b>Owner record survives</b><span>The exact definition, Store result and every simulated receipt remain one chain.</span></div>'
+      +'<div class="proof-gap"><b>HANDOFF IS THE CLOSE.</b> READY established that the simulated package was staged. Custody records that the identified package was handed over. No physical part or live Store order is claimed to exist.</div>'
+      +'<div id="proof-record-ledger" class="reviewbox"><p class="dim">Simulation receipts will appear here.</p></div>',
+      '<p class="goal">The record closes without rewriting history</p><div class="row"><b>READY ≠ custody</b><span>The handoff event remains separate.</span></div><div class="row"><b>Failures would remain</b><span>A later success would not erase an earlier attempt.</span></div><div class="row"><b>Same definition</b><span>The final record points back to the same identified work and Store answer.</span></div>'
     );
 
-    function proofSimulationEconomics(){
+    function proofSimulationEconomics(){    function proofSimulationEconomics(){
       const storeReference=proofHandoff?.payload?.storeReference || null;
       const estimate=storeReference?.estimate || null;
       const totals=estimate?.totals || null;
@@ -2074,6 +2165,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         material:totals?.material ?? estimate?.material ?? storeReference?.materialResolution?.materialTotal ?? null,
         machineService:totals?.machine_service ?? estimate?.cellRecovery ?? null,
         cycleMin:estimate?.cycle?.T_job_min ?? null,
+        remnantIn:estimate?.travel?.finalRemainderIn ?? storeReference?.estimate?.travel?.finalRemainderIn ?? null,
         sku:storeReference?.materialResolution?.storeSku || storeReference?.materialResolution?.pricingReferenceSku || null,
         resultHash:estimate?.calculationIdentity?.resultHash || storeReference?.calculationIdentity?.resultHash || null,
         storeReceipt:storeReference?.evaluationReceipt || null
@@ -2125,6 +2217,23 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       return ensureProofSimulation()?.receipts.find(receipt=>receipt.type===type)?.receiptId || null;
     }
 
+    function completeProofYardSimulation(){
+      const economics=proofSimulationEconomics();
+      if(!proofSimulationHas('SIMULATED_PAYMENT')) return false;
+      proofSimulationReceipt('SIMULATED_ALLOCATION','Simulated material allocation'+(economics.sku?' · '+economics.sku:'')+' · no live inventory reserved');
+      proofSimulationReceipt('SIMULATED_QUEUE','Simulated Yard queue entry for the same identified paid definition');
+      proofSimulationReceipt('SIMULATED_PRODUCTION_RELEASE','Simulated job release toward the local cell · no physical production authority created');
+      proofSimulationReceipt('SIMULATED_MACHINE_NEUTRAL_PLAN','Portable operation sequence represented for the accepted definition · no controller code emitted');
+      proofSimulationReceipt('SIMULATED_LOCAL_LOWERING','Candidate local lowering boundary represented · no commissioned postprocessor or CellProgramIdentity issued');
+      proofSimulationReceipt('SIMULATED_CELL_READINESS','Reference-cell readiness represented for simulation only · no commissioned-machine claim');
+      proofSimulationReceipt('SIMULATED_OPERATOR_LOAD','Operator load instruction represented for the identified Store material · no physical material handled');
+      proofSimulationReceipt('SIMULATED_CYCLE_START','Local Cycle Start represented as operator-owned · no live machine start');
+      proofSimulationReceipt('SIMULATED_EXECUTION','Simulated job completed'+(Number.isFinite(Number(economics.cycleMin))?' · modeled '+Number(economics.cycleMin).toFixed(4)+' min':'')+' · no live motion or controller command');
+      proofSimulationReceipt('SIMULATED_INSPECTION_STAGING','Simulated inspection, labeling, reconciliation and staging recorded');
+      proofSimulationReceipt('SIMULATED_READY_NOTICE','Simulated READY notice issued · staged is still not picked up');
+      return true;
+    }
+
     function renderProofReceiptLedger(targetId){
       const target=doc.getElementById(targetId);
       if(!target) return;
@@ -2163,6 +2272,21 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       status('proof-sim-execution-status','SIMULATED_EXECUTION','NOT RECORDED');
       status('proof-sim-stage-status','SIMULATED_INSPECTION_STAGING','NOT RECORDED');
       status('proof-sim-ready-status','SIMULATED_READY_NOTICE','NOT RECORDED');
+      status('proof-yard-offer-receipt','SIMULATED_OFFER','NOT RECORDED');
+      status('proof-yard-accept-receipt','SIMULATED_ACCEPTANCE','NOT RECORDED');
+      status('proof-yard-payment-receipt','SIMULATED_PAYMENT','NOT RECORDED');
+      status('proof-yard-allocation-receipt','SIMULATED_ALLOCATION','NOT RECORDED');
+      status('proof-yard-queue-receipt','SIMULATED_QUEUE','NOT RECORDED');
+      status('proof-yard-release-receipt','SIMULATED_PRODUCTION_RELEASE','NOT RECORDED');
+      status('proof-yard-plan-receipt','SIMULATED_MACHINE_NEUTRAL_PLAN','NOT RECORDED');
+      status('proof-yard-plan-receipt-copy','SIMULATED_MACHINE_NEUTRAL_PLAN','NOT RECORDED');
+      status('proof-yard-lowering-receipt','SIMULATED_LOCAL_LOWERING','NOT RECORDED');
+      status('proof-yard-readiness-receipt','SIMULATED_CELL_READINESS','NOT RECORDED');
+      status('proof-yard-load-receipt','SIMULATED_OPERATOR_LOAD','NOT RECORDED');
+      status('proof-yard-cycle-start-receipt','SIMULATED_CYCLE_START','NOT RECORDED');
+      status('proof-yard-execution-receipt','SIMULATED_EXECUTION','NOT RECORDED');
+      status('proof-yard-stage-receipt','SIMULATED_INSPECTION_STAGING','NOT RECORDED');
+      status('proof-yard-ready-receipt','SIMULATED_READY_NOTICE','NOT RECORDED');
 
       const offer=proofSimulationHas('SIMULATED_OFFER');
       const accepted=proofSimulationHas('SIMULATED_ACCEPTANCE');
@@ -2189,22 +2313,31 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       const stageButton=actionButton('stage'); if(stageButton) stageButton.disabled=!executed||staged;
       const readyButton=actionButton('ready'); if(readyButton) readyButton.disabled=!staged||ready;
       const pickupButton=actionButton('pickup'); if(pickupButton){ pickupButton.disabled=!ready||custody; pickupButton.textContent=custody?'✓ SIMULATED PICKUP RECORDED':'SIMULATE PICKUP / TRANSFER CUSTODY'; }
+      const handoffButton=actionButton('handoff-record');
+      if(handoffButton){
+        handoffButton.disabled=!ready||custody;
+        handoffButton.textContent=custody?'✓ CUSTOMER / YARD HANDOFF RECORDED':'CUSTOMER / YARD RECORD HANDOFF →';
+      }
 
-      const yardNext=doc.getElementById('proof-yard-next'); if(yardNext) yardNext.disabled=!ready;
       const termsNext=doc.getElementById('proof-terms-next'); if(termsNext) termsNext.disabled=!ready;
 
       set('proof-sim-receipt-count',String(sim.receipts.length));
+      set('proof-yard-receipt-count',String(sim.receipts.length));
+      set('proof-yard-ready-state',ready?'✓ SIMULATED READY NOTICE RECORDED':'NOT RECORDED');
+      set('proof-yard-custody-state',custody?'✓ SIMULATED CUSTODY TRANSFERRED':'NOT TRANSFERRED');
       set('proof-record-ready',ready?'✓ SIMULATED READY NOTICE RECORDED':'NOT RECORDED');
       set('proof-record-custody',custody?'✓ SIMULATED CUSTODY TRANSFERRED':'NOT TRANSFERRED');
       set('proof-record-status',custody?'✓ CLOSED · SIMULATED OWNER RECORD':'OPEN · SIMULATION');
       renderProofReceiptLedger('proof-receipt-ledger');
+      renderProofReceiptLedger('proof-yard-receipt-ledger');
       renderProofReceiptLedger('proof-record-ledger');
 
       doc.querySelectorAll('.recovery-nav button[data-journey-stage]').forEach(button=>{
         if(activeJourneyProject!=='start-own') return;
         const stage=button.dataset.journeyStage;
         if(stage==='yard') button.disabled=!paid;
-        if(stage==='terms'||stage==='record') button.disabled=!ready;
+        if(stage==='terms') button.disabled=!ready;
+        if(stage==='record') button.disabled=!custody;
       });
     }
 
@@ -2218,6 +2351,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         proofSimulationReceipt('SIMULATED_OFFER','Simulated offer created from the identified Store answer · total '+money);
         proofSimulationReceipt('SIMULATED_ACCEPTANCE','Customer accepted the simulated offer for the same identified definition');
         proofSimulationReceipt('SIMULATED_PAYMENT','Simulated payment recorded · '+money+' · no money moved');
+        completeProofYardSimulation();
         syncProofSimulationUI();
         originalShow.call(win,'proof-yard');
         syncJourneyNav('yard');
@@ -2247,6 +2381,13 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       } else if(action==='ready'){
         if(!proofSimulationHas('SIMULATED_INSPECTION_STAGING')) return true;
         proofSimulationReceipt('SIMULATED_READY_NOTICE','Simulated READY notice issued · staged is still not picked up');
+      } else if(action==='handoff-record'){
+        if(!proofSimulationHas('SIMULATED_READY_NOTICE')) return true;
+        proofSimulationReceipt('SIMULATED_CUSTODY_TRANSFER','Simulated customer pickup and Yard custody transfer recorded · demonstration job closed');
+        syncProofSimulationUI();
+        originalShow.call(win,'proof-record');
+        syncJourneyNav('record');
+        return true;
       } else if(action==='pickup'){
         if(!proofSimulationHas('SIMULATED_READY_NOTICE')) return true;
         proofSimulationReceipt('SIMULATED_CUSTODY_TRANSFER','Simulated pickup and custody transfer recorded · demonstration job closed');
@@ -2260,7 +2401,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     function canOpenStartOwnSimulationStage(stage){
       if(proofHandoff?.source!=='start-own') return stage==='scan'||stage==='configure';
       if(stage==='yard') return proofSimulationHas('SIMULATED_PAYMENT');
-      if(stage==='terms'||stage==='record') return proofSimulationHas('SIMULATED_READY_NOTICE');
+      if(stage==='terms') return proofSimulationHas('SIMULATED_READY_NOTICE');
+      if(stage==='record') return proofSimulationHas('SIMULATED_CUSTODY_TRANSFER');
       return true;
     }
 
@@ -2357,8 +2499,18 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         ? 'BUDGETARY ESTIMATE · Q $'+Number(q).toFixed(2)+' · '+String(estimate?.engine?.id || 'Store Zero')+' · result '+String(estimate?.calculationIdentity?.resultHash || storeReference?.calculationIdentity?.resultHash || '').slice(0,12)+'…'
         : 'UNRESOLVED';
 
-      const yardNext=doc.getElementById('proof-yard-next');
-      if(yardNext)yardNext.textContent=isStartOwn?'CONTINUE → TERMS':'CONTINUE → HANDOFF / RECORD';
+      const setYard=(id,value)=>{ const el=doc.getElementById(id); if(el) el.textContent=value; };
+      setYard('proof-yard-q',Number.isFinite(Number(q))?'$'+Number(q).toFixed(2):'UNRESOLVED');
+      setYard('proof-yard-service',Number.isFinite(Number(machineService))?'$'+Number(machineService).toFixed(2):'UNRESOLVED');
+      setYard('proof-yard-material',materialResolution?.storeSku || materialResolution?.pricingReferenceSku || 'UNRESOLVED');
+      setYard('proof-yard-cycle',Number.isFinite(Number(estimate?.cycle?.T_job_min))?Number(estimate.cycle.T_job_min).toFixed(4)+' min · modeled':'UNRESOLVED');
+      const storeReceiptIdentity=storeReference?.evaluationReceipt?.receiptHash || storeReference?.evaluationReceipt?.requestId || resultHash || 'UNRESOLVED';
+      setYard('proof-yard-store-receipt',storeReceiptIdentity);
+      setYard('proof-yard-store-receipt-copy',storeReceiptIdentity);
+      setYard('proof-yard-store-calc',inputHash&&resultHash?'input '+inputHash+' · result '+resultHash:'UNRESOLVED');
+      const remnantIn=estimate?.travel?.finalRemainderIn ?? null;
+      setYard('proof-yard-remnant',Number.isFinite(Number(remnantIn))?Number(remnantIn).toFixed(3).replace(/\.000$/,'')+' in · simulated reconciliation':'UNRESOLVED');
+
       if(materialSource)materialSource.textContent=materialResolution?.source
         ? 'Store Zero catalog '+materialResolution.source.clock+' · '+String(materialResolution.source.pin).slice(0,12)+'…'
         : storeReference?.source?.storePin
@@ -2402,7 +2554,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         if(!expectedSource || proofHandoff?.source !== expectedSource) return;
         syncProofHandoff();
         let target=go.dataset.proofGo;
-        if(proofHandoff?.source==='start-own' && target==='proof-record' && go.closest('#proof-yard')) target='proof-terms';
         originalShow.call(win,target);
         if(proofHandoff?.source==='start-own'){
           const stageByTarget={proofStore:'store'};
@@ -2689,7 +2840,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         review:'proof-store',
         request:'proof-accept',
         yard:'proof-yard',
-        terms:'proof-terms',
+        terms:'proof-yard',
         recap:'proof-record',
         record:'proof-record'
       }),
@@ -2743,9 +2894,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       review:'Store Review',
       request:'Accept / Pay',
       yard:'Store / Yard',
-      terms:'Receipts',
-      recap:'Handoff / Record',
-      record:'Handoff / Record'
+      terms:'Store / Yard',
+      recap:'Final Record',
+      record:'Final Record'
     });
 
     function restoreJourneyNav(nav) {
@@ -2804,8 +2955,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         button.dataset.jobTarget = directTarget;
         button.textContent = START_OWN_NAV_LABELS[stage] || button.dataset.defaultLabel;
 
-        // Duplicate legacy stages have the same Job 1 destination. Keep one button only.
-        if (stage === 'review' || stage === 'recap') button.hidden = true;
+        // Duplicate technical stages project onto the same Job 1 customer surface. Keep one button only.
+        if (stage === 'review' || stage === 'terms' || stage === 'recap') button.hidden = true;
       });
     }
 

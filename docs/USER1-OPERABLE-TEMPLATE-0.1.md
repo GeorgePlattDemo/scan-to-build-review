@@ -216,14 +216,17 @@ While a job is active:
 3. a button may not merely be relabeled while retaining another project's target;
 4. stage navigation must never select another project implicitly;
 5. the only cross-project navigation is an explicit exit such as **Project Library**;
-6. returning from Store/yard/terms must return to the same identified job/version;
+6. returning from Store or Yard must return to the same identified job/version;
 7. confirmation must land on that job's Store-review surface;
-8. downstream navigation may display an existing event/state but may not manufacture offer, acceptance, payment, allocation, release, readiness, Cycle Start, READY, custody, or closeout;
-9. every project added to acceptance must carry a navigation-regression test proving all visible nav targets stay inside that project's allowed route map or an explicit exit.
+8. viewing, scrolling, or navigation may not manufacture offer, acceptance, payment, allocation, release, readiness, Cycle Start, READY, custody, or closeout;
+9. an explicitly invoked simulation may create only labeled simulation receipts, in sequence, and must not promote them into live commerce or physical authority;
+10. every project added to acceptance must carry a navigation-regression test proving all visible nav targets stay inside that project's allowed route map or an explicit exit.
 
-For Job 1 the allowed journey targets are:
+For Job 1 the visible journey targets are:
 
-`start-own-live → proof-store → proof-accept → proof-yard → proof-terms → proof-record`
+`start-own-live → proof-store → proof-accept → proof-yard → proof-record`
+
+The underlying canonical technical stages remain intact. Job 1 projects the receipt/terms detail into the continuous Yard surface rather than requiring a separate customer stop.
 
 No active Job 1 stage button may target `alcove-capture`, `alcove-config`, `alcove-review`, or another project's page.
 
