@@ -114,6 +114,11 @@ assert.match(shell,/'start-own': Object\.freeze\(\{[\s\S]*?store:'proof-store'[\
 assert.match(shell,/data-proof-go="proof-accept">CONTINUE → ACCEPT \/ PAY/);
 assert.match(shell,/id="proof-accept-pay-yard"[^>]*data-proof-sim-action="accept-pay-yard">ACCEPT STORE QUOTE \/ PAY \/ SEND TO YARD →/);
 assert.match(shell,/id="proof-yard-handoff"[^>]*data-proof-sim-action="handoff-record">CUSTOMER \/ YARD RECORD HANDOFF →/);
+assert.match(shell,/1 · Your idea/);
+assert.match(shell,/3 · The Store answers/);
+assert.match(shell,/05 · FROM CONFIRMATION TO MOTION/);
+assert.match(shell,/PICKED UP\. GO FIX THAT BENCH\./);
+assert.match(shell,/YOU BUILD\./);
 assert.equal(shell.includes('id="proof-yard-next"'),false,'Job 1 Yard still has a separate receipts-next button');
 assert.match(shell,/canOpenStartOwnSimulationStage/);
 assert.match(shell,/stage==='yard'[\s\S]*SIMULATED_PAYMENT/);
