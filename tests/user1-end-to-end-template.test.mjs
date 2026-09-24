@@ -192,8 +192,8 @@ for(const oldButton of ['SIMULATE ALLOCATION','SIMULATE RELEASE','RUN CELL SIMUL
 assert.match(shell,/DEFINE → VERIFY → QUOTE → PURCHASE → ALLOCATE → QUEUE → TRANSLATE → LOAD → CYCLE → INSPECT → STAGE → HANDOFF/);
 assert.match(shell,/NO BLOOD ON WOOD/);
 assert.match(shell,/Scrolling creates no event/);
-assert.match(shell,/Current digital stack:/);
-assert.match(shell,/Physical stack to prove:/);
+assert.match(shell,/FROM CONFIRMATION TO MOTION/);
+assert.match(shell,/specialist intermediary chain is absent by architecture/);
 assert.match(shell,/candidate bounded cell/);
 assert.match(shell,/proof-yard-receipt-ledger/);
 
