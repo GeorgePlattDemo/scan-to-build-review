@@ -18,8 +18,8 @@ test('Job 1 Yard is one continuous scroll with one final customer action', () =>
   }
 
   assert.match(yard,/DEFINE → VERIFY → QUOTE → PURCHASE → ALLOCATE → QUEUE → TRANSLATE → LOAD → CYCLE → INSPECT → STAGE → HANDOFF/);
-  assert.match(yard,/Current digital stack:/);
-  assert.match(yard,/Physical stack to prove:/);
+  assert.match(yard,/FROM CONFIRMATION TO MOTION/);
+  assert.match(yard,/specialist intermediary chain is absent by architecture/);
   assert.match(yard,/FULFILLMENT REGISTER/);
   assert.match(yard,/Delivery to door \/ curb/);
   assert.match(yard,/Delivery inside/);
