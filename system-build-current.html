@@ -2497,7 +2497,10 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
       const storeLead=doc.getElementById('proof-store-lead');
       if(storeLead) storeLead.textContent=complete && Number.isFinite(Number(q))
-        ? 'The Store can support this version. Estimated total: 
+        ? 'The Store can support this version. Estimated total: $'+Number(q).toFixed(2)+'.'
+        : 'The Store answered this version; complete economics are not available.';
+
+      if(recoveryEl)recoveryEl.textContent=Number.isFinite(Number(machineService))
         ? '$'+Number(machineService).toFixed(2)
         : 'UNRESOLVED';
       if(qEl)qEl.textContent=Number.isFinite(Number(q))
