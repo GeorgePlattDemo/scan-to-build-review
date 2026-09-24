@@ -99,7 +99,7 @@ assert.equal(shell.includes("target==='proof-record' && go.closest('#proof-yard'
 assert.match(shell,/setTimeout\(\(\) => showStartOwnStage\('bench'\),0\)/);
 assert.match(shell,/STORE BUDGETARY Q<\/b><span id="proof-store-q"/);
 assert.match(shell,/data-proof-sim-action="accept-pay-yard"/);
-assert.match(shell,/ACCEPT STORE QUOTE \/ PAY \/ SEND TO YARD →/);
+assert.match(shell,/ACCEPT ESTIMATE \/ PAY \/ SEND TO YARD →/);
 assert.match(shell,/SIMULATED_OFFER/);
 assert.match(shell,/SIMULATED_ACCEPTANCE/);
 assert.match(shell,/SIMULATED_PAYMENT/);
