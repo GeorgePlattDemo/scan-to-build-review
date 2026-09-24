@@ -11,7 +11,7 @@ test('Job 1 Accept/Pay exposes exactly two customer actions and preserves receip
   const buttons=[...block.matchAll(/<button\b/g)];
   assert.equal(buttons.length,2);
   assert.match(block,/data-proof-return-source>← GO BACK \/ CHANGE DEFINITION<\/button>/);
-  assert.match(block,/data-proof-sim-action="accept-pay-yard">ACCEPT STORE QUOTE \/ PAY \/ SEND TO YARD →<\/button>/);
+  assert.match(block,/data-proof-sim-action="accept-pay-yard">ACCEPT ESTIMATE \/ PAY \/ SEND TO YARD →<\/button>/);
   assert.equal(block.includes('CREATE SIMULATED OFFER'),false);
   assert.equal(block.includes('ACCEPT SIMULATED OFFER'),false);
   assert.equal(block.includes('SIMULATE PAYMENT'),false);
