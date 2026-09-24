@@ -112,8 +112,13 @@ assert.match(shell,/'start-own': Object\.freeze\(\{[\s\S]*?store:'proof-store'[\
 
 // Gate navigation is sequential from Store answer to one continuous Yard surface and final custody record.
 assert.match(shell,/data-proof-go="proof-accept">CONTINUE → ACCEPT \/ PAY/);
-assert.match(shell,/id="proof-accept-pay-yard"[^>]*data-proof-sim-action="accept-pay-yard">ACCEPT STORE QUOTE \/ PAY \/ SEND TO YARD →/);
+assert.match(shell,/id="proof-accept-pay-yard"[^>]*data-proof-sim-action="accept-pay-yard">ACCEPT ESTIMATE \/ PAY \/ SEND TO YARD →/);
 assert.match(shell,/id="proof-yard-handoff"[^>]*data-proof-sim-action="handoff-record">CUSTOMER \/ YARD RECORD HANDOFF →/);
+assert.match(shell,/1 · Your idea/);
+assert.match(shell,/3 · The Store answers/);
+assert.match(shell,/05 · FROM CONFIRMATION TO MOTION/);
+assert.match(shell,/PICKED UP\. GO FIX THAT BENCH\./);
+assert.match(shell,/YOU BUILD\./);
 assert.equal(shell.includes('id="proof-yard-next"'),false,'Job 1 Yard still has a separate receipts-next button');
 assert.match(shell,/canOpenStartOwnSimulationStage/);
 assert.match(shell,/stage==='yard'[\s\S]*SIMULATED_PAYMENT/);
@@ -154,7 +159,7 @@ assert.equal(shell.includes('setupCharge'),false,'Job 1 browser contains a Store
 
 // ACCEPT/PAY: one customer action preserves three explicit commerce receipts.
 assert.match(shell,/← GO BACK \/ CHANGE DEFINITION/);
-assert.match(shell,/ACCEPT STORE QUOTE \/ PAY \/ SEND TO YARD →/);
+assert.match(shell,/ACCEPT ESTIMATE \/ PAY \/ SEND TO YARD →/);
 assert.match(shell,/data-proof-sim-action="accept-pay-yard"/);
 assert.equal(shell.includes('CREATE SIMULATED OFFER'),false,'Accept/Pay still exposes the old offer button');
 assert.equal(shell.includes('ACCEPT SIMULATED OFFER'),false,'Accept/Pay still exposes the old acceptance button');
@@ -187,8 +192,8 @@ for(const oldButton of ['SIMULATE ALLOCATION','SIMULATE RELEASE','RUN CELL SIMUL
 assert.match(shell,/DEFINE → VERIFY → QUOTE → PURCHASE → ALLOCATE → QUEUE → TRANSLATE → LOAD → CYCLE → INSPECT → STAGE → HANDOFF/);
 assert.match(shell,/NO BLOOD ON WOOD/);
 assert.match(shell,/Scrolling creates no event/);
-assert.match(shell,/Current digital stack:/);
-assert.match(shell,/Physical stack to prove:/);
+assert.match(shell,/FROM CONFIRMATION TO MOTION/);
+assert.match(shell,/specialist intermediary chain is absent by architecture/);
 assert.match(shell,/candidate bounded cell/);
 assert.match(shell,/proof-yard-receipt-ledger/);
 

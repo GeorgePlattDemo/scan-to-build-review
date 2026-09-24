@@ -1962,6 +1962,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     ensureProjectJourneyPage('proof-store',
       '<p class="stage-tag">STORE ANSWER</p><h1 id="proof-store-title">STORE ANSWER · PROOF JOB</h1>'
       +'<p class="sub" id="proof-store-summary">The confirmed definition reached the common Store actor boundary unchanged. Store material, capability and economics are shown only to the extent carried by the identified project answer.</p>'
+      +'<div class="band"><b data-proof-job-thread>JOB 1 · X BRACE</b></div>'
+      +'<h2 id="proof-store-lead">The Store is answering this version.</h2>'
       +'<div class="proof-actor-grid">'
         +'<div><b>JOB</b><span id="proof-store-job">—</span></div>'
         +'<div><b>VERSION</b><span id="proof-store-version">—</span></div>'
@@ -1988,7 +1990,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
 
     ensureProjectJourneyPage('proof-accept',
       '<p class="stage-tag">ACCEPT / PAY</p><h1>YOU ARE ALREADY AT THE YARD. DO YOU WANT THE YARD TO DO THE MACHINE WORK TOO?</h1>'
-      +'<p class="sub">You can take the board home and do the work yourself. Or you can use this simulation to carry the same identified job all the way through Store service, payment, yard work and pickup.</p>'
+      +'<p class="sub">You can take the board home and do the work yourself. Or carry this same identified job through the Yard.</p>'
+      +'<div class="band"><b data-proof-job-thread>JOB 1 · X BRACE</b></div>'
       +'<div class="proof-actor-grid">'
         +'<div><b>JOB</b><span id="proof-accept-job">—</span></div>'
         +'<div><b>VERSION</b><span id="proof-accept-version">—</span></div>'
@@ -2003,14 +2006,15 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         +'<div><b>SIMULATED PAYMENT</b><span id="proof-sim-pay-status">NOT RECORDED</span></div>'
       +'</div>'
       +'<div class="band"><b>THE USER CHOICE.</b> You already came to the yard for the board. The modeled machine-service portion for this exact definition is <b id="proof-accept-service-copy">—</b>. Owning a miter saw does not make setup, measuring, three angled cuts, spotting, cleanup and carrying the board home free. The choice is yours.</div>'
-      +'<div class="proof-gap"><b>SIMULATION ONLY.</b>The action below preserves separate offer, acceptance and payment receipts for this exact Store answer. No money moves. No physical stock is reserved. No production authority or machine motion is created.</div>'
-      +'<div class="proof-nav"><button type="button" data-proof-return-source>← GO BACK / CHANGE DEFINITION</button><button class="next primary" id="proof-accept-pay-yard" type="button" data-proof-sim-action="accept-pay-yard">ACCEPT STORE QUOTE / PAY / SEND TO YARD →</button></div>',
+      +'<div class="proof-gap"><b>PRACTICE RUN.</b>No money moves. No physical stock is reserved. No board is cut. Offer, acceptance and payment still get separate receipts.</div>'
+      +'<div class="proof-nav"><button type="button" data-proof-return-source>← GO BACK / CHANGE DEFINITION</button><button class="next primary" id="proof-accept-pay-yard" type="button" data-proof-sim-action="accept-pay-yard">ACCEPT ESTIMATE / PAY / SEND TO YARD →</button></div>',
       '<p class="goal">A small service can still be useful</p><div class="row"><b>Machine service is visible</b><span>The customer sees the service portion separately from material.</span></div><div class="row"><b>Simulation stays labeled</b><span>Offer, acceptance and payment get receipts without pretending live commerce occurred.</span></div>'
     );
 
     ensureProjectJourneyPage('proof-yard',
       '<p class="stage-tag">STORE / YARD · CONTINUOUS FULFILLMENT RECORD</p><h1>THE PAID DEFINITION BECOMES PHYSICAL WORK.</h1>'
-      +'<p class="sub">One identified job travels from customer intent through Store, local control, operator action, reconciliation and staging. The customer does not operate the Yard by clicking internal events. The events remain separate and keep their own receipts.</p>'
+      +'<p class="sub">One identified job travels through the Yard. The events stay separate and keep their own receipts.</p>'
+      +'<div class="band"><b data-proof-job-thread>JOB 1 · X BRACE</b></div>'
       +'<div class="proof-actor-grid">'
         +'<div><b>JOB</b><span id="proof-yard-job">—</span></div>'
         +'<div><b>VERSION</b><span id="proof-yard-version">—</span></div>'
@@ -2051,17 +2055,15 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         +'<div class="kv"><span>Production release</span><span id="proof-yard-release-receipt">NOT RECORDED</span></div>'
       +'</div>'
 
-      +'<div class="proof-gap"><b>05 · PORTABLE WORK — DESCRIBE WHAT THE PART REQUIRES.</b>'
-        +'<p>The accepted work becomes a machine-neutral operation sequence: load identified stock, establish a reference, perform the admitted cut / mill / drill / spot operations, release and identify the part. This layer carries finished geometry and part-relative features, not a controller register map.</p>'
-        +'<div class="kv"><span>Portable operation plan</span><span id="proof-yard-plan-receipt">NOT RECORDED</span></div>'
+      +'<div class="proof-gap"><b>05 · FROM CONFIRMATION TO MOTION.</b>'
+        +'<p><b>The specialist intermediary chain is absent by architecture.</b> The job carries the identified parts and operations; the local cell carries its registered tools, stations, datums and limits. They meet without a per-job redraw, tape layout or programmer reconstruction of the customer’s intent.</p>'
+        +'<div class="kv"><span>Machine-neutral plan</span><span id="proof-yard-plan-receipt">NOT RECORDED</span></div>'
+        +'<div class="kv"><span>Local lowering boundary</span><span id="proof-yard-lowering-receipt">NOT RECORDED</span></div>'
       +'</div>'
 
-      +'<div class="proof-gap"><b>06 · LOCAL CELL / CONTROLLER — RESOLVE THE WORK AGAINST ACTUAL IRON.</b>'
-        +'<p>A commissioned cell contributes the facts the project should not contain: station locations, tool geometry, workholding references, axes, offsets, kerf/process compensation and admitted limits. A machine-specific lowering/postprocessor would combine those local facts with the portable operations to produce controller-readable instructions.</p>'
-        +'<p><b>Current digital stack:</b> customer definition → live Store HTTP request → hosted System adapter → Store Zero evaluator → D-001 Stage-2 envelope → travel model → Store economics → Store answer + hashes + receipt.</p>'
-        +'<p><b>Physical stack to prove:</b> accepted definition → machine-neutral operations → commissioned MachineEnvelope → lowering/postprocessor → controller program identity → local operator gate → cycle records.</p>'
+      +'<div class="proof-gap"><b>06 · LOCAL CELL — ADD ONLY MACHINE FACTS.</b>'
+        +'<p>Controller-specific instructions are resolved locally from the same identified definition and the registered machine configuration. The definition survives; the machine adds only the facts the machine owns.</p>'
         +'<div class="kv"><span>Machine-neutral plan</span><span id="proof-yard-plan-receipt-copy">NOT RECORDED</span></div>'
-        +'<div class="kv"><span>Local lowering boundary</span><span id="proof-yard-lowering-receipt">NOT RECORDED</span></div>'
         +'<div class="kv"><span>Local cell readiness</span><span id="proof-yard-readiness-receipt">NOT RECORDED</span></div>'
       +'</div>'
 
@@ -2144,8 +2146,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     );
 
     ensureProjectJourneyPage('proof-record',
-      '<p class="stage-tag">FINAL OWNER RECORD</p><h1>THE SIMULATED TRANSACTION IS CLOSED.</h1>'
-      +'<p class="sub">The final record keeps the definition, Store answer, commercial events, Yard execution simulation and custody event in one identified chain.</p>'
+      '<p class="stage-tag">FINAL OWNER RECORD</p><h1>PICKED UP. GO FIX THAT BENCH.</h1>'
+      +'<p class="sub">Everything that happened stays tied to the exact version you approved.</p>'
+      +'<div class="band"><b data-proof-job-thread>JOB 1 · X BRACE</b></div>'
       +'<div class="proof-actor-grid">'
         +'<div><b>JOB</b><span id="proof-record-job">—</span></div>'
         +'<div><b>VERSION</b><span id="proof-record-version">—</span></div>'
@@ -2158,7 +2161,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
         +'<div><b>OWNER RECORD</b><span id="proof-record-status">OPEN · SIMULATION</span></div>'
         +'<div><b>PHYSICAL FABRICATION</b><span>NOT CLAIMED · SIMULATION ONLY</span></div>'
       +'</div>'
-      +'<div class="proof-gap"><b>HANDOFF IS THE CLOSE.</b> READY established that the simulated package was staged. Custody records that the identified package was handed over. No physical part or live Store order is claimed to exist.</div>'
+      +'<div class="proof-gap"><b>HANDOFF IS THE CLOSE.</b> READY and custody stay separate in the record.</div>'
+      +'<div class="band"><b>YOU BUILD.</b> The receipts below keep the whole trip attached to this version.</div>'
       +'<div id="proof-record-ledger" class="reviewbox"><p class="dim">Simulation receipts will appear here.</p></div>',
       '<p class="goal">The record closes without rewriting history</p><div class="row"><b>READY ≠ custody</b><span>The handoff event remains separate.</span></div><div class="row"><b>Failures would remain</b><span>A later success would not erase an earlier attempt.</span></div><div class="row"><b>Same definition</b><span>The final record points back to the same identified work and Store answer.</span></div>'
     );
@@ -2313,7 +2317,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       const acceptPayYardButton=actionButton('accept-pay-yard');
       if(acceptPayYardButton){
         acceptPayYardButton.disabled=!economics.complete||!Number.isFinite(Number(economics.q))||paid;
-        acceptPayYardButton.textContent=paid?'✓ ACCEPTED / PAID / SENT TO YARD':'ACCEPT STORE QUOTE / PAY / SEND TO YARD →';
+        acceptPayYardButton.textContent=paid?'✓ ACCEPTED / PAID / SENT TO YARD':'ACCEPT ESTIMATE / PAY / SEND TO YARD →';
       }
       const allocateButton=actionButton('allocate'); if(allocateButton) allocateButton.disabled=!paid||allocated;
       const releaseButton=actionButton('release'); if(releaseButton) releaseButton.disabled=!allocated||released;
@@ -2480,6 +2484,21 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
       const termsNote=doc.getElementById('proof-terms-note');
       const recordEconomics=doc.getElementById('proof-record-economics');
       const isStartOwn=proofHandoff?.source==='start-own';
+
+      if(isStartOwn){
+        const demand=payload.physicalDemand || payload.definition?.physicalDemand || {};
+        const partLength=Number(demand.finishedLength ?? demand.parts?.[0]?.lengthIn);
+        const angle=Number(demand.angleDegrees ?? demand.sawAngleDeg);
+        const spot=Number(demand.spotDemand?.locationAlongLengthIn ?? demand.parts?.[0]?.features?.[0]?.xIn);
+        const fmt=n=>Number.isFinite(n)?(Math.abs(n-Math.round(n))<1e-9?String(Math.round(n)):n.toFixed(1)):'—';
+        const thread='X BRACE · 2 × '+fmt(partLength)+' in · '+fmt(angle)+'° ends · spot '+fmt(spot)+' in';
+        doc.querySelectorAll('[data-proof-job-thread]').forEach(el=>{ el.textContent=thread; });
+      }
+
+      const storeLead=doc.getElementById('proof-store-lead');
+      if(storeLead) storeLead.textContent=complete && Number.isFinite(Number(q))
+        ? 'The Store can support this version. Estimated total: $'+Number(q).toFixed(2)+'.'
+        : 'The Store answered this version; complete economics are not available.';
 
       if(recoveryEl)recoveryEl.textContent=Number.isFinite(Number(machineService))
         ? '$'+Number(machineService).toFixed(2)
@@ -2896,15 +2915,15 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#faf9f7}
     }
 
     const START_OWN_NAV_LABELS = Object.freeze({
-      scan:'Start / Intent',
-      configure:'Define',
-      store:'Store Review',
-      review:'Store Review',
-      request:'Accept / Pay',
-      yard:'Store / Yard',
-      terms:'Store / Yard',
-      recap:'Final Record',
-      record:'Final Record'
+      scan:'1 · Your idea',
+      configure:'2 · Make it yours',
+      store:'3 · The Store answers',
+      review:'3 · The Store answers',
+      request:'4 · Your call',
+      yard:'5 · We cut it',
+      terms:'5 · We cut it',
+      recap:'6 · Pick up & build',
+      record:'6 · Pick up & build'
     });
 
     function restoreJourneyNav(nav) {
