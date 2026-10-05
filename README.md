@@ -1,6 +1,13 @@
 # Scan-to-Build / Home as a Twin — Public Review Package
 
-<a href="https://georgeplattdemo.github.io/scan-to-build-review/system-build-current.html"><kbd>▶ OPEN WORKING APP</kbd></a>
+> **FROZEN REVIEW PACKAGE.** This repository preserves the larger Scan-to-Build / Home as a Twin architecture through documents and self-contained browser demonstrations. It is not the current application, Store runtime, or active development workspace.
+
+<a href="https://georgeplattdemo.github.io/scan-to-build-review/"><kbd>▶ OPEN REVIEW DEMONSTRATION</kbd></a>
+&nbsp;
+<a href="https://georgeplattdemo.github.io/scan-to-build-system/system-build-current.html"><kbd>▶ OPEN CURRENT SYSTEM APP</kbd></a>
+
+**Current homes:** [Program — research / why](https://github.com/GeorgePlattDemo/3d-solutions-program) · [System — what the job means](https://github.com/GeorgePlattDemo/scan-to-build-system) · [Store — what this Store can provide](https://github.com/GeorgePlattDemo/scan-to-build-store)
+
 
 Public review artifact · simulation only · no live machine control · no production claim.
 
@@ -30,11 +37,14 @@ Each artifact establishes the terms or operating boundary used by the next one. 
 | 6 | [WorkPacket Examples](docs/WORKPACKET_EXAMPLES.md) | The concrete handoff: packets showing how the shared vocabulary travels, what the workflow evaluates, what gets refused or revised, what reaches the cell, and what returns. |
 | 7 | [Operational Roadmap](docs/OPERATIONAL_ROADMAP.md) | The operating sequence: record → packet → validation or refusal → material choice → routing → consent → browser-modeled execution report → outcome archive → export. |
 | 8 | [Executable Proof Layer](scan-to-build-executable-proof-layer.html) | The runnable proof: one offline browser artifact tying the architecture, ontologies, machine boundary, packets, and roadmap into visible gates and verification tests. |
-| 9 | [From Issued Claims to Applied Architecture](docs/ISSUED_CLAIMS_TO_APPLIED_ARCHITECTURE.md) | The issued foundation: a walkthrough of all 33 claims, the system, method, software, operator, commercial, and machine elements they assemble, their expression in the present package, and the boundary where the later governance layer begins. |
-| 10 | [Continuous Engineering](docs/CONTINUOUS_ENGINEERING.md) | The controlled improvement loop: refusal evidence, operator feedback, capability review, and bounded-cell growth without silently expanding the declared MachineEnvelope. |
-| 11 | [Institutional Study Layer](docs/INSTITUTIONAL_STUDY_LAYER.md) | The broader review surface: engineering, materials, AI, workforce, sustainability, data governance, finance, public interest, technology transfer, and pilot design. |
-| 12 | [Future Research & IP Review Areas](docs/FUTURE_RESEARCH_AND_IP_REVIEW_AREAS.md) | The forward review frame: technical, legal, and institutional questions around the issued foundation, present operating layer, and possible later work. |
-| 13 | [Frontier work by others](13_Frontier_Work_By_Others.md) | Not authored here. Fifteen published research works and one skill standard, from Bucklin's 1965 postponement theory through 2026 field studies in distributed timber fabrication, forestry information systems, manufacturing agency, and woodworking competency standards. Each is given as its authors framed it, with the boundary of what it does not address and the question that appears where it meets this sequence. |
+| 9 | [Project 1 digital manufacturing trail](docs/D001_Project1_Review.md) | A frozen copy of Store's accepted Project 1 review manuscript: one bounded definition through Store material/capability evaluation, modeled Q, virtual controller-oriented commands, and the explicit BLOCKED physical-release boundary. Canonical custody remains [Store](https://github.com/GeorgePlattDemo/scan-to-build-store/tree/main/docs/project-1-digital-trail). |
+| 10 | [From Issued Claims to Applied Architecture](docs/ISSUED_CLAIMS_TO_APPLIED_ARCHITECTURE.md) | The issued foundation: a walkthrough of all 33 claims, the system, method, software, operator, commercial, and machine elements they assemble, their expression in the present package, and the boundary where the later governance layer begins. |
+| 11 | [Continuous Engineering](docs/CONTINUOUS_ENGINEERING.md) | The controlled improvement loop: refusal evidence, operator feedback, capability review, and bounded-cell growth without silently expanding the declared MachineEnvelope. |
+| 12 | [Institutional Study Layer](docs/INSTITUTIONAL_STUDY_LAYER.md) | The broader review surface: engineering, materials, AI, workforce, sustainability, data governance, finance, public interest, technology transfer, and pilot design. |
+| 13 | [Future Research & IP Review Areas](docs/FUTURE_RESEARCH_AND_IP_REVIEW_AREAS.md) | The forward review frame: technical, legal, and institutional questions around the issued foundation, present operating layer, and possible later work. |
+| 14 | [Frontier work by others](13_Frontier_Work_By_Others.md) | Not authored here. Fifteen published research works and one skill standard, from Bucklin's 1965 postponement theory through 2026 field studies in distributed timber fabrication, forestry information systems, manufacturing agency, and woodworking competency standards. Each is given as its authors framed it, with the boundary of what it does not address and the question that appears where it meets this sequence. |
+
+Item 9 is included for review convenience as a frozen documentary copy. Its Store facts and custody remain Store-owned; Review does not maintain or execute them.
 
 ## Running the proof layer
 
