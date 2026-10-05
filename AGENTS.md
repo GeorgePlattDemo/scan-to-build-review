@@ -1,9 +1,39 @@
-# Repository continuation rules
+# Review repository rules
 
-For Alcove / Store connection work, first read `docs/ALCOVE-REAL-STORE-CONNECTION.md`.
+This repository is a **frozen public review package**.
 
-Preserve existing project pages, controls, content, navigation, and physical definitions. Store Zero is the executable simulation of the declared cell, not a browser price clone. Change scope through the existing controls; never change capability limits, omit operations, or hardcode answers merely to obtain a pass.
+Its function is to make the larger Scan-to-Build / Home as a Twin architecture inspectable through documents and self-contained browser demonstrations. It is a thinking and critique surface, not the current application workspace.
 
-Use the existing real System runtime and pinned Store. Keep deployment address in `stb-store-runtime.json`. No production localhost, temporary tunnel advertised as durable deployment, placeholder public URL, stored answer substitution, or browser economics.
+## Ownership boundaries
 
-Completion requires the actual public OPEN SYSTEM BUILD journey to receive a fresh Store evaluation for edited scope. Record exact commits, endpoint, and tests; distinguish local HTTP integration from browser/deployment evidence. If hosting is unavailable, retain a candidate branch and state NOT YET VISIBLE. Do not repin main as complete.
+- **Program** owns research, evidence, rationale, experiments, findings, and adoption history.
+- **System** owns current application behavior and what a job definition means.
+- **Store** owns current catalog, material/service offerings, capability, refusal, modeled work, timing, and economics.
+- **Review** preserves the integrated vision and bounded review artifacts.
+
+## Do not put current implementation work here
+
+Do not add or rebuild:
+
+- System runtime pages or current public-build source;
+- Store clients, runtime endpoints, catalog snapshots, pricing/evaluator logic, or Store pins;
+- Railway/deployment configuration;
+- application integration or regression suites;
+- current project-specific Store bridges;
+- controller/postprocessor implementation or machine-development source;
+- active build guides or migration work queues.
+
+Do not use Review as a staging area when another repository already owns the work.
+
+## Permitted maintenance
+
+Only when explicitly authorized:
+
+- repair a broken link in the review package;
+- correct a review-document error without turning it into current runtime authority;
+- add a deliberately frozen review artifact with its source/custody identified;
+- update pointers to the current Program, System, or Store homes.
+
+The self-contained HTML demonstrations are illustrative toys. They may show the architecture, but they do not become current System or Store authority.
+
+**NO BLOOD ON WOOD.**
